@@ -1,0 +1,13 @@
+"""
+Rectangle related functions
+"""
+from __future__ import annotations
+__all__ = ['clamp', 'move', 'scale_by', 'scale_to']
+def clamp(*args, **kwargs):
+    ...
+def move(*args, **kwargs):
+    ...
+def scale_by(*args, **kwargs):
+    ...
+def scale_to(*args, **kwargs):
+    ...

@@ -5,6 +5,7 @@ namespace py = pybind11;
 
 struct SDL_Window;
 struct SDL_Renderer;
+struct SDL_Surface;
 struct Color;
 namespace math
 {
@@ -40,7 +41,7 @@ float getScale();
 void setFullscreen(bool fullscreen);
 
 bool isFullscreen();
-
+void setWindowIcon(SDL_Window* window, SDL_Surface* icon);
 void setTitle(const std::string& title);
 
 std::string getTitle();

@@ -1,10 +1,372 @@
-from . import time
-from . import window
-
-def init() -> None:
-    """Initialize Kraken Engine"""
-    ...
-
-def quit() -> None:
-    """Quit Kraken Engine"""
-    ...
+from __future__ import annotations
+from pykraken._core import Camera
+from pykraken._core import Circle
+from pykraken._core import Clock
+from pykraken._core import Color
+from pykraken._core import EasingAnimation
+from pykraken._core import Event
+from pykraken._core import EventType
+from pykraken._core import GamepadAxis
+from pykraken._core import GamepadButton
+from pykraken._core import GamepadType
+from pykraken._core import InputAction
+from pykraken._core import Keycode
+from pykraken._core import Line
+from pykraken._core import MouseButton
+from pykraken._core import PolarCoordinate
+from pykraken._core import Rect
+from pykraken._core import Scancode
+from pykraken._core import Vec2
+from pykraken._core import color
+from pykraken._core import draw
+from pykraken._core import ease
+from pykraken._core import event
+from pykraken._core import gamepad
+from pykraken._core import init
+from pykraken._core import input
+from pykraken._core import key
+from pykraken._core import line
+from pykraken._core import math
+from pykraken._core import mouse
+from pykraken._core import quit
+from pykraken._core import rect
+from pykraken._core import time
+from pykraken._core import window
+from . import _core
+__all__: list = ['__doc__', 'color', 'event', 'key', 'math', 'mouse', 'rect', 'time', 'window']
+AUDIODEVICEADDED: _core.EventType  # value = <EventType.AUDIODEVICEADDED: 4352>
+AUDIODEVICEREMOVED: _core.EventType  # value = <EventType.AUDIODEVICEREMOVED: 4353>
+CAMERAADDED: _core.EventType  # value = <EventType.CAMERAADDED: 5120>
+CAMERAAPPROVED: _core.EventType  # value = <EventType.CAMERAAPPROVED: 5122>
+CAMERADENIED: _core.EventType  # value = <EventType.CAMERADENIED: 5123>
+CAMERAREMOVED: _core.EventType  # value = <EventType.CAMERAREMOVED: 5121>
+C_BACK: _core.GamepadButton  # value = <GamepadButton.C_BACK: 4>
+C_DPADDOWN: _core.GamepadButton  # value = <GamepadButton.C_DPADDOWN: 12>
+C_DPADLEFT: _core.GamepadButton  # value = <GamepadButton.C_DPADLEFT: 13>
+C_DPADRIGHT: _core.GamepadButton  # value = <GamepadButton.C_DPADRIGHT: 14>
+C_DPADUP: _core.GamepadButton  # value = <GamepadButton.C_DPADUP: 11>
+C_EAST: _core.GamepadButton  # value = <GamepadButton.C_EAST: 1>
+C_GUIDE: _core.GamepadButton  # value = <GamepadButton.C_GUIDE: 5>
+C_LEFTSHOULDER: _core.GamepadButton  # value = <GamepadButton.C_LEFTSHOULDER: 9>
+C_LEFTSTICK: _core.GamepadButton  # value = <GamepadButton.C_LEFTSTICK: 7>
+C_LTRIGGER: _core.GamepadAxis  # value = <GamepadAxis.C_LTRIGGER: 4>
+C_LX: _core.GamepadAxis  # value = <GamepadAxis.C_LX: 0>
+C_LY: _core.GamepadAxis  # value = <GamepadAxis.C_LY: 1>
+C_NORTH: _core.GamepadButton  # value = <GamepadButton.C_NORTH: 3>
+C_PS3: _core.GamepadType  # value = <GamepadType.C_PS3: 4>
+C_PS4: _core.GamepadType  # value = <GamepadType.C_PS4: 5>
+C_PS5: _core.GamepadType  # value = <GamepadType.C_PS5: 6>
+C_RIGHTSHOULDER: _core.GamepadButton  # value = <GamepadButton.C_RIGHTSHOULDER: 10>
+C_RIGHTSTICK: _core.GamepadButton  # value = <GamepadButton.C_RIGHTSTICK: 8>
+C_RTRIGGER: _core.GamepadAxis  # value = <GamepadAxis.C_RTRIGGER: 5>
+C_RX: _core.GamepadAxis  # value = <GamepadAxis.C_RX: 2>
+C_RY: _core.GamepadAxis  # value = <GamepadAxis.C_RY: 3>
+C_SOUTH: _core.GamepadButton  # value = <GamepadButton.C_SOUTH: 0>
+C_STANDARD: _core.GamepadType  # value = <GamepadType.C_STANDARD: 1>
+C_START: _core.GamepadButton  # value = <GamepadButton.C_START: 6>
+C_SWITCHJOYCONLEFT: _core.GamepadType  # value = <GamepadType.C_SWITCHJOYCONLEFT: 8>
+C_SWITCHJOYCONPAIR: _core.GamepadType  # value = <GamepadType.C_SWITCHJOYCONPAIR: 10>
+C_SWITCHJOYCONRIGHT: _core.GamepadType  # value = <GamepadType.C_SWITCHJOYCONRIGHT: 9>
+C_SWITCHPRO: _core.GamepadType  # value = <GamepadType.C_SWITCHPRO: 7>
+C_WEST: _core.GamepadButton  # value = <GamepadButton.C_WEST: 2>
+C_XBOX360: _core.GamepadType  # value = <GamepadType.C_XBOX360: 2>
+C_XBOXONE: _core.GamepadType  # value = <GamepadType.C_XBOXONE: 3>
+DROPBEGIN: _core.EventType  # value = <EventType.DROPBEGIN: 4098>
+DROPCOMPLETE: _core.EventType  # value = <EventType.DROPCOMPLETE: 4099>
+DROPFILE: _core.EventType  # value = <EventType.DROPFILE: 4096>
+DROPPOSITION: _core.EventType  # value = <EventType.DROPPOSITION: 4100>
+DROPTEXT: _core.EventType  # value = <EventType.DROPTEXT: 4097>
+GAMEPADADDED: _core.EventType  # value = <EventType.GAMEPADADDED: 1619>
+GAMEPADAXISMOTION: _core.EventType  # value = <EventType.GAMEPADAXISMOTION: 1616>
+GAMEPADBUTTONDOWN: _core.EventType  # value = <EventType.GAMEPADBUTTONDOWN: 1617>
+GAMEPADBUTTONUP: _core.EventType  # value = <EventType.GAMEPADBUTTONUP: 1618>
+GAMEPADREMOVED: _core.EventType  # value = <EventType.GAMEPADREMOVED: 1620>
+GAMEPADTOUCHPADDOWN: _core.EventType  # value = <EventType.GAMEPADTOUCHPADDOWN: 1622>
+GAMEPADTOUCHPADMOTION: _core.EventType  # value = <EventType.GAMEPADTOUCHPADMOTION: 1623>
+GAMEPADTOUCHPADUP: _core.EventType  # value = <EventType.GAMEPADTOUCHPADUP: 1624>
+KEYBOARD_ADDED: _core.EventType  # value = <EventType.KEYBOARD_ADDED: 773>
+KEYBOARD_REMOVED: _core.EventType  # value = <EventType.KEYBOARD_REMOVED: 774>
+KEYDOWN: _core.EventType  # value = <EventType.KEYDOWN: 768>
+KEYUP: _core.EventType  # value = <EventType.KEYUP: 769>
+K_0: _core.Keycode  # value = <Keycode.K_0: 48>
+K_1: _core.Keycode  # value = <Keycode.K_1: 49>
+K_2: _core.Keycode  # value = <Keycode.K_2: 50>
+K_3: _core.Keycode  # value = <Keycode.K_3: 51>
+K_4: _core.Keycode  # value = <Keycode.K_4: 52>
+K_5: _core.Keycode  # value = <Keycode.K_5: 53>
+K_6: _core.Keycode  # value = <Keycode.K_6: 54>
+K_7: _core.Keycode  # value = <Keycode.K_7: 55>
+K_8: _core.Keycode  # value = <Keycode.K_8: 56>
+K_9: _core.Keycode  # value = <Keycode.K_9: 57>
+K_AGAIN: _core.Keycode  # value = <Keycode.K_AGAIN: 1073741945>
+K_AMPERSAND: _core.Keycode  # value = <Keycode.K_AMPERSAND: 38>
+K_ASTERISK: _core.Keycode  # value = <Keycode.K_ASTERISK: 42>
+K_AT: _core.Keycode  # value = <Keycode.K_AT: 64>
+K_BACKSLASH: _core.Keycode  # value = <Keycode.K_BACKSLASH: 92>
+K_BACKSPACE: _core.Keycode  # value = <Keycode.K_BACKSPACE: 8>
+K_CAPS: _core.Keycode  # value = <Keycode.K_CAPS: 1073741881>
+K_CARET: _core.Keycode  # value = <Keycode.K_CARET: 94>
+K_COLON: _core.Keycode  # value = <Keycode.K_COLON: 58>
+K_COMMA: _core.Keycode  # value = <Keycode.K_COMMA: 44>
+K_COPY: _core.Keycode  # value = <Keycode.K_COPY: 1073741948>
+K_CUT: _core.Keycode  # value = <Keycode.K_CUT: 1073741947>
+K_DBLQUOTE: _core.Keycode  # value = <Keycode.K_DBLQUOTE: 34>
+K_DEL: _core.Keycode  # value = <Keycode.K_DEL: 127>
+K_DOLLAR: _core.Keycode  # value = <Keycode.K_DOLLAR: 36>
+K_DOWN: _core.Keycode  # value = <Keycode.K_DOWN: 1073741905>
+K_END: _core.Keycode  # value = <Keycode.K_END: 1073741901>
+K_EQ: _core.Keycode  # value = <Keycode.K_EQ: 61>
+K_ESC: _core.Keycode  # value = <Keycode.K_ESC: 27>
+K_EXCLAIM: _core.Keycode  # value = <Keycode.K_EXCLAIM: 33>
+K_F1: _core.Keycode  # value = <Keycode.K_F1: 1073741882>
+K_F10: _core.Keycode  # value = <Keycode.K_F10: 1073741891>
+K_F11: _core.Keycode  # value = <Keycode.K_F11: 1073741892>
+K_F12: _core.Keycode  # value = <Keycode.K_F12: 1073741893>
+K_F2: _core.Keycode  # value = <Keycode.K_F2: 1073741883>
+K_F3: _core.Keycode  # value = <Keycode.K_F3: 1073741884>
+K_F4: _core.Keycode  # value = <Keycode.K_F4: 1073741885>
+K_F5: _core.Keycode  # value = <Keycode.K_F5: 1073741886>
+K_F6: _core.Keycode  # value = <Keycode.K_F6: 1073741887>
+K_F7: _core.Keycode  # value = <Keycode.K_F7: 1073741888>
+K_F8: _core.Keycode  # value = <Keycode.K_F8: 1073741889>
+K_F9: _core.Keycode  # value = <Keycode.K_F9: 1073741890>
+K_FIND: _core.Keycode  # value = <Keycode.K_FIND: 1073741950>
+K_GRAVE: _core.Keycode  # value = <Keycode.K_GRAVE: 96>
+K_GT: _core.Keycode  # value = <Keycode.K_GT: 62>
+K_HASH: _core.Keycode  # value = <Keycode.K_HASH: 35>
+K_HOME: _core.Keycode  # value = <Keycode.K_HOME: 1073741898>
+K_INS: _core.Keycode  # value = <Keycode.K_INS: 1073741897>
+K_KP_0: _core.Keycode  # value = <Keycode.K_KP_0: 1073741922>
+K_KP_1: _core.Keycode  # value = <Keycode.K_KP_1: 1073741913>
+K_KP_2: _core.Keycode  # value = <Keycode.K_KP_2: 1073741914>
+K_KP_3: _core.Keycode  # value = <Keycode.K_KP_3: 1073741915>
+K_KP_4: _core.Keycode  # value = <Keycode.K_KP_4: 1073741916>
+K_KP_5: _core.Keycode  # value = <Keycode.K_KP_5: 1073741917>
+K_KP_6: _core.Keycode  # value = <Keycode.K_KP_6: 1073741918>
+K_KP_7: _core.Keycode  # value = <Keycode.K_KP_7: 1073741919>
+K_KP_8: _core.Keycode  # value = <Keycode.K_KP_8: 1073741920>
+K_KP_9: _core.Keycode  # value = <Keycode.K_KP_9: 1073741921>
+K_KP_DIV: _core.Keycode  # value = <Keycode.K_KP_DIV: 1073741908>
+K_KP_ENTER: _core.Keycode  # value = <Keycode.K_KP_ENTER: 1073741912>
+K_KP_MINUS: _core.Keycode  # value = <Keycode.K_KP_MINUS: 1073741910>
+K_KP_MULT: _core.Keycode  # value = <Keycode.K_KP_MULT: 1073741909>
+K_KP_PERIOD: _core.Keycode  # value = <Keycode.K_KP_PERIOD: 1073741923>
+K_KP_PLUS: _core.Keycode  # value = <Keycode.K_KP_PLUS: 1073741911>
+K_LALT: _core.Keycode  # value = <Keycode.K_LALT: 1073742050>
+K_LBRACE: _core.Keycode  # value = <Keycode.K_LBRACE: 123>
+K_LBRACKET: _core.Keycode  # value = <Keycode.K_LBRACKET: 91>
+K_LCTRL: _core.Keycode  # value = <Keycode.K_LCTRL: 1073742048>
+K_LEFT: _core.Keycode  # value = <Keycode.K_LEFT: 1073741904>
+K_LGUI: _core.Keycode  # value = <Keycode.K_LGUI: 1073742051>
+K_LPAREN: _core.Keycode  # value = <Keycode.K_LPAREN: 40>
+K_LSHIFT: _core.Keycode  # value = <Keycode.K_LSHIFT: 1073742049>
+K_LT: _core.Keycode  # value = <Keycode.K_LT: 60>
+K_MINUS: _core.Keycode  # value = <Keycode.K_MINUS: 45>
+K_MUTE: _core.Keycode  # value = <Keycode.K_MUTE: 1073741951>
+K_NUMLOCK: _core.Keycode  # value = <Keycode.K_NUMLOCK: 1073741907>
+K_PASTE: _core.Keycode  # value = <Keycode.K_PASTE: 1073741949>
+K_PAUSE: _core.Keycode  # value = <Keycode.K_PAUSE: 1073741896>
+K_PERCENT: _core.Keycode  # value = <Keycode.K_PERCENT: 37>
+K_PERIOD: _core.Keycode  # value = <Keycode.K_PERIOD: 46>
+K_PGDOWN: _core.Keycode  # value = <Keycode.K_PGDOWN: 1073741902>
+K_PGUP: _core.Keycode  # value = <Keycode.K_PGUP: 1073741899>
+K_PIPE: _core.Keycode  # value = <Keycode.K_PIPE: 124>
+K_PLUS: _core.Keycode  # value = <Keycode.K_PLUS: 43>
+K_PRTSCR: _core.Keycode  # value = <Keycode.K_PRTSCR: 1073741894>
+K_QUESTION: _core.Keycode  # value = <Keycode.K_QUESTION: 63>
+K_RALT: _core.Keycode  # value = <Keycode.K_RALT: 1073742054>
+K_RBRACE: _core.Keycode  # value = <Keycode.K_RBRACE: 125>
+K_RBRACKET: _core.Keycode  # value = <Keycode.K_RBRACKET: 93>
+K_RCTRL: _core.Keycode  # value = <Keycode.K_RCTRL: 1073742052>
+K_RETURN: _core.Keycode  # value = <Keycode.K_RETURN: 13>
+K_RGUI: _core.Keycode  # value = <Keycode.K_RGUI: 1073742055>
+K_RIGHT: _core.Keycode  # value = <Keycode.K_RIGHT: 1073741903>
+K_RPAREN: _core.Keycode  # value = <Keycode.K_RPAREN: 41>
+K_RSHIFT: _core.Keycode  # value = <Keycode.K_RSHIFT: 1073742053>
+K_SCRLK: _core.Keycode  # value = <Keycode.K_SCRLK: 1073741895>
+K_SEMICOLON: _core.Keycode  # value = <Keycode.K_SEMICOLON: 59>
+K_SGLQUOTE: _core.Keycode  # value = <Keycode.K_SGLQUOTE: 39>
+K_SLASH: _core.Keycode  # value = <Keycode.K_SLASH: 47>
+K_SPACE: _core.Keycode  # value = <Keycode.K_SPACE: 32>
+K_TAB: _core.Keycode  # value = <Keycode.K_TAB: 9>
+K_TILDE: _core.Keycode  # value = <Keycode.K_TILDE: 126>
+K_UNDERSCORE: _core.Keycode  # value = <Keycode.K_UNDERSCORE: 95>
+K_UNDO: _core.Keycode  # value = <Keycode.K_UNDO: 1073741946>
+K_UP: _core.Keycode  # value = <Keycode.K_UP: 1073741906>
+K_VOLDOWN: _core.Keycode  # value = <Keycode.K_VOLDOWN: 1073741953>
+K_VOLUP: _core.Keycode  # value = <Keycode.K_VOLUP: 1073741952>
+K_a: _core.Keycode  # value = <Keycode.K_a: 97>
+K_b: _core.Keycode  # value = <Keycode.K_b: 98>
+K_c: _core.Keycode  # value = <Keycode.K_c: 99>
+K_d: _core.Keycode  # value = <Keycode.K_d: 100>
+K_e: _core.Keycode  # value = <Keycode.K_e: 101>
+K_f: _core.Keycode  # value = <Keycode.K_f: 102>
+K_g: _core.Keycode  # value = <Keycode.K_g: 103>
+K_h: _core.Keycode  # value = <Keycode.K_h: 104>
+K_i: _core.Keycode  # value = <Keycode.K_i: 105>
+K_j: _core.Keycode  # value = <Keycode.K_j: 106>
+K_k: _core.Keycode  # value = <Keycode.K_k: 107>
+K_l: _core.Keycode  # value = <Keycode.K_l: 108>
+K_m: _core.Keycode  # value = <Keycode.K_m: 109>
+K_n: _core.Keycode  # value = <Keycode.K_n: 110>
+K_o: _core.Keycode  # value = <Keycode.K_o: 111>
+K_p: _core.Keycode  # value = <Keycode.K_p: 112>
+K_q: _core.Keycode  # value = <Keycode.K_q: 113>
+K_r: _core.Keycode  # value = <Keycode.K_r: 114>
+K_s: _core.Keycode  # value = <Keycode.K_s: 115>
+K_t: _core.Keycode  # value = <Keycode.K_t: 116>
+K_u: _core.Keycode  # value = <Keycode.K_u: 117>
+K_v: _core.Keycode  # value = <Keycode.K_v: 118>
+K_w: _core.Keycode  # value = <Keycode.K_w: 119>
+K_x: _core.Keycode  # value = <Keycode.K_x: 120>
+K_y: _core.Keycode  # value = <Keycode.K_y: 121>
+K_z: _core.Keycode  # value = <Keycode.K_z: 122>
+MOUSEADDED: _core.EventType  # value = <EventType.MOUSEADDED: 1028>
+MOUSEBUTTONDOWN: _core.EventType  # value = <EventType.MOUSEBUTTONDOWN: 1025>
+MOUSEBUTTONUP: _core.EventType  # value = <EventType.MOUSEBUTTONUP: 1026>
+MOUSEMOTION: _core.EventType  # value = <EventType.MOUSEMOTION: 1024>
+MOUSEREMOVED: _core.EventType  # value = <EventType.MOUSEREMOVED: 1029>
+MOUSEWHEEL: _core.EventType  # value = <EventType.MOUSEWHEEL: 1027>
+M_LEFT: _core.MouseButton  # value = <MouseButton.M_LEFT: 1>
+M_MIDDLE: _core.MouseButton  # value = <MouseButton.M_MIDDLE: 2>
+M_RIGHT: _core.MouseButton  # value = <MouseButton.M_RIGHT: 3>
+M_SIDE1: _core.MouseButton  # value = <MouseButton.M_SIDE1: 4>
+M_SIDE2: _core.MouseButton  # value = <MouseButton.M_SIDE2: 5>
+PENAXIS: _core.EventType  # value = <EventType.PENAXIS: 4871>
+PENBUTTONDOWN: _core.EventType  # value = <EventType.PENBUTTONDOWN: 4868>
+PENBUTTONUP: _core.EventType  # value = <EventType.PENBUTTONUP: 4869>
+PENDOWN: _core.EventType  # value = <EventType.PENDOWN: 4866>
+PENMOTION: _core.EventType  # value = <EventType.PENMOTION: 4870>
+PENPROXIMITYIN: _core.EventType  # value = <EventType.PENPROXIMITYIN: 4864>
+PENPROXIMITYOUT: _core.EventType  # value = <EventType.PENPROXIMITYOUT: 4865>
+PENUP: _core.EventType  # value = <EventType.PENUP: 4867>
+QUIT: _core.EventType  # value = <EventType.QUIT: 256>
+S_0: _core.Scancode  # value = <Scancode.S_0: 39>
+S_1: _core.Scancode  # value = <Scancode.S_1: 30>
+S_2: _core.Scancode  # value = <Scancode.S_2: 31>
+S_3: _core.Scancode  # value = <Scancode.S_3: 32>
+S_4: _core.Scancode  # value = <Scancode.S_4: 33>
+S_5: _core.Scancode  # value = <Scancode.S_5: 34>
+S_6: _core.Scancode  # value = <Scancode.S_6: 35>
+S_7: _core.Scancode  # value = <Scancode.S_7: 36>
+S_8: _core.Scancode  # value = <Scancode.S_8: 37>
+S_9: _core.Scancode  # value = <Scancode.S_9: 38>
+S_AGAIN: _core.Scancode  # value = <Scancode.S_AGAIN: 121>
+S_APOSTROPHE: _core.Scancode  # value = <Scancode.S_APOSTROPHE: 52>
+S_BACKSLASH: _core.Scancode  # value = <Scancode.S_BACKSLASH: 49>
+S_BACKSPACE: _core.Scancode  # value = <Scancode.S_BACKSPACE: 42>
+S_CAPS: _core.Scancode  # value = <Scancode.S_CAPS: 57>
+S_COMMA: _core.Scancode  # value = <Scancode.S_COMMA: 54>
+S_COPY: _core.Scancode  # value = <Scancode.S_COPY: 124>
+S_CUT: _core.Scancode  # value = <Scancode.S_CUT: 123>
+S_DEL: _core.Scancode  # value = <Scancode.S_DEL: 76>
+S_DOWN: _core.Scancode  # value = <Scancode.S_DOWN: 81>
+S_END: _core.Scancode  # value = <Scancode.S_END: 77>
+S_EQ: _core.Scancode  # value = <Scancode.S_EQ: 46>
+S_ESC: _core.Scancode  # value = <Scancode.S_ESC: 41>
+S_F1: _core.Scancode  # value = <Scancode.S_F1: 58>
+S_F10: _core.Scancode  # value = <Scancode.S_F10: 67>
+S_F11: _core.Scancode  # value = <Scancode.S_F11: 68>
+S_F12: _core.Scancode  # value = <Scancode.S_F12: 69>
+S_F2: _core.Scancode  # value = <Scancode.S_F2: 59>
+S_F3: _core.Scancode  # value = <Scancode.S_F3: 60>
+S_F4: _core.Scancode  # value = <Scancode.S_F4: 61>
+S_F5: _core.Scancode  # value = <Scancode.S_F5: 62>
+S_F6: _core.Scancode  # value = <Scancode.S_F6: 63>
+S_F7: _core.Scancode  # value = <Scancode.S_F7: 64>
+S_F8: _core.Scancode  # value = <Scancode.S_F8: 65>
+S_F9: _core.Scancode  # value = <Scancode.S_F9: 66>
+S_FIND: _core.Scancode  # value = <Scancode.S_FIND: 126>
+S_GRAVE: _core.Scancode  # value = <Scancode.S_GRAVE: 53>
+S_HOME: _core.Scancode  # value = <Scancode.S_HOME: 74>
+S_INS: _core.Scancode  # value = <Scancode.S_INS: 73>
+S_KP_0: _core.Scancode  # value = <Scancode.S_KP_0: 98>
+S_KP_1: _core.Scancode  # value = <Scancode.S_KP_1: 89>
+S_KP_2: _core.Scancode  # value = <Scancode.S_KP_2: 90>
+S_KP_3: _core.Scancode  # value = <Scancode.S_KP_3: 91>
+S_KP_4: _core.Scancode  # value = <Scancode.S_KP_4: 92>
+S_KP_5: _core.Scancode  # value = <Scancode.S_KP_5: 93>
+S_KP_6: _core.Scancode  # value = <Scancode.S_KP_6: 94>
+S_KP_7: _core.Scancode  # value = <Scancode.S_KP_7: 95>
+S_KP_8: _core.Scancode  # value = <Scancode.S_KP_8: 96>
+S_KP_9: _core.Scancode  # value = <Scancode.S_KP_9: 97>
+S_KP_DIV: _core.Scancode  # value = <Scancode.S_KP_DIV: 84>
+S_KP_ENTER: _core.Scancode  # value = <Scancode.S_KP_ENTER: 88>
+S_KP_MINUS: _core.Scancode  # value = <Scancode.S_KP_MINUS: 86>
+S_KP_MULT: _core.Scancode  # value = <Scancode.S_KP_MULT: 85>
+S_KP_PERIOD: _core.Scancode  # value = <Scancode.S_KP_PERIOD: 99>
+S_KP_PLUS: _core.Scancode  # value = <Scancode.S_KP_PLUS: 87>
+S_LALT: _core.Scancode  # value = <Scancode.S_LALT: 226>
+S_LBRACKET: _core.Scancode  # value = <Scancode.S_LBRACKET: 47>
+S_LCTRL: _core.Scancode  # value = <Scancode.S_LCTRL: 224>
+S_LEFT: _core.Scancode  # value = <Scancode.S_LEFT: 80>
+S_LGUI: _core.Scancode  # value = <Scancode.S_LGUI: 227>
+S_LSHIFT: _core.Scancode  # value = <Scancode.S_LSHIFT: 225>
+S_MINUS: _core.Scancode  # value = <Scancode.S_MINUS: 45>
+S_MUTE: _core.Scancode  # value = <Scancode.S_MUTE: 127>
+S_NUMLOCK: _core.Scancode  # value = <Scancode.S_NUMLOCK: 83>
+S_PASTE: _core.Scancode  # value = <Scancode.S_PASTE: 125>
+S_PAUSE: _core.Scancode  # value = <Scancode.S_PAUSE: 72>
+S_PERIOD: _core.Scancode  # value = <Scancode.S_PERIOD: 55>
+S_PGDOWN: _core.Scancode  # value = <Scancode.S_PGDOWN: 78>
+S_PGUP: _core.Scancode  # value = <Scancode.S_PGUP: 75>
+S_PRTSCR: _core.Scancode  # value = <Scancode.S_PRTSCR: 70>
+S_RALT: _core.Scancode  # value = <Scancode.S_RALT: 230>
+S_RBRACKET: _core.Scancode  # value = <Scancode.S_RBRACKET: 48>
+S_RCTRL: _core.Scancode  # value = <Scancode.S_RCTRL: 228>
+S_RETURN: _core.Scancode  # value = <Scancode.S_RETURN: 40>
+S_RGUI: _core.Scancode  # value = <Scancode.S_RGUI: 231>
+S_RIGHT: _core.Scancode  # value = <Scancode.S_RIGHT: 79>
+S_RSHIFT: _core.Scancode  # value = <Scancode.S_RSHIFT: 229>
+S_SCRLK: _core.Scancode  # value = <Scancode.S_SCRLK: 71>
+S_SEMICOLON: _core.Scancode  # value = <Scancode.S_SEMICOLON: 51>
+S_SLASH: _core.Scancode  # value = <Scancode.S_SLASH: 56>
+S_SPACE: _core.Scancode  # value = <Scancode.S_SPACE: 44>
+S_TAB: _core.Scancode  # value = <Scancode.S_TAB: 43>
+S_UNDO: _core.Scancode  # value = <Scancode.S_UNDO: 122>
+S_UP: _core.Scancode  # value = <Scancode.S_UP: 82>
+S_VOLDOWN: _core.Scancode  # value = <Scancode.S_VOLDOWN: 129>
+S_VOLUP: _core.Scancode  # value = <Scancode.S_VOLUP: 128>
+S_a: _core.Scancode  # value = <Scancode.S_a: 4>
+S_b: _core.Scancode  # value = <Scancode.S_b: 5>
+S_c: _core.Scancode  # value = <Scancode.S_c: 6>
+S_d: _core.Scancode  # value = <Scancode.S_d: 7>
+S_e: _core.Scancode  # value = <Scancode.S_e: 8>
+S_f: _core.Scancode  # value = <Scancode.S_f: 9>
+S_g: _core.Scancode  # value = <Scancode.S_g: 10>
+S_h: _core.Scancode  # value = <Scancode.S_h: 11>
+S_i: _core.Scancode  # value = <Scancode.S_i: 12>
+S_j: _core.Scancode  # value = <Scancode.S_j: 13>
+S_k: _core.Scancode  # value = <Scancode.S_k: 14>
+S_l: _core.Scancode  # value = <Scancode.S_l: 15>
+S_m: _core.Scancode  # value = <Scancode.S_m: 16>
+S_n: _core.Scancode  # value = <Scancode.S_n: 17>
+S_o: _core.Scancode  # value = <Scancode.S_o: 18>
+S_p: _core.Scancode  # value = <Scancode.S_p: 19>
+S_q: _core.Scancode  # value = <Scancode.S_q: 20>
+S_r: _core.Scancode  # value = <Scancode.S_r: 21>
+S_s: _core.Scancode  # value = <Scancode.S_s: 22>
+S_t: _core.Scancode  # value = <Scancode.S_t: 23>
+S_u: _core.Scancode  # value = <Scancode.S_u: 24>
+S_v: _core.Scancode  # value = <Scancode.S_v: 25>
+S_w: _core.Scancode  # value = <Scancode.S_w: 26>
+S_x: _core.Scancode  # value = <Scancode.S_x: 27>
+S_y: _core.Scancode  # value = <Scancode.S_y: 28>
+S_z: _core.Scancode  # value = <Scancode.S_z: 29>
+TEXTEDITING: _core.EventType  # value = <EventType.TEXTEDITING: 770>
+TEXTINPUT: _core.EventType  # value = <EventType.TEXTINPUT: 771>
+WINDOWENTERFULLSCREEN: _core.EventType  # value = <EventType.WINDOWENTERFULLSCREEN: 535>
+WINDOWEXPOSED: _core.EventType  # value = <EventType.WINDOWEXPOSED: 516>
+WINDOWFOCUSGAINED: _core.EventType  # value = <EventType.WINDOWFOCUSGAINED: 526>
+WINDOWFOCUSLOST: _core.EventType  # value = <EventType.WINDOWFOCUSLOST: 527>
+WINDOWHIDDEN: _core.EventType  # value = <EventType.WINDOWHIDDEN: 515>
+WINDOWLEAVEFULLSCREEN: _core.EventType  # value = <EventType.WINDOWLEAVEFULLSCREEN: 536>
+WINDOWMAXIMIZED: _core.EventType  # value = <EventType.WINDOWMAXIMIZED: 522>
+WINDOWMINIMIZED: _core.EventType  # value = <EventType.WINDOWMINIMIZED: 521>
+WINDOWMOUSEENTER: _core.EventType  # value = <EventType.WINDOWMOUSEENTER: 524>
+WINDOWMOUSELEAVE: _core.EventType  # value = <EventType.WINDOWMOUSELEAVE: 525>
+WINDOWMOVED: _core.EventType  # value = <EventType.WINDOWMOVED: 517>
+WINDOWOCCLUDED: _core.EventType  # value = <EventType.WINDOWOCCLUDED: 534>
+WINDOWRESIZED: _core.EventType  # value = <EventType.WINDOWRESIZED: 518>
+WINDOWRESTORED: _core.EventType  # value = <EventType.WINDOWRESTORED: 523>
+WINDOWSHOWN: _core.EventType  # value = <EventType.WINDOWSHOWN: 514>

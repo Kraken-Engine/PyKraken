@@ -1,6 +1,7 @@
 import pykraken as kn
 
 kn.init()
+
 kn.window.create((200, 150), scaled=True)
 clock = kn.Clock()
 

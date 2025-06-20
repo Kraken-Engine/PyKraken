@@ -1,0 +1,13 @@
+"""
+Drawing related functions
+"""
+from __future__ import annotations
+__all__ = ['circle', 'line', 'point', 'rect']
+def circle(*args, **kwargs):
+    ...
+def line(*args, **kwargs):
+    ...
+def point(*args, **kwargs):
+    ...
+def rect(*args, **kwargs):
+    ...
