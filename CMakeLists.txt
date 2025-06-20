@@ -13,14 +13,13 @@ find_package(SDL3 REQUIRED) # SDL3 core
 find_package(SDL3_image REQUIRED) # SDL3 image
 
 pybind11_add_module(_core MODULE
+  src/_core.cpp
   src/gfx/SDL3_gfxPrimitives.cpp
   src/gfx/SDL3_rotozoom.cpp
   src/camera.cpp
   src/circle.cpp
   src/color.cpp
   src/constants.cpp
-  src/core.cpp
-  src/draw.cpp
   src/ease.cpp
   src/event.cpp
   src/gamepad.cpp
@@ -30,6 +29,8 @@ pybind11_add_module(_core MODULE
   src/math.cpp
   src/mouse.cpp
   src/rect.cpp
+  src/renderer.cpp
+  src/texture.cpp
   src/time.cpp
   src/window.cpp
   WITH_SOABI

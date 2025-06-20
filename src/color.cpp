@@ -174,7 +174,7 @@ Color fromHex(std::string_view hex)
     return {0, 0, 0, 255};
 }
 
-std::string toHex(Color color)
+std::string toHex(const Color& color)
 {
     std::stringstream ss;
 
@@ -305,4 +305,21 @@ std::string Color::toHex() const
        << std::setw(2) << b << std::setw(2) << a;
 
     return "#" + ss.str();
+}
+
+bool Color::_isValid() const
+{
+    return 0 <= r && r <= 255 && 0 <= g && g <= 255 && 0 <= b && b <= 255 && 0 <= a && a <= 255;
+}
+
+Color color::_fromSeq(const py::sequence& seq)
+{
+    if (seq.size() < 3 || seq.size() > 4)
+        throw std::invalid_argument("Color sequence must be of length 3 or 4");
+
+    Color color = {seq[0].cast<uint8_t>(), seq[1].cast<uint8_t>(), seq[2].cast<uint8_t>()};
+    if (seq.size() == 4)
+        color.a = seq[3].cast<uint8_t>();
+
+    return color;
 }

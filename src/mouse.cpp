@@ -80,16 +80,14 @@ py::tuple getPos()
 {
     float x, y;
     SDL_GetMouseState(&x, &y);
-    const auto s = window::getScale();
-    return py::make_tuple(x / s, y / s);
+    return py::make_tuple(x, y);
 }
 
 py::tuple getRel()
 {
     float dx, dy;
     SDL_GetRelativeMouseState(&dx, &dy);
-    const auto s = window::getScale();
-    return py::make_tuple(dx / s, dy / s);
+    return py::make_tuple(dx, dy);
 }
 
 bool isPressed(knMouseButton button)

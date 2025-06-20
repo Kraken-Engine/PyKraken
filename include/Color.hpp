@@ -20,6 +20,8 @@ struct Color
     std::string toHex() const;
 
     void fromHex(std::string_view hex);
+
+    bool _isValid() const;
 };
 
 namespace color
@@ -28,9 +30,11 @@ void _bind(py::module_& module);
 
 Color fromHex(std::string_view hex);
 
-std::string toHex(Color color);
+std::string toHex(const Color& color);
 
 Color fromHSV(float h, float s, float v, float a = 1.0f);
+
+Color _fromSeq(const py::sequence& seq);
 
 Color lerp(const Color& a, const Color& b, double t);
 
