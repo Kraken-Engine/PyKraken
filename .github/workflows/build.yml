@@ -33,6 +33,16 @@ jobs:
           Invoke-WebRequest -Uri "https://github.com/libsdl-org/SDL_image/releases/download/release-$SDL_image_VERSION/SDL3_image-devel-$SDL_image_VERSION-VC.zip" -OutFile "sdl3-image.zip"
           Expand-Archive -Path "sdl3-image.zip" -DestinationPath "sdl3"
           Copy-Item "sdl3/SDL3_image-$SDL_image_VERSION/lib/x64/SDL3_image.dll" -Destination "src/pykraken/"
+
+          $SDL3_image_ROOT = "${PWD}/sdl3/SDL3_image-$SDL_image_VERSION"
+          echo "SDL3_image_ROOT=$SDL3_image_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "SDL3_image_DIR=$SDL3_image_ROOT/cmake" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "CMAKE_PREFIX_PATH=$SDL3_image_ROOT;${env:CMAKE_PREFIX_PATH}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          
+          $env:SDL3_image_DIR = "$SDL3_image_ROOT/cmake"
+          $env:CMAKE_PREFIX_PATH = "$SDL3_image_ROOT;${env:CMAKE_PREFIX_PATH}"
+
+
           echo "SDL3_image_CMAKE_PATH=${PWD}/sdl3/SDL3_image-$SDL_image_VERSION/cmake" | Out-File -FilePath $env:GITHUB_ENV -Append
         shell: powershell
 
