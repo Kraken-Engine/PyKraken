@@ -6,6 +6,7 @@
 #include "Window.hpp"
 
 #include <SDL3_image/SDL_image.h>
+#include <iostream>
 
 namespace texture
 {

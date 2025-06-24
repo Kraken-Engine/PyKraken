@@ -30,7 +30,7 @@ py::tuple getSize();
 void setFullscreen(bool fullscreen);
 
 bool isFullscreen();
-void setWindowIcon(SDL_Window* window, SDL_Surface* icon);
+
 void setTitle(const std::string& title);
 
 std::string getTitle();

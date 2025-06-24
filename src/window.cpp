@@ -24,8 +24,6 @@ void _bind(pybind11::module_& module)
     subWindow.def("get_size", &window::getSize, "Get the current size of the window");
     subWindow.def("get_title", &window::getTitle, "Get the current title of the window");
     subWindow.def("set_title", &window::setTitle, py::arg("title"), "Set the title of the window");
-    subWindow.def("set_window_icon", &window::setTitle, py::arg("window, icon"),
-                  "Set the icon of the window");
 }
 
 SDL_Window* getWindow() { return _window; }
@@ -126,13 +124,7 @@ void setTitle(const std::string& title)
     if (!SDL_SetWindowTitle(_window, title.c_str()))
         throw std::runtime_error(SDL_GetError());
 }
-void setWindowIcon(SDL_Window* window, SDL_Surface* icon)
-{
-    if (!SDL_SetWindowIcon(window, icon))
-    {
-        throw std::runtime_error(SDL_GetError());
-    };
-}
+
 std::string getTitle()
 {
     if (!_window)

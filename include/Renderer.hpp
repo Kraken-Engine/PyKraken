@@ -21,21 +21,16 @@ class Texture;
 class Renderer
 {
   public:
-    Renderer() = default;
     explicit Renderer(const math::Vec2& resolution);
-    ~Renderer();
-
-    // Renderer(const Renderer& other);
-    // Renderer& operator=(const Renderer&) = delete;
-
-    // Renderer(Renderer&&) noexcept = default;
-    // Renderer& operator=(Renderer&&) noexcept = default;
+    ~Renderer() = default;
 
     void clear(const Color& color);
 
     void present();
 
     void draw(const Texture& texture);
+
+    void destroy();
 
     SDL_Renderer* getSDL() const;
 

@@ -14,4 +14,5 @@ while kn.window.is_open():
     renderer.draw(texture)
     renderer.present()
 
+renderer.destroy()
 kn.quit()

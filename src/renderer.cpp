@@ -6,6 +6,7 @@
 #include "Window.hpp"
 
 #include <SDL3/SDL.h>
+#include <iostream>
 
 namespace renderer
 {
@@ -51,7 +52,8 @@ void _bind(pybind11::module_& module)
             py::arg("color") = py::cast<Color>({0, 0, 0, 255}),
             "Clear the renderer with the specified color")
         .def("present", &Renderer::present, "Present the rendered content")
-        .def("draw", &Renderer::draw, py::arg("texture"), "Draw a texture to the renderer");
+        .def("draw", &Renderer::draw, py::arg("texture"), "Draw a texture to the renderer")
+        .def("destroy", &Renderer::destroy, "Destroy the renderer");
 }
 } // namespace renderer
 
@@ -61,17 +63,18 @@ Renderer::Renderer(const math::Vec2& resolution)
         throw std::invalid_argument("Resolution must be greater than zero");
 
     m_renderer = SDL_CreateRenderer(window::getWindow(), nullptr);
-    if (!m_renderer)
+    if (m_renderer == nullptr)
         throw std::runtime_error(SDL_GetError());
 
     if (!SDL_SetRenderLogicalPresentation(m_renderer, resolution.x, resolution.y,
                                           SDL_LOGICAL_PRESENTATION_LETTERBOX))
         throw std::runtime_error(SDL_GetError());
 
-    SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
+    if (!SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND))
+        throw std::runtime_error(SDL_GetError());
 }
 
-Renderer::~Renderer()
+void Renderer::destroy()
 {
     if (m_renderer)
     {
@@ -79,8 +82,6 @@ Renderer::~Renderer()
         m_renderer = nullptr;
     }
 }
-
-// Renderer::Renderer(const Renderer& other) { m_renderer = other.getSDL(); }
 
 void Renderer::clear(const Color& color)
 {
