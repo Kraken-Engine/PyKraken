@@ -11,23 +11,23 @@ void _bind(py::module_& module)
         .def(py::init())
         .def(py::init<double, double, double, double>())
         .def(py::init(
-            [](const py::object& aObj, double bx, double by)
+            [](const py::object& aObj, double bx, double by) -> Line*
             {
-                Line line;
-                line.bx = bx;
-                line.by = by;
+                auto line = new Line();
+                line->bx = bx;
+                line->by = by;
 
                 if (py::isinstance<math::Vec2>(aObj))
                 {
                     const auto aVec = aObj.cast<math::Vec2>();
-                    line.ax = aVec.x;
-                    line.ay = aVec.y;
+                    line->ax = aVec.x;
+                    line->ay = aVec.y;
                 }
                 else if (py::isinstance<py::sequence>(aObj))
                 {
                     const auto aSeq = aObj.cast<py::sequence>();
-                    line.ax = aSeq[0].cast<double>();
-                    line.ay = aSeq[1].cast<double>();
+                    line->ax = aSeq[0].cast<double>();
+                    line->ay = aSeq[1].cast<double>();
                 }
                 else
                     throw std::invalid_argument("A position must be a Vec2 or 2-element sequence");
@@ -35,23 +35,23 @@ void _bind(py::module_& module)
                 return line;
             }))
         .def(py::init(
-            [](double ax, double ay, const py::object& bObj)
+            [](double ax, double ay, const py::object& bObj) -> Line*
             {
-                Line line;
-                line.ax = ax;
-                line.ax = ax;
+                auto line = new Line();
+                line->ax = ax;
+                line->ax = ax;
 
                 if (py::isinstance<math::Vec2>(bObj))
                 {
                     const auto bVec = bObj.cast<math::Vec2>();
-                    line.bx = bVec.x;
-                    line.by = bVec.y;
+                    line->bx = bVec.x;
+                    line->by = bVec.y;
                 }
                 else if (py::isinstance<py::sequence>(bObj))
                 {
                     const auto bSeq = bObj.cast<py::sequence>();
-                    line.bx = bSeq[0].cast<double>();
-                    line.by = bSeq[1].cast<double>();
+                    line->bx = bSeq[0].cast<double>();
+                    line->by = bSeq[1].cast<double>();
                 }
                 else
                     throw std::invalid_argument("B position must be a Vec2 or 2-element sequence");
@@ -59,21 +59,21 @@ void _bind(py::module_& module)
                 return line;
             }))
         .def(py::init(
-            [](const py::object& aObj, const py::object& bObj)
+            [](const py::object& aObj, const py::object& bObj) -> Line*
             {
-                Line line;
+                auto line = new Line();
 
                 if (py::isinstance<math::Vec2>(aObj))
                 {
                     const auto aVec = aObj.cast<math::Vec2>();
-                    line.ax = aVec.x;
-                    line.ay = aVec.y;
+                    line->ax = aVec.x;
+                    line->ay = aVec.y;
                 }
                 else if (py::isinstance<py::sequence>(aObj))
                 {
                     const auto aSeq = aObj.cast<py::sequence>();
-                    line.ax = aSeq[0].cast<double>();
-                    line.ay = aSeq[1].cast<double>();
+                    line->ax = aSeq[0].cast<double>();
+                    line->ay = aSeq[1].cast<double>();
                 }
                 else
                     throw std::invalid_argument("A position must be a Vec2 or 2-element sequence");
@@ -81,14 +81,14 @@ void _bind(py::module_& module)
                 if (py::isinstance<math::Vec2>(bObj))
                 {
                     const auto bVec = bObj.cast<math::Vec2>();
-                    line.bx = bVec.x;
-                    line.by = bVec.y;
+                    line->bx = bVec.x;
+                    line->by = bVec.y;
                 }
                 else if (py::isinstance<py::sequence>(bObj))
                 {
                     const auto bSeq = bObj.cast<py::sequence>();
-                    line.bx = bSeq[0].cast<double>();
-                    line.by = bSeq[1].cast<double>();
+                    line->bx = bSeq[0].cast<double>();
+                    line->by = bSeq[1].cast<double>();
                 }
                 else
                     throw std::invalid_argument("B position must be a Vec2 or 2-element sequence");
@@ -97,10 +97,10 @@ void _bind(py::module_& module)
             }))
 
         .def(
-            "__iter__", [](const Line& self) { return py::make_iterator(&self.ax, &self.ax + 4); },
-            py::keep_alive<0, 1>())
+            "__iter__", [](const Line& self) -> py::iterator
+            { return py::make_iterator(&self.ax, &self.ax + 4); }, py::keep_alive<0, 1>())
         .def("__getitem__",
-             [](const Line& self, size_t i)
+             [](const Line& self, size_t i) -> double
              {
                  switch (i)
                  {
@@ -116,13 +116,13 @@ void _bind(py::module_& module)
                      throw py::index_error("Index out of range");
                  }
              })
-        .def("__len__", [](const Line&) { return 4; })
+        .def("__len__", [](const Line&) -> int { return 4; })
         .def("__eq__", &Line::operator==)
         .def("__ne__", &Line::operator!=)
 
         .def_property(
             "a", [](const Line& self) -> py::tuple { return self.getA(); },
-            [](Line& self, const py::object& pos)
+            [](Line& self, const py::object& pos) -> void
             {
                 if (py::isinstance<math::Vec2>(pos))
                 {
@@ -141,7 +141,7 @@ void _bind(py::module_& module)
             })
         .def_property(
             "b", [](const Line& self) -> py::tuple { return self.getB(); },
-            [](Line& self, const py::object& pos)
+            [](Line& self, const py::object& pos) -> void
             {
                 if (py::isinstance<math::Vec2>(pos))
                 {
@@ -165,7 +165,7 @@ void _bind(py::module_& module)
         .def_property_readonly("length", &Line::getLength)
         .def("copy", &Line::copy)
         .def("move",
-             [](Line& self, const py::object& offsetObj)
+             [](Line& self, const py::object& offsetObj) -> void
              {
                  math::Vec2 offsetVec;
                  if (py::isinstance<math::Vec2>(offsetObj))
@@ -187,7 +187,7 @@ void _bind(py::module_& module)
     auto subLine = module.def_submodule("line");
 
     subLine.def("move",
-                [](const Line& line, const py::object& offsetObj)
+                [](const Line& line, const py::object& offsetObj) -> void
                 {
                     math::Vec2 offsetVec;
                     if (py::isinstance<math::Vec2>(offsetObj))

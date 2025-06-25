@@ -4,12 +4,12 @@
 #define VEC2_PROPERTY(name, getter, setter)                                                        \
     .def_property(                                                                                 \
         name,                                                                                      \
-        [](const Rect& self)                                                                       \
+        [](const Rect& self) -> py::tuple                                                          \
         {                                                                                          \
             const math::Vec2 pos = self.getter();                                                  \
             return py::make_tuple(pos.x, pos.y);                                                   \
         },                                                                                         \
-        [](Rect& self, const py::object& posObj)                                                   \
+        [](Rect& self, const py::object& posObj) -> void                                           \
         {                                                                                          \
             math::Vec2 posVec;                                                                     \
             if (py::isinstance<math::Vec2>(posObj))                                                \
@@ -33,37 +33,37 @@ void _bind(py::module_& module)
         .def(py::init())
         .def(py::init<double, double, double, double>())
         .def(py::init(
-            [](const py::sequence& s) -> Rect
+            [](const py::sequence& s) -> Rect*
             {
                 if (s.size() != 4)
                     throw std::runtime_error("Rect((x, y, w, h)) expects a 4-element sequence");
-                return {s[0].cast<double>(), s[1].cast<double>(), s[2].cast<double>(),
-                        s[3].cast<double>()};
+                return new Rect{s[0].cast<double>(), s[1].cast<double>(), s[2].cast<double>(),
+                                s[3].cast<double>()};
             }))
         .def(py::init(
-            [](const py::sequence& pos, const py::sequence& size) -> Rect
+            [](const py::sequence& pos, const py::sequence& size) -> Rect*
             {
                 if (pos.size() != 2)
                     throw std::runtime_error("Position must be a 2-element sequence");
                 if (size.size() != 2)
                     throw std::runtime_error("Size must be a 2-element sequence");
 
-                return {{pos[0].cast<double>(), pos[1].cast<double>()},
-                        {size[0].cast<double>(), size[1].cast<double>()}};
+                return new Rect{{pos[0].cast<double>(), pos[1].cast<double>()},
+                                {size[0].cast<double>(), size[1].cast<double>()}};
             }))
         .def(py::init(
-            [](const py::sequence& pos, const py::float_& w, const py::float_& h) -> Rect
+            [](const py::sequence& pos, const py::float_& w, const py::float_& h) -> Rect*
             {
                 if (pos.size() != 2)
                     throw std::runtime_error("Position must be a 2-element sequence");
-                return {{pos[0].cast<double>(), pos[1].cast<double>()}, w, h};
+                return new Rect{{pos[0].cast<double>(), pos[1].cast<double>()}, w, h};
             }))
         .def(py::init(
-            [](const py::float_& x, const py::float_& y, const py::sequence& size) -> Rect
+            [](const py::float_& x, const py::float_& y, const py::sequence& size) -> Rect*
             {
                 if (size.size() != 2)
                     throw std::runtime_error("Size must be a 2-element sequence");
-                return {x, y, {size[0].cast<double>(), size[1].cast<double>()}};
+                return new Rect{x, y, {size[0].cast<double>(), size[1].cast<double>()}};
             }))
 
         .def_readwrite("x", &Rect::x)
@@ -97,7 +97,7 @@ void _bind(py::module_& module)
         .def("collide_rect", &Rect::collideRect)
         .def("clamp", py::overload_cast<const Rect&>(&Rect::clamp))
         .def("clamp",
-             [](Rect& self, const py::sequence& min, const py::sequence& max)
+             [](Rect& self, const py::sequence& min, const py::sequence& max) -> void
              {
                  if (min.size() != 2)
                      throw std::runtime_error("'min' must be a 2-element sequence");
@@ -109,7 +109,7 @@ void _bind(py::module_& module)
              })
         .def("scale_by", py::overload_cast<double>(&Rect::scaleBy))
         .def("scale_by",
-             [](Rect& self, const py::sequence& factor)
+             [](Rect& self, const py::sequence& factor) -> void
              {
                  if (factor.size() != 2)
                      throw std::runtime_error("'factor' must be a 2-element sequence");
@@ -120,25 +120,25 @@ void _bind(py::module_& module)
 
         .def("__eq__", &Rect::operator==)
         .def("__ne__", &Rect::operator!=)
-        .def("__bool__", [](const Rect& rect) { return rect.w > 0 && rect.h > 0; })
+        .def("__bool__", [](const Rect& rect) -> bool { return rect.w > 0 && rect.h > 0; })
         .def("__str__",
-             [](const Rect& rect)
+             [](const Rect& rect) -> std::string
              {
                  return "[" + std::to_string(rect.x) + ", " + std::to_string(rect.y) + ", " +
                         std::to_string(rect.w) + ", " + std::to_string(rect.h) + "]";
              })
         .def("__repr__",
-             [](const Rect& rect)
+             [](const Rect& rect) -> std::string
              {
                  return "Rect(x=" + std::to_string(rect.x) + ", y=" + std::to_string(rect.y) +
                         ", w=" + std::to_string(rect.w) + ", h=" + std::to_string(rect.h) + ")";
              })
         .def(
-            "__iter__", [](const Rect& rect) { return py::make_iterator(&rect.x, &rect.x + 4); },
-            py::keep_alive<0, 1>())
-        .def("__len__", [](const Rect& rect) { return 4; })
+            "__iter__", [](const Rect& rect) -> py::iterator
+            { return py::make_iterator(&rect.x, &rect.x + 4); }, py::keep_alive<0, 1>())
+        .def("__len__", [](const Rect& rect) -> int { return 4; })
         .def("__getitem__",
-             [](const Rect& rect, const size_t i)
+             [](const Rect& rect, const size_t i) -> double
              {
                  switch (i)
                  {
@@ -158,7 +158,7 @@ void _bind(py::module_& module)
     auto subRect = module.def_submodule("rect", "Rectangle related functions");
 
     subRect.def("move",
-                [](const Rect& rect, const py::object& offsetObj)
+                [](const Rect& rect, const py::object& offsetObj) -> Rect*
                 {
                     math::Vec2 offsetVec;
                     if (py::isinstance<math::Vec2>(offsetObj))
@@ -174,28 +174,29 @@ void _bind(py::module_& module)
                     else
                         throw std::invalid_argument("Expected Vec2 or 2-element sequence");
 
-                    return move(rect, offsetVec);
+                    return new Rect(move(rect, offsetVec));
                 });
     subRect.def("clamp",
-                [](const Rect& rect, const py::sequence& min, const py::sequence& max) -> Rect
+                [](const Rect& rect, const py::sequence& min, const py::sequence& max) -> Rect*
                 {
                     if (min.size() != 2)
                         throw std::runtime_error("'min' must be a 2-element sequence");
                     if (max.size() != 2)
                         throw std::runtime_error("'max' must be a 2-element sequence");
 
-                    return clamp(rect, {min[0].cast<double>(), min[1].cast<double>()},
-                                 {max[0].cast<double>(), max[1].cast<double>()});
+                    return new Rect(clamp(rect, {min[0].cast<double>(), min[1].cast<double>()},
+                                          {max[0].cast<double>(), max[1].cast<double>()}));
                 });
     subRect.def("clamp", py::overload_cast<const Rect&, const Rect&>(&rect::clamp));
     subRect.def("scale_by", py::overload_cast<const Rect&, double>(&rect::scaleBy));
     subRect.def("scale_by",
-                [](const Rect& rect, const py::sequence& factor)
+                [](const Rect& rect, const py::sequence& factor) -> Rect*
                 {
                     if (factor.size() != 2)
                         throw std::runtime_error("'scale' must be a 2-element sequence");
 
-                    return scaleBy(rect, {factor[0].cast<double>(), factor[1].cast<double>()});
+                    return new Rect(
+                        scaleBy(rect, {factor[0].cast<double>(), factor[1].cast<double>()}));
                 });
     subRect.def("scale_by", py::overload_cast<const Rect&, const math::Vec2&>(&rect::scaleBy));
     subRect.def("scale_to", &rect::scaleTo);

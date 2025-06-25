@@ -14,7 +14,7 @@ void _bind(pybind11::module_& module)
 {
     py::class_<Renderer>(module, "Renderer")
         .def(py::init(
-                 [](const py::object& resObj)
+                 [](const py::object& resObj) -> Renderer*
                  {
                      math::Vec2 res;
                      if (py::isinstance<math::Vec2>(resObj))
@@ -30,12 +30,12 @@ void _bind(pybind11::module_& module)
                          throw std::invalid_argument(
                              "Invalid resolution type, expected Vec2 or sequence");
 
-                     return Renderer(res);
+                     return new Renderer(res);
                  }),
              py::arg("resolution"), "Create a Renderer with the specified resolution")
         .def(
             "clear",
-            [](Renderer& self, const py::object& colorObj)
+            [](Renderer& self, const py::object& colorObj) -> void
             {
                 if (py::isinstance<Color>(colorObj))
                     self.clear(colorObj.cast<Color>());
@@ -52,8 +52,7 @@ void _bind(pybind11::module_& module)
             py::arg("color") = py::cast<Color>({0, 0, 0, 255}),
             "Clear the renderer with the specified color")
         .def("present", &Renderer::present, "Present the rendered content")
-        .def("draw", &Renderer::draw, py::arg("texture"), "Draw a texture to the renderer")
-        .def("destroy", &Renderer::destroy, "Destroy the renderer");
+        .def("draw", &Renderer::draw, py::arg("texture"), "Draw a texture to the renderer");
 }
 } // namespace renderer
 
@@ -74,7 +73,7 @@ Renderer::Renderer(const math::Vec2& resolution)
         throw std::runtime_error(SDL_GetError());
 }
 
-void Renderer::destroy()
+Renderer::~Renderer()
 {
     if (m_renderer)
     {

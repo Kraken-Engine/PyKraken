@@ -15,7 +15,7 @@ void _bind(py::module_& module)
     py::class_<Circle>(module, "Circle")
         .def(py::init())
         .def(py::init(
-            [](const py::object& centerObj, double radius)
+            [](const py::object& centerObj, double radius) -> Circle*
             {
                 math::Vec2 center;
 
@@ -32,12 +32,12 @@ void _bind(py::module_& module)
                 else
                     throw std::invalid_argument("Vec2 or 2-element sequence expected");
 
-                return Circle(center, radius);
+                return new Circle(center, radius);
             }))
 
         .def(
             "__iter__",
-            [](const Circle& circle)
+            [](const Circle& circle) -> py::iterator
             {
                 static double data[3];
                 data[0] = circle.pos.x;
@@ -47,7 +47,7 @@ void _bind(py::module_& module)
             },
             py::keep_alive<0, 1>())
         .def("__getitem__",
-             [](const Circle& circle, size_t i)
+             [](const Circle& circle, size_t i) -> double
              {
                  switch (i)
                  {
@@ -61,7 +61,7 @@ void _bind(py::module_& module)
                      throw py::index_error("Index out of range");
                  }
              })
-        .def("__len__", [](const Circle&) { return 3; })
+        .def("__len__", [](const Circle&) -> int { return 3; })
         .def("__eq__", &Circle::operator==)
         .def("__ne__", &Circle::operator!=)
 
@@ -72,7 +72,7 @@ void _bind(py::module_& module)
         .def_property_readonly("circumference", &Circle::getCircumference)
 
         .def("collide_point",
-             [](const Circle& self, const py::object& pointObj)
+             [](const Circle& self, const py::object& pointObj) -> bool
              {
                  math::Vec2 point;
 
@@ -95,7 +95,7 @@ void _bind(py::module_& module)
         .def("collide_rect", &Circle::collideRect)
         .def("collide_line", &Circle::collideLine)
         .def("contains",
-             [](const Circle& self, const py::object& shapeObject)
+             [](const Circle& self, const py::object& shapeObject) -> bool
              {
                  if (py::isinstance<math::Vec2>(shapeObject))
                      return self.collidePoint(shapeObject.cast<math::Vec2>());

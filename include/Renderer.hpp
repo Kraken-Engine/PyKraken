@@ -22,15 +22,13 @@ class Renderer
 {
   public:
     explicit Renderer(const math::Vec2& resolution);
-    ~Renderer() = default;
+    ~Renderer();
 
     void clear(const Color& color);
 
     void present();
 
     void draw(const Texture& texture);
-
-    void destroy();
 
     SDL_Renderer* getSDL() const;
 

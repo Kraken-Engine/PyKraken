@@ -17,10 +17,11 @@ void _bind(py::module_& module)
     py::class_<EasingAnimation>(module, "EasingAnimation")
         .def(
             py::init(
-                [](py::object start, py::object end, double duration, EasingFunction easeFunc)
+                [](py::object start, py::object end, double duration,
+                   EasingFunction easeFunc) -> EasingAnimation*
                 {
-                    return EasingAnimation(start.cast<math::Vec2>(), end.cast<math::Vec2>(),
-                                           duration, easeFunc);
+                    return new EasingAnimation(start.cast<math::Vec2>(), end.cast<math::Vec2>(),
+                                               duration, easeFunc);
                 }),
             py::arg("start"), py::arg("end"), py::arg("duration"), py::arg("easeFunc"),
             "Create an EasingAnimation with start and end positions, duration, and easing function")

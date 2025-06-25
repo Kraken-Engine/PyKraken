@@ -17,7 +17,7 @@ void _bind(py::module_& module)
         .def("get_size", &Texture::getSize)
         .def("get_rect", &Texture::getRect)
         .def("set_tint",
-             [](Texture& self, const py::object& tintObj)
+             [](Texture& self, const py::object& tintObj) -> void
              {
                  Color tint;
 

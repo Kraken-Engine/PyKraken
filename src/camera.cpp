@@ -14,7 +14,7 @@ void _bind(py::module_& module)
 
             Initializes the camera at position (0.0, 0.0).
         )doc")
-        .def(py::init([](const double x, const double y) { return Camera({x, y}); }),
+        .def(py::init([](const double x, const double y) -> Camera* { return new Camera({x, y}); }),
              R"doc(
             Create a Camera at a specific position.
 
@@ -25,16 +25,17 @@ void _bind(py::module_& module)
         )doc",
              py::arg("x"), py::arg("y"))
         .def(py::init(
-                 [](const py::object& pos)
+                 [](const py::object& pos) -> Camera*
                  {
                      if (py::isinstance<math::Vec2>(pos))
-                         return Camera(py::cast<math::Vec2>(pos));
+                         return new Camera(py::cast<math::Vec2>(pos));
 
                      if (py::isinstance<py::sequence>(pos))
                      {
                          const auto posSeq = py::cast<py::sequence>(pos);
                          if (posSeq.size() == 2)
-                             return Camera({posSeq[0].cast<double>(), posSeq[1].cast<double>()});
+                             return new Camera(
+                                 {posSeq[0].cast<double>(), posSeq[1].cast<double>()});
                          throw std::invalid_argument(
                              "Position sequence must have exactly two elements.");
                      }
@@ -50,7 +51,7 @@ void _bind(py::module_& module)
         )doc")
         .def_property(
             "pos", &Camera::getPos,
-            [](Camera& self, const py::object& setterObj)
+            [](Camera& self, const py::object& setterObj) -> void
             {
                 if (py::isinstance<math::Vec2>(setterObj))
                 {

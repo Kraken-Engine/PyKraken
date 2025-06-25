@@ -34,7 +34,7 @@ void _bind(py::module_& module)
 
     subInput.def(
         "bind",
-        [](const py::str& name, const py::sequence& actions)
+        [](const py::str& name, const py::sequence& actions) -> void
         {
             if (actions.size() == 0)
                 throw std::invalid_argument("Input actions cannot be empty.");
@@ -236,11 +236,11 @@ bool isPressed(const std::string& name)
         {
             return std::visit(
                 overloaded{
-                    [](SDL_Scancode scan) { return key::isPressed(scan); },
-                    [](KnKeycode key) { return key::isPressed(key); },
-                    [](knMouseButton mButton) { return mouse::isPressed(mButton); },
-                    [](SDL_GamepadButton cButton) { return gamepad::isPressed(cButton); },
-                    [](const std::pair<SDL_GamepadAxis, bool>& axisPair) { return false; },
+                    [](SDL_Scancode scan) -> bool { return key::isPressed(scan); },
+                    [](KnKeycode key) -> bool { return key::isPressed(key); },
+                    [](knMouseButton mButton) -> bool { return mouse::isPressed(mButton); },
+                    [](SDL_GamepadButton cButton) -> bool { return gamepad::isPressed(cButton); },
+                    [](const std::pair<SDL_GamepadAxis, bool>& axisPair) -> bool { return false; },
                 },
                 action.data);
         });
@@ -258,11 +258,12 @@ bool isJustPressed(const std::string& name)
         {
             return std::visit(
                 overloaded{
-                    [](SDL_Scancode scan) { return key::isJustPressed(scan); },
-                    [](KnKeycode key) { return key::isJustPressed(key); },
-                    [](knMouseButton mButton) { return mouse::isJustPressed(mButton); },
-                    [](SDL_GamepadButton cButton) { return gamepad::isJustPressed(cButton); },
-                    [](const std::pair<SDL_GamepadAxis, bool>& axisPair) { return false; },
+                    [](SDL_Scancode scan) -> bool { return key::isJustPressed(scan); },
+                    [](KnKeycode key) -> bool { return key::isJustPressed(key); },
+                    [](knMouseButton mButton) -> bool { return mouse::isJustPressed(mButton); },
+                    [](SDL_GamepadButton cButton) -> bool
+                    { return gamepad::isJustPressed(cButton); },
+                    [](const std::pair<SDL_GamepadAxis, bool>& axisPair) -> bool { return false; },
                 },
                 action.data);
         });
@@ -280,11 +281,12 @@ bool isJustReleased(const std::string& name)
         {
             return std::visit(
                 overloaded{
-                    [](SDL_Scancode scan) { return key::isJustReleased(scan); },
-                    [](KnKeycode key) { return key::isJustReleased(key); },
-                    [](knMouseButton mButton) { return mouse::isJustReleased(mButton); },
-                    [](SDL_GamepadButton cButton) { return gamepad::isJustReleased(cButton); },
-                    [](const std::pair<SDL_GamepadAxis, bool>& axisPair) { return false; },
+                    [](SDL_Scancode scan) -> bool { return key::isJustReleased(scan); },
+                    [](KnKeycode key) -> bool { return key::isJustReleased(key); },
+                    [](knMouseButton mButton) -> bool { return mouse::isJustReleased(mButton); },
+                    [](SDL_GamepadButton cButton) -> bool
+                    { return gamepad::isJustReleased(cButton); },
+                    [](const std::pair<SDL_GamepadAxis, bool>& axisPair) -> bool { return false; },
                 },
                 action.data);
         });

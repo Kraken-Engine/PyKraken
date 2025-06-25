@@ -15,11 +15,11 @@ void _bind(py::module_& module)
     py::class_<PolarCoordinate>(module, "PolarCoordinate")
         .def(py::init())
         .def(py::init(
-                 [](const py::sequence& s)
+                 [](const py::sequence& s) -> PolarCoordinate*
                  {
                      if (s.size() != 2)
                          throw std::runtime_error("PolarCoordinate expects a 2-element sequence");
-                     return PolarCoordinate(s[0].cast<double>(), s[1].cast<double>());
+                     return new PolarCoordinate(s[0].cast<double>(), s[1].cast<double>());
                  }),
              "Construct from sequence (angle, radius)")
         .def(py::init<double, double>(), py::arg("angle"), py::arg("radius"),
@@ -33,19 +33,19 @@ void _bind(py::module_& module)
 
         .def_readwrite("angle", &PolarCoordinate::angle)
         .def_readwrite("radius", &PolarCoordinate::radius)
-        .def("__str__", [](const PolarCoordinate& p)
+        .def("__str__", [](const PolarCoordinate& p) -> std::string
              { return "(" + std::to_string(p.angle) + ", " + std::to_string(p.radius) + ")"; })
         .def("__repr__",
-             [](const PolarCoordinate& p)
+             [](const PolarCoordinate& p) -> std::string
              {
                  return "PolarCoordinate(" + std::to_string(p.angle) + ", " +
                         std::to_string(p.radius) + ")";
              })
         .def(
-            "__iter__", [](const PolarCoordinate& p)
+            "__iter__", [](const PolarCoordinate& p) -> py::iterator
             { return py::make_iterator(&p.angle, &p.angle + 2); }, py::keep_alive<0, 1>())
         .def("__getitem__",
-             [](const PolarCoordinate& p, const size_t i)
+             [](const PolarCoordinate& p, const size_t i) -> double
              {
                  if (i == 0)
                      return p.angle;
@@ -55,7 +55,7 @@ void _bind(py::module_& module)
                      throw py::index_error("Index out of range");
              })
         .def("__setitem__",
-             [](PolarCoordinate& p, const size_t i, const double value)
+             [](PolarCoordinate& p, const size_t i, const double value) -> void
              {
                  if (i == 0)
                      p.angle = value;
@@ -64,9 +64,9 @@ void _bind(py::module_& module)
                  else
                      throw py::index_error("Index out of range");
              })
-        .def("__len__", [](const PolarCoordinate&) { return 2; })
+        .def("__len__", [](const PolarCoordinate&) -> int { return 2; })
         .def("__hash__",
-             [](const PolarCoordinate& p)
+             [](const PolarCoordinate& p) -> size_t
              {
                  std::size_t ha = std::hash<double>{}(p.angle);
                  std::size_t hr = std::hash<double>{}(p.radius);
@@ -80,11 +80,11 @@ void _bind(py::module_& module)
         .def(py::init<double, double>(), py::arg("x"), py::arg("y"),
              "Create a Vec2 with given x and y values")
         .def(py::init(
-                 [](py::sequence s)
+                 [](py::sequence s) -> Vec2*
                  {
                      if (s.size() != 2)
                          throw std::runtime_error("Vec2 requires a 2-element sequence");
-                     return Vec2(s[0].cast<double>(), s[1].cast<double>());
+                     return new Vec2(s[0].cast<double>(), s[1].cast<double>());
                  }),
              "Create a Vec2 from a sequence of two elements")
 
@@ -93,15 +93,15 @@ void _bind(py::module_& module)
         .def_readwrite("y", &Vec2::y)
 
         // Magic methods
-        .def("__str__", [](const Vec2& v)
+        .def("__str__", [](const Vec2& v) -> std::string
              { return "<" + std::to_string(v.x) + ", " + std::to_string(v.y) + ">"; })
-        .def("__repr__", [](const Vec2& v)
+        .def("__repr__", [](const Vec2& v) -> std::string
              { return "Vec2(" + std::to_string(v.x) + ", " + std::to_string(v.y) + ")"; })
         .def(
-            "__iter__", [](const Vec2& v) { return py::make_iterator(&v.x, &v.x + 2); },
-            py::keep_alive<0, 1>())
+            "__iter__", [](const Vec2& v) -> py::iterator
+            { return py::make_iterator(&v.x, &v.x + 2); }, py::keep_alive<0, 1>())
         .def("__getitem__",
-             [](const Vec2& v, const size_t i)
+             [](const Vec2& v, const size_t i) -> double
              {
                  if (i == 0)
                      return v.x;
@@ -111,7 +111,7 @@ void _bind(py::module_& module)
                      throw py::index_error("Index out of range");
              })
         .def("__setitem__",
-             [](Vec2& v, const size_t i, const double value)
+             [](Vec2& v, const size_t i, const double value) -> void
              {
                  if (i == 0)
                      v.x = value;
@@ -120,34 +120,36 @@ void _bind(py::module_& module)
                  else
                      throw py::index_error("Index out of range");
              })
-        .def("__len__", [](const Vec2&) { return 2; })
+        .def("__len__", [](const Vec2&) -> int { return 2; })
 
         // Arithmetic operators
         .def("__add__",
-             [](const Vec2& a, const py::object& b)
+             [](const Vec2& a, const py::object& b) -> Vec2*
              {
                  if (py::isinstance<Vec2>(b))
-                     return a + b.cast<Vec2>();
+                     return new Vec2(a + b.cast<Vec2>());
                  if (py::isinstance<py::sequence>(b))
                  {
                      py::sequence seq = b.cast<py::sequence>();
                      if (seq.size() == 2)
-                         return a + Vec2(seq[0].cast<double>(), seq[1].cast<double>());
+                         return new Vec2(a + Vec2(seq[0].cast<double>(), seq[1].cast<double>()));
                  }
+
                  throw py::type_error(
                      "Vec2 can only be added to another Vec2 or a sequence of 2 numbers");
              })
         .def("__radd__",
-             [](const Vec2& b, const py::object& a)
+             [](const Vec2& b, const py::object& a) -> Vec2*
              {
                  if (py::isinstance<Vec2>(a))
-                     return a.cast<Vec2>() + b;
+                     return new Vec2(a.cast<Vec2>() + b);
                  if (py::isinstance<py::sequence>(a))
                  {
                      py::sequence seq = a.cast<py::sequence>();
                      if (seq.size() == 2)
-                         return Vec2(seq[0].cast<double>(), seq[1].cast<double>()) + b;
+                         return new Vec2(Vec2(seq[0].cast<double>(), seq[1].cast<double>()) + b);
                  }
+
                  throw py::type_error(
                      "Vec2 can only be added to another Vec2 or a sequence of 2 numbers");
              })
@@ -155,42 +157,51 @@ void _bind(py::module_& module)
              [](Vec2& a, const py::object& b) -> Vec2&
              {
                  if (py::isinstance<Vec2>(b))
-                     return a += b.cast<Vec2>();
+                 {
+                     a += b.cast<Vec2>();
+                     return a;
+                 }
                  if (py::isinstance<py::sequence>(b))
                  {
                      py::sequence seq = b.cast<py::sequence>();
                      if (seq.size() == 2)
-                         return a += Vec2(seq[0].cast<double>(), seq[1].cast<double>());
+                     {
+                         a += Vec2(seq[0].cast<double>(), seq[1].cast<double>());
+                         return a;
+                     }
                  }
+
                  throw py::type_error(
                      "Vec2 can only be added to another Vec2 or a sequence of 2 numbers");
              })
 
         .def("__sub__",
-             [](const Vec2& a, const py::object& b)
+             [](const Vec2& a, const py::object& b) -> Vec2*
              {
                  if (py::isinstance<Vec2>(b))
-                     return a - b.cast<Vec2>();
+                     return new Vec2(a - b.cast<Vec2>());
                  if (py::isinstance<py::sequence>(b))
                  {
                      py::sequence seq = b.cast<py::sequence>();
                      if (seq.size() == 2)
-                         return a - Vec2(seq[0].cast<double>(), seq[1].cast<double>());
+                         return new Vec2(a - Vec2(seq[0].cast<double>(), seq[1].cast<double>()));
                  }
+
                  throw py::type_error(
                      "Vec2 can only be subtracted by another Vec2 or a sequence of 2 numbers");
              })
         .def("__rsub__",
-             [](const Vec2& b, const py::object& a)
+             [](const Vec2& b, const py::object& a) -> Vec2*
              {
                  if (py::isinstance<Vec2>(a))
-                     return a.cast<Vec2>() - b;
+                     return new Vec2(a.cast<Vec2>() - b);
                  if (py::isinstance<py::sequence>(a))
                  {
                      py::sequence seq = a.cast<py::sequence>();
                      if (seq.size() == 2)
-                         return Vec2(seq[0].cast<double>(), seq[1].cast<double>()) - b;
+                         return new Vec2(Vec2(seq[0].cast<double>(), seq[1].cast<double>()) - b);
                  }
+
                  throw py::type_error(
                      "Vec2 can only be subtracted by another Vec2 or a sequence of 2 numbers");
              })
@@ -198,28 +209,35 @@ void _bind(py::module_& module)
              [](Vec2& a, const py::object& b) -> Vec2&
              {
                  if (py::isinstance<Vec2>(b))
-                     return a -= b.cast<Vec2>();
+                 {
+                     a -= b.cast<Vec2>();
+                     return a;
+                 }
                  if (py::isinstance<py::sequence>(b))
                  {
                      py::sequence seq = b.cast<py::sequence>();
                      if (seq.size() == 2)
-                         return a -= Vec2(seq[0].cast<double>(), seq[1].cast<double>());
+                     {
+                         a -= Vec2(seq[0].cast<double>(), seq[1].cast<double>());
+                         return a;
+                     }
                  }
+
                  throw py::type_error(
                      "Vec2 can only be subtracted by another Vec2 or a sequence of 2 numbers");
              })
 
-        .def("__neg__", [](const Vec2& v) { return -v; })
+        .def("__neg__", [](const Vec2& v) -> Vec2* { return new Vec2(-v); })
         .def(
-            "__bool__", [](const Vec2& v) { return !v.isZero(); },
+            "__bool__", [](const Vec2& v) -> bool { return !v.isZero(); },
             "Check if the vector is not zero")
 
-        .def("__truediv__", [](const Vec2& v, const double scalar) { return v / scalar; })
-        .def("__itruediv__", [](Vec2& v, const double scalar) -> Vec2& { return v /= scalar; })
+        .def("__truediv__", &Vec2::operator/)
+        .def("__itruediv__", &Vec2::operator/=)
 
-        .def("__mul__", [](const Vec2& v, const double scalar) { return v * scalar; })
-        .def("__rmul__", [](const double scalar, const Vec2& v) { return scalar * v; })
-        .def("__imul__", [](Vec2& v, const double scalar) -> Vec2& { return v *= scalar; })
+        .def("__mul__", &Vec2::operator*)
+        .def("__rmul__", &operator*)
+        .def("__imul__", &Vec2::operator*=)
 
         .def("__hash__",
              [](const Vec2& v)
@@ -256,13 +274,8 @@ void _bind(py::module_& module)
     subMath.def("normalize", &normalize, "Normalize a vector");
     subMath.def("clamp", &clampVec, "Clamp a vector between two vectors");
     subMath.def(
-        "clamp",
-        [](py::float_ value, py::float_ min_val, py::float_ max_val) -> py::float_
-        {
-            return std::clamp(static_cast<double>(value), static_cast<double>(min_val),
-                              static_cast<double>(max_val));
-        },
-        "Clamp a value between two values");
+        "clamp", [](double value, double min_val, double max_val) -> double
+        { return std::clamp(value, min_val, max_val); }, "Clamp a value between two values");
     subMath.def("lerp", static_cast<Vec2 (*)(const Vec2&, const Vec2&, double)>(&lerp),
                 "Linearly interpolate between two Vec2s");
     subMath.def("lerp", static_cast<double (*)(double, double, double)>(&lerp),
