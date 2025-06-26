@@ -10,90 +10,29 @@ void _bind(py::module_& module)
     py::class_<Line>(module, "Line")
         .def(py::init())
         .def(py::init<double, double, double, double>())
+        .def(py::init<double, double, const math::Vec2&>())
+        .def(py::init<const math::Vec2&, double, double>())
+        .def(py::init<const math::Vec2&, const math::Vec2&>())
         .def(py::init(
-            [](const py::object& aObj, double bx, double by) -> Line*
+            [](const py::sequence& abSeq) -> Line*
             {
-                auto line = new Line();
-                line->bx = bx;
-                line->by = by;
+                if (abSeq.size() != 2)
+                    throw std::runtime_error("Line expects two 2D points");
 
-                if (py::isinstance<math::Vec2>(aObj))
-                {
-                    const auto aVec = aObj.cast<math::Vec2>();
-                    line->ax = aVec.x;
-                    line->ay = aVec.y;
-                }
-                else if (py::isinstance<py::sequence>(aObj))
-                {
-                    const auto aSeq = aObj.cast<py::sequence>();
-                    line->ax = aSeq[0].cast<double>();
-                    line->ay = aSeq[1].cast<double>();
-                }
-                else
-                    throw std::invalid_argument("A position must be a Vec2 or 2-element sequence");
+                if (!py::isinstance<py::sequence>(abSeq[0]) ||
+                    !py::isinstance<py::sequence>(abSeq[1]))
+                    throw std::runtime_error("Line expects ((ax, ay), (bx, by))");
 
-                return line;
-            }))
-        .def(py::init(
-            [](double ax, double ay, const py::object& bObj) -> Line*
-            {
-                auto line = new Line();
-                line->ax = ax;
-                line->ax = ax;
+                py::sequence aSeq = abSeq[0].cast<py::sequence>();
+                py::sequence bSeq = abSeq[1].cast<py::sequence>();
 
-                if (py::isinstance<math::Vec2>(bObj))
-                {
-                    const auto bVec = bObj.cast<math::Vec2>();
-                    line->bx = bVec.x;
-                    line->by = bVec.y;
-                }
-                else if (py::isinstance<py::sequence>(bObj))
-                {
-                    const auto bSeq = bObj.cast<py::sequence>();
-                    line->bx = bSeq[0].cast<double>();
-                    line->by = bSeq[1].cast<double>();
-                }
-                else
-                    throw std::invalid_argument("B position must be a Vec2 or 2-element sequence");
+                if (aSeq.size() != 2)
+                    throw std::runtime_error("A point must be a 2-element sequence");
+                if (bSeq.size() != 2)
+                    throw std::runtime_error("B point must be a 2-element sequence");
 
-                return line;
-            }))
-        .def(py::init(
-            [](const py::object& aObj, const py::object& bObj) -> Line*
-            {
-                auto line = new Line();
-
-                if (py::isinstance<math::Vec2>(aObj))
-                {
-                    const auto aVec = aObj.cast<math::Vec2>();
-                    line->ax = aVec.x;
-                    line->ay = aVec.y;
-                }
-                else if (py::isinstance<py::sequence>(aObj))
-                {
-                    const auto aSeq = aObj.cast<py::sequence>();
-                    line->ax = aSeq[0].cast<double>();
-                    line->ay = aSeq[1].cast<double>();
-                }
-                else
-                    throw std::invalid_argument("A position must be a Vec2 or 2-element sequence");
-
-                if (py::isinstance<math::Vec2>(bObj))
-                {
-                    const auto bVec = bObj.cast<math::Vec2>();
-                    line->bx = bVec.x;
-                    line->by = bVec.y;
-                }
-                else if (py::isinstance<py::sequence>(bObj))
-                {
-                    const auto bSeq = bObj.cast<py::sequence>();
-                    line->bx = bSeq[0].cast<double>();
-                    line->by = bSeq[1].cast<double>();
-                }
-                else
-                    throw std::invalid_argument("B position must be a Vec2 or 2-element sequence");
-
-                return line;
+                return new Line(aSeq[0].cast<double>(), aSeq[1].cast<double>(),
+                                bSeq[0].cast<double>(), bSeq[1].cast<double>());
             }))
 
         .def(
@@ -183,6 +122,7 @@ void _bind(py::module_& module)
 
                  self.move(offsetVec);
              });
+    py::implicitly_convertible<py::sequence, Line>();
 
     auto subLine = module.def_submodule("line");
 
@@ -216,6 +156,12 @@ Line move(const Line& line, const math::Vec2& offset)
 Line::Line() : ax(0.0), ay(0.0), bx(0.0), by(0.0) {}
 
 Line::Line(double ax, double ay, double bx, double by) : ax(ax), ay(ay), bx(bx), by(by) {}
+
+Line::Line(double ax, double ay, const math::Vec2& b) : ax(ax), ay(ay), bx(b.x), by(b.y) {}
+
+Line::Line(const math::Vec2& a, double bx, double by) : ax(a.x), ay(a.y), bx(bx), by(by) {}
+
+Line::Line(const math::Vec2& a, const math::Vec2& b) : ax(a.x), ay(a.y), bx(b.x), by(b.y) {}
 
 double Line::getLength() const
 {

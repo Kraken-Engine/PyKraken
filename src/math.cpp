@@ -72,6 +72,7 @@ void _bind(py::module_& module)
                  std::size_t hr = std::hash<double>{}(p.radius);
                  return ha ^ (hr << 1);
              });
+    py::implicitly_convertible<py::sequence, PolarCoordinate>();
 
     py::class_<Vec2>(module, "Vec2")
         .def(py::init(), "Create a zero vector")
@@ -263,6 +264,7 @@ void _bind(py::module_& module)
         .def("scale_to_length", &Vec2::scaleToLength, py::arg("length"))
         .def("distance_to", &Vec2::distanceTo, py::arg("other"))
         .def("to_polar", &Vec2::toPolar, "Return a polar coordinate pair (angle, length)");
+    py::implicitly_convertible<py::sequence, Vec2>();
 
     auto subMath = module.def_submodule("math", "Math related functions");
 

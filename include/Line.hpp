@@ -25,6 +25,9 @@ class Line
 
     Line();
     Line(double ax, double ay, double bx, double by);
+    Line(double ax, double ay, const math::Vec2& b);
+    Line(const math::Vec2& a, double bx, double by);
+    Line(const math::Vec2& a, const math::Vec2& b);
     ~Line() = default;
 
     double getLength() const;

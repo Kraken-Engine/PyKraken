@@ -67,6 +67,8 @@ void _bind(py::module_& module)
         .def_readwrite("b", &Color::b)
         .def_readwrite("a", &Color::a)
         .def_property("hex", &Color::toHex, &Color::fromHex);
+    py::implicitly_convertible<py::sequence, Color>();
+    py::implicitly_convertible<py::str, Color>();
 
     auto subColor = module.def_submodule("color", "Color related functions");
 

@@ -12,8 +12,8 @@ namespace window
 void _bind(pybind11::module_& module)
 {
     auto subWindow = module.def_submodule("window", "Window related functions");
-    subWindow.def("create", &window::create, py::arg("title"), py::arg("scaled") = false,
-                  py::arg("size") = py::make_tuple(800, 600),
+    subWindow.def("create", &window::create, py::arg("title"), py::arg("size"),
+                  py::arg("scaled") = false,
                   "Create a window with (width, height), optional title, and auto-scaling mode");
     subWindow.def("is_open", &window::isOpen, "Check if the window is open");
     subWindow.def("close", &window::close, "Close the window");
@@ -21,14 +21,21 @@ void _bind(pybind11::module_& module)
                   "Set the fullscreen mode of the window");
     subWindow.def("is_fullscreen", &window::isFullscreen,
                   "Check if the window is in fullscreen mode");
-    subWindow.def("get_size", &window::getSize, "Get the current size of the window");
+    subWindow.def(
+        "get_size",
+        []() -> py::tuple
+        {
+            math::Vec2 winSize = getSize();
+            return py::make_tuple(winSize.x, winSize.y);
+        },
+        "Get the current size of the window");
     subWindow.def("get_title", &window::getTitle, "Get the current title of the window");
     subWindow.def("set_title", &window::setTitle, py::arg("title"), "Set the title of the window");
 }
 
 SDL_Window* getWindow() { return _window; }
 
-void create(const std::string& title, const bool scaled, const py::object& sizeObj)
+void create(const std::string& title, const math::Vec2& size, const bool scaled)
 {
     if (_window)
         throw std::runtime_error("Window already created");
@@ -51,22 +58,8 @@ void create(const std::string& title, const bool scaled, const py::object& sizeO
     }
     else
     {
-        if (py::isinstance<math::Vec2>(sizeObj))
-        {
-            auto sizeVec = sizeObj.cast<math::Vec2>();
-            winW = static_cast<int>(sizeVec.x);
-            winH = static_cast<int>(sizeVec.y);
-        }
-        else if (py::isinstance<py::sequence>(sizeObj))
-        {
-            auto sizeSeq = sizeObj.cast<py::sequence>();
-            if (sizeSeq.size() != 2)
-                throw std::invalid_argument("Size sequence must be of length 2");
-            winW = sizeSeq[0].cast<int>();
-            winH = sizeSeq[1].cast<int>();
-        }
-        else
-            throw std::invalid_argument("Size must be a Vec2 or a sequence of two integers");
+        winW = static_cast<int>(size.x);
+        winH = static_cast<int>(size.y);
 
         if (winW <= 0 || winH <= 0)
             throw std::invalid_argument("Window size values must be greater than 0");
@@ -83,7 +76,7 @@ bool isOpen() { return _isOpen; }
 
 void close() { _isOpen = false; }
 
-py::tuple getSize()
+math::Vec2 getSize()
 {
     if (!_window)
         throw std::runtime_error("Window not initialized");
@@ -91,7 +84,7 @@ py::tuple getSize()
     int w, h;
     SDL_GetWindowSize(_window, &w, &h);
 
-    return py::make_tuple(w, h);
+    return {w, h};
 }
 
 void setFullscreen(bool fullscreen)

@@ -16,7 +16,11 @@ class Vec2;
 
 class Color;
 struct SDL_Renderer;
+
 class Texture;
+class Circle;
+class Line;
+class Rect;
 
 class Renderer
 {
@@ -28,7 +32,13 @@ class Renderer
 
     void present();
 
+    math::Vec2 toView(const math::Vec2& windowCoord) const;
+
+    void draw(const math::Vec2& point, const Color& color);
     void draw(const Texture& texture);
+    void draw(const Circle& circle, const Color& color, int thickness);
+    void draw(const Line& line, const Color& color, int thickness);
+    void draw(const Rect& rect, const Color& color, int thickness);
 
     SDL_Renderer* getSDL() const;
 

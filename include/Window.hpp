@@ -19,13 +19,13 @@ void _bind(py::module_& module);
 
 SDL_Window* getWindow();
 
-void create(const std::string& title, bool scaled, const py::object& sizeObj);
+void create(const std::string& title, const math::Vec2& size, bool scaled);
 
 bool isOpen();
 
 void close();
 
-py::tuple getSize();
+math::Vec2 getSize();
 
 void setFullscreen(bool fullscreen);
 
