@@ -29,7 +29,6 @@ PYBIND11_MODULE(_core, m)
     circle::_bind(m);
     color::_bind(m);
     constants::_bind(m);
-    // draw::_bind(m);
     ease::_bind(m);
     event::_bind(m);
     gamepad::_bind(m);

@@ -6,6 +6,19 @@
 
 void constants::_bind(py::module_& module)
 {
+    // Define Anchor enum
+    py::enum_<Anchor>(module, "Anchor", py::arithmetic())
+        .value("TOP_LEFT", Anchor::TOP_LEFT)
+        .value("TOP_MID", Anchor::TOP_MID)
+        .value("TOP_RIGHT", Anchor::TOP_RIGHT)
+        .value("MID_LEFT", Anchor::MID_LEFT)
+        .value("CENTER", Anchor::CENTER)
+        .value("MID_RIGHT", Anchor::MID_RIGHT)
+        .value("BOTTOM_LEFT", Anchor::BOTTOM_LEFT)
+        .value("BOTTOM_MID", Anchor::BOTTOM_MID)
+        .value("BOTTOM_RIGHT", Anchor::BOTTOM_RIGHT)
+        .export_values();
+
     // Define event types
     py::enum_<SDL_EventType>(module, "EventType", py::arithmetic())
         .value("QUIT", SDL_EVENT_QUIT)

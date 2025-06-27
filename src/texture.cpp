@@ -6,39 +6,26 @@
 #include "Window.hpp"
 
 #include <SDL3_image/SDL_image.h>
-#include <iostream>
 
 namespace texture
 {
 void _bind(py::module_& module)
 {
-    py::class_<Texture>(module, "Texture")
+    py::class_<Texture> texture(module, "Texture");
+
+    py::class_<Texture::Flip>(texture, "Flip")
+        .def_readwrite("h", &Texture::Flip::h)
+        .def_readwrite("v", &Texture::Flip::v);
+
+    texture
         .def(py::init<const Renderer&, const std::string&>())
-        .def("get_size", &Texture::getSize)
+
+        .def_readwrite("angle", &Texture::angle)
+        .def_readwrite("flip", &Texture::flip)
+
+        .def("get_size", [](Texture& self) -> py::tuple { return self.getSize(); })
         .def("get_rect", &Texture::getRect)
-        .def("set_tint",
-             [](Texture& self, const py::object& tintObj) -> void
-             {
-                 Color tint;
-
-                 if (py::isinstance<Color>(tintObj))
-                     tint = tintObj.cast<Color>();
-                 else if (py::isinstance<py::sequence>(tintObj))
-                 {
-                     auto tintSeq = tintObj.cast<py::tuple>();
-                     if (tintSeq.size() != 3 && tintSeq.size() != 4)
-                         throw std::invalid_argument("Tint expected a 3 or 4-element sequence");
-
-                     tint = {tintSeq[0].cast<uint8_t>(), tintSeq[1].cast<uint8_t>(),
-                             tintSeq[2].cast<uint8_t>(),
-                             tintSeq.size() == 4 ? tintSeq[3].cast<uint8_t>()
-                                                 : static_cast<uint8_t>(255)};
-                 }
-                 else
-                     throw std::runtime_error("Invalid tint type, expected Color or sequence.");
-
-                 self.setTint(tint);
-             })
+        .def("set_tint", &Texture::setTint)
         .def("get_tint", &Texture::getTint)
         .def("set_alpha", &Texture::setAlpha)
         .def("get_alpha", &Texture::getAlpha)
@@ -64,6 +51,8 @@ Texture::Texture(const Renderer& renderer, const std::string& filePath)
     m_texPtr = IMG_LoadTexture(sdlRenderer, filePath.c_str());
     if (!m_texPtr)
         throw std::runtime_error("Failed to load texture: " + std::string(SDL_GetError()));
+
+    SDL_SetTextureScaleMode(m_texPtr, SDL_SCALEMODE_NEAREST);
 }
 
 Texture::Texture(SDL_Texture* sdlTexture) { this->loadFromSDL(sdlTexture); }
@@ -88,11 +77,11 @@ void Texture::loadFromSDL(SDL_Texture* sdlTexture)
     m_texPtr = sdlTexture;
 }
 
-py::tuple Texture::getSize() const
+math::Vec2 Texture::getSize() const
 {
     float w, h;
     SDL_GetTextureSize(m_texPtr, &w, &h);
-    return py::make_tuple(w, h);
+    return {w, h};
 }
 
 Rect Texture::getRect() const

@@ -1,6 +1,5 @@
 #include "Time.hpp"
 #include <SDL3/SDL.h>
-#include <iostream>
 
 namespace kn::time
 {

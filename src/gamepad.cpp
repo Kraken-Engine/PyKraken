@@ -2,8 +2,6 @@
 #include "Event.hpp"
 #include "Math.hpp"
 
-#include <iostream>
-
 constexpr int MAX_GAMEPADS = 4;
 static std::array<std::optional<SDL_JoystickID>, MAX_GAMEPADS> _gamepadSlots;
 static std::unordered_map<SDL_JoystickID, GamepadState> _connectedPads;

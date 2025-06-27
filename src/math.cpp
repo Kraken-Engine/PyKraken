@@ -14,6 +14,8 @@ void _bind(py::module_& module)
 {
     py::class_<PolarCoordinate>(module, "PolarCoordinate")
         .def(py::init())
+        .def(py::init<double, double>(), py::arg("angle"), py::arg("radius"),
+             "Construct from angle and radius")
         .def(py::init(
                  [](const py::sequence& s) -> PolarCoordinate*
                  {
@@ -22,8 +24,6 @@ void _bind(py::module_& module)
                      return new PolarCoordinate(s[0].cast<double>(), s[1].cast<double>());
                  }),
              "Construct from sequence (angle, radius)")
-        .def(py::init<double, double>(), py::arg("angle"), py::arg("radius"),
-             "Construct from angle and radius")
 
         .def("to_cartesian", &PolarCoordinate::toCartesian,
              "Convert to Cartesian coordinates (Vec2)")

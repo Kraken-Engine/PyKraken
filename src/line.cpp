@@ -17,19 +17,20 @@ void _bind(py::module_& module)
             [](const py::sequence& abSeq) -> Line*
             {
                 if (abSeq.size() != 2)
-                    throw std::runtime_error("Line expects two 2D points");
+                    throw std::invalid_argument("Line expects two 2D points");
 
-                if (!py::isinstance<py::sequence>(abSeq[0]) ||
-                    !py::isinstance<py::sequence>(abSeq[1]))
-                    throw std::runtime_error("Line expects ((ax, ay), (bx, by))");
+                if (!py::isinstance<py::sequence>(abSeq[0]))
+                    throw std::invalid_argument("A point must be a sequence");
+                if (!py::isinstance<py::sequence>(abSeq[1]))
+                    throw std::invalid_argument("B point must be a sequence");
 
                 py::sequence aSeq = abSeq[0].cast<py::sequence>();
                 py::sequence bSeq = abSeq[1].cast<py::sequence>();
 
                 if (aSeq.size() != 2)
-                    throw std::runtime_error("A point must be a 2-element sequence");
+                    throw std::invalid_argument("A point must be a 2-element sequence");
                 if (bSeq.size() != 2)
-                    throw std::runtime_error("B point must be a 2-element sequence");
+                    throw std::invalid_argument("B point must be a 2-element sequence");
 
                 return new Line(aSeq[0].cast<double>(), aSeq[1].cast<double>(),
                                 bSeq[0].cast<double>(), bSeq[1].cast<double>());

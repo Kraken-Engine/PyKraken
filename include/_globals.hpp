@@ -12,6 +12,19 @@ enum class knMouseButton : uint8_t
     M_SIDE2 = SDL_BUTTON_X2,
 };
 
+enum class Anchor
+{
+    TOP_LEFT,
+    TOP_MID,
+    TOP_RIGHT,
+    MID_LEFT,
+    CENTER,
+    MID_RIGHT,
+    BOTTOM_LEFT,
+    BOTTOM_MID,
+    BOTTOM_RIGHT,
+};
+
 enum class KnKeycode : SDL_Keycode
 {
     K_BACKSPACE = SDLK_BACKSPACE,

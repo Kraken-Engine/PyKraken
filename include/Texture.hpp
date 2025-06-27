@@ -36,7 +36,7 @@ class Texture final
 
     void loadFromSDL(SDL_Texture* sdlTexture);
 
-    py::tuple getSize() const;
+    math::Vec2 getSize() const;
 
     Rect getRect() const;
 

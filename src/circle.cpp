@@ -14,25 +14,25 @@ void _bind(py::module_& module)
 {
     py::class_<Circle>(module, "Circle")
         .def(py::init())
+        .def(py::init<const math::Vec2&, double>())
         .def(py::init(
-            [](const py::object& centerObj, double radius) -> Circle*
+            [](const py::sequence& prSeq) -> Circle*
             {
-                math::Vec2 center;
+                if (prSeq.size() != 2)
+                    throw std::invalid_argument("Circle expects a 2-element sequence");
 
-                if (py::isinstance<math::Vec2>(centerObj))
-                    center = centerObj.cast<math::Vec2>();
-                else if (py::isinstance<py::sequence>(centerObj))
-                {
-                    const auto centerSeq = centerObj.cast<py::sequence>();
-                    if (centerSeq.size() != 2)
-                        throw std::invalid_argument("2-element sequence expected");
-                    center.x = centerSeq[0].cast<double>();
-                    center.y = centerSeq[1].cast<double>();
-                }
-                else
-                    throw std::invalid_argument("Vec2 or 2-element sequence expected");
+                if (!py::isinstance<py::sequence>(prSeq[0]))
+                    throw std::invalid_argument("Position must be a sequence");
+                if (!py::isinstance<double>(prSeq[1]))
+                    throw std::invalid_argument("Radius must be an int or float");
 
-                return new Circle(center, radius);
+                py::sequence posSeq = prSeq[0].cast<py::sequence>();
+                double radius = prSeq[1].cast<double>();
+
+                if (posSeq.size() != 2)
+                    throw std::invalid_argument("Position must be a 2-element sequence");
+
+                return new Circle({posSeq[0].cast<double>(), posSeq[1].cast<double>()}, radius);
             }))
 
         .def(
@@ -108,6 +108,7 @@ void _bind(py::module_& module)
              })
         .def("as_rect", &Circle::asRect)
         .def("copy", &Circle::copy);
+    py::implicitly_convertible<py::sequence, Circle>();
 }
 } // namespace circle
 
