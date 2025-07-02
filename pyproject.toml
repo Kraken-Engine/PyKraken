@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "kraken-engine"
-version = "0.1.0"
+version = "0.1.2"
 authors = [
   { name = "Derrick Martinez" },
 ]
@@ -21,3 +21,6 @@ license-files = ["LICENSE"]
 [project.urls]
 Homepage = "https://github.com/Kraken-Engine/PyKraken"
 Issues = "https://github.com/Kraken-Engine/PyKraken/issues"
+
+[tool.cibuildwheel]
+build-frontend = "build[uv]"

@@ -1,1 +1,1 @@
-from pykraken._core import *
+from ._core import *
