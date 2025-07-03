@@ -2,7 +2,6 @@
 #include "Circle.hpp"
 #include "Color.hpp"
 #include "Constants.hpp"
-// #include "Draw.hpp"
 #include "Ease.hpp"
 #include "Event.hpp"
 #include "Gamepad.hpp"

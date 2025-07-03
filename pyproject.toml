@@ -22,5 +22,5 @@ license-files = ["LICENSE"]
 Homepage = "https://github.com/Kraken-Engine/PyKraken"
 Issues = "https://github.com/Kraken-Engine/PyKraken/issues"
 
-[tool.cibuildwheel]
-build-frontend = "build[uv]"
+[tool.scikit-build]
+wheel.packages = ["src/pykraken"]
