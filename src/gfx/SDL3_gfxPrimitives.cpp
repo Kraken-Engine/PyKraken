@@ -3522,7 +3522,7 @@ bool characterRGBA(SDL_Renderer* renderer, Sint16 x, Sint16 y, char c, Uint8 r, 
         /*
          * Redraw character into surface
          */
-        character = SDL_CreateSurface(charWidth, charHeight, SDL_PIXELFORMAT_RGBA8888);
+        character = SDL_CreateSurface(charWidth, charHeight, SDL_PIXELFORMAT_RGBA32);
         if (character == NULL)
             return false;
 

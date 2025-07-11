@@ -130,18 +130,16 @@ void Renderer::draw(const Texture& texture, Rect dstRect, const Rect& srcRect)
     math::Vec2 cameraPos = camera::getActivePos();
     dstRect.x -= cameraPos.x;
     dstRect.y -= cameraPos.y;
-    SDL_FRect dstSDLRect = dstRect;
 
-    SDL_FRect srcSDLRect = srcRect;
-    if (srcRect.getSize() == math::Vec2())
-        srcSDLRect = texture.getRect();
+    SDL_FRect dstSDLRect = dstRect;
+    SDL_FRect srcSDLRect = (srcRect.getSize() == math::Vec2()) ? texture.getRect() : srcRect;
 
     SDL_SetRenderTarget(m_renderer, m_target);
     SDL_RenderTextureRotated(m_renderer, sdlTexture, &srcSDLRect, &dstSDLRect, texture.angle,
                              nullptr, flipAxis);
 }
 
-void Renderer::draw(const Texture& texture, math::Vec2 pos, Anchor anchor)
+void Renderer::draw(const Texture& texture, math::Vec2 pos, const Anchor anchor)
 {
     SDL_Texture* sdlTexture = texture.getSDL();
     if (SDL_GetRendererFromTexture(sdlTexture) != m_renderer)
@@ -153,36 +151,36 @@ void Renderer::draw(const Texture& texture, math::Vec2 pos, Anchor anchor)
     if (texture.flip.v)
         flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_VERTICAL);
 
-    const math::Vec2 drawPos = pos - camera::getActivePos();
+    pos -= camera::getActivePos();
     Rect rect = texture.getRect();
     switch (anchor)
     {
     case Anchor::TOP_LEFT:
-        rect.setTopLeft(drawPos);
+        rect.setTopLeft(pos);
         break;
     case Anchor::TOP_MID:
-        rect.setTopMid(drawPos);
+        rect.setTopMid(pos);
         break;
     case Anchor::TOP_RIGHT:
-        rect.setTopRight(drawPos);
+        rect.setTopRight(pos);
         break;
     case Anchor::MID_LEFT:
-        rect.setMidLeft(drawPos);
+        rect.setMidLeft(pos);
         break;
     case Anchor::CENTER:
-        rect.setCenter(drawPos);
+        rect.setCenter(pos);
         break;
     case Anchor::MID_RIGHT:
-        rect.setMidRight(drawPos);
+        rect.setMidRight(pos);
         break;
     case Anchor::BOTTOM_LEFT:
-        rect.setBottomLeft(drawPos);
+        rect.setBottomLeft(pos);
         break;
     case Anchor::BOTTOM_MID:
-        rect.setBottomMid(drawPos);
+        rect.setBottomMid(pos);
         break;
     case Anchor::BOTTOM_RIGHT:
-        rect.setBottomRight(drawPos);
+        rect.setBottomRight(pos);
         break;
     }
 

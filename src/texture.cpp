@@ -3,6 +3,7 @@
 #include "Math.hpp"
 #include "Rect.hpp"
 #include "Renderer.hpp"
+#include "Surface.hpp"
 #include "Window.hpp"
 
 #include <SDL3_image/SDL_image.h>
@@ -17,8 +18,8 @@ void _bind(py::module_& module)
         .def_readwrite("h", &Texture::Flip::h)
         .def_readwrite("v", &Texture::Flip::v);
 
-    texture
-        .def(py::init<const Renderer&, const std::string&>())
+    texture.def(py::init<const Renderer&, const std::string&>())
+        .def(py::init<const Renderer&, const Surface&>())
 
         .def_readwrite("angle", &Texture::angle)
         .def_readwrite("flip", &Texture::flip)
@@ -35,10 +36,21 @@ void _bind(py::module_& module)
 }
 } // namespace texture
 
+Texture::Texture(const Renderer& renderer, const Surface& surface)
+{
+    m_texPtr = SDL_CreateTextureFromSurface(renderer.getSDL(), surface.getSDL());
+
+    if (!m_texPtr)
+    {
+        throw std::runtime_error("Failed to create texture from surface: " +
+                                 std::string(SDL_GetError()));
+    }
+
+    SDL_SetTextureScaleMode(m_texPtr, SDL_SCALEMODE_NEAREST);
+}
+
 Texture::Texture(const Renderer& renderer, const std::string& filePath)
 {
-    SDL_Renderer* sdlRenderer = renderer.getSDL();
-
     if (filePath.empty())
         throw std::invalid_argument("File path cannot be empty");
 
@@ -48,7 +60,7 @@ Texture::Texture(const Renderer& renderer, const std::string& filePath)
         m_texPtr = nullptr;
     }
 
-    m_texPtr = IMG_LoadTexture(sdlRenderer, filePath.c_str());
+    m_texPtr = IMG_LoadTexture(renderer.getSDL(), filePath.c_str());
     if (!m_texPtr)
         throw std::runtime_error("Failed to load texture: " + std::string(SDL_GetError()));
 

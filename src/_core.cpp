@@ -12,14 +12,16 @@
 #include "Mouse.hpp"
 #include "Rect.hpp"
 #include "Renderer.hpp"
+#include "Surface.hpp"
 #include "Texture.hpp"
 #include "Time.hpp"
+#include "Transform.hpp"
 #include "Window.hpp"
 
 PYBIND11_MODULE(_core, m)
 {
-    py::options options;
-    options.disable_function_signatures();
+    // py::options options;
+    // options.disable_function_signatures();
 
     m.def("init", &init, "Initialize Kraken Engine");
     m.def("quit", &quit, "Quit Kraken Engine");
@@ -38,7 +40,9 @@ PYBIND11_MODULE(_core, m)
     mouse::_bind(m);
     rect::_bind(m);
     renderer::_bind(m);
+    surface::_bind(m);
     texture::_bind(m);
     kn::time::_bind(m);
+    transform::_bind(m);
     window::_bind(m);
 }

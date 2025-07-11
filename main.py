@@ -6,11 +6,17 @@ renderer = kn.Renderer((200, 150))
 clock = kn.Clock()
 
 bg_color = kn.Color("#141414")
-texture = kn.Texture(renderer, "img.png")
-rect = texture.get_rect()
+
+surface = kn.Surface("kn112.png")
+surface_gray = kn.transform.grayscale(surface)
+surface_inv = kn.transform.invert(surface)
+
+texture_gray = kn.Texture(renderer, surface_gray)
+texture_inv = kn.Texture(renderer, surface_inv)
+
+rect = surface.rect
 rect.scale_by(0.5)
 pos = kn.Vec2()
-texture.flip.h = True
 
 while kn.window.is_open():
     dt = clock.tick()
@@ -28,14 +34,18 @@ while kn.window.is_open():
     if kn.key.is_pressed(kn.S_s):
         pos.y += dt * 100
     if kn.key.is_pressed(kn.S_z):
-        texture.angle -= dt * 30
+        texture_gray.angle -= dt * 30
+        texture_inv.angle -= dt * 30
     if kn.key.is_pressed(kn.S_x):
-        texture.angle += dt * 30
+        texture_gray.angle += dt * 30
+        texture_inv.angle += dt * 30
         
-    rect.center = pos
-    
     renderer.clear(bg_color)
-    renderer.draw(texture, rect)
+    
+    rect.center = pos
+    renderer.draw(texture_gray, rect)
+    rect.center = pos + (30, 30)
+    renderer.draw(texture_inv, rect)
     
     renderer.present()
 

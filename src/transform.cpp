@@ -1,0 +1,321 @@
+#include "Transform.hpp"
+#include "Color.hpp"
+#include "Math.hpp"
+#include "Surface.hpp"
+
+#include <gfx/SDL3_rotozoom.h>
+
+namespace transform
+{
+void _bind(py::module_& module)
+{
+    auto subTransform = module.def_submodule("transform");
+
+    subTransform.def("flip", &flip);
+    subTransform.def("scale", &scale);
+    subTransform.def("scale_by", &scaleBy);
+    subTransform.def("rotate", &rotate);
+    subTransform.def("box_blur", &boxBlur);
+    subTransform.def("gaussian_blur", &gaussianBlur);
+    subTransform.def("invert", &invert);
+    subTransform.def("grayscale", &grayscale);
+}
+
+Surface* flip(const Surface& surface, const bool flipX, const bool flipY)
+{
+    SDL_Surface* sdlSurface = surface.getSDL();
+    SDL_Surface* flipped = SDL_CreateSurface(sdlSurface->w, sdlSurface->h, SDL_PIXELFORMAT_RGBA32);
+
+    if (!flipped)
+        throw std::runtime_error("Failed to create flipped surface.");
+
+    int bpp = SDL_GetPixelFormatDetails(sdlSurface->format)->bytes_per_pixel;
+
+    for (int y = 0; y < sdlSurface->h; ++y)
+        for (int x = 0; x < sdlSurface->w; ++x)
+        {
+            int srcX = flipX ? (sdlSurface->w - 1 - x) : x;
+            int srcY = flipY ? (sdlSurface->h - 1 - y) : y;
+
+            Uint8* srcPixel = (Uint8*)sdlSurface->pixels + srcY * sdlSurface->pitch + srcX * bpp;
+            Uint8* dstPixel = (Uint8*)flipped->pixels + y * flipped->pitch + x * bpp;
+
+            memcpy(dstPixel, srcPixel, bpp);
+        }
+
+    return new Surface(flipped);
+}
+
+Surface* scale(const Surface& surface, const math::Vec2& newSize)
+{
+    SDL_Surface* sdlSurface = surface.getSDL();
+
+    const auto newW = static_cast<int>(newSize.x);
+    const auto newH = static_cast<int>(newSize.y);
+
+    SDL_Surface* scaled = SDL_CreateSurface(newW, newH, SDL_PIXELFORMAT_RGBA32);
+    if (!scaled)
+        throw std::runtime_error("Failed to create scaled surface.");
+
+    SDL_Rect dstRect = {0, 0, newW, newH};
+    if (!SDL_BlitSurfaceScaled(sdlSurface, nullptr, scaled, &dstRect, SDL_SCALEMODE_NEAREST))
+    {
+        SDL_DestroySurface(scaled);
+        throw std::runtime_error("SDL_BlitScaled failed: " + std::string(SDL_GetError()));
+    }
+
+    return new Surface(scaled);
+}
+
+Surface* scaleBy(const Surface& surface, const double factor)
+{
+    if (factor <= 0.0)
+        throw std::invalid_argument("Scale factor must be a positive value.");
+
+    const math::Vec2 originalSize = surface.getSize();
+    const math::Vec2 scaledSize = originalSize * factor;
+
+    return scale(surface, scaledSize);
+}
+
+Surface* rotate(const Surface& surface, const double angle)
+{
+    SDL_Surface* sdlSurface = surface.getSDL();
+    SDL_Surface* rotated =
+        rotozoomSurface(sdlSurface, angle, 1.0, SMOOTHING_OFF); // rotate, don't scale
+    if (!rotated)
+        throw std::runtime_error("Failed to rotate surface.");
+
+    return new Surface(rotated);
+}
+
+Surface* boxBlur(const Surface& surface, const int radius, const bool repeatEdgePixels)
+{
+    SDL_Surface* src = surface.getSDL();
+    const int width = src->w;
+    const int height = src->h;
+
+    SDL_Surface* temp = SDL_CreateSurface(width, height, src->format);
+    SDL_Surface* result = SDL_CreateSurface(width, height, src->format);
+    if (!temp || !result)
+        throw std::runtime_error("Failed to create surfaces for box blur.");
+
+    auto clamp = [](const int v, const int low, const int high)
+    { return std::max(low, std::min(v, high)); };
+
+    auto* srcPx = static_cast<uint32_t*>(src->pixels);
+    auto* tmpPx = static_cast<uint32_t*>(temp->pixels);
+    auto* dstPx = static_cast<uint32_t*>(result->pixels);
+
+    const int diameter = radius * 2 + 1;
+    const auto srcDetails = SDL_GetPixelFormatDetails(src->format);
+    const auto tmpDetails = SDL_GetPixelFormatDetails(temp->format);
+    const auto resDetails = SDL_GetPixelFormatDetails(result->format);
+
+    // Horizontal
+    for (int y = 0; y < height; ++y)
+        for (int x = 0; x < width; ++x)
+        {
+            uint8_t r = 0, g = 0, b = 0, a = 0;
+            for (int dx = -radius; dx <= radius; ++dx)
+            {
+                int sx = repeatEdgePixels ? clamp(x + dx, 0, width - 1) : x + dx;
+                if (sx < 0 || sx >= width)
+                    continue;
+
+                uint8_t pr, pg, pb, pa;
+                SDL_GetRGBA(srcPx[y * width + sx], srcDetails, nullptr, &pr, &pg, &pb, &pa);
+                r += pr;
+                g += pg;
+                b += pb;
+                a += pa;
+            }
+            r /= diameter;
+            g /= diameter;
+            b /= diameter;
+            a /= diameter;
+            tmpPx[y * width + x] = SDL_MapRGBA(tmpDetails, nullptr, r, g, b, a);
+        }
+
+    // Vertical
+    for (int y = 0; y < height; ++y)
+        for (int x = 0; x < width; ++x)
+        {
+            uint8_t r = 0, g = 0, b = 0, a = 0;
+            for (int dy = -radius; dy <= radius; ++dy)
+            {
+                int sy = repeatEdgePixels ? clamp(y + dy, 0, height - 1) : y + dy;
+                if (sy < 0 || sy >= height)
+                    continue;
+                uint8_t pr, pg, pb, pa;
+                SDL_GetRGBA(tmpPx[sy * width + x], tmpDetails, nullptr, &pr, &pg, &pb, &pa);
+                r += pr;
+                g += pg;
+                b += pb;
+                a += pa;
+            }
+            r /= diameter;
+            g /= diameter;
+            b /= diameter;
+            a /= diameter;
+            dstPx[y * width + x] = SDL_MapRGBA(resDetails, nullptr, r, g, b, a);
+        }
+
+    SDL_DestroySurface(temp);
+
+    return new Surface(result);
+}
+
+Surface* gaussianBlur(const Surface& surface, int radius, bool repeatEdgePixels)
+{
+    SDL_Surface* src = surface.getSDL();
+
+    const int w = src->w, h = src->h;
+    int diameter = radius * 2 + 1;
+
+    // Build Gaussian kernel (σ = radius/2)
+    float sigma = radius > 0 ? (radius / 2.0f) : 1.0f;
+    float twoSigmaSq = 2.0f * sigma * sigma;
+    float invSigmaRoot = 1.0f / (std::sqrt(2.0f * M_PI) * sigma);
+    std::vector<float> kernel(diameter);
+    for (int i = 0; i < diameter; ++i)
+    {
+        int x = i - radius;
+        kernel[i] = invSigmaRoot * std::exp(-(x * x) / twoSigmaSq);
+    }
+
+    // Normalize
+    float sum = 0;
+    for (float v : kernel)
+        sum += v;
+    for (float& v : kernel)
+        v /= sum;
+
+    // Create intermediate and output surfaces
+    SDL_Surface* temp = SDL_CreateSurface(w, h, src->format);
+    SDL_Surface* result = SDL_CreateSurface(w, h, src->format);
+    if (!temp)
+        throw std::runtime_error("Failed to create temporary surface for gaussian blur.");
+    if (!result)
+        throw std::runtime_error("Failed to create result surface for gaussian blur.");
+
+    auto clamp = [](int v, int low, int high) { return std::max(low, std::min(v, high)); };
+    Uint32* srcPx = static_cast<Uint32*>(src->pixels);
+    Uint32* tmpPx = static_cast<Uint32*>(temp->pixels);
+    Uint32* dstPx = static_cast<Uint32*>(result->pixels);
+
+    const auto srcDetails = SDL_GetPixelFormatDetails(src->format);
+    const auto tmpDetails = SDL_GetPixelFormatDetails(temp->format);
+    const auto resDetails = SDL_GetPixelFormatDetails(result->format);
+
+    // Horizontal pass
+    for (int y = 0; y < h; ++y)
+        for (int x = 0; x < w; ++x)
+        {
+            float fr = 0, fg = 0, fb = 0, fa = 0;
+            for (int k = 0; k < diameter; ++k)
+            {
+                int sx = x + (k - radius);
+                if (repeatEdgePixels)
+                    sx = clamp(sx, 0, w - 1);
+                if (sx < 0 || sx >= w)
+                    continue;
+
+                Uint8 pr, pg, pb, pa;
+                SDL_GetRGBA(srcPx[y * w + sx], srcDetails, nullptr, &pr, &pg, &pb, &pa);
+                fr += pr * kernel[k];
+                fg += pg * kernel[k];
+                fb += pb * kernel[k];
+                fa += pa * kernel[k];
+            }
+            tmpPx[y * w + x] =
+                SDL_MapRGBA(tmpDetails, nullptr, static_cast<Uint8>(fr), static_cast<Uint8>(fg),
+                            static_cast<Uint8>(fb), static_cast<Uint8>(fa));
+        }
+
+    // Vertical pass
+    for (int y = 0; y < h; ++y)
+        for (int x = 0; x < w; ++x)
+        {
+            float fr = 0.f, fg = 0.f, fb = 0.f, fa = 0.f;
+            for (int k = 0; k < diameter; ++k)
+            {
+                int sy = y + (k - radius);
+                if (repeatEdgePixels)
+                    sy = clamp(sy, 0, h - 1);
+                if (sy < 0 || sy >= h)
+                    continue;
+                uint8_t pr, pg, pb, pa;
+                SDL_GetRGBA(tmpPx[sy * w + x], tmpDetails, nullptr, &pr, &pg, &pb, &pa);
+                fr += pr * kernel[k];
+                fg += pg * kernel[k];
+                fb += pb * kernel[k];
+                fa += pa * kernel[k];
+            }
+            dstPx[y * w + x] =
+                SDL_MapRGBA(resDetails, nullptr, static_cast<Uint8>(fr), static_cast<Uint8>(fg),
+                            static_cast<Uint8>(fb), static_cast<Uint8>(fa));
+        }
+
+    SDL_DestroySurface(temp);
+
+    return new Surface(result);
+}
+
+Surface* invert(const Surface& surface)
+{
+    SDL_Surface* src = surface.getSDL();
+
+    const int w = src->w;
+    const int h = src->h;
+
+    // Create an output surface matching the source format
+    SDL_Surface* result = SDL_CreateSurface(w, h, src->format);
+    if (!result)
+        throw std::runtime_error("Failed to create result surface for invert.");
+
+    auto srcPx = static_cast<uint32_t*>(src->pixels);
+    auto dstPx = static_cast<uint32_t*>(result->pixels);
+
+    auto srcDetails = SDL_GetPixelFormatDetails(src->format);
+    auto resDetails = SDL_GetPixelFormatDetails(result->format);
+
+    uint8_t r, g, b, a;
+    for (int i = 0; i < w * h; ++i)
+    {
+        SDL_GetRGBA(srcPx[i], srcDetails, nullptr, &r, &g, &b, &a);
+        dstPx[i] = SDL_MapRGBA(resDetails, nullptr, 255 - r, 255 - g, 255 - b, a);
+    }
+
+    return new Surface(result);
+}
+
+Surface* grayscale(const Surface& surface)
+{
+    SDL_Surface* src = surface.getSDL();
+
+    const int w = src->w;
+    const int h = src->h;
+
+    // Create output surface with its own memory
+    SDL_Surface* result = SDL_CreateSurface(w, h, src->format);
+    if (!result)
+        throw std::runtime_error("Failed to create surface for grayscale.");
+
+    auto srcPx = static_cast<uint32_t*>(src->pixels);
+    auto dstPx = static_cast<uint32_t*>(result->pixels);
+
+    auto srcDetails = SDL_GetPixelFormatDetails(src->format);
+    auto resDetails = SDL_GetPixelFormatDetails(result->format);
+
+    uint8_t r, g, b, a;
+    for (int i = 0; i < w * h; ++i)
+    {
+        SDL_GetRGBA(srcPx[i], srcDetails, nullptr, &r, &g, &b, &a);
+        auto gray = static_cast<uint8_t>(0.299 * r + 0.587 * g + 0.114 * b);
+        dstPx[i] = SDL_MapRGBA(resDetails, nullptr, gray, gray, gray, a);
+    }
+
+    return new Surface(result);
+}
+} // namespace transform

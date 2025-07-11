@@ -32,8 +32,10 @@ pybind11_add_module(_core MODULE
   src/mouse.cpp
   src/rect.cpp
   src/renderer.cpp
+  src/surface.cpp
   src/texture.cpp
   src/time.cpp
+  src/transform.cpp
   src/window.cpp
   WITH_SOABI
 )
