@@ -11,7 +11,7 @@ class knEvent
     uint32_t type;
     py::dict data;
 
-    knEvent(uint32_t type) : type(type) {}
+    knEvent(uint32_t type);
 
     py::object getAttr(const std::string& name) const;
 };

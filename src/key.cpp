@@ -13,20 +13,73 @@ namespace key
 {
 void _bind(py::module_& module)
 {
-    auto subKey = module.def_submodule("key", "Key related functions");
+    auto subKey = module.def_submodule("key", "Keyboard key state checks");
 
-    subKey.def("is_pressed", static_cast<bool (*)(SDL_Scancode)>(&isPressed),
-               "Check if a key is pressed by scancode");
+    subKey.def("is_pressed", static_cast<bool (*)(SDL_Scancode)>(&isPressed), py::arg("scancode"),
+               R"doc(
+Check if a key is currently held down (by scancode).
+
+Args:
+    scancode (Scancode): The physical key (e.g., S_w).
+
+Returns:
+    bool: True if the key is held.
+        )doc");
+
     subKey.def("is_just_pressed", static_cast<bool (*)(SDL_Scancode)>(&isJustPressed),
-               "Check if a key is just pressed by scancode");
+               py::arg("scancode"), R"doc(
+Check if a key was pressed this frame (by scancode).
+
+Args:
+    scancode (Scancode): The physical key.
+
+Returns:
+    bool: True if the key was newly pressed.
+        )doc");
+
     subKey.def("is_just_released", static_cast<bool (*)(SDL_Scancode)>(&isJustReleased),
-               "Check if a key is just released by scancode");
-    subKey.def("is_pressed", static_cast<bool (*)(KnKeycode)>(&isPressed),
-               "Check if a key is pressed by keycode");
+               py::arg("scancode"), R"doc(
+Check if a key was released this frame (by scancode).
+
+Args:
+    scancode (Scancode): The physical key.
+
+Returns:
+    bool: True if the key was newly released.
+        )doc");
+
+    subKey.def("is_pressed", static_cast<bool (*)(KnKeycode)>(&isPressed), py::arg("keycode"),
+               R"doc(
+Check if a key is currently held down (by keycode).
+
+Args:
+    keycode (Keycode): The symbolic key (e.g., K_SPACE).
+
+Returns:
+    bool: True if the key is held.
+        )doc");
+
     subKey.def("is_just_pressed", static_cast<bool (*)(KnKeycode)>(&isJustPressed),
-               "Check if a key is just pressed by keycode");
+               py::arg("keycode"), R"doc(
+Check if a key was pressed this frame (by keycode).
+
+Args:
+    keycode (Keycode): The symbolic key.
+
+Returns:
+    bool: True if the key was newly pressed.
+        )doc");
+
     subKey.def("is_just_released", static_cast<bool (*)(KnKeycode)>(&isJustReleased),
-               "Check if a key is just released by keycode");
+               py::arg("keycode"), R"doc(
+Check if a key was released this frame (by keycode).
+
+Args:
+    keycode (Keycode): The symbolic key.
+
+Returns:
+    bool: True if the key was newly released.
+        )doc");
 }
 
 bool isPressed(SDL_Scancode scancode) { return SDL_GetKeyboardState(nullptr)[scancode]; }

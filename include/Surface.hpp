@@ -8,10 +8,7 @@
 
 namespace py = pybind11;
 
-namespace math
-{
 class Vec2;
-}
 struct Color;
 class Rect;
 
@@ -32,14 +29,13 @@ class Surface
   public:
     Surface() = default;
     Surface(SDL_Surface* sdlSurface);
-    Surface(const math::Vec2& size);
+    Surface(const Vec2& size);
     Surface(const std::string& filePath);
     ~Surface();
 
     void fill(const Color& color) const;
 
-    void blit(const Surface& other, const math::Vec2& pos, Anchor anchor,
-              const Rect& srcRect) const;
+    void blit(const Surface& other, const Vec2& pos, Anchor anchor, const Rect& srcRect) const;
     void blit(const Surface& other, const Rect& dstRect, const Rect& srcRect) const;
 
     void setColorKey(const Color& color) const;
@@ -50,15 +46,15 @@ class Surface
 
     int getAlpha() const;
 
-    Color getAt(const math::Vec2& coord) const;
+    Color getAt(const Vec2& coord) const;
 
-    void setAt(const math::Vec2& coord, const Color& color) const;
+    void setAt(const Vec2& coord, const Color& color) const;
 
     int getWidth() const;
 
     int getHeight() const;
 
-    math::Vec2 getSize() const;
+    Vec2 getSize() const;
 
     Rect getRect() const;
 

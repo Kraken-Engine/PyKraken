@@ -1,4 +1,5 @@
 from __future__ import annotations
+from pykraken._core import Anchor
 from pykraken._core import Camera
 from pykraken._core import Circle
 from pykraken._core import Clock
@@ -15,10 +16,12 @@ from pykraken._core import Line
 from pykraken._core import MouseButton
 from pykraken._core import PolarCoordinate
 from pykraken._core import Rect
+from pykraken._core import Renderer
 from pykraken._core import Scancode
+from pykraken._core import Surface
+from pykraken._core import Texture
 from pykraken._core import Vec2
 from pykraken._core import color
-from pykraken._core import draw
 from pykraken._core import ease
 from pykraken._core import event
 from pykraken._core import gamepad
@@ -31,15 +34,20 @@ from pykraken._core import mouse
 from pykraken._core import quit
 from pykraken._core import rect
 from pykraken._core import time
+from pykraken._core import transform
 from pykraken._core import window
 from . import _core
-__all__: list = ['__doc__', 'color', 'event', 'key', 'math', 'mouse', 'rect', 'time', 'window']
-AUDIODEVICEADDED: _core.EventType  # value = <EventType.AUDIODEVICEADDED: 4352>
-AUDIODEVICEREMOVED: _core.EventType  # value = <EventType.AUDIODEVICEREMOVED: 4353>
-CAMERAADDED: _core.EventType  # value = <EventType.CAMERAADDED: 5120>
-CAMERAAPPROVED: _core.EventType  # value = <EventType.CAMERAAPPROVED: 5122>
-CAMERADENIED: _core.EventType  # value = <EventType.CAMERADENIED: 5123>
-CAMERAREMOVED: _core.EventType  # value = <EventType.CAMERAREMOVED: 5121>
+__all__ = ['AUDIO_DEVICE_ADDED', 'AUDIO_DEVICE_REMOVED', 'Anchor', 'BOTTOM_LEFT', 'BOTTOM_MID', 'BOTTOM_RIGHT', 'CAMERA_ADDED', 'CAMERA_APPROVED', 'CAMERA_DENIED', 'CAMERA_REMOVED', 'CENTER', 'C_BACK', 'C_DPADDOWN', 'C_DPADLEFT', 'C_DPADRIGHT', 'C_DPADUP', 'C_EAST', 'C_GUIDE', 'C_LEFTSHOULDER', 'C_LEFTSTICK', 'C_LTRIGGER', 'C_LX', 'C_LY', 'C_NORTH', 'C_PS3', 'C_PS4', 'C_PS5', 'C_RIGHTSHOULDER', 'C_RIGHTSTICK', 'C_RTRIGGER', 'C_RX', 'C_RY', 'C_SOUTH', 'C_STANDARD', 'C_START', 'C_SWITCHJOYCONLEFT', 'C_SWITCHJOYCONPAIR', 'C_SWITCHJOYCONRIGHT', 'C_SWITCHPRO', 'C_WEST', 'C_XBOX360', 'C_XBOXONE', 'Camera', 'Circle', 'Clock', 'Color', 'DROP_BEGIN', 'DROP_COMPLETE', 'DROP_FILE', 'DROP_POSITION', 'DROP_TEXT', 'EasingAnimation', 'Event', 'EventType', 'GAMEPAD_ADDED', 'GAMEPAD_AXIS_MOTION', 'GAMEPAD_BUTTON_DOWN', 'GAMEPAD_BUTTON_UP', 'GAMEPAD_REMOVED', 'GAMEPAD_TOUCHPAD_DOWN', 'GAMEPAD_TOUCHPAD_MOTION', 'GAMEPAD_TOUCHPAD_UP', 'GamepadAxis', 'GamepadButton', 'GamepadType', 'InputAction', 'KEYBOARD_ADDED', 'KEYBOARD_REMOVED', 'KEY_DOWN', 'KEY_UP', 'K_0', 'K_1', 'K_2', 'K_3', 'K_4', 'K_5', 'K_6', 'K_7', 'K_8', 'K_9', 'K_AGAIN', 'K_AMPERSAND', 'K_ASTERISK', 'K_AT', 'K_BACKSLASH', 'K_BACKSPACE', 'K_CAPS', 'K_CARET', 'K_COLON', 'K_COMMA', 'K_COPY', 'K_CUT', 'K_DBLQUOTE', 'K_DEL', 'K_DOLLAR', 'K_DOWN', 'K_END', 'K_EQ', 'K_ESC', 'K_EXCLAIM', 'K_F1', 'K_F10', 'K_F11', 'K_F12', 'K_F2', 'K_F3', 'K_F4', 'K_F5', 'K_F6', 'K_F7', 'K_F8', 'K_F9', 'K_FIND', 'K_GRAVE', 'K_GT', 'K_HASH', 'K_HOME', 'K_INS', 'K_KP_0', 'K_KP_1', 'K_KP_2', 'K_KP_3', 'K_KP_4', 'K_KP_5', 'K_KP_6', 'K_KP_7', 'K_KP_8', 'K_KP_9', 'K_KP_DIV', 'K_KP_ENTER', 'K_KP_MINUS', 'K_KP_MULT', 'K_KP_PERIOD', 'K_KP_PLUS', 'K_LALT', 'K_LBRACE', 'K_LBRACKET', 'K_LCTRL', 'K_LEFT', 'K_LGUI', 'K_LPAREN', 'K_LSHIFT', 'K_LT', 'K_MINUS', 'K_MUTE', 'K_NUMLOCK', 'K_PASTE', 'K_PAUSE', 'K_PERCENT', 'K_PERIOD', 'K_PGDOWN', 'K_PGUP', 'K_PIPE', 'K_PLUS', 'K_PRTSCR', 'K_QUESTION', 'K_RALT', 'K_RBRACE', 'K_RBRACKET', 'K_RCTRL', 'K_RETURN', 'K_RGUI', 'K_RIGHT', 'K_RPAREN', 'K_RSHIFT', 'K_SCRLK', 'K_SEMICOLON', 'K_SGLQUOTE', 'K_SLASH', 'K_SPACE', 'K_TAB', 'K_TILDE', 'K_UNDERSCORE', 'K_UNDO', 'K_UP', 'K_VOLDOWN', 'K_VOLUP', 'K_a', 'K_b', 'K_c', 'K_d', 'K_e', 'K_f', 'K_g', 'K_h', 'K_i', 'K_j', 'K_k', 'K_l', 'K_m', 'K_n', 'K_o', 'K_p', 'K_q', 'K_r', 'K_s', 'K_t', 'K_u', 'K_v', 'K_w', 'K_x', 'K_y', 'K_z', 'Keycode', 'Line', 'MID_LEFT', 'MID_RIGHT', 'MOUSE_ADDED', 'MOUSE_BUTTON_DOWN', 'MOUSE_BUTTON_UP', 'MOUSE_MOTION', 'MOUSE_REMOVED', 'MOUSE_WHEEL', 'M_LEFT', 'M_MIDDLE', 'M_RIGHT', 'M_SIDE1', 'M_SIDE2', 'MouseButton', 'PEN_AXIS', 'PEN_BUTTON_DOWN', 'PEN_BUTTON_UP', 'PEN_DOWN', 'PEN_MOTION', 'PEN_PROXIMITY_IN', 'PEN_PROXIMITY_OUT', 'PEN_UP', 'PolarCoordinate', 'QUIT', 'Rect', 'Renderer', 'S_0', 'S_1', 'S_2', 'S_3', 'S_4', 'S_5', 'S_6', 'S_7', 'S_8', 'S_9', 'S_AGAIN', 'S_APOSTROPHE', 'S_BACKSLASH', 'S_BACKSPACE', 'S_CAPS', 'S_COMMA', 'S_COPY', 'S_CUT', 'S_DEL', 'S_DOWN', 'S_END', 'S_EQ', 'S_ESC', 'S_F1', 'S_F10', 'S_F11', 'S_F12', 'S_F2', 'S_F3', 'S_F4', 'S_F5', 'S_F6', 'S_F7', 'S_F8', 'S_F9', 'S_FIND', 'S_GRAVE', 'S_HOME', 'S_INS', 'S_KP_0', 'S_KP_1', 'S_KP_2', 'S_KP_3', 'S_KP_4', 'S_KP_5', 'S_KP_6', 'S_KP_7', 'S_KP_8', 'S_KP_9', 'S_KP_DIV', 'S_KP_ENTER', 'S_KP_MINUS', 'S_KP_MULT', 'S_KP_PERIOD', 'S_KP_PLUS', 'S_LALT', 'S_LBRACKET', 'S_LCTRL', 'S_LEFT', 'S_LGUI', 'S_LSHIFT', 'S_MINUS', 'S_MUTE', 'S_NUMLOCK', 'S_PASTE', 'S_PAUSE', 'S_PERIOD', 'S_PGDOWN', 'S_PGUP', 'S_PRTSCR', 'S_RALT', 'S_RBRACKET', 'S_RCTRL', 'S_RETURN', 'S_RGUI', 'S_RIGHT', 'S_RSHIFT', 'S_SCRLK', 'S_SEMICOLON', 'S_SLASH', 'S_SPACE', 'S_TAB', 'S_UNDO', 'S_UP', 'S_VOLDOWN', 'S_VOLUP', 'S_a', 'S_b', 'S_c', 'S_d', 'S_e', 'S_f', 'S_g', 'S_h', 'S_i', 'S_j', 'S_k', 'S_l', 'S_m', 'S_n', 'S_o', 'S_p', 'S_q', 'S_r', 'S_s', 'S_t', 'S_u', 'S_v', 'S_w', 'S_x', 'S_y', 'S_z', 'Scancode', 'Surface', 'TEXT_EDITING', 'TEXT_INPUT', 'TOP_LEFT', 'TOP_MID', 'TOP_RIGHT', 'Texture', 'Vec2', 'WINDOW_ENTER_FULLSCREEN', 'WINDOW_EXPOSED', 'WINDOW_FOCUS_GAINED', 'WINDOW_FOCUS_LOST', 'WINDOW_HIDDEN', 'WINDOW_LEAVE_FULLSCREEN', 'WINDOW_MAXIMIZED', 'WINDOW_MINIMIZED', 'WINDOW_MOUSE_ENTER', 'WINDOW_MOUSE_LEAVE', 'WINDOW_MOVED', 'WINDOW_OCCLUDED', 'WINDOW_RESIZED', 'WINDOW_RESTORED', 'WINDOW_SHOWN', 'color', 'ease', 'event', 'gamepad', 'init', 'input', 'key', 'line', 'math', 'mouse', 'quit', 'rect', 'time', 'transform', 'window']
+AUDIO_DEVICE_ADDED: _core.EventType  # value = <EventType.AUDIO_DEVICE_ADDED: 4352>
+AUDIO_DEVICE_REMOVED: _core.EventType  # value = <EventType.AUDIO_DEVICE_REMOVED: 4353>
+BOTTOM_LEFT: _core.Anchor  # value = <Anchor.BOTTOM_LEFT: 6>
+BOTTOM_MID: _core.Anchor  # value = <Anchor.BOTTOM_MID: 7>
+BOTTOM_RIGHT: _core.Anchor  # value = <Anchor.BOTTOM_RIGHT: 8>
+CAMERA_ADDED: _core.EventType  # value = <EventType.CAMERA_ADDED: 5120>
+CAMERA_APPROVED: _core.EventType  # value = <EventType.CAMERA_APPROVED: 5122>
+CAMERA_DENIED: _core.EventType  # value = <EventType.CAMERA_DENIED: 5123>
+CAMERA_REMOVED: _core.EventType  # value = <EventType.CAMERA_REMOVED: 5121>
+CENTER: _core.Anchor  # value = <Anchor.CENTER: 4>
 C_BACK: _core.GamepadButton  # value = <GamepadButton.C_BACK: 4>
 C_DPADDOWN: _core.GamepadButton  # value = <GamepadButton.C_DPADDOWN: 12>
 C_DPADLEFT: _core.GamepadButton  # value = <GamepadButton.C_DPADLEFT: 13>
@@ -71,23 +79,23 @@ C_SWITCHPRO: _core.GamepadType  # value = <GamepadType.C_SWITCHPRO: 7>
 C_WEST: _core.GamepadButton  # value = <GamepadButton.C_WEST: 2>
 C_XBOX360: _core.GamepadType  # value = <GamepadType.C_XBOX360: 2>
 C_XBOXONE: _core.GamepadType  # value = <GamepadType.C_XBOXONE: 3>
-DROPBEGIN: _core.EventType  # value = <EventType.DROPBEGIN: 4098>
-DROPCOMPLETE: _core.EventType  # value = <EventType.DROPCOMPLETE: 4099>
-DROPFILE: _core.EventType  # value = <EventType.DROPFILE: 4096>
-DROPPOSITION: _core.EventType  # value = <EventType.DROPPOSITION: 4100>
-DROPTEXT: _core.EventType  # value = <EventType.DROPTEXT: 4097>
-GAMEPADADDED: _core.EventType  # value = <EventType.GAMEPADADDED: 1619>
-GAMEPADAXISMOTION: _core.EventType  # value = <EventType.GAMEPADAXISMOTION: 1616>
-GAMEPADBUTTONDOWN: _core.EventType  # value = <EventType.GAMEPADBUTTONDOWN: 1617>
-GAMEPADBUTTONUP: _core.EventType  # value = <EventType.GAMEPADBUTTONUP: 1618>
-GAMEPADREMOVED: _core.EventType  # value = <EventType.GAMEPADREMOVED: 1620>
-GAMEPADTOUCHPADDOWN: _core.EventType  # value = <EventType.GAMEPADTOUCHPADDOWN: 1622>
-GAMEPADTOUCHPADMOTION: _core.EventType  # value = <EventType.GAMEPADTOUCHPADMOTION: 1623>
-GAMEPADTOUCHPADUP: _core.EventType  # value = <EventType.GAMEPADTOUCHPADUP: 1624>
+DROP_BEGIN: _core.EventType  # value = <EventType.DROP_BEGIN: 4098>
+DROP_COMPLETE: _core.EventType  # value = <EventType.DROP_COMPLETE: 4099>
+DROP_FILE: _core.EventType  # value = <EventType.DROP_FILE: 4096>
+DROP_POSITION: _core.EventType  # value = <EventType.DROP_POSITION: 4100>
+DROP_TEXT: _core.EventType  # value = <EventType.DROP_TEXT: 4097>
+GAMEPAD_ADDED: _core.EventType  # value = <EventType.GAMEPAD_ADDED: 1619>
+GAMEPAD_AXIS_MOTION: _core.EventType  # value = <EventType.GAMEPAD_AXIS_MOTION: 1616>
+GAMEPAD_BUTTON_DOWN: _core.EventType  # value = <EventType.GAMEPAD_BUTTON_DOWN: 1617>
+GAMEPAD_BUTTON_UP: _core.EventType  # value = <EventType.GAMEPAD_BUTTON_UP: 1618>
+GAMEPAD_REMOVED: _core.EventType  # value = <EventType.GAMEPAD_REMOVED: 1620>
+GAMEPAD_TOUCHPAD_DOWN: _core.EventType  # value = <EventType.GAMEPAD_TOUCHPAD_DOWN: 1622>
+GAMEPAD_TOUCHPAD_MOTION: _core.EventType  # value = <EventType.GAMEPAD_TOUCHPAD_MOTION: 1623>
+GAMEPAD_TOUCHPAD_UP: _core.EventType  # value = <EventType.GAMEPAD_TOUCHPAD_UP: 1624>
 KEYBOARD_ADDED: _core.EventType  # value = <EventType.KEYBOARD_ADDED: 773>
 KEYBOARD_REMOVED: _core.EventType  # value = <EventType.KEYBOARD_REMOVED: 774>
-KEYDOWN: _core.EventType  # value = <EventType.KEYDOWN: 768>
-KEYUP: _core.EventType  # value = <EventType.KEYUP: 769>
+KEY_DOWN: _core.EventType  # value = <EventType.KEY_DOWN: 768>
+KEY_UP: _core.EventType  # value = <EventType.KEY_UP: 769>
 K_0: _core.Keycode  # value = <Keycode.K_0: 48>
 K_1: _core.Keycode  # value = <Keycode.K_1: 49>
 K_2: _core.Keycode  # value = <Keycode.K_2: 50>
@@ -221,25 +229,27 @@ K_w: _core.Keycode  # value = <Keycode.K_w: 119>
 K_x: _core.Keycode  # value = <Keycode.K_x: 120>
 K_y: _core.Keycode  # value = <Keycode.K_y: 121>
 K_z: _core.Keycode  # value = <Keycode.K_z: 122>
-MOUSEADDED: _core.EventType  # value = <EventType.MOUSEADDED: 1028>
-MOUSEBUTTONDOWN: _core.EventType  # value = <EventType.MOUSEBUTTONDOWN: 1025>
-MOUSEBUTTONUP: _core.EventType  # value = <EventType.MOUSEBUTTONUP: 1026>
-MOUSEMOTION: _core.EventType  # value = <EventType.MOUSEMOTION: 1024>
-MOUSEREMOVED: _core.EventType  # value = <EventType.MOUSEREMOVED: 1029>
-MOUSEWHEEL: _core.EventType  # value = <EventType.MOUSEWHEEL: 1027>
+MID_LEFT: _core.Anchor  # value = <Anchor.MID_LEFT: 3>
+MID_RIGHT: _core.Anchor  # value = <Anchor.MID_RIGHT: 5>
+MOUSE_ADDED: _core.EventType  # value = <EventType.MOUSE_ADDED: 1028>
+MOUSE_BUTTON_DOWN: _core.EventType  # value = <EventType.MOUSE_BUTTON_DOWN: 1025>
+MOUSE_BUTTON_UP: _core.EventType  # value = <EventType.MOUSE_BUTTON_UP: 1026>
+MOUSE_MOTION: _core.EventType  # value = <EventType.MOUSE_MOTION: 1024>
+MOUSE_REMOVED: _core.EventType  # value = <EventType.MOUSE_REMOVED: 1029>
+MOUSE_WHEEL: _core.EventType  # value = <EventType.MOUSE_WHEEL: 1027>
 M_LEFT: _core.MouseButton  # value = <MouseButton.M_LEFT: 1>
 M_MIDDLE: _core.MouseButton  # value = <MouseButton.M_MIDDLE: 2>
 M_RIGHT: _core.MouseButton  # value = <MouseButton.M_RIGHT: 3>
 M_SIDE1: _core.MouseButton  # value = <MouseButton.M_SIDE1: 4>
 M_SIDE2: _core.MouseButton  # value = <MouseButton.M_SIDE2: 5>
-PENAXIS: _core.EventType  # value = <EventType.PENAXIS: 4871>
-PENBUTTONDOWN: _core.EventType  # value = <EventType.PENBUTTONDOWN: 4868>
-PENBUTTONUP: _core.EventType  # value = <EventType.PENBUTTONUP: 4869>
-PENDOWN: _core.EventType  # value = <EventType.PENDOWN: 4866>
-PENMOTION: _core.EventType  # value = <EventType.PENMOTION: 4870>
-PENPROXIMITYIN: _core.EventType  # value = <EventType.PENPROXIMITYIN: 4864>
-PENPROXIMITYOUT: _core.EventType  # value = <EventType.PENPROXIMITYOUT: 4865>
-PENUP: _core.EventType  # value = <EventType.PENUP: 4867>
+PEN_AXIS: _core.EventType  # value = <EventType.PEN_AXIS: 4871>
+PEN_BUTTON_DOWN: _core.EventType  # value = <EventType.PEN_BUTTON_DOWN: 4868>
+PEN_BUTTON_UP: _core.EventType  # value = <EventType.PEN_BUTTON_UP: 4869>
+PEN_DOWN: _core.EventType  # value = <EventType.PEN_DOWN: 4866>
+PEN_MOTION: _core.EventType  # value = <EventType.PEN_MOTION: 4870>
+PEN_PROXIMITY_IN: _core.EventType  # value = <EventType.PEN_PROXIMITY_IN: 4864>
+PEN_PROXIMITY_OUT: _core.EventType  # value = <EventType.PEN_PROXIMITY_OUT: 4865>
+PEN_UP: _core.EventType  # value = <EventType.PEN_UP: 4867>
 QUIT: _core.EventType  # value = <EventType.QUIT: 256>
 S_0: _core.Scancode  # value = <Scancode.S_0: 39>
 S_1: _core.Scancode  # value = <Scancode.S_1: 30>
@@ -353,20 +363,23 @@ S_w: _core.Scancode  # value = <Scancode.S_w: 26>
 S_x: _core.Scancode  # value = <Scancode.S_x: 27>
 S_y: _core.Scancode  # value = <Scancode.S_y: 28>
 S_z: _core.Scancode  # value = <Scancode.S_z: 29>
-TEXTEDITING: _core.EventType  # value = <EventType.TEXTEDITING: 770>
-TEXTINPUT: _core.EventType  # value = <EventType.TEXTINPUT: 771>
-WINDOWENTERFULLSCREEN: _core.EventType  # value = <EventType.WINDOWENTERFULLSCREEN: 535>
-WINDOWEXPOSED: _core.EventType  # value = <EventType.WINDOWEXPOSED: 516>
-WINDOWFOCUSGAINED: _core.EventType  # value = <EventType.WINDOWFOCUSGAINED: 526>
-WINDOWFOCUSLOST: _core.EventType  # value = <EventType.WINDOWFOCUSLOST: 527>
-WINDOWHIDDEN: _core.EventType  # value = <EventType.WINDOWHIDDEN: 515>
-WINDOWLEAVEFULLSCREEN: _core.EventType  # value = <EventType.WINDOWLEAVEFULLSCREEN: 536>
-WINDOWMAXIMIZED: _core.EventType  # value = <EventType.WINDOWMAXIMIZED: 522>
-WINDOWMINIMIZED: _core.EventType  # value = <EventType.WINDOWMINIMIZED: 521>
-WINDOWMOUSEENTER: _core.EventType  # value = <EventType.WINDOWMOUSEENTER: 524>
-WINDOWMOUSELEAVE: _core.EventType  # value = <EventType.WINDOWMOUSELEAVE: 525>
-WINDOWMOVED: _core.EventType  # value = <EventType.WINDOWMOVED: 517>
-WINDOWOCCLUDED: _core.EventType  # value = <EventType.WINDOWOCCLUDED: 534>
-WINDOWRESIZED: _core.EventType  # value = <EventType.WINDOWRESIZED: 518>
-WINDOWRESTORED: _core.EventType  # value = <EventType.WINDOWRESTORED: 523>
-WINDOWSHOWN: _core.EventType  # value = <EventType.WINDOWSHOWN: 514>
+TEXT_EDITING: _core.EventType  # value = <EventType.TEXT_EDITING: 770>
+TEXT_INPUT: _core.EventType  # value = <EventType.TEXT_INPUT: 771>
+TOP_LEFT: _core.Anchor  # value = <Anchor.TOP_LEFT: 0>
+TOP_MID: _core.Anchor  # value = <Anchor.TOP_MID: 1>
+TOP_RIGHT: _core.Anchor  # value = <Anchor.TOP_RIGHT: 2>
+WINDOW_ENTER_FULLSCREEN: _core.EventType  # value = <EventType.WINDOW_ENTER_FULLSCREEN: 535>
+WINDOW_EXPOSED: _core.EventType  # value = <EventType.WINDOW_EXPOSED: 516>
+WINDOW_FOCUS_GAINED: _core.EventType  # value = <EventType.WINDOW_FOCUS_GAINED: 526>
+WINDOW_FOCUS_LOST: _core.EventType  # value = <EventType.WINDOW_FOCUS_LOST: 527>
+WINDOW_HIDDEN: _core.EventType  # value = <EventType.WINDOW_HIDDEN: 515>
+WINDOW_LEAVE_FULLSCREEN: _core.EventType  # value = <EventType.WINDOW_LEAVE_FULLSCREEN: 536>
+WINDOW_MAXIMIZED: _core.EventType  # value = <EventType.WINDOW_MAXIMIZED: 522>
+WINDOW_MINIMIZED: _core.EventType  # value = <EventType.WINDOW_MINIMIZED: 521>
+WINDOW_MOUSE_ENTER: _core.EventType  # value = <EventType.WINDOW_MOUSE_ENTER: 524>
+WINDOW_MOUSE_LEAVE: _core.EventType  # value = <EventType.WINDOW_MOUSE_LEAVE: 525>
+WINDOW_MOVED: _core.EventType  # value = <EventType.WINDOW_MOVED: 517>
+WINDOW_OCCLUDED: _core.EventType  # value = <EventType.WINDOW_OCCLUDED: 534>
+WINDOW_RESIZED: _core.EventType  # value = <EventType.WINDOW_RESIZED: 518>
+WINDOW_RESTORED: _core.EventType  # value = <EventType.WINDOW_RESTORED: 523>
+WINDOW_SHOWN: _core.EventType  # value = <EventType.WINDOW_SHOWN: 514>

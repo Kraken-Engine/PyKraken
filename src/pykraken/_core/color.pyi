@@ -1,28 +1,40 @@
 """
-Color related functions
+Color-related functions and constants
 """
 from __future__ import annotations
 import pykraken._core
+import typing
 __all__ = ['BLACK', 'BLUE', 'BROWN', 'CYAN', 'DARK_GRAY', 'DARK_GREY', 'GRAY', 'GREEN', 'GREY', 'LIGHT_GRAY', 'LIGHT_GREY', 'MAGENTA', 'MAROON', 'NAVY', 'OLIVE', 'ORANGE', 'PINK', 'PURPLE', 'RED', 'TEAL', 'WHITE', 'YELLOW', 'from_hex', 'from_hsv', 'invert', 'lerp', 'to_hex']
-def from_hex(*args, **kwargs):
+def from_hex(hex: str) -> pykraken._core.Color:
     """
-    Create a Color from a hex string.
+    Create a Color from a hex string (e.g. "#FF00FF" or "#FF00FF80").
     """
-def from_hsv(*args, **kwargs):
+def from_hsv(h: float, s: float, v: float, a: float = 1.0) -> pykraken._core.Color:
     """
-    Create a Color from HSV values.
+    Create a Color from HSV(A) values.
+    
+    Args:
+        h (float): Hue angle (0-360).
+        s (float): Saturation (0-1).
+        v (float): Value/brightness (0-1).
+        a (float, optional): Alpha (0-1). Defaults to 1.0.
     """
-def invert(*args, **kwargs):
+def invert(color: pykraken._core.Color) -> pykraken._core.Color:
     """
-    Invert the given Color.
+    Return the inverse of a color (flips RGB channels).
     """
-def lerp(*args, **kwargs):
+def lerp(a: pykraken._core.Color, b: pykraken._core.Color, t: float) -> pykraken._core.Color:
     """
-    Linearly interpolate between two Colors.
+    Linearly interpolate between two colors.
+    
+    Args:
+        a (Color): Start color.
+        b (Color): End color.
+        t (float): Blend factor (0.0 = a, 1.0 = b).
     """
-def to_hex(*args, **kwargs):
+def to_hex(color: typing.Any) -> str:
     """
-    Convert a Color to a hex string.
+    Convert a Color or RGB(A) sequence to a hex string.
     """
 BLACK: pykraken._core.Color  # value = Color(0, 0, 0, 255)
 BLUE: pykraken._core.Color  # value = Color(0, 0, 255, 255)

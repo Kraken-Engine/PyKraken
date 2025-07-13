@@ -2,51 +2,172 @@
 Math related functions
 """
 from __future__ import annotations
+import pykraken._core
+import typing
 __all__ = ['angle_between', 'clamp', 'cross', 'dot', 'from_polar', 'lerp', 'normalize', 'remap', 'scale_to_length', 'to_degrees', 'to_radians']
-def angle_between(*args, **kwargs):
+def angle_between(a: pykraken._core.Vec2, b: pykraken._core.Vec2) -> float:
     """
-    Calculate the angle between two vectors
+    Calculate the angle between two vectors.
+    
+    Args:
+        a (Vec2): The first vector.
+        b (Vec2): The second vector.
+    
+    Returns:
+        float: The angle between the vectors in radians [0, π].
     """
-def clamp(*args, **kwargs):
+@typing.overload
+def clamp(vector: pykraken._core.Vec2, min_vec: pykraken._core.Vec2, max_vec: pykraken._core.Vec2) -> pykraken._core.Vec2:
     """
-    Clamp a vector between two vectors
-    Clamp a value between two values
+    Clamp a vector between two boundary vectors.
+    
+    Args:
+        vector (Vec2): The vector to clamp.
+        min_vec (Vec2): The minimum boundary vector.
+        max_vec (Vec2): The maximum boundary vector.
+    
+    Returns:
+        Vec2: A new vector with components clamped between min and max.
     """
-def cross(*args, **kwargs):
+@typing.overload
+def clamp(value: float, min_val: float, max_val: float) -> float:
     """
-    Calculate the cross product of two vectors
+    Clamp a value between two boundaries.
+    
+    Args:
+        value (float): The value to clamp.
+        min_val (float): The minimum boundary.
+        max_val (float): The maximum boundary.
+    
+    Returns:
+        float: The clamped value.
     """
-def dot(*args, **kwargs):
+def cross(a: pykraken._core.Vec2, b: pykraken._core.Vec2) -> float:
     """
-    Calculate the dot product of two vectors
+    Calculate the 2D cross product of two vectors.
+    
+    Args:
+        a (Vec2): The first vector.
+        b (Vec2): The second vector.
+    
+    Returns:
+        float: The 2D cross product (a.x * b.y - a.y * b.x).
     """
-def from_polar(*args, **kwargs):
+def dot(a: pykraken._core.Vec2, b: pykraken._core.Vec2) -> float:
     """
-    Convert radians and a radius to a Cartesian vector
-    Convert a PolarCoordinate object to a Cartesian vector
+    Calculate the dot product of two vectors.
+    
+    Args:
+        a (Vec2): The first vector.
+        b (Vec2): The second vector.
+    
+    Returns:
+        float: The dot product (a.x * b.x + a.y * b.y).
     """
-def lerp(*args, **kwargs):
+@typing.overload
+def from_polar(angle: float, radius: float) -> pykraken._core.Vec2:
     """
-    Linearly interpolate between two Vec2s
-    Linearly interpolate between two doubles
+    Convert polar coordinates to a Cartesian vector.
+    
+    Args:
+        angle (float): The angle in radians.
+        radius (float): The radius/distance from origin.
+    
+    Returns:
+        Vec2: The equivalent Cartesian vector.
     """
-def normalize(*args, **kwargs):
+@typing.overload
+def from_polar(polar: pykraken._core.PolarCoordinate) -> pykraken._core.Vec2:
     """
-    Normalize a vector
+    Convert a PolarCoordinate object to a Cartesian vector.
+    
+    Args:
+        polar (PolarCoordinate): The polar coordinate to convert.
+    
+    Returns:
+        Vec2: The equivalent Cartesian vector.
     """
-def remap(*args, **kwargs):
+@typing.overload
+def lerp(a: pykraken._core.Vec2, b: pykraken._core.Vec2, t: float) -> pykraken._core.Vec2:
     """
-    Remap a value from one range to another
+    Linearly interpolate between two Vec2s.
+    
+    Args:
+        a (Vec2): The start vector.
+        b (Vec2): The end vector.
+        t (float): The interpolation factor [0.0, 1.0].
+    
+    Returns:
+        Vec2: The interpolated vector.
     """
-def scale_to_length(*args, **kwargs):
+@typing.overload
+def lerp(a: float, b: float, t: float) -> float:
     """
-    Scale a vector to a given length
+    Linearly interpolate between two values.
+    
+    Args:
+        a (float): The start value.
+        b (float): The end value.
+        t (float): The interpolation factor [0.0, 1.0].
+    
+    Returns:
+        float: The interpolated value.
     """
-def to_degrees(*args, **kwargs):
+def normalize(vector: pykraken._core.Vec2) -> pykraken._core.Vec2:
     """
-    Convert radians to degrees
+    Normalize a vector to unit length.
+    
+    Args:
+        vector (Vec2): The input vector.
+    
+    Returns:
+        Vec2: A new normalized vector.
     """
-def to_radians(*args, **kwargs):
+def remap(in_min: float, in_max: float, out_min: float, out_max: float, value: float) -> float:
     """
-    Convert degrees to radians
+    Remap a value from one range to another.
+    
+    Args:
+        in_min (float): Input range minimum.
+        in_max (float): Input range maximum.
+        out_min (float): Output range minimum.
+        out_max (float): Output range maximum.
+        value (float): The value to remap.
+    
+    Returns:
+        float: The remapped value in the output range.
+    
+    Raises:
+        ValueError: If in_min equals in_max.
+    """
+def scale_to_length(vector: pykraken._core.Vec2, length: float) -> pykraken._core.Vec2:
+    """
+    Scale a vector to a given length.
+    
+    Args:
+        vector (Vec2): The input vector.
+        length (float): The target length.
+    
+    Returns:
+        Vec2: A new vector scaled to the specified length.
+    """
+def to_degrees(radians: float) -> float:
+    """
+    Convert radians to degrees.
+    
+    Args:
+        radians (float): The angle in radians.
+    
+    Returns:
+        float: The angle in degrees.
+    """
+def to_radians(degrees: float) -> float:
+    """
+    Convert degrees to radians.
+    
+    Args:
+        degrees (float): The angle in degrees.
+    
+    Returns:
+        float: The angle in radians.
     """

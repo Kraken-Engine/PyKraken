@@ -7,21 +7,18 @@ namespace py = pybind11;
 
 class Rect;
 
-namespace math
-{
 class Vec2;
-}
 
 namespace rect
 {
 void _bind(py::module_& module);
 
-Rect move(const Rect& rect, const math::Vec2& offset);
-Rect clamp(const Rect& rect, const math::Vec2& min, const math::Vec2& max);
+Rect move(const Rect& rect, const Vec2& offset);
+Rect clamp(const Rect& rect, const Vec2& min, const Vec2& max);
 Rect clamp(const Rect& rect, const Rect& other);
 Rect scaleBy(const Rect& rect, double factor);
-Rect scaleBy(const Rect& rect, const math::Vec2& factor);
-Rect scaleTo(const Rect& rect, const math::Vec2& size);
+Rect scaleBy(const Rect& rect, const Vec2& factor);
+Rect scaleTo(const Rect& rect, const Vec2& size);
 } // namespace rect
 
 class Rect
@@ -33,34 +30,34 @@ class Rect
     double h = 0;
 
     Rect() = default;
-    Rect(const math::Vec2& pos, const math::Vec2& size);
+    Rect(const Vec2& pos, const Vec2& size);
     Rect(double x, double y, double w, double h);
-    Rect(const math::Vec2& pos, double w, double h);
-    Rect(double x, double y, const math::Vec2& size);
+    Rect(const Vec2& pos, double w, double h);
+    Rect(double x, double y, const Vec2& size);
 
     Rect copy() const;
 
-    void move(const math::Vec2& offset);
+    void move(const Vec2& offset);
 
-    void inflate(const math::Vec2& offset);
+    void inflate(const Vec2& offset);
 
     void fit(const Rect& other);
 
     bool contains(const Rect& other) const;
 
-    bool collidePoint(const math::Vec2& point) const;
+    bool collidePoint(const Vec2& point) const;
 
     bool collideRect(const Rect& other) const;
 
-    void clamp(const math::Vec2& min, const math::Vec2& max);
+    void clamp(const Vec2& min, const Vec2& max);
 
     void clamp(const Rect& other);
 
     void scaleBy(double factor);
 
-    void scaleBy(const math::Vec2& factor);
+    void scaleBy(const Vec2& factor);
 
-    void scaleTo(const math::Vec2& size);
+    void scaleTo(const Vec2& size);
 
     bool operator==(const Rect& other) const;
     bool operator!=(const Rect& other) const;
@@ -68,33 +65,33 @@ class Rect
     operator SDL_Rect() const;
     operator SDL_FRect() const;
 
-    void setSize(const math::Vec2& size);
+    void setSize(const Vec2& size);
     void setLeft(double left);
     void setRight(double right);
     void setTop(double top);
     void setBottom(double bottom);
-    void setTopLeft(const math::Vec2& topLeft);
-    void setTopMid(const math::Vec2& topMid);
-    void setTopRight(const math::Vec2& topRight);
-    void setMidLeft(const math::Vec2& midLeft);
-    void setCenter(const math::Vec2& mid);
-    void setMidRight(const math::Vec2& midRight);
-    void setBottomLeft(const math::Vec2& bottomLeft);
-    void setBottomMid(const math::Vec2& bottomMid);
-    void setBottomRight(const math::Vec2& bottomRight);
+    void setTopLeft(const Vec2& topLeft);
+    void setTopMid(const Vec2& topMid);
+    void setTopRight(const Vec2& topRight);
+    void setMidLeft(const Vec2& midLeft);
+    void setCenter(const Vec2& mid);
+    void setMidRight(const Vec2& midRight);
+    void setBottomLeft(const Vec2& bottomLeft);
+    void setBottomMid(const Vec2& bottomMid);
+    void setBottomRight(const Vec2& bottomRight);
 
-    math::Vec2 getSize() const;
+    Vec2 getSize() const;
     double getLeft() const;
     double getRight() const;
     double getTop() const;
     double getBottom() const;
-    math::Vec2 getTopLeft() const;
-    math::Vec2 getTopMid() const;
-    math::Vec2 getTopRight() const;
-    math::Vec2 getMidLeft() const;
-    math::Vec2 getCenter() const;
-    math::Vec2 getMidRight() const;
-    math::Vec2 getBottomLeft() const;
-    math::Vec2 getBottomMid() const;
-    math::Vec2 getBottomRight() const;
+    Vec2 getTopLeft() const;
+    Vec2 getTopMid() const;
+    Vec2 getTopRight() const;
+    Vec2 getMidLeft() const;
+    Vec2 getCenter() const;
+    Vec2 getMidRight() const;
+    Vec2 getBottomLeft() const;
+    Vec2 getBottomMid() const;
+    Vec2 getBottomRight() const;
 };

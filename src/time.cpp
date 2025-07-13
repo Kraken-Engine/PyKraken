@@ -5,17 +5,57 @@ namespace kn::time
 {
 void _bind(py::module_& module)
 {
-    py::class_<Clock>(module, "Clock")
-        .def(py::init<>())
-        .def("tick", &Clock::tick, py::arg("frame_rate") = 0,
-             "Get the time since the last frame in seconds and optionally cap the framerate")
-        .def("get_fps", &Clock::getFPS, "Get the current frames per second of the program");
+    py::class_<Clock>(module, "Clock", R"doc(
+A clock for tracking frame time and controlling framerate.
+
+The Clock class is used to measure time between frames and optionally
+limit the framerate of your application. It's essential for creating
+smooth, frame-rate independent animations and game loops.
+    )doc")
+        .def(py::init<>(), R"doc(
+Create a new Clock instance.
+
+The clock starts measuring time immediately upon creation.
+        )doc")
+        .def("tick", &Clock::tick, py::arg("frame_rate") = 0, R"doc(
+Get the time since the last frame and optionally cap the framerate.
+
+This method should be called once per frame in your main loop. It returns
+the time elapsed since the last call to tick(), which can be used for
+frame-rate independent animations.
+
+Args:
+    frame_rate (int, optional): Maximum framerate to enforce. If 0, no limit is applied.
+                               Defaults to 0 (unlimited).
+
+Returns:
+    float: The time elapsed since the last tick() call, in seconds.
+        )doc")
+        .def("get_fps", &Clock::getFPS, R"doc(
+Get the current frames per second of the program.
+
+Returns:
+    int: The current FPS based on the last frame time.
+        )doc");
 
     auto subTime = module.def_submodule("time", "Time related functions");
 
-    subTime.def("get_elapsed_time", &getElapsedTime,
-                "Get the elapsed time since the program started, in seconds");
-    subTime.def("delay", &delay, "Delay the program by a duration in milliseconds");
+    subTime.def("get_elapsed_time", &getElapsedTime, R"doc(
+Get the elapsed time since the program started.
+
+Returns:
+    float: The total elapsed time since program start, in seconds.
+        )doc");
+    subTime.def("delay", &delay, py::arg("milliseconds"), R"doc(
+Delay the program execution for the specified duration.
+
+This function pauses execution for the given number of milliseconds.
+Useful for simple timing control, though using Clock.tick() is generally
+preferred for frame rate control.
+
+Args:
+    milliseconds (int): The number of milliseconds to delay.
+        )doc");
 }
 
 Clock::Clock() : m_lastTick(SDL_GetTicksNS()) {}

@@ -7,11 +7,11 @@ namespace py = pybind11;
 struct SDL_Point;
 struct SDL_FPoint;
 
-namespace math
-{
 class PolarCoordinate;
 class Vec2;
 
+namespace math
+{
 void _bind(py::module_& module);
 
 Vec2 scaleToLength(const Vec2& vec, double scalar);
@@ -39,6 +39,7 @@ double dot(const Vec2& a, const Vec2& b);
 double cross(const Vec2& a, const Vec2& b);
 
 double angleBetween(const Vec2& a, const Vec2& b);
+} // namespace math
 
 struct PolarCoordinate
 {
@@ -125,5 +126,3 @@ class Vec2
 };
 
 Vec2 operator*(double lhs, const Vec2& rhs);
-
-} // namespace math

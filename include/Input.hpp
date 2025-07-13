@@ -8,10 +8,7 @@
 
 namespace py = pybind11;
 
-namespace math
-{
 class Vec2;
-} // namespace math
 
 namespace input
 {
@@ -39,8 +36,8 @@ void bindInput(const std::string& name, const std::vector<InputAction>& actions)
 
 void unbindInput(const std::string& name);
 
-math::Vec2 getDirection(const std::string& up = "", const std::string& right = "",
-                        const std::string& down = "", const std::string& left = "");
+Vec2 getDirection(const std::string& up = "", const std::string& right = "",
+                  const std::string& down = "", const std::string& left = "");
 
 double getAxis(const std::string& negative = "", const std::string& positive = "");
 

@@ -16,11 +16,10 @@ using EasingFunction = std::function<double(double)>;
 class EasingAnimation
 {
   public:
-    EasingAnimation(const math::Vec2& start, const math::Vec2& end, double duration,
-                    EasingFunction easeFunc);
+    EasingAnimation(const Vec2& start, const Vec2& end, double duration, EasingFunction easeFunc);
     ~EasingAnimation() = default;
 
-    math::Vec2 step(double delta);
+    Vec2 step(double delta);
 
     void pause();
 
@@ -40,8 +39,8 @@ class EasingAnimation
         DONE,
     };
 
-    math::Vec2 startPos;
-    math::Vec2 endPos;
+    Vec2 startPos;
+    Vec2 endPos;
     double duration;
     EasingFunction easingFunc;
 
@@ -49,7 +48,7 @@ class EasingAnimation
     State state = State::PLAYING;
     bool forward = true;
 
-    math::Vec2 getCurrentPosition() const;
+    Vec2 getCurrentPosition() const;
 };
 
 double linear(double t);

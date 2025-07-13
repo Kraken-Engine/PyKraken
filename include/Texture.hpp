@@ -11,10 +11,7 @@ class Surface;
 
 namespace py = pybind11;
 
-namespace math
-{
 class Vec2;
-}
 
 namespace texture
 {
@@ -38,7 +35,7 @@ class Texture final
 
     void loadFromSDL(SDL_Texture* sdlTexture);
 
-    math::Vec2 getSize() const;
+    Vec2 getSize() const;
 
     Rect getRect() const;
 

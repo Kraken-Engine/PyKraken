@@ -7,10 +7,7 @@ namespace py = pybind11;
 
 enum class knMouseButton : uint8_t;
 
-namespace math
-{
 class Vec2;
-}
 
 namespace event
 {

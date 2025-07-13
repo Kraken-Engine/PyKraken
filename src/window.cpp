@@ -13,29 +13,89 @@ void _bind(pybind11::module_& module)
 {
     auto subWindow = module.def_submodule("window", "Window related functions");
     subWindow.def("create", &window::create, py::arg("title"), py::arg("size"),
-                  py::arg("scaled") = false,
-                  "Create a window with (width, height), optional title, and auto-scaling mode");
-    subWindow.def("is_open", &window::isOpen, "Check if the window is open");
-    subWindow.def("close", &window::close, "Close the window");
-    subWindow.def("set_fullscreen", &window::setFullscreen, py::arg("fullscreen"),
-                  "Set the fullscreen mode of the window");
-    subWindow.def("is_fullscreen", &window::isFullscreen,
-                  "Check if the window is in fullscreen mode");
+                  py::arg("scaled") = false, R"doc(
+Create a window with specified title and size.
+
+Args:
+    title (str): The window title. Must be non-empty and <= 255 characters.
+    size (Vec2): The window size as (width, height). Ignored if scaled=True.
+    scaled (bool, optional): If True, creates a fullscreen window using the 
+                            display's usable bounds. Defaults to False.
+
+Raises:
+    RuntimeError: If a window already exists or window creation fails.
+    ValueError: If title is empty, exceeds 255 characters, or size values are <= 0.
+    )doc");
+    subWindow.def("is_open", &window::isOpen, R"doc(
+Check if the window is open.
+
+Returns:
+    bool: True if the window is open and active.
+    )doc");
+    subWindow.def("close", &window::close, R"doc(
+Close the window.
+
+Marks the window as closed, typically used to signal the main loop to exit.
+This doesn't destroy the window immediately but sets the close flag.
+    )doc");
+    subWindow.def("set_fullscreen", &window::setFullscreen, py::arg("fullscreen"), R"doc(
+Set the fullscreen mode of the window.
+
+Args:
+    fullscreen (bool): True to enable fullscreen mode, False for windowed mode.
+
+Raises:
+    RuntimeError: If the window is not initialized.
+    )doc");
+    subWindow.def("is_fullscreen", &window::isFullscreen, R"doc(
+Check if the window is in fullscreen mode.
+
+Returns:
+    bool: True if the window is currently in fullscreen mode.
+
+Raises:
+    RuntimeError: If the window is not initialized.
+    )doc");
     subWindow.def(
         "get_size",
         []() -> py::tuple
         {
-            math::Vec2 winSize = getSize();
+            Vec2 winSize = getSize();
             return py::make_tuple(winSize.x, winSize.y);
         },
-        "Get the current size of the window");
-    subWindow.def("get_title", &window::getTitle, "Get the current title of the window");
-    subWindow.def("set_title", &window::setTitle, py::arg("title"), "Set the title of the window");
+        R"doc(
+Get the current size of the window.
+
+Returns:
+    tuple[float, float]: The window size as (width, height).
+
+Raises:
+    RuntimeError: If the window is not initialized.
+    )doc");
+    subWindow.def("get_title", &window::getTitle, R"doc(
+Get the current title of the window.
+
+Returns:
+    str: The current window title.
+
+Raises:
+    RuntimeError: If the window is not initialized.
+    )doc");
+    subWindow.def("set_title", &window::setTitle, py::arg("title"), R"doc(
+Set the title of the window.
+
+Args:
+    title (str): The new window title. Must be non-empty and <= 255 characters.
+
+Raises:
+    RuntimeError: If the window is not initialized or title setting fails.
+    ValueError: If title is empty or exceeds 255 characters.
+    )doc");
 }
 
 SDL_Window* getWindow() { return _window; }
 
-void create(const std::string& title, const math::Vec2& size, const bool scaled)
+void create(const std::string& title, const Vec2& size, const bool scaled)
 {
     if (_window)
         throw std::runtime_error("Window already created");
@@ -76,7 +136,7 @@ bool isOpen() { return _isOpen; }
 
 void close() { _isOpen = false; }
 
-math::Vec2 getSize()
+Vec2 getSize()
 {
     if (!_window)
         throw std::runtime_error("Window not initialized");

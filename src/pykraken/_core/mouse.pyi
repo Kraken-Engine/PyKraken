@@ -2,97 +2,84 @@
 Mouse related functions
 """
 from __future__ import annotations
+import pykraken._core
 __all__ = ['get_pos', 'get_rel', 'hide', 'is_hidden', 'is_just_pressed', 'is_just_released', 'is_locked', 'is_pressed', 'lock', 'show', 'unlock']
-def get_pos(*args, **kwargs):
+def get_pos() -> tuple:
     """
+    Get the current position of the mouse cursor.
     
-            Get the current position of the mouse cursor.
+    Returns:
+        tuple[float, float]: The current mouse position as (x, y) coordinates.
+    """
+def get_rel() -> tuple:
+    """
+    Get the relative mouse movement since the last frame.
     
-            :return: The current mouse position.
-            :rtype: ``tuple[float, float]``
-        
+    Returns:
+        tuple[float, float]: The relative movement of the mouse as (dx, dy).
     """
-def get_rel(*args, **kwargs):
+def hide() -> None:
     """
+    Hide the mouse cursor from view.
     
-            Get the relative mouse movement since the last frame.
+    The cursor will be invisible but mouse input will still be tracked.
+    """
+def is_hidden() -> bool:
+    """
+    Check if the mouse cursor is currently hidden.
     
-            :return: The relative movement of the mouse.
-            :rtype: ``tuple[float, float]``
-        
+    Returns:
+        bool: True if the cursor is hidden.
     """
-def hide(*args, **kwargs):
+def is_just_pressed(button: pykraken._core.MouseButton) -> bool:
     """
+    Check if a mouse button was pressed this frame.
     
-            Hide the mouse cursor from view.
-        
-    """
-def is_hidden(*args, **kwargs):
-    """
+    Args:
+        button (MouseButton): The mouse button to check.
     
-            Check if the mouse cursor is currently hidden.
+    Returns:
+        bool: True if the button was just pressed.
+    """
+def is_just_released(button: pykraken._core.MouseButton) -> bool:
+    """
+    Check if a mouse button was released this frame.
     
-            :return: True if the cursor is hidden.
-            :rtype: ``bool``
-        
-    """
-def is_just_pressed(*args, **kwargs):
-    """
+    Args:
+        button (MouseButton): The mouse button to check.
     
-            Check if a mouse button was pressed this frame.
+    Returns:
+        bool: True if the button was just released.
+    """
+def is_locked() -> bool:
+    """
+    Check if the mouse is currently locked to the window.
     
-            :param button: The mouse button to check.
-            :type button: MouseButton
-            :return: True if the button was just pressed.
-            :rtype: ``bool``
-        
+    Returns:
+        bool: True if the mouse is locked.
     """
-def is_just_released(*args, **kwargs):
+def is_pressed(button: pykraken._core.MouseButton) -> bool:
     """
+    Check if a mouse button is currently pressed.
     
-            Check if a mouse button was released this frame.
+    Args:
+        button (MouseButton): The mouse button to check (e.g., kn.MOUSE_LEFT).
     
-            :param button: The mouse button to check.
-            :type button: MouseButton
-            :return: True if the button was just released.
-            :rtype: ``bool``
-        
+    Returns:
+        bool: True if the button is currently pressed.
     """
-def is_locked(*args, **kwargs):
+def lock() -> None:
     """
+    Lock the mouse to the center of the window.
     
-            Check if the mouse is currently locked to the window.
-    
-            :return: True if the mouse is locked.
-            :rtype: ``bool``
-        
+    Useful for first-person controls where you want to capture mouse movement
+    without letting the cursor leave the window area.
     """
-def is_pressed(*args, **kwargs):
+def show() -> None:
     """
-    
-            Check if a mouse button is currently pressed.
-    
-            :param button: The mouse button to check (e.g., kn.MOUSE_LEFT).
-            :type button: MouseButton
-            :return: True if the button is currently pressed.
-            :rtype: ``bool``
-        
+    Show the mouse cursor if it was hidden.
     """
-def lock(*args, **kwargs):
+def unlock() -> None:
     """
-    
-            Lock the mouse to the center of the window. Useful for first-person controls.
-        
-    """
-def show(*args, **kwargs):
-    """
-    
-            Show the mouse cursor if it was hidden.
-        
-    """
-def unlock(*args, **kwargs):
-    """
-    
-            Unlock the mouse from the window, allowing it to move freely.
-        
+    Unlock the mouse from the window, allowing it to move freely.
     """

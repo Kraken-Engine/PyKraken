@@ -2,6 +2,8 @@
 #include "Event.hpp"
 #include "Math.hpp"
 
+#include <pybind11/stl.h>
+
 constexpr int MAX_GAMEPADS = 4;
 static std::array<std::optional<SDL_JoystickID>, MAX_GAMEPADS> _gamepadSlots;
 static std::unordered_map<SDL_JoystickID, GamepadState> _connectedPads;
@@ -12,28 +14,107 @@ namespace gamepad
 {
 void _bind(py::module_& module)
 {
-    auto subGamepad = module.def_submodule("gamepad", "Gamepad related functions");
+    auto subGamepad = module.def_submodule("gamepad", "Gamepad input handling functions");
 
-    subGamepad.def("is_pressed", &isPressed, "Check if a gamepad button is pressed",
-                   py::arg("button"), py::arg("id") = 0);
-    subGamepad.def("is_just_pressed", &isJustPressed, "Check if a gamepad button was just pressed",
-                   py::arg("button"), py::arg("id") = 0);
-    subGamepad.def("is_just_released", &isJustReleased,
-                   "Check if a gamepad button was just released", py::arg("button"),
-                   py::arg("id") = 0);
-    subGamepad.def("get_left_stick", &getLeftStick, "Get the left stick position",
-                   py::arg("id") = 0);
-    subGamepad.def("get_right_stick", &getRightStick, "Get the right stick position",
-                   py::arg("id") = 0);
-    subGamepad.def("get_left_trigger", &getLeftTrigger, "Get the left trigger value",
-                   py::arg("id") = 0);
-    subGamepad.def("get_right_trigger", &getRightTrigger, "Get the right trigger value",
-                   py::arg("id") = 0);
-    subGamepad.def("set_dead_zone", static_cast<void (*)(float, int)>(&setDeadZone),
-                   "Set the dead zone for sticks", py::arg("deadZone"), py::arg("slot") = 0);
-    subGamepad.def("get_dead_zone", static_cast<float (*)(int)>(&getDeadZone),
-                   "Get the dead zone for sticks", py::arg("slot") = 0);
-    subGamepad.def("get_connected_slots", &getConnectedSlots, "Get connected gamepad slots");
+    subGamepad.def("is_pressed", &isPressed, py::arg("button"), py::arg("slot") = 0, R"doc(
+Check if a gamepad button is currently being held down.
+
+Args:
+    button (GamepadButton): The button code.
+    slot (int, optional): Gamepad slot ID (default is 0).
+
+Returns:
+    bool: True if the button is pressed.
+    )doc");
+
+    subGamepad.def("is_just_pressed", &isJustPressed, py::arg("button"), py::arg("slot") = 0,
+                   R"doc(
+Check if a gamepad button was pressed during this frame.
+
+Args:
+    button (GamepadButton): The button code.
+    slot (int, optional): Gamepad slot ID (default is 0).
+
+Returns:
+    bool: True if the button was just pressed.
+    )doc");
+
+    subGamepad.def("is_just_released", &isJustReleased, py::arg("button"), py::arg("slot") = 0,
+                   R"doc(
+Check if a gamepad button was released during this frame.
+
+Args:
+    button (GamepadButton): The button code.
+    slot (int, optional): Gamepad slot ID (default is 0).
+
+Returns:
+    bool: True if the button was just released.
+    )doc");
+
+    subGamepad.def("get_left_stick", &getLeftStick, py::arg("slot") = 0, R"doc(
+Get the left analog stick position.
+
+Args:
+    slot (int, optional): Gamepad slot ID (default is 0).
+
+Returns:
+    Vec2: A vector of stick input normalized to [-1, 1], or (0, 0) if inside dead zone.
+    )doc");
+
+    subGamepad.def("get_right_stick", &getRightStick, py::arg("slot") = 0, R"doc(
+Get the right analog stick position.
+
+Args:
+    slot (int, optional): Gamepad slot ID (default is 0).
+
+Returns:
+    Vec2: A vector of stick input normalized to [-1, 1], or (0, 0) if inside dead zone.
+    )doc");
+
+    subGamepad.def("get_left_trigger", &getLeftTrigger, py::arg("slot") = 0, R"doc(
+Get the left trigger's current pressure value.
+
+Args:
+    slot (int, optional): Gamepad slot ID (default is 0).
+
+Returns:
+    float: Trigger value in range [0.0, 1.0].
+    )doc");
+
+    subGamepad.def("get_right_trigger", &getRightTrigger, py::arg("slot") = 0, R"doc(
+Get the right trigger's current pressure value.
+
+Args:
+    slot (int, optional): Gamepad slot ID (default is 0).
+
+Returns:
+    float: Trigger value in range [0.0, 1.0].
+    )doc");
+
+    subGamepad.def("set_deadzone", &setDeadzone, py::arg("deadzone"), py::arg("slot") = 0, R"doc(
+Set the dead zone threshold for a gamepad's analog sticks.
+
+Args:
+    deadzone (float): Value from 0.0 to 1.0 where movement is ignored.
+    slot (int, optional): Gamepad slot ID (default is 0).
+    )doc");
+
+    subGamepad.def("get_deadzone", &getDeadzone, py::arg("slot") = 0, R"doc(
+Get the current dead zone value for a gamepad's analog sticks.
+
+Args:
+    slot (int, optional): Gamepad slot ID (default is 0).
+
+Returns:
+    float: Deadzone threshold.
+    )doc");
+
+    subGamepad.def("get_connected_slots", &getConnectedSlots, R"doc(
+Get a list of connected gamepad slot indices.
+
+Returns:
+    list[int]: A list of slot IDs with active gamepads.
+    )doc");
 }
 
 bool isPressed(SDL_GamepadButton button, int slot)
@@ -71,7 +152,7 @@ bool isJustReleased(SDL_GamepadButton button, int slot)
     return buttonIt != state.justReleased.end();
 }
 
-math::Vec2 getLeftStick(int slot)
+Vec2 getLeftStick(int slot)
 {
     if (!verifySlot(slot))
         return {};
@@ -79,16 +160,16 @@ math::Vec2 getLeftStick(int slot)
     SDL_JoystickID id = _gamepadSlots.at(slot).value();
     const GamepadState& state = _connectedPads.at(id);
 
-    math::Vec2 axes = {SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_LEFTX),
-                       SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_LEFTY)};
+    Vec2 axes = {SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_LEFTX),
+                 SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_LEFTY)};
     axes /= SDL_MAX_SINT16;
-    if (axes.getLength() > state.deadZone)
+    if (axes.getLength() > state.deadzone)
         return axes;
 
     return {};
 }
 
-math::Vec2 getRightStick(int slot)
+Vec2 getRightStick(int slot)
 {
     if (!verifySlot(slot))
         return {};
@@ -96,10 +177,10 @@ math::Vec2 getRightStick(int slot)
     SDL_JoystickID id = _gamepadSlots.at(slot).value();
     const GamepadState& state = _connectedPads.at(id);
 
-    math::Vec2 axes = {SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_RIGHTX),
-                       SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_RIGHTY)};
+    Vec2 axes = {SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_RIGHTX),
+                 SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_RIGHTY)};
     axes /= SDL_MAX_SINT16;
-    if (axes.getLength() > state.deadZone)
+    if (axes.getLength() > state.deadzone)
         return axes;
 
     return {};
@@ -129,7 +210,7 @@ double getRightTrigger(int slot)
            static_cast<double>(SDL_MAX_SINT16);
 }
 
-void setDeadZone(float deadZone, int slot)
+void setDeadzone(float deadZone, int slot)
 {
     if (!verifySlot(slot))
         return;
@@ -137,10 +218,10 @@ void setDeadZone(float deadZone, int slot)
     SDL_JoystickID id = _gamepadSlots.at(slot).value();
     GamepadState& state = _connectedPads.at(id);
 
-    state.deadZone = deadZone;
+    state.deadzone = deadZone;
 }
 
-float getDeadZone(int slot)
+float getDeadzone(int slot)
 {
     if (!verifySlot(slot))
         return 0.1f;
@@ -148,7 +229,7 @@ float getDeadZone(int slot)
     SDL_JoystickID id = _gamepadSlots.at(slot).value();
     const GamepadState& state = _connectedPads.at(id);
 
-    return state.deadZone;
+    return state.deadzone;
 }
 
 std::vector<int> getConnectedSlots()

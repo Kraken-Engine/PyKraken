@@ -15,32 +15,155 @@ void _bind(py::module_& module)
     //     .value("SCROLL_REPEAT", ScrollType::SCROLL_REPEAT)
     //     .export_values();
 
-    py::class_<Surface>(module, "Surface")
-        .def(py::init<const math::Vec2&>())
-        .def(py::init<const std::string&>())
+    py::class_<Surface>(module, "Surface", R"doc(
+Represents a 2D pixel buffer for image manipulation and blitting operations.
 
-        .def("fill", &Surface::fill)
-        .def("blit", py::overload_cast<const Surface&, const math::Vec2&, Anchor, const Rect&>(
-                         &Surface::blit, py::const_))
-        .def("blit", py::overload_cast<const Surface&, const Rect&, const Rect&>(&Surface::blit,
-                                                                                 py::const_))
-        .def("get_at", &Surface::getAt)
-        .def("set_at", &Surface::setAt)
-        .def("copy", &Surface::copy)
+A Surface is a collection of pixels that can be manipulated, drawn on, and used as a source
+for texture creation or blitting to other surfaces. Supports pixel-level operations,
+color key transparency, and alpha blending.
+    )doc")
+        .def(py::init<const Vec2&>(), py::arg("size"), R"doc(
+Create a new Surface with the specified dimensions.
 
-        .def_property("color_key", &Surface::getColorKey, &Surface::setColorKey)
-        .def_property("alpha_mod", &Surface::getAlpha, &Surface::setAlpha)
+Args:
+    size (Vec2): The size of the surface as (width, height).
 
-        .def_property_readonly("width", &Surface::getWidth)
-        .def_property_readonly("height", &Surface::getHeight)
-        .def_property_readonly("size", &Surface::getSize)
-        .def_property_readonly("rect", &Surface::getRect);
+Raises:
+    RuntimeError: If surface creation fails.
+        )doc")
+        .def(py::init<const std::string&>(), py::arg("file_path"), R"doc(
+Create a Surface by loading an image from a file.
+
+Args:
+    file_path (str): Path to the image file to load.
+
+Raises:
+    RuntimeError: If the file cannot be loaded or doesn't exist.
+        )doc")
+
+        .def("fill", &Surface::fill, py::arg("color"), R"doc(
+Fill the entire surface with a solid color.
+
+Args:
+    color (Color): The color to fill the surface with.
+        )doc")
+        .def("blit",
+             py::overload_cast<const Surface&, const Vec2&, Anchor, const Rect&>(&Surface::blit,
+                                                                                 py::const_),
+             py::arg("source"), py::arg("pos"), py::arg("anchor") = Anchor::CENTER,
+             py::arg("src_rect") = Rect(), R"doc(
+Blit (copy) another surface onto this surface at the specified position with anchor alignment.
+
+Args:
+    source (Surface): The source surface to blit from.
+    pos (Vec2): The position to blit to.
+    anchor (Anchor, optional): The anchor point for positioning. Defaults to CENTER.
+    src_rect (Rect, optional): The source rectangle to blit from. Defaults to entire source surface.
+
+Raises:
+    RuntimeError: If the blit operation fails.
+        )doc")
+        .def(
+            "blit",
+            py::overload_cast<const Surface&, const Rect&, const Rect&>(&Surface::blit, py::const_),
+            py::arg("source"), py::arg("dst_rect"), py::arg("src_rect") = Rect(), R"doc(
+Blit (copy) another surface onto this surface with specified destination and source rectangles.
+
+Args:
+    source (Surface): The source surface to blit from.
+    dst_rect (Rect): The destination rectangle on this surface.
+    src_rect (Rect, optional): The source rectangle to blit from. Defaults to entire source surface.
+
+Raises:
+    RuntimeError: If the blit operation fails.
+        )doc")
+        .def("get_at", &Surface::getAt, py::arg("coord"), R"doc(
+Get the color of a pixel at the specified coordinates.
+
+Args:
+    coord (Vec2): The coordinates of the pixel as (x, y).
+
+Returns:
+    Color: The color of the pixel at the specified coordinates.
+
+Raises:
+    IndexError: If coordinates are outside the surface bounds.
+        )doc")
+        .def("set_at", &Surface::setAt, py::arg("coord"), py::arg("color"), R"doc(
+Set the color of a pixel at the specified coordinates.
+
+Args:
+    coord (Vec2): The coordinates of the pixel as (x, y).
+    color (Color): The color to set the pixel to.
+
+Raises:
+    IndexError: If coordinates are outside the surface bounds.
+        )doc")
+        .def("copy", &Surface::copy, R"doc(
+Create a copy of this surface.
+
+Returns:
+    Surface: A new Surface that is an exact copy of this one.
+
+Raises:
+    RuntimeError: If surface copying fails.
+        )doc")
+
+        .def_property("color_key", &Surface::getColorKey, &Surface::setColorKey, R"doc(
+The color key for transparency.
+
+When set, pixels of this color will be treated as transparent during blitting operations.
+Used for simple transparency effects.
+
+Returns:
+    Color: The current color key.
+
+Raises:
+    RuntimeError: If getting the color key fails.
+        )doc")
+        .def_property("alpha_mod", &Surface::getAlpha, &Surface::setAlpha, R"doc(
+The alpha modulation value for the surface.
+
+Controls the overall transparency of the surface. Values range from 0 (fully transparent)
+to 255 (fully opaque).
+
+Returns:
+    int: The current alpha modulation value [0-255].
+
+Raises:
+    RuntimeError: If getting the alpha value fails.
+        )doc")
+
+        .def_property_readonly("width", &Surface::getWidth, R"doc(
+The width of the surface in pixels.
+
+Returns:
+    int: The surface width.
+        )doc")
+        .def_property_readonly("height", &Surface::getHeight, R"doc(
+The height of the surface in pixels.
+
+Returns:
+    int: The surface height.
+        )doc")
+        .def_property_readonly("size", &Surface::getSize, R"doc(
+The size of the surface as a Vec2.
+
+Returns:
+    Vec2: The surface size as (width, height).
+        )doc")
+        .def_property_readonly("rect", &Surface::getRect, R"doc(
+A rectangle representing the surface bounds.
+
+Returns:
+    Rect: A rectangle with position (0, 0) and the surface's dimensions.
+        )doc");
 }
 } // namespace surface
 
 Surface::Surface(SDL_Surface* sdlSurface) : m_surface(sdlSurface) {}
 
-Surface::Surface(const math::Vec2& size)
+Surface::Surface(const Vec2& size)
 {
     if (m_surface)
     {
@@ -84,7 +207,7 @@ void Surface::fill(const Color& color) const
     SDL_FillSurfaceRect(m_surface, nullptr, colorMap);
 }
 
-void Surface::blit(const Surface& other, const math::Vec2& pos, const Anchor anchor,
+void Surface::blit(const Surface& other, const Vec2& pos, const Anchor anchor,
                    const Rect& srcRect) const
 {
     Rect dstRect = other.getRect();
@@ -120,7 +243,7 @@ void Surface::blit(const Surface& other, const math::Vec2& pos, const Anchor anc
     }
 
     SDL_Rect dstSDL = dstRect;
-    SDL_Rect srcSDL = (srcRect.getSize() == math::Vec2()) ? other.getRect() : srcRect;
+    SDL_Rect srcSDL = (srcRect.getSize() == Vec2()) ? other.getRect() : srcRect;
 
     if (!SDL_BlitSurface(other.getSDL(), &srcSDL, m_surface, &dstSDL))
         throw std::runtime_error("Failed to blit surface: " + std::string(SDL_GetError()));
@@ -129,7 +252,7 @@ void Surface::blit(const Surface& other, const math::Vec2& pos, const Anchor anc
 void Surface::blit(const Surface& other, const Rect& dstRect, const Rect& srcRect) const
 {
     SDL_Rect dstSDL = dstRect;
-    SDL_Rect srcSDL = (srcRect.getSize() == math::Vec2()) ? other.getRect() : srcRect;
+    SDL_Rect srcSDL = (srcRect.getSize() == Vec2()) ? other.getRect() : srcRect;
 
     if (!SDL_BlitSurface(other.getSDL(), &srcSDL, m_surface, &dstSDL))
         throw std::runtime_error("Failed to blit surface: " + std::string(SDL_GetError()));
@@ -165,7 +288,7 @@ int Surface::getAlpha() const
     return alpha;
 }
 
-Color Surface::getAt(const math::Vec2& coord) const
+Color Surface::getAt(const Vec2& coord) const
 {
     if (coord.x < 0 || coord.x >= m_surface->w || coord.y < 0 || coord.y >= m_surface->h)
         throw std::out_of_range("Coordinates out of bounds for surface");
@@ -184,7 +307,7 @@ Color Surface::getAt(const math::Vec2& coord) const
     return color;
 }
 
-void Surface::setAt(const math::Vec2& coord, const Color& color) const
+void Surface::setAt(const Vec2& coord, const Color& color) const
 {
     if (coord.x < 0 || coord.x >= m_surface->w || coord.y < 0 || coord.y >= m_surface->h)
         throw std::out_of_range("Coordinates out of bounds for surface");
@@ -203,7 +326,7 @@ int Surface::getWidth() const { return m_surface->w; }
 
 int Surface::getHeight() const { return m_surface->h; }
 
-math::Vec2 Surface::getSize() const { return {m_surface->w, m_surface->h}; }
+Vec2 Surface::getSize() const { return {m_surface->w, m_surface->h}; }
 
 Rect Surface::getRect() const { return Rect(0, 0, m_surface->w, m_surface->h); }
 

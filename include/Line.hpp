@@ -6,16 +6,13 @@ class Line;
 
 namespace py = pybind11;
 
-namespace math
-{
 class Vec2;
-}
 
 namespace line
 {
 void _bind(py::module_& module);
 
-Line move(const Line& line, const math::Vec2& offset);
+Line move(const Line& line, const Vec2& offset);
 } // namespace line
 
 class Line
@@ -25,18 +22,19 @@ class Line
 
     Line();
     Line(double ax, double ay, double bx, double by);
-    Line(double ax, double ay, const math::Vec2& b);
-    Line(const math::Vec2& a, double bx, double by);
-    Line(const math::Vec2& a, const math::Vec2& b);
+    Line(double ax, double ay, const Vec2& b);
+    Line(const Vec2& a, double bx, double by);
+    Line(const Vec2& a, const Vec2& b);
     ~Line() = default;
 
     double getLength() const;
 
-    math::Vec2 getA() const;
+    Vec2 getA() const;
+    void setA(const Vec2& pos);
+    Vec2 getB() const;
+    void setB(const Vec2& pos);
 
-    math::Vec2 getB() const;
-
-    void move(const math::Vec2& offset);
+    void move(const Vec2& offset);
 
     Line copy() const;
 

@@ -17,18 +17,18 @@ void _bind(py::module_& module);
 class Circle
 {
   public:
-    math::Vec2 pos;
+    Vec2 pos;
     double radius = 0.0;
 
     Circle() = default;
-    Circle(const math::Vec2& center, double radius);
+    Circle(const Vec2& center, double radius);
     ~Circle() = default;
 
     double getArea() const;
 
     double getCircumference() const;
 
-    bool collidePoint(const math::Vec2& point) const;
+    bool collidePoint(const Vec2& point) const;
 
     bool collideCircle(const Circle& circle) const;
 

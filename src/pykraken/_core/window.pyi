@@ -2,52 +2,84 @@
 Window related functions
 """
 from __future__ import annotations
-__all__ = ['clear', 'close', 'create', 'flip', 'get_scale', 'get_size', 'get_title', 'is_fullscreen', 'is_open', 'set_fullscreen', 'set_title', 'set_window_icon']
-def clear(*args, **kwargs):
+import pykraken._core
+__all__ = ['close', 'create', 'get_size', 'get_title', 'is_fullscreen', 'is_open', 'set_fullscreen', 'set_title']
+def close() -> None:
     """
-    Clear the window with the specified color (r, g, b)
+    Close the window.
+    
+    Marks the window as closed, typically used to signal the main loop to exit.
+    This doesn't destroy the window immediately but sets the close flag.
     """
-def close(*args, **kwargs):
+def create(title: str, size: pykraken._core.Vec2, scaled: bool = False) -> None:
     """
-    Close the window
+    Create a window with specified title and size.
+    
+    Args:
+        title (str): The window title. Must be non-empty and <= 255 characters.
+        size (Vec2): The window size as (width, height). Ignored if scaled=True.
+        scaled (bool, optional): If True, creates a fullscreen window using the 
+                                display's usable bounds. Defaults to False.
+    
+    Raises:
+        RuntimeError: If a window already exists or window creation fails.
+        ValueError: If title is empty, exceeds 255 characters, or size values are <= 0.
     """
-def create(*args, **kwargs):
+def get_size() -> tuple:
     """
-    Create a window with (width, height), optional title, and auto-scaling mode
+    Get the current size of the window.
+    
+    Returns:
+        tuple[float, float]: The window size as (width, height).
+    
+    Raises:
+        RuntimeError: If the window is not initialized.
     """
-def flip(*args, **kwargs):
+def get_title() -> str:
     """
-    Flip the render buffer
+    Get the current title of the window.
+    
+    Returns:
+        str: The current window title.
+    
+    Raises:
+        RuntimeError: If the window is not initialized.
     """
-def get_scale(*args, **kwargs):
+def is_fullscreen() -> bool:
     """
-    Get the current scale of the renderer
+    Check if the window is in fullscreen mode.
+    
+    Returns:
+        bool: True if the window is currently in fullscreen mode.
+    
+    Raises:
+        RuntimeError: If the window is not initialized.
     """
-def get_size(*args, **kwargs):
+def is_open() -> bool:
     """
-    Get the current size of the window
+    Check if the window is open.
+    
+    Returns:
+        bool: True if the window is open and active.
     """
-def get_title(*args, **kwargs):
+def set_fullscreen(fullscreen: bool) -> None:
     """
-    Get the current title of the window
+    Set the fullscreen mode of the window.
+    
+    Args:
+        fullscreen (bool): True to enable fullscreen mode, False for windowed mode.
+    
+    Raises:
+        RuntimeError: If the window is not initialized.
     """
-def is_fullscreen(*args, **kwargs):
+def set_title(title: str) -> None:
     """
-    Check if the window is in fullscreen mode
-    """
-def is_open(*args, **kwargs):
-    """
-    Check if the window is open
-    """
-def set_fullscreen(*args, **kwargs):
-    """
-    Set the fullscreen mode of the window
-    """
-def set_title(*args, **kwargs):
-    """
-    Set the title of the window
-    """
-def set_window_icon(*args, **kwargs):
-    """
-    Set the icon of the window
+    Set the title of the window.
+    
+    Args:
+        title (str): The new window title. Must be non-empty and <= 255 characters.
+    
+    Raises:
+        RuntimeError: If the window is not initialized or title setting fails.
+        ValueError: If title is empty or exceeds 255 characters.
     """

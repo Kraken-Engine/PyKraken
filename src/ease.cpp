@@ -1,5 +1,7 @@
 #include "Ease.hpp"
 
+#include <pybind11/functional.h>
+
 #include <cmath>
 
 #ifndef M_PI
@@ -14,69 +16,342 @@ namespace ease
 {
 void _bind(py::module_& module)
 {
-    py::class_<EasingAnimation>(module, "EasingAnimation")
-        .def(
-            py::init(
-                [](py::object start, py::object end, double duration,
-                   EasingFunction easeFunc) -> EasingAnimation*
-                {
-                    return new EasingAnimation(start.cast<math::Vec2>(), end.cast<math::Vec2>(),
-                                               duration, easeFunc);
-                }),
-            py::arg("start"), py::arg("end"), py::arg("duration"), py::arg("easeFunc"),
-            "Create an EasingAnimation with start and end positions, duration, and easing function")
-        .def("step", &EasingAnimation::step, py::arg("delta"),
-             "Update the animation with the given delta time and get the current position in the "
-             "animation")
-        .def("pause", &EasingAnimation::pause, "Pause the animation")
-        .def("resume", &EasingAnimation::resume, "Resume the animation")
-        .def("restart", &EasingAnimation::restart, "Restart the animation")
-        .def("reverse", &EasingAnimation::reverse, "Reverse the direction of the animation")
-        .def_property_readonly("is_done", &EasingAnimation::isDone,
-                               "Check if the animation is done");
+    py::class_<EasingAnimation>(module, "EasingAnimation", R"doc(
+A class for animating values over time using easing functions.
 
-    auto subEase = module.def_submodule("ease", "Easing functions and animations");
+This class supports pausing, resuming, reversing, and checking progress.
+    )doc")
 
-    subEase.def("linear", &linear, "Linear easing function");
-    subEase.def("in_quad", &inQuad, "In Quad easing function");
-    subEase.def("out_quad", &outQuad, "Out Quad easing function");
-    subEase.def("in_out_quad", &inOutQuad, "In Out Quad easing function");
-    subEase.def("in_cubic", &inCubic, "In Cubic easing function");
-    subEase.def("out_cubic", &outCubic, "Out Cubic easing function");
-    subEase.def("in_out_cubic", &inOutCubic, "In Out Cubic easing function");
-    subEase.def("in_quart", &inQuart, "In Quart easing function");
-    subEase.def("out_quart", &outQuart, "Out Quart easing function");
-    subEase.def("in_out_quart", &inOutQuart, "In Out Quart easing function");
-    subEase.def("in_quint", &inQuint, "In Quint easing function");
-    subEase.def("out_quint", &outQuint, "Out Quint easing function");
-    subEase.def("in_out_quint", &inOutQuint, "In Out Quint easing function");
-    subEase.def("in_sine", &inSine, "In Sine easing function");
-    subEase.def("out_sine", &outSine, "Out Sine easing function");
-    subEase.def("in_out_sine", &inOutSine, "In Out Sine easing function");
-    subEase.def("in_circ", &inCirc, "In Circ easing function");
-    subEase.def("out_circ", &outCirc, "Out Circ easing function");
-    subEase.def("in_out_circ", &inOutCirc, "In Out Circ easing function");
-    subEase.def("in_expo", &inExpo, "In Expo easing function");
-    subEase.def("out_expo", &outExpo, "Out Expo easing function");
-    subEase.def("in_out_expo", &inOutExpo, "In Out Expo easing function");
-    subEase.def("in_elastic", &inElastic, "In Elastic easing function");
-    subEase.def("out_elastic", &outElastic, "Out Elastic easing function");
-    subEase.def("in_out_elastic", &inOutElastic, "In Out Elastic easing function");
-    subEase.def("in_back", &inBack, "In Back easing function");
-    subEase.def("out_back", &outBack, "Out Back easing function");
-    subEase.def("in_out_back", &inOutBack, "In Out Back easing function");
-    subEase.def("in_bounce", &inBounce, "In Bounce easing function");
-    subEase.def("out_bounce", &outBounce, "Out Bounce easing function");
-    subEase.def("in_out_bounce", &inOutBounce, "In Out Bounce easing function");
+        .def(py::init<const Vec2&, const Vec2&, double, EasingFunction>(), py::arg("start"),
+             py::arg("end"), py::arg("duration"), py::arg("easeFunc"), R"doc(
+Create an EasingAnimation.
+
+Args:
+    start (Vec2): Starting position.
+    end (Vec2): Ending position.
+    duration (float): Time in seconds for full animation.
+    easeFunc (Callable): Easing function that maps [0, 1] → [0, 1].
+        )doc")
+
+        .def("step", &EasingAnimation::step, py::arg("delta"), R"doc(
+Advance the animation by delta time and return the current position.
+
+Args:
+    delta (float): Time step to progress the animation.
+Returns:
+    Vec2: Interpolated position.
+        )doc")
+
+        .def("pause", &EasingAnimation::pause, R"doc(
+Pause the animation's progression.
+        )doc")
+
+        .def("resume", &EasingAnimation::resume, R"doc(
+Resume the animation from its current state.
+        )doc")
+
+        .def("restart", &EasingAnimation::restart, R"doc(
+Restart the animation from the beginning.
+        )doc")
+
+        .def("reverse", &EasingAnimation::reverse, R"doc(
+Reverse the direction of the animation.
+        )doc")
+
+        .def_property_readonly("is_done", &EasingAnimation::isDone, R"doc(
+Check whether the animation has finished.
+        )doc");
+
+    // Submodule for easing functions
+    auto subEase = module.def_submodule("ease", "Easing functions and animation utilities");
+
+    subEase.def("linear", &linear, py::arg("t"), R"doc(
+Linear easing.
+
+Args:
+    t (float): Normalized time (0.0 to 1.0).
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("in_quad", &inQuad, py::arg("t"), R"doc(
+Quadratic easing in (slow start).
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("out_quad", &outQuad, py::arg("t"), R"doc(
+Quadratic easing out (fast start).
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("in_out_quad", &inOutQuad, py::arg("t"), R"doc(
+Quadratic easing in and out.
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("in_cubic", &inCubic, py::arg("t"), R"doc(
+Cubic easing in (very slow start).
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("out_cubic", &outCubic, py::arg("t"), R"doc(
+Cubic easing out (fast then smooth).
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("in_out_cubic", &inOutCubic, py::arg("t"), R"doc(
+Cubic easing in and out.
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("in_quart", &inQuart, py::arg("t"), R"doc(
+Quartic easing in.
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("out_quart", &outQuart, py::arg("t"), R"doc(
+Quartic easing out.
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("in_out_quart", &inOutQuart, py::arg("t"), R"doc(
+Quartic easing in and out.
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("in_quint", &inQuint, py::arg("t"), R"doc(
+Quintic easing in.
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("out_quint", &outQuint, py::arg("t"), R"doc(
+Quintic easing out.
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("in_out_quint", &inOutQuint, py::arg("t"), R"doc(
+Quintic easing in and out.
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("in_sine", &inSine, py::arg("t"), R"doc(
+Sinusoidal easing in.
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("out_sine", &outSine, py::arg("t"), R"doc(
+Sinusoidal easing out.
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("in_out_sine", &inOutSine, py::arg("t"), R"doc(
+Sinusoidal easing in and out.
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("in_circ", &inCirc, py::arg("t"), R"doc(
+Circular easing in.
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("out_circ", &outCirc, py::arg("t"), R"doc(
+Circular easing out.
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("in_out_circ", &inOutCirc, py::arg("t"), R"doc(
+Circular easing in and out.
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("in_expo", &inExpo, py::arg("t"), R"doc(
+Exponential easing in.
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("out_expo", &outExpo, py::arg("t"), R"doc(
+Exponential easing out.
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("in_out_expo", &inOutExpo, py::arg("t"), R"doc(
+Exponential easing in and out.
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("in_elastic", &inElastic, py::arg("t"), R"doc(
+Elastic easing in (springy start).
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("out_elastic", &outElastic, py::arg("t"), R"doc(
+Elastic easing out (springy end).
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("in_out_elastic", &inOutElastic, py::arg("t"), R"doc(
+Elastic easing in and out.
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("in_back", &inBack, py::arg("t"), R"doc(
+Back easing in (overshoot at start).
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("out_back", &outBack, py::arg("t"), R"doc(
+Back easing out (overshoot at end).
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("in_out_back", &inOutBack, py::arg("t"), R"doc(
+Back easing in and out.
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("in_bounce", &inBounce, py::arg("t"), R"doc(
+Bounce easing in (bounces toward target).
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("out_bounce", &outBounce, py::arg("t"), R"doc(
+Bounce easing out (bounces after start).
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
+
+    subEase.def("in_out_bounce", &inOutBounce, py::arg("t"), R"doc(
+Bounce easing in and out.
+
+Args:
+    t (float): Normalized time.
+Returns:
+    float: Eased result.
+    )doc");
 }
 
-EasingAnimation::EasingAnimation(const math::Vec2& start, const math::Vec2& end, double duration,
+EasingAnimation::EasingAnimation(const Vec2& start, const Vec2& end, double duration,
                                  EasingFunction easeFunc)
     : startPos(start), endPos(end), duration(duration), easingFunc(easeFunc)
 {
 }
 
-math::Vec2 EasingAnimation::step(const double deltaTime)
+Vec2 EasingAnimation::step(const double deltaTime)
 {
     if (state == State::PAUSED || state == State::DONE)
         return getCurrentPosition();
@@ -90,7 +365,7 @@ math::Vec2 EasingAnimation::step(const double deltaTime)
     return getCurrentPosition();
 }
 
-math::Vec2 EasingAnimation::getCurrentPosition() const
+Vec2 EasingAnimation::getCurrentPosition() const
 {
     double t = elapsedTime / duration;
     t = std::max(0.0, std::min(t, 1.0));

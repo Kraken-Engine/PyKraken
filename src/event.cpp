@@ -13,14 +13,42 @@ namespace event
 
 void _bind(py::module_& module)
 {
-    py::class_<knEvent>(module, "Event")
-        .def_readonly("type", &knEvent::type)
-        .def("__getattr__", &knEvent::getAttr);
+    py::class_<knEvent>(module, "Event", R"doc(
+Represents a single input event such as keyboard, mouse, or gamepad activity.
 
-    auto subEvent = module.def_submodule("event", "Event related functions");
+Attributes:
+    type (int): Event type. Additional fields are accessed dynamically.
+        )doc")
 
-    subEvent.def("poll", &poll, "Get user input events");
+        .def_readonly("type", &knEvent::type, R"doc(
+The event type (e.g., KEY_DOWN, MOUSE_BUTTON_UP).
+        )doc")
+
+        .def("__getattr__", &knEvent::getAttr, R"doc(
+Dynamically access event attributes.
+
+Examples:
+    event.key
+    event.button
+    event.pos
+
+Raises:
+    AttributeError: If the requested attribute doesn't exist.
+        )doc");
+
+    auto subEvent = module.def_submodule("event", "Input event handling");
+
+    subEvent.def("poll", &poll, R"doc(
+Poll for all pending user input events.
+
+This clears input states and returns a list of events that occurred since the last call.
+
+Returns:
+    list[Event]: A list of input event objects.
+        )doc");
 }
+
+knEvent::knEvent(uint32_t type) : type(type) {}
 
 std::vector<knEvent> poll()
 {

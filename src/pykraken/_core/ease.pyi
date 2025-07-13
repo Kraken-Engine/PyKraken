@@ -1,129 +1,284 @@
 """
-Easing functions and animations
+Easing functions and animation utilities
 """
 from __future__ import annotations
 __all__ = ['in_back', 'in_bounce', 'in_circ', 'in_cubic', 'in_elastic', 'in_expo', 'in_out_back', 'in_out_bounce', 'in_out_circ', 'in_out_cubic', 'in_out_elastic', 'in_out_expo', 'in_out_quad', 'in_out_quart', 'in_out_quint', 'in_out_sine', 'in_quad', 'in_quart', 'in_quint', 'in_sine', 'linear', 'out_back', 'out_bounce', 'out_circ', 'out_cubic', 'out_elastic', 'out_expo', 'out_quad', 'out_quart', 'out_quint', 'out_sine']
-def in_back(*args, **kwargs):
+def in_back(t: float) -> float:
     """
-    In Back easing function
+    Back easing in (overshoot at start).
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def in_bounce(*args, **kwargs):
+def in_bounce(t: float) -> float:
     """
-    In Bounce easing function
+    Bounce easing in (bounces toward target).
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def in_circ(*args, **kwargs):
+def in_circ(t: float) -> float:
     """
-    In Circ easing function
+    Circular easing in.
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def in_cubic(*args, **kwargs):
+def in_cubic(t: float) -> float:
     """
-    In Cubic easing function
+    Cubic easing in (very slow start).
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def in_elastic(*args, **kwargs):
+def in_elastic(t: float) -> float:
     """
-    In Elastic easing function
+    Elastic easing in (springy start).
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def in_expo(*args, **kwargs):
+def in_expo(t: float) -> float:
     """
-    In Expo easing function
+    Exponential easing in.
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def in_out_back(*args, **kwargs):
+def in_out_back(t: float) -> float:
     """
-    In Out Back easing function
+    Back easing in and out.
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def in_out_bounce(*args, **kwargs):
+def in_out_bounce(t: float) -> float:
     """
-    In Out Bounce easing function
+    Bounce easing in and out.
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def in_out_circ(*args, **kwargs):
+def in_out_circ(t: float) -> float:
     """
-    In Out Circ easing function
+    Circular easing in and out.
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def in_out_cubic(*args, **kwargs):
+def in_out_cubic(t: float) -> float:
     """
-    In Out Cubic easing function
+    Cubic easing in and out.
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def in_out_elastic(*args, **kwargs):
+def in_out_elastic(t: float) -> float:
     """
-    In Out Elastic easing function
+    Elastic easing in and out.
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def in_out_expo(*args, **kwargs):
+def in_out_expo(t: float) -> float:
     """
-    In Out Expo easing function
+    Exponential easing in and out.
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def in_out_quad(*args, **kwargs):
+def in_out_quad(t: float) -> float:
     """
-    In Out Quad easing function
+    Quadratic easing in and out.
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def in_out_quart(*args, **kwargs):
+def in_out_quart(t: float) -> float:
     """
-    In Out Quart easing function
+    Quartic easing in and out.
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def in_out_quint(*args, **kwargs):
+def in_out_quint(t: float) -> float:
     """
-    In Out Quint easing function
+    Quintic easing in and out.
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def in_out_sine(*args, **kwargs):
+def in_out_sine(t: float) -> float:
     """
-    In Out Sine easing function
+    Sinusoidal easing in and out.
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def in_quad(*args, **kwargs):
+def in_quad(t: float) -> float:
     """
-    In Quad easing function
+    Quadratic easing in (slow start).
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def in_quart(*args, **kwargs):
+def in_quart(t: float) -> float:
     """
-    In Quart easing function
+    Quartic easing in.
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def in_quint(*args, **kwargs):
+def in_quint(t: float) -> float:
     """
-    In Quint easing function
+    Quintic easing in.
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def in_sine(*args, **kwargs):
+def in_sine(t: float) -> float:
     """
-    In Sine easing function
+    Sinusoidal easing in.
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def linear(*args, **kwargs):
+def linear(t: float) -> float:
     """
-    Linear easing function
+    Linear easing.
+    
+    Args:
+        t (float): Normalized time (0.0 to 1.0).
+    Returns:
+        float: Eased result.
     """
-def out_back(*args, **kwargs):
+def out_back(t: float) -> float:
     """
-    Out Back easing function
+    Back easing out (overshoot at end).
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def out_bounce(*args, **kwargs):
+def out_bounce(t: float) -> float:
     """
-    Out Bounce easing function
+    Bounce easing out (bounces after start).
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def out_circ(*args, **kwargs):
+def out_circ(t: float) -> float:
     """
-    Out Circ easing function
+    Circular easing out.
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def out_cubic(*args, **kwargs):
+def out_cubic(t: float) -> float:
     """
-    Out Cubic easing function
+    Cubic easing out (fast then smooth).
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def out_elastic(*args, **kwargs):
+def out_elastic(t: float) -> float:
     """
-    Out Elastic easing function
+    Elastic easing out (springy end).
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def out_expo(*args, **kwargs):
+def out_expo(t: float) -> float:
     """
-    Out Expo easing function
+    Exponential easing out.
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def out_quad(*args, **kwargs):
+def out_quad(t: float) -> float:
     """
-    Out Quad easing function
+    Quadratic easing out (fast start).
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def out_quart(*args, **kwargs):
+def out_quart(t: float) -> float:
     """
-    Out Quart easing function
+    Quartic easing out.
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def out_quint(*args, **kwargs):
+def out_quint(t: float) -> float:
     """
-    Out Quint easing function
+    Quintic easing out.
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """
-def out_sine(*args, **kwargs):
+def out_sine(t: float) -> float:
     """
-    Out Sine easing function
+    Sinusoidal easing out.
+    
+    Args:
+        t (float): Normalized time.
+    Returns:
+        float: Eased result.
     """

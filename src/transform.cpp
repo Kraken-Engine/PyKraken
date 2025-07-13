@@ -9,16 +9,137 @@ namespace transform
 {
 void _bind(py::module_& module)
 {
-    auto subTransform = module.def_submodule("transform");
+    auto subTransform = module.def_submodule("transform", "Functions for transforming surfaces");
 
-    subTransform.def("flip", &flip);
-    subTransform.def("scale", &scale);
-    subTransform.def("scale_by", &scaleBy);
-    subTransform.def("rotate", &rotate);
-    subTransform.def("box_blur", &boxBlur);
-    subTransform.def("gaussian_blur", &gaussianBlur);
-    subTransform.def("invert", &invert);
-    subTransform.def("grayscale", &grayscale);
+    subTransform.def("flip", &flip, py::arg("surface"), py::arg("flip_x"), py::arg("flip_y"),
+                     R"doc(
+Flip a surface horizontally, vertically, or both.
+
+Args:
+    surface (Surface): The surface to flip.
+    flip_x (bool): Whether to flip horizontally (mirror left-right).
+    flip_y (bool): Whether to flip vertically (mirror top-bottom).
+
+Returns:
+    Surface: A new surface with the flipped image.
+
+Raises:
+    RuntimeError: If surface creation fails.
+    )doc");
+    subTransform.def("scale", &scale, py::arg("surface"), py::arg("new_size"), R"doc(
+Resize a surface to a new size.
+
+Args:
+    surface (Surface): The surface to resize.
+    new_size (Vec2): The target size as (width, height).
+
+Returns:
+    Surface: A new surface scaled to the specified size.
+
+Raises:
+    RuntimeError: If surface creation or scaling fails.
+    )doc");
+    subTransform.def("scale_by", &scaleBy, py::arg("surface"), py::arg("factor"), R"doc(
+Scale a surface by a given factor.
+
+Args:
+    surface (Surface): The surface to scale.
+    factor (float): The scaling factor (must be > 0). Values > 1.0 enlarge,
+                   values < 1.0 shrink the surface.
+
+Returns:
+    Surface: A new surface scaled by the specified factor.
+
+Raises:
+    ValueError: If factor is <= 0.
+    RuntimeError: If surface creation or scaling fails.
+    )doc");
+    subTransform.def("rotate", &rotate, py::arg("surface"), py::arg("angle"), R"doc(
+Rotate a surface by a given angle.
+
+Args:
+    surface (Surface): The surface to rotate.
+    angle (float): The rotation angle in degrees. Positive values rotate clockwise.
+
+Returns:
+    Surface: A new surface containing the rotated image. The output surface may be
+            larger than the input to accommodate the rotated image.
+
+Raises:
+    RuntimeError: If surface rotation fails.
+    )doc");
+    subTransform.def("box_blur", &boxBlur, py::arg("surface"), py::arg("radius"),
+                     py::arg("repeat_edge_pixels") = true, R"doc(
+Apply a box blur effect to a surface.
+
+Box blur creates a uniform blur effect by averaging pixels within a square kernel.
+It's faster than Gaussian blur but produces a more uniform, less natural look.
+
+Args:
+    surface (Surface): The surface to blur.
+    radius (int): The blur radius in pixels. Larger values create stronger blur.
+    repeat_edge_pixels (bool, optional): Whether to repeat edge pixels when sampling
+                                        outside the surface bounds. Defaults to True.
+
+Returns:
+    Surface: A new surface with the box blur effect applied.
+
+Raises:
+    RuntimeError: If surface creation fails during the blur process.
+    )doc");
+    subTransform.def("gaussian_blur", &gaussianBlur, py::arg("surface"), py::arg("radius"),
+                     py::arg("repeat_edge_pixels") = true, R"doc(
+Apply a Gaussian blur effect to a surface.
+
+Gaussian blur creates a natural, smooth blur effect using a Gaussian distribution
+for pixel weighting. It produces higher quality results than box blur but is
+computationally more expensive.
+
+Args:
+    surface (Surface): The surface to blur.
+    radius (int): The blur radius in pixels. Larger values create stronger blur.
+    repeat_edge_pixels (bool, optional): Whether to repeat edge pixels when sampling
+                                        outside the surface bounds. Defaults to True.
+
+Returns:
+    Surface: A new surface with the Gaussian blur effect applied.
+
+Raises:
+    RuntimeError: If surface creation fails during the blur process.
+    )doc");
+    subTransform.def("invert", &invert, py::arg("surface"), R"doc(
+Invert the colors of a surface.
+
+Creates a negative image effect by inverting each color channel (RGB).
+The alpha channel is preserved unchanged.
+
+Args:
+    surface (Surface): The surface to invert.
+
+Returns:
+    Surface: A new surface with inverted colors.
+
+Raises:
+    RuntimeError: If surface creation fails.
+    )doc");
+    subTransform.def("grayscale", &grayscale, py::arg("surface"), R"doc(
+Convert a surface to grayscale.
+
+Converts the surface to grayscale using the standard luminance formula:
+gray = 0.299 * red + 0.587 * green + 0.114 * blue
+
+This formula accounts for human perception of brightness across different colors.
+The alpha channel is preserved unchanged.
+
+Args:
+    surface (Surface): The surface to convert to grayscale.
+
+Returns:
+    Surface: A new surface converted to grayscale.
+
+Raises:
+    RuntimeError: If surface creation fails.
+    )doc");
 }
 
 Surface* flip(const Surface& surface, const bool flipX, const bool flipY)
@@ -46,7 +167,7 @@ Surface* flip(const Surface& surface, const bool flipX, const bool flipY)
     return new Surface(flipped);
 }
 
-Surface* scale(const Surface& surface, const math::Vec2& newSize)
+Surface* scale(const Surface& surface, const Vec2& newSize)
 {
     SDL_Surface* sdlSurface = surface.getSDL();
 
@@ -72,8 +193,8 @@ Surface* scaleBy(const Surface& surface, const double factor)
     if (factor <= 0.0)
         throw std::invalid_argument("Scale factor must be a positive value.");
 
-    const math::Vec2 originalSize = surface.getSize();
-    const math::Vec2 scaledSize = originalSize * factor;
+    const Vec2 originalSize = surface.getSize();
+    const Vec2 scaledSize = originalSize * factor;
 
     return scale(surface, scaledSize);
 }

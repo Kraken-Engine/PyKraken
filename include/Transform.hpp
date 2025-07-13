@@ -5,10 +5,7 @@
 namespace py = pybind11;
 
 class Surface;
-namespace math
-{
 class Vec2;
-} // namespace math
 
 namespace transform
 {
@@ -16,7 +13,7 @@ void _bind(py::module_& module);
 
 Surface* flip(const Surface& surface, bool flipX, bool flipY);
 
-Surface* scale(const Surface& surface, const math::Vec2& size);
+Surface* scale(const Surface& surface, const Vec2& size);
 
 Surface* scaleBy(const Surface& surface, double factor);
 
