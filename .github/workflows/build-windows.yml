@@ -9,8 +9,6 @@ on:
 
   workflow_call: # So other workflows can call this
 
-  workflow_dispatch: # So I can manually trigger it on GitHub
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-windows
   cancel-in-progress: true
