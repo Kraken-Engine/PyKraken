@@ -69,10 +69,7 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          # Limit builds to the Python versions specified in the matrix
-          CIBW_BUILD: "cp${{ matrix.python-version | remove('.') }}-*"
-          # For Windows, SDL3_DIR and SDL3_image_DIR are set from the previous step
-          # For Linux/macOS, CMake's find_package will find the system-installed libraries
+          CIBW_SKIP: "pp*"
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
