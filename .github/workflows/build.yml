@@ -18,11 +18,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-15]
         python-version: ["3.10", "3.11", "3.12", "3.13"]
 
-    env:
-      MACOSX_DEPLOYMENT_TARGET: "14.0"
+    # env:
+    #   MACOSX_DEPLOYMENT_TARGET: "14.0"
 
     steps:
       - name: Checkout repository
@@ -44,24 +44,28 @@ jobs:
             libx11-dev libxext-dev libxrandr-dev libxinerama-dev libxcursor-dev \
             libxi-dev libwayland-dev libxkbcommon-dev libgl1-mesa-dev
 
-      - name: Build and install SDL3 from source (Linux)
+      - name: Create local install directory for dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: mkdir ${{ github.workspace }}/deps_install
+
+      - name: Build and install SDL3 to local dir (Linux)
         if: runner.os == 'Linux'
         run: |
-          git clone --depth 1 --branch release-3.2.18 https://github.com/libsdl-org/SDL.git
+          git clone --depth 1 --branch release-3.2.14 https://github.com/libsdl-org/SDL.git
           cd SDL
-          cmake . -B build -DSDL_TESTS=OFF
+          cmake . -B build -DSDL_TESTS=OFF -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/deps_install
           cmake --build build
-          sudo cmake --install build
+          cmake --install build
           cd ..
 
-      - name: Build and install SDL3_image from source (Linux)
+      - name: Build and install SDL3_image to local dir (Linux)
         if: runner.os == 'Linux'
         run: |
           git clone --depth 1 --branch release-3.2.4 https://github.com/libsdl-org/SDL_image.git
           cd SDL_image
-          cmake . -B build
+          cmake . -B build -DCMAKE_PREFIX_PATH=${{ github.workspace }}/deps_install -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/deps_install
           cmake --build build
-          sudo cmake --install build
+          cmake --install build
           cd ..
 
       # ------------------ MacOS ------------------
@@ -102,7 +106,7 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_CMAKE_ARGS_LINUX: -DCMAKE_PREFIX_PATH=/usr/local
+          CIBW_CMAKE_ARGS_LINUX: -DCMAKE_PREFIX_PATH=${{ github.workspace }}/deps_install
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
