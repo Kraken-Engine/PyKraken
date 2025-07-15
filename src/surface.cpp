@@ -270,10 +270,11 @@ Color Surface::getColorKey() const
     if (!SDL_GetSurfaceColorKey(m_surface, &key))
         throw std::runtime_error("Failed to get surface color key: " + std::string(SDL_GetError()));
 
-    Color color = {(key >> 24) & 0xFF, // Extract red component
-                   (key >> 16) & 0xFF, // Extract green component
-                   (key >> 8) & 0xFF,  // Extract blue component
-                   key & 0xFF};        // Extract alpha component
+    Color color;
+    color.r = static_cast<uint8_t>((key >> 24) & 0xFF);
+    color.g = static_cast<uint8_t>((key >> 16) & 0xFF);
+    color.b = static_cast<uint8_t>((key >> 8) & 0xFF);
+    color.a = static_cast<uint8_t>(key & 0xFF);
 
     return color;
 }
