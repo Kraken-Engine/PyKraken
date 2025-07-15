@@ -75,8 +75,8 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $SDL_VERSION = "3.2.18" # Use the appropriate version
-          $SDL_IMAGE_VERSION = "3.2.4" # Use the appropriate version
+          $SDL_VERSION = "3.2.18"
+          $SDL_IMAGE_VERSION = "3.2.4"
 
           # Download and extract SDL3
           Invoke-WebRequest -Uri "https://github.com/libsdl-org/SDL/releases/download/release-$SDL_VERSION/SDL3-devel-$SDL_VERSION-VC.zip" -OutFile "sdl3.zip"
@@ -101,6 +101,8 @@ jobs:
 
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_CMAKE_ARGS_LINUX: -DCMAKE_PREFIX_PATH=/usr/local
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
