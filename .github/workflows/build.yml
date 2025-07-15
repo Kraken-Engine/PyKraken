@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   build_wheels:
-    name: Build wheels on ${{ matrix.os }} for Python ${{ matrix.python-version }}
+    name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -21,21 +21,26 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.10", "3.11", "3.12", "3.13"]
 
+    env:
+      MACOSX_DEPLOYMENT_TARGET: "14.0"
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
 
       # ------------------ Linux ------------------
-      - name: Install build dependencies (Linux)
+      - name: Install build and SDL dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y git cmake build-essential ninja-build
+          sudo apt-get install -y \
+            git cmake build-essential ninja-build \
+            libasound2-dev libpulse-dev libaudio-dev libjack-dev libsndio-dev \
+            libx11-dev libxext-dev libxrandr-dev libxinerama-dev libxcursor-dev \
+            libxi-dev libwayland-dev libxkbcommon-dev libgl1-mesa-dev
 
       - name: Build and install SDL3 from source (Linux)
         if: runner.os == 'Linux'
@@ -95,10 +100,10 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_SKIP: "pp*"
+          CIBW_BUILD: "cp31[0-3]-*" # Build for Python 3.10-3.13
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-${{ matrix.os }}-py${{ matrix.python-version }}
+          name: wheels-${{ matrix.os }}
           path: ./wheelhouse/*.whl
