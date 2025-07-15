@@ -1,0 +1,81 @@
+# .github/workflows/build_wheels.yml
+
+name: Build Wheels
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: # Allows manual triggering of the workflow
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }} for Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsdl3-dev libsdl3-image-dev
+
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install sdl3 sdl3_image
+
+      - name: Install dependencies (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $SDL_VERSION = "3.2.14" # Use the appropriate version
+          $SDL_IMAGE_VERSION = "3.2.4" # Use the appropriate version
+
+          # Download and extract SDL3
+          Invoke-WebRequest -Uri "https://github.com/libsdl-org/SDL/releases/download/release-$SDL_VERSION/SDL3-devel-$SDL_VERSION-VC.zip" -OutFile "sdl3.zip"
+          Expand-Archive -Path "sdl3.zip" -DestinationPath "sdl3_temp"
+          $SDL3_PATH = (Get-ChildItem -Path "sdl3_temp/SDL3-*" | Select-Object -First 1).FullName
+          echo "SDL3_DIR=$SDL3_PATH/cmake" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Copy-Item "$SDL3_PATH/lib/x64/SDL3.dll" -Destination "src/pykraken/"
+
+          # Download and extract SDL3_image
+          Invoke-WebRequest -Uri "https://github.com/libsdl-org/SDL_image/releases/download/release-$SDL_IMAGE_VERSION/SDL3_image-devel-$SDL_IMAGE_VERSION-VC.zip" -OutFile "sdl3_image.zip"
+          Expand-Archive -Path "sdl3_image.zip" -DestinationPath "sdl3_image_temp"
+          $SDL_IMAGE_PATH = (Get-ChildItem -Path "sdl3_image_temp/SDL3_image-*" | Select-Object -First 1).FullName
+          echo "SDL3_image_DIR=$SDL_IMAGE_PATH/cmake" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Copy-Item "$SDL_IMAGE_PATH/lib/x64/SDL3_image.dll" -Destination "src/pykraken/"
+
+          # Add SDL3 bin to PATH for CMake find_package to work correctly
+          echo "$SDL3_PATH/lib/x64" | Out-File -FilePath $env:GITHUB_PATH -Append
+
+      - name: Install build tools
+        run: python -m pip install cibuildwheel
+
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
+        env:
+          # Limit builds to the Python versions specified in the matrix
+          CIBW_BUILD: "cp${{ matrix.python-version | remove('.') }}-*"
+          # For Windows, SDL3_DIR and SDL3_image_DIR are set from the previous step
+          # For Linux/macOS, CMake's find_package will find the system-installed libraries
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.os }}-py${{ matrix.python-version }}
+          path: ./wheelhouse/*.whl
