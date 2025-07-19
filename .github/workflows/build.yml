@@ -35,7 +35,11 @@ jobs:
                   sudo apt-get install -y \
                     cmake \
                     git \
-                    build-essential
+                    build-essential \
+                    libpipewire-0.3-dev \
+                    libwayland-dev \
+                    libdecor-0-dev \
+                    liburing-dev
                   git clone https://github.com/libsdl-org/SDL.git
                   cd SDL
                   cmake -B build -DSDL_STATIC=OFF
