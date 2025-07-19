@@ -23,6 +23,8 @@ jobs:
 
         env:
             MACOSX_DEPLOYMENT_TARGET: "15.0"
+            CMAKE_PREFIX_PATH: /usr/local
+            SDL3_DIR: /usr/local/lib/cmake/SDL3
 
         steps:
             - uses: actions/checkout@v4
