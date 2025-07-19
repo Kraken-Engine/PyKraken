@@ -31,11 +31,7 @@ jobs:
             - name: Install dependencies (Linux)
               if: runner.os == 'Linux'
               run: |
-                  sudo apt update \
-                  sudo apt upgrade -y \
-                  sudo apt-get install -y \
-                   libsdl3-dev \
-                   libsdl3-image-dev
+                  sudo apt update && sudo apt upgrade -y && sudo apt-get install -y libsdl3-dev libsdl3-image-dev
 
             # ------------------ MacOS ------------------
             - name: Install dependencies (macOS)
