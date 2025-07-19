@@ -31,7 +31,22 @@ jobs:
             - name: Install dependencies (Linux)
               if: runner.os == 'Linux'
               run: |
-                  sudo apt update && sudo apt upgrade -y && sudo apt-get install -y libsdl3-dev libsdl3-image-dev
+                  sudo apt update && sudo apt upgrade -y 
+                  sudo apt-get install -y \
+                    cmake \
+                    git \
+                    build-essential
+                  git clone https://github.com/libsdl-org/SDL.git
+                  cd SDL
+                  cmake -B build -DSDL_STATIC=OFF
+                  cmake --build build
+                  sudo cmake --install build
+
+                  git clone https://github.com/libsdl-org/SDL_image.git
+                  cd SDL_image
+                  cmake -B build -DSDL_STATIC=OFF
+                  cmake --build build
+                  sudo cmake --install build
 
             # ------------------ MacOS ------------------
             - name: Install dependencies (macOS)
