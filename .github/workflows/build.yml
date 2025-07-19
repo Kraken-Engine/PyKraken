@@ -60,7 +60,7 @@ jobs:
 
       # ------------------ Linux ------------------
       - name: Install dependencies (Linux)
-        if: runner.os == "Linux"
+        if: runner.os == 'Linux'
         run: |
           # absolutely crucial, otherwise the build step doesn't know to include the SDL*.so files from here
           # cmake puts them in /usr/local/lib by default (on Linux) during the install step
