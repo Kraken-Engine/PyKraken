@@ -62,10 +62,6 @@ jobs:
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
-          # absolutely crucial, otherwise the build step doesn't know to include the SDL*.so files from here
-          # cmake puts them in /usr/local/lib by default (on Linux) during the install step
-          export LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
-
           export DIRECTORY=${PWD}
           export VENDORED_DIRECTORY=${DIRECTORY}/vendored
           mkdir ${VENDORED_DIRECTORY}
@@ -115,6 +111,12 @@ jobs:
           CIBW_BUILD_FRONTEND: "build[uv]"
           CIBW_SKIP: "pp* *-musllinux_*"
           CIBW_BUILD_VERBOSITY: 1
+ 
+          # absolutely crucial, otherwise the build step doesn't know to include the SDL*.so files from here
+          # cmake puts them in /usr/local/lib by default (on Linux) during the install step
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
+            export LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
+            auditwheel repair --verbose -w {dest_dir} {wheel}
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
