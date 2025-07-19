@@ -95,8 +95,8 @@ jobs:
               && cmake --build ${SDL_PATH}/build \
               && cmake --install ${SDL_PATH}/build
 
-          wget https://github.com/libsdl-org/SDL/releases/download/release-${SDL_IMAGE_VERSION}/${SDL_IMAGE_DIRECTORY}.tar.gz -O /tmp/SDL.tar.gz \
-              && tar -xvzf /tmp/SDL.tar.gz --directory=${VENDORED_DIRECTORY} \
+          wget https://github.com/libsdl-org/SDL/releases/download/release-${SDL_IMAGE_VERSION}/${SDL_IMAGE_DIRECTORY}.tar.gz -O /tmp/SDL_image.tar.gz \
+              && tar -xvzf /tmp/SDL_image.tar.gz --directory=${VENDORED_DIRECTORY} \
               && cmake -S ${SDL_IMAGE_PATH} -B ${SDL_IMAGE_PATH}/build -DCMAKE_BUILD_TYPE=Release \
               && cmake --build ${SDL_IMAGE_PATH}/build \
               && cmake --install ${SDL_IMAGE_PATH}/build
