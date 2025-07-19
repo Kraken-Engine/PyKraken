@@ -114,8 +114,10 @@ jobs:
  
           # absolutely crucial, otherwise the build step doesn't know to include the SDL*.so files from here
           # cmake puts them in /usr/local/lib by default (on Linux) during the install step
+          # since cibuildwheel runs in docker, it has no (direct) access to the files built on the host, however,
+          # by default it mounts the host filesystem at root to /host in the container
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
-            export LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
+            export LD_LIBRARY_PATH="/host/usr/local/lib:$LD_LIBRARY_PATH"
             auditwheel repair --verbose -w {dest_dir} {wheel}
 
       - name: Upload wheels
