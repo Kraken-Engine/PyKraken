@@ -23,9 +23,25 @@ jobs:
 
         env:
             MACOSX_DEPLOYMENT_TARGET: "15.0"
-            CMAKE_PREFIX_PATH: /usr/local
             CIBW_ENVIRONMENT_LINUX: "CMAKE_PREFIX_PATH=/usr/local SDL3_DIR=/usr/local/lib/cmake/SDL3 SDL3_image_DIR=/usr/local/lib/cmake/SDL3_image PKG_CONFIG_PATH=/usr/local/lib/pkgconfig"
-            SDL3_DIR: /usr/local/lib/cmake/SDL3
+            CIBW_BEFORE_ALL_LINUX: |
+                yum install -y git cmake3 gcc-c++ make pkgconfig
+                yum install -y alsa-lib-devel pulseaudio-libs-devel \
+                    libX11-devel libXext-devel libXrandr-devel libXcursor-devel \
+                    libXfixes-devel libXi-devel libXss-devel libdrm-devel \
+                    mesa-libGL-devel mesa-libEGL-devel mesa-libgbm-devel \
+                    dbus-devel systemd-devel
+                git clone https://github.com/libsdl-org/SDL.git /tmp/SDL
+                cd /tmp/SDL
+                cmake3 -B build -DSDL_STATIC=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local
+                cmake3 --build build -j$(nproc)
+                cmake3 --install build
+                git clone https://github.com/libsdl-org/SDL_image.git /tmp/SDL_image
+                cd /tmp/SDL_image
+                cmake3 -B build -DSDL_STATIC=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local
+                cmake3 --build build -j$(nproc)
+                cmake3 --install build
+                ldconfig
 
         steps:
             - uses: actions/checkout@v4
@@ -34,36 +50,7 @@ jobs:
             - name: Install dependencies (Linux)
               if: runner.os == 'Linux'
               run: |
-                  sudo apt update && sudo apt upgrade -y 
-                  sudo apt-get install build-essential git make \
-                  pkg-config cmake ninja-build gnome-desktop-testing libasound2-dev libpulse-dev \
-                  libaudio-dev libjack-dev libsndio-dev libx11-dev libxext-dev \
-                  libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev \
-                  libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
-                  libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev
-                  sudo apt-get install -y \
-                    cmake \
-                    git \
-                    build-essential \
-                    libpipewire-0.3-dev \
-                    libwayland-dev \
-                    libdecor-0-dev \
-                    liburing-dev
-                  git clone https://github.com/libsdl-org/SDL.git
-                  cd SDL
-                  cmake -B build -DSDL_STATIC=OFF
-                  cmake --build build
-                  sudo cmake --install build
-
-                  git clone https://github.com/libsdl-org/SDL_image.git
-                  cd SDL_image
-                  cmake -B build -DSDL_STATIC=OFF
-                  cmake --build build
-                  sudo cmake --install build
-
-                  cd .. 
-                  sudo ldconfig
-
+                  rm -rf SDL/ SDL_image/ sdl3.zip sdl3_image.zip
             # ------------------ MacOS ------------------
             - name: Install dependencies (macOS)
               if: runner.os == 'macOS'
@@ -104,7 +91,6 @@ jobs:
             - name: Build and test wheels
               uses: pypa/cibuildwheel@v3.0.1
               env:
-                  CIBW_BEFORE_BUILD_LINUX: "yum install -y pkgconfig || apt-get update && apt-get install -y pkg-config || apk add pkgconfig || true"
                   CIBW_SKIP: "pp* *-musllinux_*"
                   CIBW_BUILD_VERBOSITY: 1
 
