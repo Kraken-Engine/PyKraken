@@ -1,75 +1,84 @@
 name: Build Wheels
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  workflow_dispatch:
-  workflow_call:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+    workflow_dispatch:
+    workflow_call:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
 
 jobs:
-  build_wheels:
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, macos-15]
+    build_wheels:
+        name: Build wheels on ${{ matrix.os }}
+        runs-on: ${{ matrix.os }}
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [windows-latest, macos-15, ubuntu-latest]
 
-    env:
-      MACOSX_DEPLOYMENT_TARGET: "15.0"
+        env:
+            MACOSX_DEPLOYMENT_TARGET: "15.0"
 
-    steps:
-      - uses: actions/checkout@v4
+        steps:
+            - uses: actions/checkout@v4
+            # ------------------ Linux ------------------
 
-      # ------------------ MacOS ------------------
-      - name: Install dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew install sdl3 sdl3_image
+            - name: Install dependencies (Linux)
+              if: runner.os == 'Linux'
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y \
+                   libsdl3-dev \
+                   libsdl3-image-dev
 
-      # ------------------ Windows ------------------
-      - name: Install dependencies (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $SDL_VERSION = "3.2.18"
-          $SDL_IMAGE_VERSION = "3.2.4"
+            # ------------------ MacOS ------------------
+            - name: Install dependencies (macOS)
+              if: runner.os == 'macOS'
+              run: |
+                  brew install sdl3 sdl3_image
 
-          # Download and extract SDL3
-          Invoke-WebRequest -Uri "https://github.com/libsdl-org/SDL/releases/download/release-$SDL_VERSION/SDL3-devel-$SDL_VERSION-VC.zip" -OutFile "sdl3.zip"
-          Expand-Archive -Path "sdl3.zip" -DestinationPath "sdl3_temp"
-          $SDL3_PATH = (Get-ChildItem -Path "sdl3_temp/SDL3-*" | Select-Object -First 1).FullName
-          echo "SDL3_DIR=$SDL3_PATH/cmake" | Out-File -FilePath $env:GITHUB_ENV -Append
-          Copy-Item "$SDL3_PATH/lib/x64/SDL3.dll" -Destination "src/pykraken/"
+            # ------------------ Windows ------------------
+            - name: Install dependencies (Windows)
+              if: runner.os == 'Windows'
+              shell: pwsh
+              run: |
+                  $SDL_VERSION = "3.2.18"
+                  $SDL_IMAGE_VERSION = "3.2.4"
 
-          # Download and extract SDL3_image
-          Invoke-WebRequest -Uri "https://github.com/libsdl-org/SDL_image/releases/download/release-$SDL_IMAGE_VERSION/SDL3_image-devel-$SDL_IMAGE_VERSION-VC.zip" -OutFile "sdl3_image.zip"
-          Expand-Archive -Path "sdl3_image.zip" -DestinationPath "sdl3_image_temp"
-          $SDL_IMAGE_PATH = (Get-ChildItem -Path "sdl3_image_temp/SDL3_image-*" | Select-Object -First 1).FullName
-          echo "SDL3_image_DIR=$SDL_IMAGE_PATH/cmake" | Out-File -FilePath $env:GITHUB_ENV -Append
-          Copy-Item "$SDL_IMAGE_PATH/lib/x64/SDL3_image.dll" -Destination "src/pykraken/"
+                  # Download and extract SDL3
+                  Invoke-WebRequest -Uri "https://github.com/libsdl-org/SDL/releases/download/release-$SDL_VERSION/SDL3-devel-$SDL_VERSION-VC.zip" -OutFile "sdl3.zip"
+                  Expand-Archive -Path "sdl3.zip" -DestinationPath "sdl3_temp"
+                  $SDL3_PATH = (Get-ChildItem -Path "sdl3_temp/SDL3-*" | Select-Object -First 1).FullName
+                  echo "SDL3_DIR=$SDL3_PATH/cmake" | Out-File -FilePath $env:GITHUB_ENV -Append
+                  Copy-Item "$SDL3_PATH/lib/x64/SDL3.dll" -Destination "src/pykraken/"
 
-          # Add SDL3 bin to PATH for CMake find_package to work correctly
-          echo "$SDL3_PATH/lib/x64" | Out-File -FilePath $env:GITHUB_PATH -Append
+                  # Download and extract SDL3_image
+                  Invoke-WebRequest -Uri "https://github.com/libsdl-org/SDL_image/releases/download/release-$SDL_IMAGE_VERSION/SDL3_image-devel-$SDL_IMAGE_VERSION-VC.zip" -OutFile "sdl3_image.zip"
+                  Expand-Archive -Path "sdl3_image.zip" -DestinationPath "sdl3_image_temp"
+                  $SDL_IMAGE_PATH = (Get-ChildItem -Path "sdl3_image_temp/SDL3_image-*" | Select-Object -First 1).FullName
+                  echo "SDL3_image_DIR=$SDL_IMAGE_PATH/cmake" | Out-File -FilePath $env:GITHUB_ENV -Append
+                  Copy-Item "$SDL_IMAGE_PATH/lib/x64/SDL3_image.dll" -Destination "src/pykraken/"
 
-      # ------------------ Build Wheels ------------------
-      - name: Install uv for speed
-        uses: astral-sh/setup-uv@v6
-        with:
-          version: "latest"
+                  # Add SDL3 bin to PATH for CMake find_package to work correctly
+                  echo "$SDL3_PATH/lib/x64" | Out-File -FilePath $env:GITHUB_PATH -Append
 
-      - name: Build and test wheels
-        uses: pypa/cibuildwheel@v3.0.1
+            # ------------------ Build Wheels ------------------
+            - name: Install uv for speed
+              uses: astral-sh/setup-uv@v6
+              with:
+                  version: "latest"
 
-      - name: Upload wheels
-        uses: actions/upload-artifact@v4
-        with:
-          name: wheels-${{ matrix.os }}
-          path: ./wheelhouse/*.whl
-          compression-level: 0
+            - name: Build and test wheels
+              uses: pypa/cibuildwheel@v3.0.1
+
+            - name: Upload wheels
+              uses: actions/upload-artifact@v4
+              with:
+                  name: wheels-${{ matrix.os }}
+                  path: ./wheelhouse/*.whl
+                  compression-level: 0
