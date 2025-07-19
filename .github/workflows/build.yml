@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-15]
+        os: [windows-latest, macos-15, ubuntu-latest]
 
     env:
       MACOSX_DEPLOYMENT_TARGET: "15.0"
@@ -58,6 +58,49 @@ jobs:
           # Add SDL3 bin to PATH for CMake find_package to work correctly
           echo "$SDL3_PATH/lib/x64" | Out-File -FilePath $env:GITHUB_PATH -Append
 
+      # ------------------ Linux ------------------
+      - name: Install dependencies (Linux)
+        if: runner.os == "Linux"
+        run: |
+          # absolutely crucial, otherwise the build step doesn't know to include the SDL*.so files from here
+          # cmake puts them in /usr/local/lib by default (on Linux) during the install step
+          export LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
+
+          export DIRECTORY=${PWD}
+          export VENDORED_DIRECTORY=${DIRECTORY}/vendored
+
+          export SDL_VERSION="3.2.18"
+          export SDL_DIRECTORY=SDL3-${SDL_VERSION}
+          export SDL_PATH=${VENDORED_DIRECTORY}/${SDL_DIRECTORY}
+
+          export SDL_IMAGE_VERSION="3.2.4"
+          export SDL_IMAGE_DIRECTORY=SDL3_image-${SDL_IMAGE_VERSION}
+          export SDL_IMAGE_PATH=${VENDORED_DIRECTORY}/${SDL_IMAGE_DIRECTORY}
+
+          apt-get update
+
+          # see https://github.com/libsdl-org/SDL/blob/main/docs/README-linux.md#build-dependencies
+          apt-get install -y --no-install-recommends build-essential git make \
+              pkg-config cmake ninja-build gnome-desktop-testing libasound2-dev libpulse-dev \
+              libaudio-dev libjack-dev libsndio-dev libx11-dev libxext-dev \
+              libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev \
+              libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
+              libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev
+
+          apt-get install -y --no-install-recommends gcc g++ wget ca-certificates cmake
+
+          wget https://github.com/libsdl-org/SDL/releases/download/release-${SDL_VERSION}/${SDL_DIRECTORY}.tar.gz -O /tmp/SDL.tar.gz \
+              && tar -xvzf /tmp/SDL.tar.gz --directory=${VENDORED_DIRECTORY} \
+              && cmake -S ${SDL_PATH} -B ${SDL_PATH}/build -DCMAKE_BUILD_TYPE=Release \
+              && cmake --build ${SDL_PATH}/build \
+              && cmake --install ${SDL_PATH}/build
+
+          wget https://github.com/libsdl-org/SDL/releases/download/release-${SDL_IMAGE_VERSION}/${SDL_IMAGE_DIRECTORY}.tar.gz -O /tmp/SDL.tar.gz \
+              && tar -xvzf /tmp/SDL.tar.gz --directory=${VENDORED_DIRECTORY} \
+              && cmake -S ${SDL_IMAGE_PATH} -B ${SDL_IMAGE_PATH}/build -DCMAKE_BUILD_TYPE=Release \
+              && cmake --build ${SDL_IMAGE_PATH}/build \
+              && cmake --install ${SDL_IMAGE_PATH}/build
+
       # ------------------ Build Wheels ------------------
       - name: Install uv for speed
         uses: astral-sh/setup-uv@v6
@@ -66,6 +109,11 @@ jobs:
 
       - name: Build and test wheels
         uses: pypa/cibuildwheel@v3.0.1
+        env:
+          # Use uv and build
+          CIBW_BUILD_FRONTEND: "build[uv]"
+          CIBW_SKIP: "pp* *-musllinux_*"
+          CIBW_BUILD_VERBOSITY: 1
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
