@@ -91,6 +91,9 @@ jobs:
             - name: Build and test wheels
               uses: pypa/cibuildwheel@v3.0.1
               env:
+                  CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
+                      LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH" \
+                      auditwheel repair --lib-dir /usr/local/lib --verbose -w {dest_dir} {wheel}
                   CIBW_SKIP: "pp* *-musllinux_*"
                   CIBW_BUILD_VERBOSITY: 1
 
