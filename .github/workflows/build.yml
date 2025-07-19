@@ -68,6 +68,7 @@ jobs:
 
           export DIRECTORY=${PWD}
           export VENDORED_DIRECTORY=${DIRECTORY}/vendored
+          mkdir ${VENDORED_DIRECTORY}
 
           export SDL_VERSION="3.2.18"
           export SDL_DIRECTORY=SDL3-${SDL_VERSION}
