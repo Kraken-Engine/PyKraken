@@ -103,13 +103,18 @@ jobs:
 
             yum install -y gcc g++ wget ca-certificates cmake
 
-            /usr/bin/wget https://github.com/libsdl-org/SDL/releases/download/release-${SDL_VERSION}/${SDL_DIRECTORY}.tar.gz -O /tmp/SDL.tar.gz \
+            yum search wget
+            yum list wget
+            yum info wget
+            yum install -y wget
+
+            wget https://github.com/libsdl-org/SDL/releases/download/release-${SDL_VERSION}/${SDL_DIRECTORY}.tar.gz -O /tmp/SDL.tar.gz \
                 && tar -xvzf /tmp/SDL.tar.gz --directory=${VENDORED_DIRECTORY} \
                 && cmake -S ${SDL_PATH} -B ${SDL_PATH}/build -DCMAKE_BUILD_TYPE=Release \
                 && cmake --build ${SDL_PATH}/build -j$(nproc) \
                 && cmake --install ${SDL_PATH}/build
 
-            /usr/bin/wget https://github.com/libsdl-org/SDL_image/releases/download/release-${SDL_IMAGE_VERSION}/${SDL_IMAGE_DIRECTORY}.tar.gz -O /tmp/SDL_image.tar.gz \
+            wget https://github.com/libsdl-org/SDL_image/releases/download/release-${SDL_IMAGE_VERSION}/${SDL_IMAGE_DIRECTORY}.tar.gz -O /tmp/SDL_image.tar.gz \
                 && tar -xvzf /tmp/SDL_image.tar.gz --directory=${VENDORED_DIRECTORY} \
                 && cmake -S ${SDL_IMAGE_PATH} -B ${SDL_IMAGE_PATH}/build -DCMAKE_BUILD_TYPE=Release \
                 && cmake --build ${SDL_IMAGE_PATH}/build -j$(nproc) \
