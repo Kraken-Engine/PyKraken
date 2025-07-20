@@ -115,13 +115,12 @@ jobs:
           CIBW_BUILD_VERBOSITY: 1
           # absolutely crucial, otherwise the build step doesn't know to include the SDL*.so files from here
           # cmake puts them in /usr/local/lib by default (on Linux) during the install step
-          # since cibuildwheel runs in docker, it has no (direct) access to the files built on the host, however,
-          # by default it mounts the host filesystem at root to /host in the container
+          # since cibuildwheel runs in docker, it has no (direct) access to the files built on the host, so
+          # we need to mount /usr/local explicitly (though it should be also somehow accessible through the
+          # /host mount that cibuildwheel creates, but that doesn't want to work)
           CIBW_ENVIRONMENT_LINUX: >
-            CMAKE_PREFIX_PATH="/host;${CMAKE_PREFIX_PATH}"
-            CMAKE_MODULE_PATH="/host;${CMAKE_MODULE_PATH}"
-            LD_LIBRARY_PATH="/host/usr/local/lib:/usr/local/lib:${LD_LIBRARY_PATH}"
-          CIBW_CONTAINER_ENGINE: "docker; create_args: --volume=/usr/local/lib:/usr/local/lib; disable_host_mount: false"
+            LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
+          CIBW_CONTAINER_ENGINE: "docker; create_args: --volume=/usr/local:/usr/local; disable_host_mount: false"
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
