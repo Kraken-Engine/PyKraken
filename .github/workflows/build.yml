@@ -77,7 +77,7 @@ jobs:
           # we need to mount /usr/local explicitly (though it should be also somehow accessible through the
           # /host mount that cibuildwheel creates, but that doesn't want to work)
           CIBW_ENVIRONMENT_LINUX: >
-            LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
+            LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64:${LD_LIBRARY_PATH}"
           CIBW_BEFORE_BUILD_LINUX: |
             export DIRECTORY=${PWD}
             export VENDORED_DIRECTORY=${DIRECTORY}/vendored
