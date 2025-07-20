@@ -119,6 +119,7 @@ jobs:
           # by default it mounts the host filesystem at root to /host in the container
           CIBW_ENVIRONMENT_LINUX: >
             CMAKE_PREFIX_PATH="/host;${CMAKE_PREFIX_PATH}"
+            CMAKE_MODULE_PATH="/host;${CMAKE_MODULE_PATH}"
             LD_LIBRARY_PATH="/host/usr/local/lib:${LD_LIBRARY_PATH}"
 
       - name: Upload wheels
