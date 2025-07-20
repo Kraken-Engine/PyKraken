@@ -62,7 +62,6 @@ jobs:
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
-
           export DIRECTORY=${PWD}
           export VENDORED_DIRECTORY=${DIRECTORY}/vendored
           mkdir ${VENDORED_DIRECTORY}
