@@ -62,6 +62,12 @@ jobs:
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
+          # absolutely crucial, otherwise the build step doesn't know to include the SDL*.so files from here
+          # cmake puts them in /usr/local/lib by default (on Linux) during the install step
+          # since cibuildwheel runs in docker, it has no (direct) access to the files built on the host, however,
+          # by default it mounts the host filesystem at root to /host in the container
+          export LD_LIBRARY_PATH="/host/usr/local/lib:$LD_LIBRARY_PATH"
+
           export DIRECTORY=${PWD}
           export VENDORED_DIRECTORY=${DIRECTORY}/vendored
           mkdir ${VENDORED_DIRECTORY}
@@ -111,14 +117,8 @@ jobs:
           CIBW_BUILD_FRONTEND: "build[uv]"
           CIBW_SKIP: "pp* *-musllinux_*"
           CIBW_BUILD_VERBOSITY: 1
- 
-          # absolutely crucial, otherwise the build step doesn't know to include the SDL*.so files from here
-          # cmake puts them in /usr/local/lib by default (on Linux) during the install step
-          # since cibuildwheel runs in docker, it has no (direct) access to the files built on the host, however,
-          # by default it mounts the host filesystem at root to /host in the container
-          CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
-            export LD_LIBRARY_PATH="/host/usr/local/lib:$LD_LIBRARY_PATH"
-            auditwheel repair --verbose -w {dest_dir} {wheel}
+          # now just need to pass this crucial environment variable to the container
+          CIBW_ENVIRONMENT_PASS_LINUX: LD_LIBRARY_PATH
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
