@@ -58,48 +58,6 @@ jobs:
           # Add SDL3 bin to PATH for CMake find_package to work correctly
           echo "$SDL3_PATH/lib/x64" | Out-File -FilePath $env:GITHUB_PATH -Append
 
-      # ------------------ Linux ------------------
-      - name: Install dependencies (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          export DIRECTORY=${PWD}
-          export VENDORED_DIRECTORY=${DIRECTORY}/vendored
-          mkdir ${VENDORED_DIRECTORY}
-
-          export SDL_VERSION="3.2.18"
-          export SDL_DIRECTORY=SDL3-${SDL_VERSION}
-          export SDL_PATH=${VENDORED_DIRECTORY}/${SDL_DIRECTORY}
-
-          export SDL_IMAGE_VERSION="3.2.4"
-          export SDL_IMAGE_DIRECTORY=SDL3_image-${SDL_IMAGE_VERSION}
-          export SDL_IMAGE_PATH=${VENDORED_DIRECTORY}/${SDL_IMAGE_DIRECTORY}
-
-          sudo apt-get update
-
-          # see https://github.com/libsdl-org/SDL/blob/main/docs/README-linux.md#build-dependencies
-          sudo apt-get install -y --no-install-recommends build-essential git make \
-              pkg-config cmake ninja-build gnome-desktop-testing libasound2-dev libpulse-dev \
-              libaudio-dev libjack-dev libsndio-dev libx11-dev libxext-dev \
-              libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev \
-              libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
-              libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev
-
-          sudo apt-get install -y --no-install-recommends gcc g++ wget ca-certificates cmake
-
-          wget https://github.com/libsdl-org/SDL/releases/download/release-${SDL_VERSION}/${SDL_DIRECTORY}.tar.gz -O /tmp/SDL.tar.gz \
-              && tar -xvzf /tmp/SDL.tar.gz --directory=${VENDORED_DIRECTORY} \
-              && cmake -S ${SDL_PATH} -B ${SDL_PATH}/build -DCMAKE_BUILD_TYPE=Release \
-              && cmake --build ${SDL_PATH}/build -j$(nproc) \
-              && sudo cmake --install ${SDL_PATH}/build
-
-          wget https://github.com/libsdl-org/SDL_image/releases/download/release-${SDL_IMAGE_VERSION}/${SDL_IMAGE_DIRECTORY}.tar.gz -O /tmp/SDL_image.tar.gz \
-              && tar -xvzf /tmp/SDL_image.tar.gz --directory=${VENDORED_DIRECTORY} \
-              && cmake -S ${SDL_IMAGE_PATH} -B ${SDL_IMAGE_PATH}/build -DCMAKE_BUILD_TYPE=Release \
-              && cmake --build ${SDL_IMAGE_PATH}/build -j$(nproc) \
-              && sudo cmake --install ${SDL_IMAGE_PATH}/build
-
-          rm -rf ${VENDORED_DIRECTORY}
-
       # ------------------ Build Wheels ------------------
       - name: Install uv for speed
         uses: astral-sh/setup-uv@v6
@@ -120,13 +78,44 @@ jobs:
           # /host mount that cibuildwheel creates, but that doesn't want to work)
           CIBW_ENVIRONMENT_LINUX: >
             LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
-          CIBW_CONTAINER_ENGINE: >
-            docker
-            ; create_args:
-            --volume=/usr/local/lib:/usr/local/lib
-            --volume=/usr/local/include:/usr/local/include
-            ; disable_host_mount:
-            false
+          CIBW_BEFORE_BUILD_LINUX: |
+            export DIRECTORY=${PWD}
+            export VENDORED_DIRECTORY=${DIRECTORY}/vendored
+            mkdir ${VENDORED_DIRECTORY}
+
+            export SDL_VERSION="3.2.18"
+            export SDL_DIRECTORY=SDL3-${SDL_VERSION}
+            export SDL_PATH=${VENDORED_DIRECTORY}/${SDL_DIRECTORY}
+
+            export SDL_IMAGE_VERSION="3.2.4"
+            export SDL_IMAGE_DIRECTORY=SDL3_image-${SDL_IMAGE_VERSION}
+            export SDL_IMAGE_PATH=${VENDORED_DIRECTORY}/${SDL_IMAGE_DIRECTORY}
+
+            sudo apt-get update
+
+            # see https://github.com/libsdl-org/SDL/blob/main/docs/README-linux.md#build-dependencies
+            sudo apt-get install -y --no-install-recommends build-essential git make \
+                pkg-config cmake ninja-build gnome-desktop-testing libasound2-dev libpulse-dev \
+                libaudio-dev libjack-dev libsndio-dev libx11-dev libxext-dev \
+                libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev \
+                libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
+                libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev
+
+            sudo apt-get install -y --no-install-recommends gcc g++ wget ca-certificates cmake
+
+            wget https://github.com/libsdl-org/SDL/releases/download/release-${SDL_VERSION}/${SDL_DIRECTORY}.tar.gz -O /tmp/SDL.tar.gz \
+                && tar -xvzf /tmp/SDL.tar.gz --directory=${VENDORED_DIRECTORY} \
+                && cmake -S ${SDL_PATH} -B ${SDL_PATH}/build -DCMAKE_BUILD_TYPE=Release \
+                && cmake --build ${SDL_PATH}/build -j$(nproc) \
+                && sudo cmake --install ${SDL_PATH}/build
+
+            wget https://github.com/libsdl-org/SDL_image/releases/download/release-${SDL_IMAGE_VERSION}/${SDL_IMAGE_DIRECTORY}.tar.gz -O /tmp/SDL_image.tar.gz \
+                && tar -xvzf /tmp/SDL_image.tar.gz --directory=${VENDORED_DIRECTORY} \
+                && cmake -S ${SDL_IMAGE_PATH} -B ${SDL_IMAGE_PATH}/build -DCMAKE_BUILD_TYPE=Release \
+                && cmake --build ${SDL_IMAGE_PATH}/build -j$(nproc) \
+                && sudo cmake --install ${SDL_IMAGE_PATH}/build
+
+            rm -rf ${VENDORED_DIRECTORY}
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
