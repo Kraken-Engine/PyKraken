@@ -120,7 +120,13 @@ jobs:
           # /host mount that cibuildwheel creates, but that doesn't want to work)
           CIBW_ENVIRONMENT_LINUX: >
             LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
-          CIBW_CONTAINER_ENGINE: "docker; create_args: --volume=/usr/local:/usr/local; disable_host_mount: false"
+          CIBW_CONTAINER_ENGINE: >
+            docker
+            ; create_args:
+            --volume=/usr/local/lib:/usr/local/lib
+            --volume=/usr/local/include:/usr/local/include
+            ; disable_host_mount:
+            false
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
