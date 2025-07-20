@@ -104,6 +104,8 @@ jobs:
               && cmake --build ${SDL_IMAGE_PATH}/build -j$(nproc) \
               && sudo cmake --install ${SDL_IMAGE_PATH}/build
 
+          rm -rf ${VENDORED_DIRECTORY}
+
       # ------------------ Build Wheels ------------------
       - name: Install uv for speed
         uses: astral-sh/setup-uv@v6
