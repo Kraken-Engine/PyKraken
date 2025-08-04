@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "kraken-engine"
-version = "0.0.1"
+version = "0.1.0"
 authors = [
   { name = "Derrick Martinez" },
 ]
@@ -12,15 +12,27 @@ description = "Python bindings for Kraken Engine"
 readme = "README.md"
 requires-python = ">=3.10"
 classifiers = [
+  "Programming Language :: Python",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Games/Entertainment",
+  "Topic :: Multimedia :: Graphics",
   "Operating System :: Microsoft :: Windows",
+  "Operating System :: MacOS",
 ]
 license = "MIT"
 license-files = ["LICENSE"]
 
 [project.urls]
-Homepage = "https://github.com/Kraken-Engine/PyKraken"
-Issues = "https://github.com/Kraken-Engine/PyKraken/issues"
+"Homepage" = "https://docs.krakenengine.org/"
+"Issues" = "https://github.com/Kraken-Engine/PyKraken/issues"
+"Documentation" = "https://docs.krakenengine.org/docs/getting-started/introduction"
+"Release Notes" = "https://github.com/Kraken-Engine/PyKraken/releases"
+"Source" = "https://github.com/Kraken-Engine/PyKraken"
 
 [tool.scikit-build]
 wheel.packages = ["src/pykraken"]
