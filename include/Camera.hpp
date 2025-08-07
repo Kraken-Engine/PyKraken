@@ -15,7 +15,6 @@ Vec2 getActivePos();
 class Camera
 {
   public:
-    Camera() = default;
     explicit Camera(const Vec2& pos = {});
     ~Camera() = default;
 

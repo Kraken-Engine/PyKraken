@@ -673,7 +673,7 @@ Args:
 Returns:
     Vec2: A new vector scaled to the specified length.
         )doc");
-    subMath.def("from_polar", static_cast<Vec2 (*)(double, double)>(&fromPolar), py::arg("angle"),
+    subMath.def("from_polar", py::overload_cast<double, double>(&fromPolar), py::arg("angle"),
                 py::arg("radius"), R"doc(
 Convert polar coordinates to a Cartesian vector.
 
@@ -684,7 +684,7 @@ Args:
 Returns:
     Vec2: The equivalent Cartesian vector.
         )doc");
-    subMath.def("from_polar", static_cast<Vec2 (*)(const PolarCoordinate&)>(&fromPolar),
+    subMath.def("from_polar", py::overload_cast<const PolarCoordinate&>(&fromPolar),
                 py::arg("polar"), R"doc(
 Convert a PolarCoordinate object to a Cartesian vector.
 
@@ -694,7 +694,7 @@ Args:
 Returns:
     Vec2: The equivalent Cartesian vector.
         )doc");
-    subMath.def("normalize", &normalize, py::arg("vector"), R"doc(
+    subMath.def("normalize", &normalize, py::arg("vec"), R"doc(
 Normalize a vector to unit length.
 
 Args:
@@ -703,7 +703,7 @@ Args:
 Returns:
     Vec2: A new normalized vector.
         )doc");
-    subMath.def("clamp", &clampVec, py::arg("vector"), py::arg("min_vec"), py::arg("max_vec"),
+    subMath.def("clamp", &clampVec, py::arg("vec"), py::arg("min_vec"), py::arg("max_vec"),
                 R"doc(
 Clamp a vector between two boundary vectors.
 
@@ -770,7 +770,7 @@ Returns:
 Raises:
     ValueError: If in_min equals in_max.
         )doc");
-    subMath.def("to_degrees", &toDegrees, py::arg("radians"), R"doc(
+    subMath.def("to_deg", &toDegrees, py::arg("radians"), R"doc(
 Convert radians to degrees.
 
 Args:
@@ -779,7 +779,7 @@ Args:
 Returns:
     float: The angle in degrees.
         )doc");
-    subMath.def("to_radians", &toRadians, py::arg("degrees"), R"doc(
+    subMath.def("to_rad", &toRadians, py::arg("degrees"), R"doc(
 Convert degrees to radians.
 
 Args:
@@ -822,11 +822,11 @@ Returns:
 
 Vec2 scaleToLength(const Vec2& vec, double scalar)
 {
-    double length = vec.getLength();
+    const double length = vec.getLength();
     if (length == 0.0)
         return vec;
 
-    double scale = scalar / length;
+    const double scale = scalar / length;
     return Vec2(vec.x * scale, vec.y * scale);
 }
 
@@ -860,8 +860,8 @@ double remap(double in_min, double in_max, double out_min, double out_max, doubl
 {
     if (in_min == in_max)
         throw std::invalid_argument("in_min and in_max must not be equal");
+    const double scale = (value - in_min) / (in_max - in_min);
 
-    double scale = (value - in_min) / (in_max - in_min);
     return out_min + scale * (out_max - out_min);
 }
 
@@ -875,12 +875,12 @@ double cross(const Vec2& a, const Vec2& b) { return a.x * b.y - a.y * b.x; }
 
 double angleBetween(const Vec2& a, const Vec2& b)
 {
-    double lengths = a.getLength() * b.getLength();
+    const double lengths = a.getLength() * b.getLength();
     if (lengths == 0.0)
         return 0.0;
 
-    double dotProduct = dot(a, b);
-    double cosTheta = dotProduct / lengths;
+    const double dotProduct = dot(a, b);
+    const double cosTheta = dotProduct / lengths;
     return std::acos(std::clamp(cosTheta, -1.0, 1.0));
 }
 } // namespace math
@@ -915,10 +915,10 @@ void Vec2::rotate(const double rad)
     if (isZero())
         return;
 
-    double cosTheta = std::cos(rad);
-    double sinTheta = std::sin(rad);
-    double newX = x * cosTheta - y * sinTheta;
-    double newY = x * sinTheta + y * cosTheta;
+    const double cosTheta = std::cos(rad);
+    const double sinTheta = std::sin(rad);
+    const double newX = x * cosTheta - y * sinTheta;
+    const double newY = x * sinTheta + y * cosTheta;
     x = newX;
     y = newY;
 }
@@ -938,7 +938,7 @@ void Vec2::scaleToLength(const double scalar)
 
 Vec2 Vec2::project(const Vec2& other) const
 {
-    double lenSq = other.x * other.x + other.y * other.y;
+    const double lenSq = other.x * other.x + other.y * other.y;
     if (lenSq == 0.0)
         return {};
     return other * (math::dot(*this, other) / lenSq);
@@ -946,13 +946,13 @@ Vec2 Vec2::project(const Vec2& other) const
 
 Vec2 Vec2::reject(const Vec2& other) const
 {
-    Vec2 projection = project(other);
+    const Vec2 projection = project(other);
     return *this - projection;
 }
 
 Vec2 Vec2::reflect(const Vec2& other) const
 {
-    Vec2 projection = project(other) * 2.0;
+    const Vec2 projection = project(other) * 2.0;
     return *this - projection;
 }
 

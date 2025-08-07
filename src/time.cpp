@@ -12,12 +12,12 @@ The Clock class is used to measure time between frames and optionally
 limit the framerate of your application. It's essential for creating
 smooth, frame-rate independent animations and game loops.
     )doc")
-        .def(py::init<>(), R"doc(
+        .def(py::init(), R"doc(
 Create a new Clock instance.
 
 The clock starts measuring time immediately upon creation.
         )doc")
-        .def("tick", &Clock::tick, py::arg("frame_rate") = 0, R"doc(
+        .def("tick", &Clock::tick, py::arg("frame_rate") = 60, R"doc(
 Get the time since the last frame and optionally cap the framerate.
 
 This method should be called once per frame in your main loop. It returns
@@ -38,9 +38,76 @@ Returns:
     int: The current FPS based on the last frame time.
         )doc");
 
+    py::class_<Timer>(module, "Timer", R"doc(
+A timer for tracking countdown durations with pause/resume functionality.
+
+The Timer class provides a simple countdown timer that can be started, paused,
+and resumed. It's useful for implementing time-based game mechanics like
+cooldowns, temporary effects, or timed events.
+    )doc")
+        .def(py::init<double>(), py::arg("duration"), R"doc(
+Create a new Timer instance with the specified duration.
+
+Args:
+    duration (float): The countdown duration in seconds. Must be greater than 0.
+
+Raises:
+    RuntimeError: If duration is less than or equal to 0.
+        )doc")
+        .def("start", &Timer::start, R"doc(
+Start or restart the timer countdown.
+
+This begins the countdown from the full duration. If the timer was previously
+started, this will reset it back to the beginning.
+        )doc")
+        .def("pause", &Timer::pause, R"doc(
+Pause the timer countdown.
+
+The timer will stop counting down but retain its current state. Use resume()
+to continue the countdown from where it was paused. Has no effect if the
+timer is not started or already paused.
+        )doc")
+        .def("resume", &Timer::resume, R"doc(
+Resume a paused timer countdown.
+
+Continues the countdown from where it was paused. Has no effect if the
+timer is not started or not currently paused.
+        )doc")
+        .def("reset", &Timer::reset, R"doc(
+Reset the timer to its initial state.
+
+Stops the timer and resets it back to its initial, unstarted state.
+The timer can be started again with `start()` after being reset.
+        )doc")
+
+        .def_property_readonly("done", &Timer::isDone, R"doc(
+bool: True if the timer has finished counting down, False otherwise.
+
+A timer is considered done when the elapsed time since start (excluding
+paused time) equals or exceeds the specified duration.
+        )doc")
+        .def_property_readonly("time_remaining", &Timer::timeRemaining, R"doc(
+float: The remaining time in seconds before the timer completes.
+
+Returns the full duration if the timer hasn't been started, or 0.0 if
+the timer has already finished.
+        )doc")
+        .def_property_readonly("elapsed_time", &Timer::elapsedTime, R"doc(
+float: The time elapsed since the timer was started, in seconds.
+
+Returns 0.0 if the timer hasn't been started. This includes time spent
+while paused, giving you the total wall-clock time since start().
+        )doc")
+        .def_property_readonly("progress", &Timer::progress, R"doc(
+float: The completion progress of the timer as a value between 0.0 and 1.0.
+
+Returns 0.0 if the timer hasn't been started, and 1.0 when the timer
+is complete. Useful for progress bars and interpolated animations.
+        )doc");
+
     auto subTime = module.def_submodule("time", "Time related functions");
 
-    subTime.def("get_elapsed_time", &getElapsedTime, R"doc(
+    subTime.def("get_elapsed", &getElapsed, R"doc(
 Get the elapsed time since the program started.
 
 Returns:
@@ -62,6 +129,9 @@ Clock::Clock() : m_lastTick(SDL_GetTicksNS()) {}
 
 double Clock::tick(const uint16_t frameRate)
 {
+    if (frameRate < 1)
+        throw std::invalid_argument("Tick framerate must be at least 1");
+
     uint64_t now = SDL_GetTicksNS();
     uint64_t frameTime = now - m_lastTick;
 
@@ -78,14 +148,121 @@ double Clock::tick(const uint16_t frameRate)
 
     m_lastTick = now;
     double delta = static_cast<double>(frameTime) / SDL_NS_PER_SECOND;
-    m_fps = static_cast<uint64_t>(1.0 / delta);
+
+    // Prevent division by zero and handle very small delta times
+    m_fps = (delta > 0.0) ? static_cast<uint64_t>(1.0 / delta) : 0;
 
     return delta;
 }
 
 uint64_t Clock::getFPS() const { return m_fps; }
 
-double getElapsedTime() { return SDL_GetTicksNS() / SDL_NS_PER_SECOND; }
+Timer::Timer(const double duration) : m_duration(duration)
+{
+    if (duration <= 0.0)
+        throw std::invalid_argument("Timer duration must be greater than 0");
+}
+
+void Timer::start()
+{
+    m_startTime = std::chrono::steady_clock::now();
+    m_started = true;
+    m_paused = false;
+}
+
+void Timer::pause()
+{
+    if (m_started && !m_paused)
+    {
+        m_pauseTime = std::chrono::steady_clock::now();
+        m_paused = true;
+    }
+}
+
+void Timer::resume()
+{
+    if (m_started && m_paused)
+    {
+        auto now = std::chrono::steady_clock::now();
+        auto pauseDuration = now - m_pauseTime;
+        m_startTime += pauseDuration; // Adjust the start time to account for the pause duration
+        m_paused = false;
+    }
+}
+
+void Timer::reset()
+{
+    m_started = false;
+    m_paused = false;
+}
+
+bool Timer::isDone() const
+{
+    if (!m_started)
+        return false;
+
+    if (m_paused)
+    {
+        // If paused, check elapsed time up to when we paused
+        std::chrono::duration<double> elapsed = m_pauseTime - m_startTime;
+        return (elapsed.count() >= m_duration);
+    }
+
+    auto now = std::chrono::steady_clock::now();
+    std::chrono::duration<double> elapsed = now - m_startTime;
+
+    return (elapsed.count() >= m_duration);
+}
+
+double Timer::timeRemaining() const
+{
+    if (!m_started)
+        return m_duration;
+
+    if (m_paused)
+    {
+        // If paused, calculate remaining time based on when we paused
+        std::chrono::duration<double> elapsed = m_pauseTime - m_startTime;
+        double remaining = m_duration - elapsed.count();
+        return (remaining > 0.0) ? remaining : 0.0;
+    }
+
+    auto now = std::chrono::steady_clock::now();
+    std::chrono::duration<double> elapsed = now - m_startTime;
+    double remaining = m_duration - elapsed.count();
+
+    return (remaining > 0.0) ? remaining : 0.0;
+}
+
+double Timer::elapsedTime() const
+{
+    if (!m_started)
+        return 0.0;
+
+    if (m_paused)
+    {
+        // If paused, return elapsed time up to when we paused
+        std::chrono::duration<double> elapsed = m_pauseTime - m_startTime;
+        return elapsed.count();
+    }
+
+    auto now = std::chrono::steady_clock::now();
+    std::chrono::duration<double> elapsed = now - m_startTime;
+
+    return elapsed.count();
+}
+
+double Timer::progress() const
+{
+    if (!m_started)
+        return 0.0;
+
+    double elapsed = elapsedTime();
+
+    return std::min(elapsed / m_duration, 1.0);
+}
+
+double getElapsed() { return static_cast<double>(SDL_GetTicksNS()) / SDL_NS_PER_SECOND; }
 
 void delay(const uint64_t ms) { SDL_DelayNS(SDL_MS_TO_NS(ms)); }
 } // namespace kn::time

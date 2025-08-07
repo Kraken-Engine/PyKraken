@@ -18,8 +18,10 @@ struct Color
     operator SDL_FColor() const { return {r / 255.f, g / 255.f, b / 255.f, a / 255.f}; }
 
     std::string toHex() const;
-
     void fromHex(std::string_view hex);
+
+    py::tuple toHSV() const;
+    void fromHSV(const py::tuple& hsv);
 
     bool _isValid() const;
 };
@@ -30,15 +32,13 @@ void _bind(py::module_& module);
 
 Color fromHex(std::string_view hex);
 
-std::string toHex(const Color& color);
-
 Color fromHSV(float h, float s, float v, float a = 1.0f);
-
-Color _fromSeq(const py::sequence& seq);
 
 Color lerp(const Color& a, const Color& b, double t);
 
 Color invert(const Color& color);
+
+Color grayscale(const Color& color);
 
 constexpr Color BLACK = {0, 0, 0};
 constexpr Color WHITE = {255, 255, 255};

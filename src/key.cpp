@@ -15,7 +15,7 @@ void _bind(py::module_& module)
 {
     auto subKey = module.def_submodule("key", "Keyboard key state checks");
 
-    subKey.def("is_pressed", static_cast<bool (*)(SDL_Scancode)>(&isPressed), py::arg("scancode"),
+    subKey.def("is_pressed", py::overload_cast<SDL_Scancode>(&isPressed), py::arg("scancode"),
                R"doc(
 Check if a key is currently held down (by scancode).
 
@@ -26,7 +26,7 @@ Returns:
     bool: True if the key is held.
         )doc");
 
-    subKey.def("is_just_pressed", static_cast<bool (*)(SDL_Scancode)>(&isJustPressed),
+    subKey.def("is_just_pressed", py::overload_cast<SDL_Scancode>(&isJustPressed),
                py::arg("scancode"), R"doc(
 Check if a key was pressed this frame (by scancode).
 
@@ -37,7 +37,7 @@ Returns:
     bool: True if the key was newly pressed.
         )doc");
 
-    subKey.def("is_just_released", static_cast<bool (*)(SDL_Scancode)>(&isJustReleased),
+    subKey.def("is_just_released", py::overload_cast<SDL_Scancode>(&isJustReleased),
                py::arg("scancode"), R"doc(
 Check if a key was released this frame (by scancode).
 
@@ -48,7 +48,7 @@ Returns:
     bool: True if the key was newly released.
         )doc");
 
-    subKey.def("is_pressed", static_cast<bool (*)(KnKeycode)>(&isPressed), py::arg("keycode"),
+    subKey.def("is_pressed", py::overload_cast<KnKeycode>(&isPressed), py::arg("keycode"),
                R"doc(
 Check if a key is currently held down (by keycode).
 
@@ -59,7 +59,7 @@ Returns:
     bool: True if the key is held.
         )doc");
 
-    subKey.def("is_just_pressed", static_cast<bool (*)(KnKeycode)>(&isJustPressed),
+    subKey.def("is_just_pressed", py::overload_cast<KnKeycode>(&isJustPressed),
                py::arg("keycode"), R"doc(
 Check if a key was pressed this frame (by keycode).
 
@@ -70,7 +70,7 @@ Returns:
     bool: True if the key was newly pressed.
         )doc");
 
-    subKey.def("is_just_released", static_cast<bool (*)(KnKeycode)>(&isJustReleased),
+    subKey.def("is_just_released", py::overload_cast<KnKeycode>(&isJustReleased),
                py::arg("keycode"), R"doc(
 Check if a key was released this frame (by keycode).
 

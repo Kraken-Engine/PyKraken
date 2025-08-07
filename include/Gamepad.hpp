@@ -31,9 +31,9 @@ bool isJustPressed(SDL_GamepadButton button, int slot = 0);
 
 bool isJustReleased(SDL_GamepadButton button, int slot = 0);
 
-Vec2 getLeftStick(int slot = 0);
+py::tuple getLeftStick(int slot = 0);
 
-Vec2 getRightStick(int slot = 0);
+py::tuple getRightStick(int slot = 0);
 
 double getLeftTrigger(int slot = 0);
 

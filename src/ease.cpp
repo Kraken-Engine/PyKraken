@@ -182,7 +182,7 @@ Returns:
     float: Eased result.
     )doc");
 
-    subEase.def("in_sine", &inSine, py::arg("t"), R"doc(
+    subEase.def("in_sin", &inSin, py::arg("t"), R"doc(
 Sinusoidal easing in.
 
 Args:
@@ -191,7 +191,7 @@ Returns:
     float: Eased result.
     )doc");
 
-    subEase.def("out_sine", &outSine, py::arg("t"), R"doc(
+    subEase.def("out_sin", &outSin, py::arg("t"), R"doc(
 Sinusoidal easing out.
 
 Args:
@@ -200,7 +200,7 @@ Returns:
     float: Eased result.
     )doc");
 
-    subEase.def("in_out_sine", &inOutSine, py::arg("t"), R"doc(
+    subEase.def("in_out_sin", &inOutSin, py::arg("t"), R"doc(
 Sinusoidal easing in and out.
 
 Args:
@@ -460,11 +460,11 @@ double inOutQuint(const double t)
     return 0.5 * f * f * f * f * f + 1;
 }
 
-double inSine(const double t) { return sin((t - 1) * M_PI_2) + 1; }
+double inSin(const double t) { return sin((t - 1) * M_PI_2) + 1; }
 
-double outSine(const double t) { return sin(t * M_PI_2); }
+double outSin(const double t) { return sin(t * M_PI_2); }
 
-double inOutSine(const double t) { return 0.5 * (1 - cos(t * M_PI)); }
+double inOutSin(const double t) { return 0.5 * (1 - cos(t * M_PI)); }
 
 double inCirc(const double t) { return 1 - sqrt(1 - (t * t)); }
 
