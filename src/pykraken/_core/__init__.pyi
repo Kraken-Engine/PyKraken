@@ -10,10 +10,11 @@ from . import line
 from . import math
 from . import mouse
 from . import rect
+from . import renderer
 from . import time
 from . import transform
 from . import window
-__all__ = ['AUDIO_DEVICE_ADDED', 'AUDIO_DEVICE_REMOVED', 'Anchor', 'BOTTOM_LEFT', 'BOTTOM_MID', 'BOTTOM_RIGHT', 'CAMERA_ADDED', 'CAMERA_APPROVED', 'CAMERA_DENIED', 'CAMERA_REMOVED', 'CENTER', 'C_BACK', 'C_DPADDOWN', 'C_DPADLEFT', 'C_DPADRIGHT', 'C_DPADUP', 'C_EAST', 'C_GUIDE', 'C_LEFTSHOULDER', 'C_LEFTSTICK', 'C_LTRIGGER', 'C_LX', 'C_LY', 'C_NORTH', 'C_PS3', 'C_PS4', 'C_PS5', 'C_RIGHTSHOULDER', 'C_RIGHTSTICK', 'C_RTRIGGER', 'C_RX', 'C_RY', 'C_SOUTH', 'C_STANDARD', 'C_START', 'C_SWITCHJOYCONLEFT', 'C_SWITCHJOYCONPAIR', 'C_SWITCHJOYCONRIGHT', 'C_SWITCHPRO', 'C_WEST', 'C_XBOX360', 'C_XBOXONE', 'Camera', 'Circle', 'Clock', 'Color', 'DROP_BEGIN', 'DROP_COMPLETE', 'DROP_FILE', 'DROP_POSITION', 'DROP_TEXT', 'EasingAnimation', 'Event', 'EventType', 'GAMEPAD_ADDED', 'GAMEPAD_AXIS_MOTION', 'GAMEPAD_BUTTON_DOWN', 'GAMEPAD_BUTTON_UP', 'GAMEPAD_REMOVED', 'GAMEPAD_TOUCHPAD_DOWN', 'GAMEPAD_TOUCHPAD_MOTION', 'GAMEPAD_TOUCHPAD_UP', 'GamepadAxis', 'GamepadButton', 'GamepadType', 'InputAction', 'KEYBOARD_ADDED', 'KEYBOARD_REMOVED', 'KEY_DOWN', 'KEY_UP', 'K_0', 'K_1', 'K_2', 'K_3', 'K_4', 'K_5', 'K_6', 'K_7', 'K_8', 'K_9', 'K_AGAIN', 'K_AMPERSAND', 'K_ASTERISK', 'K_AT', 'K_BACKSLASH', 'K_BACKSPACE', 'K_CAPS', 'K_CARET', 'K_COLON', 'K_COMMA', 'K_COPY', 'K_CUT', 'K_DBLQUOTE', 'K_DEL', 'K_DOLLAR', 'K_DOWN', 'K_END', 'K_EQ', 'K_ESC', 'K_EXCLAIM', 'K_F1', 'K_F10', 'K_F11', 'K_F12', 'K_F2', 'K_F3', 'K_F4', 'K_F5', 'K_F6', 'K_F7', 'K_F8', 'K_F9', 'K_FIND', 'K_GRAVE', 'K_GT', 'K_HASH', 'K_HOME', 'K_INS', 'K_KP_0', 'K_KP_1', 'K_KP_2', 'K_KP_3', 'K_KP_4', 'K_KP_5', 'K_KP_6', 'K_KP_7', 'K_KP_8', 'K_KP_9', 'K_KP_DIV', 'K_KP_ENTER', 'K_KP_MINUS', 'K_KP_MULT', 'K_KP_PERIOD', 'K_KP_PLUS', 'K_LALT', 'K_LBRACE', 'K_LBRACKET', 'K_LCTRL', 'K_LEFT', 'K_LGUI', 'K_LPAREN', 'K_LSHIFT', 'K_LT', 'K_MINUS', 'K_MUTE', 'K_NUMLOCK', 'K_PASTE', 'K_PAUSE', 'K_PERCENT', 'K_PERIOD', 'K_PGDOWN', 'K_PGUP', 'K_PIPE', 'K_PLUS', 'K_PRTSCR', 'K_QUESTION', 'K_RALT', 'K_RBRACE', 'K_RBRACKET', 'K_RCTRL', 'K_RETURN', 'K_RGUI', 'K_RIGHT', 'K_RPAREN', 'K_RSHIFT', 'K_SCRLK', 'K_SEMICOLON', 'K_SGLQUOTE', 'K_SLASH', 'K_SPACE', 'K_TAB', 'K_TILDE', 'K_UNDERSCORE', 'K_UNDO', 'K_UP', 'K_VOLDOWN', 'K_VOLUP', 'K_a', 'K_b', 'K_c', 'K_d', 'K_e', 'K_f', 'K_g', 'K_h', 'K_i', 'K_j', 'K_k', 'K_l', 'K_m', 'K_n', 'K_o', 'K_p', 'K_q', 'K_r', 'K_s', 'K_t', 'K_u', 'K_v', 'K_w', 'K_x', 'K_y', 'K_z', 'Keycode', 'Line', 'MID_LEFT', 'MID_RIGHT', 'MOUSE_ADDED', 'MOUSE_BUTTON_DOWN', 'MOUSE_BUTTON_UP', 'MOUSE_MOTION', 'MOUSE_REMOVED', 'MOUSE_WHEEL', 'M_LEFT', 'M_MIDDLE', 'M_RIGHT', 'M_SIDE1', 'M_SIDE2', 'MouseButton', 'PEN_AXIS', 'PEN_BUTTON_DOWN', 'PEN_BUTTON_UP', 'PEN_DOWN', 'PEN_MOTION', 'PEN_PROXIMITY_IN', 'PEN_PROXIMITY_OUT', 'PEN_UP', 'PolarCoordinate', 'QUIT', 'Rect', 'Renderer', 'S_0', 'S_1', 'S_2', 'S_3', 'S_4', 'S_5', 'S_6', 'S_7', 'S_8', 'S_9', 'S_AGAIN', 'S_APOSTROPHE', 'S_BACKSLASH', 'S_BACKSPACE', 'S_CAPS', 'S_COMMA', 'S_COPY', 'S_CUT', 'S_DEL', 'S_DOWN', 'S_END', 'S_EQ', 'S_ESC', 'S_F1', 'S_F10', 'S_F11', 'S_F12', 'S_F2', 'S_F3', 'S_F4', 'S_F5', 'S_F6', 'S_F7', 'S_F8', 'S_F9', 'S_FIND', 'S_GRAVE', 'S_HOME', 'S_INS', 'S_KP_0', 'S_KP_1', 'S_KP_2', 'S_KP_3', 'S_KP_4', 'S_KP_5', 'S_KP_6', 'S_KP_7', 'S_KP_8', 'S_KP_9', 'S_KP_DIV', 'S_KP_ENTER', 'S_KP_MINUS', 'S_KP_MULT', 'S_KP_PERIOD', 'S_KP_PLUS', 'S_LALT', 'S_LBRACKET', 'S_LCTRL', 'S_LEFT', 'S_LGUI', 'S_LSHIFT', 'S_MINUS', 'S_MUTE', 'S_NUMLOCK', 'S_PASTE', 'S_PAUSE', 'S_PERIOD', 'S_PGDOWN', 'S_PGUP', 'S_PRTSCR', 'S_RALT', 'S_RBRACKET', 'S_RCTRL', 'S_RETURN', 'S_RGUI', 'S_RIGHT', 'S_RSHIFT', 'S_SCRLK', 'S_SEMICOLON', 'S_SLASH', 'S_SPACE', 'S_TAB', 'S_UNDO', 'S_UP', 'S_VOLDOWN', 'S_VOLUP', 'S_a', 'S_b', 'S_c', 'S_d', 'S_e', 'S_f', 'S_g', 'S_h', 'S_i', 'S_j', 'S_k', 'S_l', 'S_m', 'S_n', 'S_o', 'S_p', 'S_q', 'S_r', 'S_s', 'S_t', 'S_u', 'S_v', 'S_w', 'S_x', 'S_y', 'S_z', 'Scancode', 'Surface', 'TEXT_EDITING', 'TEXT_INPUT', 'TOP_LEFT', 'TOP_MID', 'TOP_RIGHT', 'Texture', 'Vec2', 'WINDOW_ENTER_FULLSCREEN', 'WINDOW_EXPOSED', 'WINDOW_FOCUS_GAINED', 'WINDOW_FOCUS_LOST', 'WINDOW_HIDDEN', 'WINDOW_LEAVE_FULLSCREEN', 'WINDOW_MAXIMIZED', 'WINDOW_MINIMIZED', 'WINDOW_MOUSE_ENTER', 'WINDOW_MOUSE_LEAVE', 'WINDOW_MOVED', 'WINDOW_OCCLUDED', 'WINDOW_RESIZED', 'WINDOW_RESTORED', 'WINDOW_SHOWN', 'color', 'ease', 'event', 'gamepad', 'init', 'input', 'key', 'line', 'math', 'mouse', 'quit', 'rect', 'time', 'transform', 'window']
+__all__ = ['AUDIO_DEVICE_ADDED', 'AUDIO_DEVICE_REMOVED', 'Anchor', 'BOTTOM_LEFT', 'BOTTOM_MID', 'BOTTOM_RIGHT', 'CAMERA_ADDED', 'CAMERA_APPROVED', 'CAMERA_DENIED', 'CAMERA_REMOVED', 'CENTER', 'C_BACK', 'C_DPAD_DOWN', 'C_DPAD_LEFT', 'C_DPAD_RIGHT', 'C_DPAD_UP', 'C_EAST', 'C_GUIDE', 'C_LSHOULDER', 'C_LSTICK', 'C_LTRIGGER', 'C_LX', 'C_LY', 'C_NORTH', 'C_PS3', 'C_PS4', 'C_PS5', 'C_RSHOULDER', 'C_RSTICK', 'C_RTRIGGER', 'C_RX', 'C_RY', 'C_SOUTH', 'C_STANDARD', 'C_START', 'C_SWITCH_JOYCON_LEFT', 'C_SWITCH_JOYCON_PAIR', 'C_SWITCH_JOYCON_RIGHT', 'C_SWITCH_PRO', 'C_WEST', 'C_XBOX_360', 'C_XBOX_ONE', 'Camera', 'Circle', 'Clock', 'Color', 'DROP_BEGIN', 'DROP_COMPLETE', 'DROP_FILE', 'DROP_POSITION', 'DROP_TEXT', 'EasingAnimation', 'Event', 'EventType', 'GAMEPAD_ADDED', 'GAMEPAD_AXIS_MOTION', 'GAMEPAD_BUTTON_DOWN', 'GAMEPAD_BUTTON_UP', 'GAMEPAD_REMOVED', 'GAMEPAD_TOUCHPAD_DOWN', 'GAMEPAD_TOUCHPAD_MOTION', 'GAMEPAD_TOUCHPAD_UP', 'GamepadAxis', 'GamepadButton', 'GamepadType', 'InputAction', 'KEYBOARD_ADDED', 'KEYBOARD_REMOVED', 'KEY_DOWN', 'KEY_UP', 'K_0', 'K_1', 'K_2', 'K_3', 'K_4', 'K_5', 'K_6', 'K_7', 'K_8', 'K_9', 'K_AGAIN', 'K_AMPERSAND', 'K_ASTERISK', 'K_AT', 'K_BACKSLASH', 'K_BACKSPACE', 'K_CAPS', 'K_CARET', 'K_COLON', 'K_COMMA', 'K_COPY', 'K_CUT', 'K_DBLQUOTE', 'K_DEL', 'K_DOLLAR', 'K_DOWN', 'K_END', 'K_EQ', 'K_ESC', 'K_EXCLAIM', 'K_F1', 'K_F10', 'K_F11', 'K_F12', 'K_F2', 'K_F3', 'K_F4', 'K_F5', 'K_F6', 'K_F7', 'K_F8', 'K_F9', 'K_FIND', 'K_GRAVE', 'K_GT', 'K_HASH', 'K_HOME', 'K_INS', 'K_KP_0', 'K_KP_1', 'K_KP_2', 'K_KP_3', 'K_KP_4', 'K_KP_5', 'K_KP_6', 'K_KP_7', 'K_KP_8', 'K_KP_9', 'K_KP_DIV', 'K_KP_ENTER', 'K_KP_MINUS', 'K_KP_MULT', 'K_KP_PERIOD', 'K_KP_PLUS', 'K_LALT', 'K_LBRACE', 'K_LBRACKET', 'K_LCTRL', 'K_LEFT', 'K_LGUI', 'K_LPAREN', 'K_LSHIFT', 'K_LT', 'K_MINUS', 'K_MUTE', 'K_NUMLOCK', 'K_PASTE', 'K_PAUSE', 'K_PERCENT', 'K_PERIOD', 'K_PGDOWN', 'K_PGUP', 'K_PIPE', 'K_PLUS', 'K_PRTSCR', 'K_QUESTION', 'K_RALT', 'K_RBRACE', 'K_RBRACKET', 'K_RCTRL', 'K_RETURN', 'K_RGUI', 'K_RIGHT', 'K_RPAREN', 'K_RSHIFT', 'K_SCRLK', 'K_SEMICOLON', 'K_SGLQUOTE', 'K_SLASH', 'K_SPACE', 'K_TAB', 'K_TILDE', 'K_UNDERSCORE', 'K_UNDO', 'K_UP', 'K_VOLDOWN', 'K_VOLUP', 'K_a', 'K_b', 'K_c', 'K_d', 'K_e', 'K_f', 'K_g', 'K_h', 'K_i', 'K_j', 'K_k', 'K_l', 'K_m', 'K_n', 'K_o', 'K_p', 'K_q', 'K_r', 'K_s', 'K_t', 'K_u', 'K_v', 'K_w', 'K_x', 'K_y', 'K_z', 'Keycode', 'Line', 'MID_LEFT', 'MID_RIGHT', 'MOUSE_ADDED', 'MOUSE_BUTTON_DOWN', 'MOUSE_BUTTON_UP', 'MOUSE_MOTION', 'MOUSE_REMOVED', 'MOUSE_WHEEL', 'M_LEFT', 'M_MIDDLE', 'M_RIGHT', 'M_SIDE1', 'M_SIDE2', 'MouseButton', 'PEN_AXIS', 'PEN_BUTTON_DOWN', 'PEN_BUTTON_UP', 'PEN_DOWN', 'PEN_MOTION', 'PEN_PROXIMITY_IN', 'PEN_PROXIMITY_OUT', 'PEN_UP', 'PolarCoordinate', 'Polygon', 'QUIT', 'Rect', 'S_0', 'S_1', 'S_2', 'S_3', 'S_4', 'S_5', 'S_6', 'S_7', 'S_8', 'S_9', 'S_AGAIN', 'S_APOSTROPHE', 'S_BACKSLASH', 'S_BACKSPACE', 'S_CAPS', 'S_COMMA', 'S_COPY', 'S_CUT', 'S_DEL', 'S_DOWN', 'S_END', 'S_EQ', 'S_ESC', 'S_F1', 'S_F10', 'S_F11', 'S_F12', 'S_F2', 'S_F3', 'S_F4', 'S_F5', 'S_F6', 'S_F7', 'S_F8', 'S_F9', 'S_FIND', 'S_GRAVE', 'S_HOME', 'S_INS', 'S_KP_0', 'S_KP_1', 'S_KP_2', 'S_KP_3', 'S_KP_4', 'S_KP_5', 'S_KP_6', 'S_KP_7', 'S_KP_8', 'S_KP_9', 'S_KP_DIV', 'S_KP_ENTER', 'S_KP_MINUS', 'S_KP_MULT', 'S_KP_PERIOD', 'S_KP_PLUS', 'S_LALT', 'S_LBRACKET', 'S_LCTRL', 'S_LEFT', 'S_LGUI', 'S_LSHIFT', 'S_MINUS', 'S_MUTE', 'S_NUMLOCK', 'S_PASTE', 'S_PAUSE', 'S_PERIOD', 'S_PGDOWN', 'S_PGUP', 'S_PRTSCR', 'S_RALT', 'S_RBRACKET', 'S_RCTRL', 'S_RETURN', 'S_RGUI', 'S_RIGHT', 'S_RSHIFT', 'S_SCRLK', 'S_SEMICOLON', 'S_SLASH', 'S_SPACE', 'S_TAB', 'S_UNDO', 'S_UP', 'S_VOLDOWN', 'S_VOLUP', 'S_a', 'S_b', 'S_c', 'S_d', 'S_e', 'S_f', 'S_g', 'S_h', 'S_i', 'S_j', 'S_k', 'S_l', 'S_m', 'S_n', 'S_o', 'S_p', 'S_q', 'S_r', 'S_s', 'S_t', 'S_u', 'S_v', 'S_w', 'S_x', 'S_y', 'S_z', 'Scancode', 'Surface', 'TEXT_EDITING', 'TEXT_INPUT', 'TOP_LEFT', 'TOP_MID', 'TOP_RIGHT', 'Texture', 'Timer', 'Vec2', 'WINDOW_ENTER_FULLSCREEN', 'WINDOW_EXPOSED', 'WINDOW_FOCUS_GAINED', 'WINDOW_FOCUS_LOST', 'WINDOW_HIDDEN', 'WINDOW_LEAVE_FULLSCREEN', 'WINDOW_MAXIMIZED', 'WINDOW_MINIMIZED', 'WINDOW_MOUSE_ENTER', 'WINDOW_MOUSE_LEAVE', 'WINDOW_MOVED', 'WINDOW_OCCLUDED', 'WINDOW_RESIZED', 'WINDOW_RESTORED', 'WINDOW_SHOWN', 'color', 'ease', 'event', 'gamepad', 'init', 'input', 'key', 'line', 'math', 'mouse', 'quit', 'rect', 'renderer', 'time', 'transform', 'window']
 class Anchor:
     """
     Members:
@@ -164,21 +165,30 @@ class Circle:
     def collide_circle(self, circle: Circle) -> bool:
         """
         Check collision with another circle.
+        
+        Args:
+            circle (Circle): The circle to test.
         """
     def collide_line(self, line: Line) -> bool:
         """
         Check collision with a line.
+        
+        Args:
+            line (Line): The line to test.
         """
-    def collide_point(self, point: typing.Any) -> bool:
+    def collide_point(self, point: Vec2) -> bool:
         """
         Check if a point lies inside the circle.
         
         Args:
-            point (Vec2 or tuple): The point to test.
+            point (Vec2): The point to test.
         """
     def collide_rect(self, rect: Rect) -> bool:
         """
         Check collision with a rectangle.
+        
+        Args:
+            rect (Rect): The rectangle to test.
         """
     def contains(self, shape: typing.Any) -> bool:
         """
@@ -265,7 +275,16 @@ class Color:
     """
     def __getitem__(self, index: int) -> int:
         """
-        Access color channels by index (0=r, 1=g, 2=b, 3=a).
+        Access color channels by index.
+        
+        Args:
+            index (int): Channel index (0=r, 1=g, 2=b, 3=a).
+        
+        Returns:
+            int: Channel value (0-255).
+        
+        Raises:
+            IndexError: If index is not in range [0, 3].
         """
     @typing.overload
     def __init__(self) -> None:
@@ -295,28 +314,55 @@ class Color:
         """
     def __iter__(self) -> typing.Iterator:
         """
-        Return an iterator over (r, g, b, a).
+        Return an iterator over color channels.
+        
+        Yields:
+            int: The r, g, b, a values in that order (0-255 each).
+        
+        Example:
+            for channel in color:
+                print(channel)  # Prints r, g, b, a values
         """
     def __len__(self) -> int:
         """
-        Return the number of channels (always 4).
+        Return the number of color channels.
+        
+        Returns:
+            int: Always returns 4 (for r, g, b, a channels).
         """
     def __repr__(self) -> str:
         """
         Return a string suitable for debugging and recreation.
+        
+        Returns:
+            str: String in format "Color(r, g, b, a)" that can recreate the object.
         """
     def __setitem__(self, index: int, value: int) -> None:
         """
         Set a color channel by index.
+        
+        Args:
+            index (int): Channel index (0=r, 1=g, 2=b, 3=a).
+            value (int): New channel value (0-255).
+        
+        Raises:
+            IndexError: If index is not in range [0, 3].
         """
     def __str__(self) -> str:
         """
         Return a human-readable string representation.
+        
+        Returns:
+            str: String in format "(r, g, b, a)" with integer values.
         """
     @property
     def a(self) -> int:
         """
-        Alpha channel (0-255).
+        Alpha (transparency) channel value.
+        
+        Type: int
+        Range: 0-255 (8-bit unsigned integer)
+        Note: 0 = fully transparent, 255 = fully opaque
         """
     @a.setter
     def a(self, arg0: int) -> None:
@@ -324,7 +370,10 @@ class Color:
     @property
     def b(self) -> int:
         """
-        Blue channel (0-255).
+        Blue channel value.
+        
+        Type: int
+        Range: 0-255 (8-bit unsigned integer)
         """
     @b.setter
     def b(self, arg0: int) -> None:
@@ -332,7 +381,10 @@ class Color:
     @property
     def g(self) -> int:
         """
-        Green channel (0-255).
+        Green channel value.
+        
+        Type: int
+        Range: 0-255 (8-bit unsigned integer)
         """
     @g.setter
     def g(self, arg0: int) -> None:
@@ -340,15 +392,47 @@ class Color:
     @property
     def hex(self) -> str:
         """
-        Get or set the color as a hex string (e.g. "#FF00FF" or "#FF00FF80").
+        Get or set the color as a hex string.
+        
+        When getting, returns an 8-digit hex string in the format "#RRGGBBAA".
+        When setting, accepts various hex formats (see from_hex for details).
+        
+        Example:
+            color.hex = "#FF00FF"     # Set to magenta
+            print(color.hex)          # Returns "#FF00FFFF"
         """
     @hex.setter
     def hex(self, arg1: str) -> None:
         ...
     @property
+    def hsv(self) -> tuple:
+        """
+        Get or set the color as an HSV tuple.
+        
+        When getting, returns a tuple of (hue, saturation, value, alpha).
+        When setting, accepts a tuple of 3 or 4 values.
+        
+        Values:
+            hue (float): Hue angle in degrees (0-360)
+            saturation (float): Saturation level (0-1)
+            value (float): Brightness/value level (0-1)
+            alpha (float): Alpha transparency (0-1), optional
+        
+        Example:
+            color.hsv = (120, 1.0, 1.0)        # Pure green
+            color.hsv = (240, 0.5, 0.8, 0.9)   # Light blue with transparency
+            h, s, v, a = color.hsv              # Get HSV values
+        """
+    @hsv.setter
+    def hsv(self, arg1: tuple) -> None:
+        ...
+    @property
     def r(self) -> int:
         """
-        Red channel (0-255).
+        Red channel value.
+        
+        Type: int
+        Range: 0-255 (8-bit unsigned integer)
         """
     @r.setter
     def r(self, arg0: int) -> None:
@@ -734,38 +818,38 @@ class GamepadButton:
     
       C_START
     
-      C_LEFTSTICK
+      C_LSTICK
     
-      C_RIGHTSTICK
+      C_RSTICK
     
-      C_LEFTSHOULDER
+      C_LSHOULDER
     
-      C_RIGHTSHOULDER
+      C_RSHOULDER
     
-      C_DPADUP
+      C_DPAD_UP
     
-      C_DPADDOWN
+      C_DPAD_DOWN
     
-      C_DPADLEFT
+      C_DPAD_LEFT
     
-      C_DPADRIGHT
+      C_DPAD_RIGHT
     """
     C_BACK: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_BACK: 4>
-    C_DPADDOWN: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_DPADDOWN: 12>
-    C_DPADLEFT: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_DPADLEFT: 13>
-    C_DPADRIGHT: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_DPADRIGHT: 14>
-    C_DPADUP: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_DPADUP: 11>
+    C_DPAD_DOWN: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_DPAD_DOWN: 12>
+    C_DPAD_LEFT: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_DPAD_LEFT: 13>
+    C_DPAD_RIGHT: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_DPAD_RIGHT: 14>
+    C_DPAD_UP: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_DPAD_UP: 11>
     C_EAST: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_EAST: 1>
     C_GUIDE: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_GUIDE: 5>
-    C_LEFTSHOULDER: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_LEFTSHOULDER: 9>
-    C_LEFTSTICK: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_LEFTSTICK: 7>
+    C_LSHOULDER: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_LSHOULDER: 9>
+    C_LSTICK: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_LSTICK: 7>
     C_NORTH: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_NORTH: 3>
-    C_RIGHTSHOULDER: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_RIGHTSHOULDER: 10>
-    C_RIGHTSTICK: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_RIGHTSTICK: 8>
+    C_RSHOULDER: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_RSHOULDER: 10>
+    C_RSTICK: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_RSTICK: 8>
     C_SOUTH: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_SOUTH: 0>
     C_START: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_START: 6>
     C_WEST: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_WEST: 2>
-    __members__: typing.ClassVar[dict[str, GamepadButton]]  # value = {'C_SOUTH': <GamepadButton.C_SOUTH: 0>, 'C_EAST': <GamepadButton.C_EAST: 1>, 'C_WEST': <GamepadButton.C_WEST: 2>, 'C_NORTH': <GamepadButton.C_NORTH: 3>, 'C_BACK': <GamepadButton.C_BACK: 4>, 'C_GUIDE': <GamepadButton.C_GUIDE: 5>, 'C_START': <GamepadButton.C_START: 6>, 'C_LEFTSTICK': <GamepadButton.C_LEFTSTICK: 7>, 'C_RIGHTSTICK': <GamepadButton.C_RIGHTSTICK: 8>, 'C_LEFTSHOULDER': <GamepadButton.C_LEFTSHOULDER: 9>, 'C_RIGHTSHOULDER': <GamepadButton.C_RIGHTSHOULDER: 10>, 'C_DPADUP': <GamepadButton.C_DPADUP: 11>, 'C_DPADDOWN': <GamepadButton.C_DPADDOWN: 12>, 'C_DPADLEFT': <GamepadButton.C_DPADLEFT: 13>, 'C_DPADRIGHT': <GamepadButton.C_DPADRIGHT: 14>}
+    __members__: typing.ClassVar[dict[str, GamepadButton]]  # value = {'C_SOUTH': <GamepadButton.C_SOUTH: 0>, 'C_EAST': <GamepadButton.C_EAST: 1>, 'C_WEST': <GamepadButton.C_WEST: 2>, 'C_NORTH': <GamepadButton.C_NORTH: 3>, 'C_BACK': <GamepadButton.C_BACK: 4>, 'C_GUIDE': <GamepadButton.C_GUIDE: 5>, 'C_START': <GamepadButton.C_START: 6>, 'C_LSTICK': <GamepadButton.C_LSTICK: 7>, 'C_RSTICK': <GamepadButton.C_RSTICK: 8>, 'C_LSHOULDER': <GamepadButton.C_LSHOULDER: 9>, 'C_RSHOULDER': <GamepadButton.C_RSHOULDER: 10>, 'C_DPAD_UP': <GamepadButton.C_DPAD_UP: 11>, 'C_DPAD_DOWN': <GamepadButton.C_DPAD_DOWN: 12>, 'C_DPAD_LEFT': <GamepadButton.C_DPAD_LEFT: 13>, 'C_DPAD_RIGHT': <GamepadButton.C_DPAD_RIGHT: 14>}
     def __and__(self, other: typing.Any) -> typing.Any:
         ...
     def __eq__(self, other: typing.Any) -> bool:
@@ -820,9 +904,9 @@ class GamepadType:
     
       C_STANDARD
     
-      C_XBOX360
+      C_XBOX_360
     
-      C_XBOXONE
+      C_XBOX_ONE
     
       C_PS3
     
@@ -830,25 +914,25 @@ class GamepadType:
     
       C_PS5
     
-      C_SWITCHPRO
+      C_SWITCH_PRO
     
-      C_SWITCHJOYCONLEFT
+      C_SWITCH_JOYCON_LEFT
     
-      C_SWITCHJOYCONRIGHT
+      C_SWITCH_JOYCON_RIGHT
     
-      C_SWITCHJOYCONPAIR
+      C_SWITCH_JOYCON_PAIR
     """
     C_PS3: typing.ClassVar[GamepadType]  # value = <GamepadType.C_PS3: 4>
     C_PS4: typing.ClassVar[GamepadType]  # value = <GamepadType.C_PS4: 5>
     C_PS5: typing.ClassVar[GamepadType]  # value = <GamepadType.C_PS5: 6>
     C_STANDARD: typing.ClassVar[GamepadType]  # value = <GamepadType.C_STANDARD: 1>
-    C_SWITCHJOYCONLEFT: typing.ClassVar[GamepadType]  # value = <GamepadType.C_SWITCHJOYCONLEFT: 8>
-    C_SWITCHJOYCONPAIR: typing.ClassVar[GamepadType]  # value = <GamepadType.C_SWITCHJOYCONPAIR: 10>
-    C_SWITCHJOYCONRIGHT: typing.ClassVar[GamepadType]  # value = <GamepadType.C_SWITCHJOYCONRIGHT: 9>
-    C_SWITCHPRO: typing.ClassVar[GamepadType]  # value = <GamepadType.C_SWITCHPRO: 7>
-    C_XBOX360: typing.ClassVar[GamepadType]  # value = <GamepadType.C_XBOX360: 2>
-    C_XBOXONE: typing.ClassVar[GamepadType]  # value = <GamepadType.C_XBOXONE: 3>
-    __members__: typing.ClassVar[dict[str, GamepadType]]  # value = {'C_STANDARD': <GamepadType.C_STANDARD: 1>, 'C_XBOX360': <GamepadType.C_XBOX360: 2>, 'C_XBOXONE': <GamepadType.C_XBOXONE: 3>, 'C_PS3': <GamepadType.C_PS3: 4>, 'C_PS4': <GamepadType.C_PS4: 5>, 'C_PS5': <GamepadType.C_PS5: 6>, 'C_SWITCHPRO': <GamepadType.C_SWITCHPRO: 7>, 'C_SWITCHJOYCONLEFT': <GamepadType.C_SWITCHJOYCONLEFT: 8>, 'C_SWITCHJOYCONRIGHT': <GamepadType.C_SWITCHJOYCONRIGHT: 9>, 'C_SWITCHJOYCONPAIR': <GamepadType.C_SWITCHJOYCONPAIR: 10>}
+    C_SWITCH_JOYCON_LEFT: typing.ClassVar[GamepadType]  # value = <GamepadType.C_SWITCH_JOYCON_LEFT: 8>
+    C_SWITCH_JOYCON_PAIR: typing.ClassVar[GamepadType]  # value = <GamepadType.C_SWITCH_JOYCON_PAIR: 10>
+    C_SWITCH_JOYCON_RIGHT: typing.ClassVar[GamepadType]  # value = <GamepadType.C_SWITCH_JOYCON_RIGHT: 9>
+    C_SWITCH_PRO: typing.ClassVar[GamepadType]  # value = <GamepadType.C_SWITCH_PRO: 7>
+    C_XBOX_360: typing.ClassVar[GamepadType]  # value = <GamepadType.C_XBOX_360: 2>
+    C_XBOX_ONE: typing.ClassVar[GamepadType]  # value = <GamepadType.C_XBOX_ONE: 3>
+    __members__: typing.ClassVar[dict[str, GamepadType]]  # value = {'C_STANDARD': <GamepadType.C_STANDARD: 1>, 'C_XBOX_360': <GamepadType.C_XBOX_360: 2>, 'C_XBOX_ONE': <GamepadType.C_XBOX_ONE: 3>, 'C_PS3': <GamepadType.C_PS3: 4>, 'C_PS4': <GamepadType.C_PS4: 5>, 'C_PS5': <GamepadType.C_PS5: 6>, 'C_SWITCH_PRO': <GamepadType.C_SWITCH_PRO: 7>, 'C_SWITCH_JOYCON_LEFT': <GamepadType.C_SWITCH_JOYCON_LEFT: 8>, 'C_SWITCH_JOYCON_RIGHT': <GamepadType.C_SWITCH_JOYCON_RIGHT: 9>, 'C_SWITCH_JOYCON_PAIR': <GamepadType.C_SWITCH_JOYCON_PAIR: 10>}
     def __and__(self, other: typing.Any) -> typing.Any:
         ...
     def __eq__(self, other: typing.Any) -> bool:
@@ -1736,6 +1820,78 @@ class PolarCoordinate:
     @radius.setter
     def radius(self, arg0: float) -> None:
         ...
+class Polygon:
+    """
+    
+    Represents a polygon shape defined by a sequence of points.
+    
+    A polygon is a closed shape made up of connected line segments. The points define
+    the vertices of the polygon in order. Supports various geometric operations.
+        
+    """
+    def __getitem__(self, index: int) -> Vec2:
+        """
+        Get a point by index.
+        
+        Args:
+            index (int): The index of the point to retrieve.
+        
+        Returns:
+            Vec2: The point at the specified index.
+        
+        Raises:
+            IndexError: If index is out of range.
+        """
+    @typing.overload
+    def __init__(self) -> None:
+        """
+        Create an empty polygon with no points.
+        """
+    @typing.overload
+    def __init__(self, points: list[Vec2]) -> None:
+        """
+        Create a polygon from a vector of Vec2 points.
+        
+        Args:
+            points (list[Vec2]): List of Vec2 points defining the polygon vertices.
+        """
+    @typing.overload
+    def __init__(self, points: typing.Sequence) -> None:
+        """
+        Create a polygon from a sequence of points.
+        
+        Args:
+            points: A sequence of Vec2 objects or 2-element sequences [[x, y], ...].
+        
+        Raises:
+            ValueError: If points are not properly formatted.
+        """
+    def __iter__(self) -> typing.Iterator:
+        """
+        Return an iterator over the polygon's points.
+        """
+    def __len__(self) -> int:
+        """
+        Return the number of points in the polygon.
+        
+        Returns:
+            int: The number of vertices.
+        """
+    def copy(self) -> Polygon:
+        """
+        Return a copy of the polygon.
+        
+        Returns:
+            Polygon: A new polygon with the same points.
+        """
+    @property
+    def points(self) -> list[Vec2]:
+        """
+        The list of Vec2 points that define the polygon vertices.
+        """
+    @points.setter
+    def points(self, arg0: list[Vec2]) -> None:
+        ...
 class Rect:
     """
     
@@ -2133,131 +2289,6 @@ class Rect:
     @y.setter
     def y(self, arg0: float) -> None:
         ...
-class Renderer:
-    """
-    
-    A 2D graphics renderer for drawing shapes, textures, and other visual elements.
-    
-    The Renderer manages the rendering pipeline, handles camera transformations,
-    and provides methods for drawing various primitives and textures to the screen.
-        
-    """
-    def __init__(self, resolution: Vec2) -> None:
-        """
-        Create a Renderer with the specified resolution.
-        
-        Args:
-            resolution (Vec2): The rendering resolution as (width, height).
-        
-        Raises:
-            ValueError: If resolution width or height is <= 0.
-            RuntimeError: If renderer creation fails.
-        """
-    def clear(self, color: Color = ...) -> None:
-        """
-        Clear the renderer with the specified color.
-        
-        Args:
-            color (Color, optional): The color to clear with. Defaults to black (0, 0, 0, 255).
-        
-        Raises:
-            ValueError: If color values are not between 0 and 255.
-        """
-    @typing.overload
-    def draw(self, point: Vec2, color: Color) -> None:
-        """
-        Draw a single point to the renderer.
-        
-        Args:
-            point (Vec2): The position of the point.
-            color (Color): The color of the point.
-        
-        Raises:
-            RuntimeError: If point rendering fails.
-        """
-    @typing.overload
-    def draw(self, texture: Texture, dst_rect: Rect, src_rect: Rect = ...) -> None:
-        """
-        Draw a texture with specified destination and source rectangles.
-        
-        Args:
-            texture (Texture): The texture to draw.
-            dst_rect (Rect): The destination rectangle on the renderer.
-            src_rect (Rect, optional): The source rectangle from the texture. 
-                                      Defaults to entire texture if not specified.
-        
-        Raises:
-            RuntimeError: If texture doesn't belong to this renderer.
-        """
-    @typing.overload
-    def draw(self, texture: Texture, pos: Vec2 = ..., anchor: Anchor = Anchor.CENTER) -> None:
-        """
-        Draw a texture at the specified position with anchor alignment.
-        
-        Args:
-            texture (Texture): The texture to draw.
-            pos (Vec2, optional): The position to draw at. Defaults to (0, 0).
-            anchor (Anchor, optional): The anchor point for positioning. Defaults to CENTER.
-        
-        Raises:
-            RuntimeError: If texture doesn't belong to this renderer.
-        """
-    @typing.overload
-    def draw(self, circle: Circle, color: Color, thickness: int = 0) -> None:
-        """
-        Draw a circle to the renderer.
-        
-        Args:
-            circle (Circle): The circle to draw.
-            color (Color): The color of the circle.
-            thickness (int, optional): The line thickness. If 0 or >= radius, draws filled circle.
-                                      Defaults to 0 (filled).
-        """
-    @typing.overload
-    def draw(self, line: Line, color: Color, thickness: int = 1) -> None:
-        """
-        Draw a line to the renderer.
-        
-        Args:
-            line (Line): The line to draw.
-            color (Color): The color of the line.
-            thickness (int, optional): The line thickness in pixels. Defaults to 1.
-        """
-    @typing.overload
-    def draw(self, rect: Rect, color: Color, thickness: int = 0) -> None:
-        """
-        Draw a rectangle to the renderer.
-        
-        Args:
-            rect (Rect): The rectangle to draw.
-            color (Color): The color of the rectangle.
-            thickness (int, optional): The line thickness. If 0 or >= half width/height, 
-                                      draws filled rectangle. Defaults to 0 (filled).
-        """
-    def get_resolution(self) -> Vec2:
-        """
-        Get the resolution of the renderer.
-        
-        Returns:
-            Vec2: The current rendering resolution as (width, height).
-        """
-    def present(self) -> None:
-        """
-        Present the rendered content to the screen.
-        
-        This finalizes the current frame and displays it. Should be called after
-        all drawing operations for the frame are complete.
-        """
-    def to_viewport(self, coordinate: Vec2) -> Vec2:
-        """
-        Convert window coordinates to viewport coordinates.
-        
-        Args:
-            coordinate (Vec2): The window coordinate to convert.
-        
-        Returns:
-            Vec2: The equivalent viewport coordinate.
-        """
 class Scancode:
     """
     Members:
@@ -2853,12 +2884,11 @@ class Texture:
         def v(self, arg0: bool) -> None:
             ...
     @typing.overload
-    def __init__(self, renderer: Renderer, file_path: str) -> None:
+    def __init__(self, file_path: str) -> None:
         """
         Create a Texture by loading an image from a file.
         
         Args:
-            renderer (Renderer): The renderer that will own this texture.
             file_path (str): Path to the image file to load.
         
         Raises:
@@ -2866,12 +2896,11 @@ class Texture:
             RuntimeError: If the file cannot be loaded or texture creation fails.
         """
     @typing.overload
-    def __init__(self, renderer: Renderer, surface: Surface) -> None:
+    def __init__(self, surface: Surface) -> None:
         """
         Create a Texture from an existing Surface.
         
         Args:
-            renderer (Renderer): The renderer that will own this texture.
             surface (Surface): The surface to convert to a texture.
         
         Raises:
@@ -2963,6 +2992,87 @@ class Texture:
     @flip.setter
     def flip(self, arg0: Texture.Flip) -> None:
         ...
+class Timer:
+    """
+    
+    A timer for tracking countdown durations with pause/resume functionality.
+    
+    The Timer class provides a simple countdown timer that can be started, paused,
+    and resumed. It's useful for implementing time-based game mechanics like
+    cooldowns, temporary effects, or timed events.
+        
+    """
+    def __init__(self, duration: float) -> None:
+        """
+        Create a new Timer instance with the specified duration.
+        
+        Args:
+            duration (float): The countdown duration in seconds. Must be greater than 0.
+        
+        Raises:
+            RuntimeError: If duration is less than or equal to 0.
+        """
+    def pause(self) -> None:
+        """
+        Pause the timer countdown.
+        
+        The timer will stop counting down but retain its current state. Use resume()
+        to continue the countdown from where it was paused. Has no effect if the
+        timer is not started or already paused.
+        """
+    def reset(self) -> None:
+        """
+        Reset the timer to its initial state.
+        
+        Stops the timer and resets it back to its initial, unstarted state.
+        The timer can be started again with `start()` after being reset.
+        """
+    def resume(self) -> None:
+        """
+        Resume a paused timer countdown.
+        
+        Continues the countdown from where it was paused. Has no effect if the
+        timer is not started or not currently paused.
+        """
+    def start(self) -> None:
+        """
+        Start or restart the timer countdown.
+        
+        This begins the countdown from the full duration. If the timer was previously
+        started, this will reset it back to the beginning.
+        """
+    @property
+    def done(self) -> bool:
+        """
+        bool: True if the timer has finished counting down, False otherwise.
+        
+        A timer is considered done when the elapsed time since start (excluding
+        paused time) equals or exceeds the specified duration.
+        """
+    @property
+    def elapsed_time(self) -> float:
+        """
+        float: The time elapsed since the timer was started, in seconds.
+        
+        Returns 0.0 if the timer hasn't been started. This includes time spent
+        while paused, giving you the total wall-clock time since start().
+        """
+    @property
+    def progress(self) -> float:
+        """
+        float: The completion progress of the timer as a value between 0.0 and 1.0.
+        
+        Returns 0.0 if the timer hasn't been started, and 1.0 when the timer
+        is complete. Useful for progress bars and interpolated animations.
+        """
+    @property
+    def time_remaining(self) -> float:
+        """
+        float: The remaining time in seconds before the timer completes.
+        
+        Returns the full duration if the timer hasn't been started, or 0.0 if
+        the timer has already finished.
+        """
 class Vec2:
     """
     
@@ -3358,14 +3468,14 @@ CAMERA_DENIED: EventType  # value = <EventType.CAMERA_DENIED: 5123>
 CAMERA_REMOVED: EventType  # value = <EventType.CAMERA_REMOVED: 5121>
 CENTER: Anchor  # value = <Anchor.CENTER: 4>
 C_BACK: GamepadButton  # value = <GamepadButton.C_BACK: 4>
-C_DPADDOWN: GamepadButton  # value = <GamepadButton.C_DPADDOWN: 12>
-C_DPADLEFT: GamepadButton  # value = <GamepadButton.C_DPADLEFT: 13>
-C_DPADRIGHT: GamepadButton  # value = <GamepadButton.C_DPADRIGHT: 14>
-C_DPADUP: GamepadButton  # value = <GamepadButton.C_DPADUP: 11>
+C_DPAD_DOWN: GamepadButton  # value = <GamepadButton.C_DPAD_DOWN: 12>
+C_DPAD_LEFT: GamepadButton  # value = <GamepadButton.C_DPAD_LEFT: 13>
+C_DPAD_RIGHT: GamepadButton  # value = <GamepadButton.C_DPAD_RIGHT: 14>
+C_DPAD_UP: GamepadButton  # value = <GamepadButton.C_DPAD_UP: 11>
 C_EAST: GamepadButton  # value = <GamepadButton.C_EAST: 1>
 C_GUIDE: GamepadButton  # value = <GamepadButton.C_GUIDE: 5>
-C_LEFTSHOULDER: GamepadButton  # value = <GamepadButton.C_LEFTSHOULDER: 9>
-C_LEFTSTICK: GamepadButton  # value = <GamepadButton.C_LEFTSTICK: 7>
+C_LSHOULDER: GamepadButton  # value = <GamepadButton.C_LSHOULDER: 9>
+C_LSTICK: GamepadButton  # value = <GamepadButton.C_LSTICK: 7>
 C_LTRIGGER: GamepadAxis  # value = <GamepadAxis.C_LTRIGGER: 4>
 C_LX: GamepadAxis  # value = <GamepadAxis.C_LX: 0>
 C_LY: GamepadAxis  # value = <GamepadAxis.C_LY: 1>
@@ -3373,21 +3483,21 @@ C_NORTH: GamepadButton  # value = <GamepadButton.C_NORTH: 3>
 C_PS3: GamepadType  # value = <GamepadType.C_PS3: 4>
 C_PS4: GamepadType  # value = <GamepadType.C_PS4: 5>
 C_PS5: GamepadType  # value = <GamepadType.C_PS5: 6>
-C_RIGHTSHOULDER: GamepadButton  # value = <GamepadButton.C_RIGHTSHOULDER: 10>
-C_RIGHTSTICK: GamepadButton  # value = <GamepadButton.C_RIGHTSTICK: 8>
+C_RSHOULDER: GamepadButton  # value = <GamepadButton.C_RSHOULDER: 10>
+C_RSTICK: GamepadButton  # value = <GamepadButton.C_RSTICK: 8>
 C_RTRIGGER: GamepadAxis  # value = <GamepadAxis.C_RTRIGGER: 5>
 C_RX: GamepadAxis  # value = <GamepadAxis.C_RX: 2>
 C_RY: GamepadAxis  # value = <GamepadAxis.C_RY: 3>
 C_SOUTH: GamepadButton  # value = <GamepadButton.C_SOUTH: 0>
 C_STANDARD: GamepadType  # value = <GamepadType.C_STANDARD: 1>
 C_START: GamepadButton  # value = <GamepadButton.C_START: 6>
-C_SWITCHJOYCONLEFT: GamepadType  # value = <GamepadType.C_SWITCHJOYCONLEFT: 8>
-C_SWITCHJOYCONPAIR: GamepadType  # value = <GamepadType.C_SWITCHJOYCONPAIR: 10>
-C_SWITCHJOYCONRIGHT: GamepadType  # value = <GamepadType.C_SWITCHJOYCONRIGHT: 9>
-C_SWITCHPRO: GamepadType  # value = <GamepadType.C_SWITCHPRO: 7>
+C_SWITCH_JOYCON_LEFT: GamepadType  # value = <GamepadType.C_SWITCH_JOYCON_LEFT: 8>
+C_SWITCH_JOYCON_PAIR: GamepadType  # value = <GamepadType.C_SWITCH_JOYCON_PAIR: 10>
+C_SWITCH_JOYCON_RIGHT: GamepadType  # value = <GamepadType.C_SWITCH_JOYCON_RIGHT: 9>
+C_SWITCH_PRO: GamepadType  # value = <GamepadType.C_SWITCH_PRO: 7>
 C_WEST: GamepadButton  # value = <GamepadButton.C_WEST: 2>
-C_XBOX360: GamepadType  # value = <GamepadType.C_XBOX360: 2>
-C_XBOXONE: GamepadType  # value = <GamepadType.C_XBOXONE: 3>
+C_XBOX_360: GamepadType  # value = <GamepadType.C_XBOX_360: 2>
+C_XBOX_ONE: GamepadType  # value = <GamepadType.C_XBOX_ONE: 3>
 DROP_BEGIN: EventType  # value = <EventType.DROP_BEGIN: 4098>
 DROP_COMPLETE: EventType  # value = <EventType.DROP_COMPLETE: 4099>
 DROP_FILE: EventType  # value = <EventType.DROP_FILE: 4096>

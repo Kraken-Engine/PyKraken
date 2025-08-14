@@ -260,7 +260,7 @@ Rect Circle::asRect() const
     return rect;
 }
 
-Circle Circle::copy() const { return Circle(pos, radius); }
+Circle* Circle::copy() const { return new Circle(pos, radius); }
 
 bool Circle::operator==(const Circle& other) const
 {

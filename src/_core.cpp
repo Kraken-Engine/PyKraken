@@ -10,6 +10,7 @@
 #include "Line.hpp"
 #include "Math.hpp"
 #include "Mouse.hpp"
+#include "Polygon.hpp"
 #include "Rect.hpp"
 #include "Renderer.hpp"
 #include "Surface.hpp"
@@ -35,6 +36,7 @@ Call this once you're done using the engine to avoid memory leaks.
     constants::_bind(m);
     math::_bind(m);
     rect::_bind(m);
+    texture::_bind(m);
 
     camera::_bind(m);
     circle::_bind(m);
@@ -46,9 +48,9 @@ Call this once you're done using the engine to avoid memory leaks.
     key::_bind(m);
     line::_bind(m);
     mouse::_bind(m);
+    polygon::_bind(m);
     renderer::_bind(m);
     surface::_bind(m);
-    texture::_bind(m);
     kn::time::_bind(m);
     transform::_bind(m);
     window::_bind(m);

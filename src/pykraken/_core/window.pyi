@@ -3,7 +3,7 @@ Window related functions
 """
 from __future__ import annotations
 import pykraken._core
-__all__ = ['close', 'create', 'get_size', 'get_title', 'is_fullscreen', 'is_open', 'set_fullscreen', 'set_title']
+__all__ = ['close', 'create', 'get_scale', 'get_size', 'get_title', 'is_fullscreen', 'is_open', 'set_fullscreen', 'set_title']
 def close() -> None:
     """
     Close the window.
@@ -11,19 +11,30 @@ def close() -> None:
     Marks the window as closed, typically used to signal the main loop to exit.
     This doesn't destroy the window immediately but sets the close flag.
     """
-def create(title: str, size: pykraken._core.Vec2, scaled: bool = False) -> None:
+def create(title: str, resolution: pykraken._core.Vec2, scaled: bool = False) -> None:
     """
     Create a window with specified title and size.
     
     Args:
         title (str): The window title. Must be non-empty and <= 255 characters.
-        size (Vec2): The window size as (width, height). Ignored if scaled=True.
-        scaled (bool, optional): If True, creates a fullscreen window using the 
-                                display's usable bounds. Defaults to False.
+        resolution (Vec2): The renderer resolution as (width, height).
+        scaled (bool, optional): If True, creates a scaled up window using the 
+                                display's usable bounds, retaining the resolution's ratio.
+                                Defaults to False.
     
     Raises:
         RuntimeError: If a window already exists or window creation fails.
         ValueError: If title is empty, exceeds 255 characters, or size values are <= 0.
+    """
+def get_scale() -> float:
+    """
+    Get the scale of the window relative to the renderer resolution.
+    
+    Returns:
+        float: The window's scale
+    
+    Raises:
+        RuntimeError: If the window is not initialized.
     """
 def get_size() -> tuple:
     """

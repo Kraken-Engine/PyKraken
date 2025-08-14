@@ -15,7 +15,7 @@ class Clock
     Clock();
     ~Clock() = default;
 
-    double tick(uint16_t frameRate);
+    double tick(uint16_t frameRate = 0);
 
     uint64_t getFPS() const;
 

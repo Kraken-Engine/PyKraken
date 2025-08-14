@@ -4,7 +4,7 @@ Math related functions
 from __future__ import annotations
 import pykraken._core
 import typing
-__all__ = ['angle_between', 'clamp', 'cross', 'dot', 'from_polar', 'lerp', 'normalize', 'remap', 'scale_to_length', 'to_degrees', 'to_radians']
+__all__ = ['angle_between', 'clamp', 'cross', 'dot', 'from_polar', 'lerp', 'normalize', 'remap', 'scale_to_length', 'to_deg', 'to_rad']
 def angle_between(a: pykraken._core.Vec2, b: pykraken._core.Vec2) -> float:
     """
     Calculate the angle between two vectors.
@@ -17,7 +17,7 @@ def angle_between(a: pykraken._core.Vec2, b: pykraken._core.Vec2) -> float:
         float: The angle between the vectors in radians [0, π].
     """
 @typing.overload
-def clamp(vector: pykraken._core.Vec2, min_vec: pykraken._core.Vec2, max_vec: pykraken._core.Vec2) -> pykraken._core.Vec2:
+def clamp(vec: pykraken._core.Vec2, min_vec: pykraken._core.Vec2, max_vec: pykraken._core.Vec2) -> pykraken._core.Vec2:
     """
     Clamp a vector between two boundary vectors.
     
@@ -113,7 +113,7 @@ def lerp(a: float, b: float, t: float) -> float:
     Returns:
         float: The interpolated value.
     """
-def normalize(vector: pykraken._core.Vec2) -> pykraken._core.Vec2:
+def normalize(vec: pykraken._core.Vec2) -> pykraken._core.Vec2:
     """
     Normalize a vector to unit length.
     
@@ -151,7 +151,7 @@ def scale_to_length(vector: pykraken._core.Vec2, length: float) -> pykraken._cor
     Returns:
         Vec2: A new vector scaled to the specified length.
     """
-def to_degrees(radians: float) -> float:
+def to_deg(radians: float) -> float:
     """
     Convert radians to degrees.
     
@@ -161,7 +161,7 @@ def to_degrees(radians: float) -> float:
     Returns:
         float: The angle in degrees.
     """
-def to_radians(degrees: float) -> float:
+def to_rad(degrees: float) -> float:
     """
     Convert degrees to radians.
     

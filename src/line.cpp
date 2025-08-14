@@ -217,7 +217,7 @@ void Line::move(const Vec2& offset)
     by += offset.y;
 }
 
-Line Line::copy() const { return {ax, ay, bx, by}; }
+Line* Line::copy() const { return new Line(ax, ay, bx, by); }
 
 bool Line::operator==(const Line& other) const
 {

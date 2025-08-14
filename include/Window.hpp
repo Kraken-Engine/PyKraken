@@ -14,15 +14,17 @@ namespace window
 {
 void _bind(py::module_& module);
 
-SDL_Window* getWindow();
+SDL_Window* get();
 
-void create(const std::string& title, const Vec2& size, bool scaled);
+void create(const std::string& title, const Vec2& res, bool scaled);
 
 bool isOpen();
 
 void close();
 
 Vec2 getSize();
+
+float getScale();
 
 void setFullscreen(bool fullscreen);
 

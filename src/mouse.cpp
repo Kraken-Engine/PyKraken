@@ -88,14 +88,16 @@ py::tuple getPos()
 {
     float x, y;
     SDL_GetMouseState(&x, &y);
-    return py::make_tuple(x, y);
+    float scale = window::getScale();
+    return py::make_tuple(x / scale, y / scale);
 }
 
 py::tuple getRel()
 {
     float dx, dy;
     SDL_GetRelativeMouseState(&dx, &dy);
-    return py::make_tuple(dx, dy);
+    float scale = window::getScale();
+    return py::make_tuple(dx / scale, dy / scale);
 }
 
 bool isPressed(knMouseButton button)
@@ -110,11 +112,11 @@ bool isJustReleased(knMouseButton button)
     return _mouseReleased[static_cast<size_t>(button) - 1];
 }
 
-void lock() { SDL_SetWindowRelativeMouseMode(window::getWindow(), true); }
+void lock() { SDL_SetWindowRelativeMouseMode(window::get(), true); }
 
-void unlock() { SDL_SetWindowRelativeMouseMode(window::getWindow(), false); }
+void unlock() { SDL_SetWindowRelativeMouseMode(window::get(), false); }
 
-bool isLocked() { return SDL_GetWindowRelativeMouseMode(window::getWindow()); }
+bool isLocked() { return SDL_GetWindowRelativeMouseMode(window::get()); }
 
 void hide() { SDL_HideCursor(); }
 

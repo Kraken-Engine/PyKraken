@@ -60,7 +60,7 @@ class Surface
 
     SDL_Surface* getSDL() const;
 
-    Surface copy() const;
+    Surface* copy() const;
 
   private:
     SDL_Surface* m_surface = nullptr;

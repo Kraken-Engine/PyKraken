@@ -29,8 +29,8 @@ class Texture final
     } flip;
 
     explicit Texture(SDL_Texture* sdlTexture);
-    Texture(const Renderer& renderer, const Surface& surface);
-    Texture(const Renderer& renderer, const std::string& filePath);
+    Texture(const Surface& surface);
+    Texture(const std::string& filePath);
     ~Texture();
 
     void loadFromSDL(SDL_Texture* sdlTexture);

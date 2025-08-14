@@ -17,7 +17,7 @@ Create a new Clock instance.
 
 The clock starts measuring time immediately upon creation.
         )doc")
-        .def("tick", &Clock::tick, py::arg("frame_rate") = 60, R"doc(
+        .def("tick", &Clock::tick, py::arg("frame_rate") = 0, R"doc(
 Get the time since the last frame and optionally cap the framerate.
 
 This method should be called once per frame in your main loop. It returns
@@ -129,9 +129,6 @@ Clock::Clock() : m_lastTick(SDL_GetTicksNS()) {}
 
 double Clock::tick(const uint16_t frameRate)
 {
-    if (frameRate < 1)
-        throw std::invalid_argument("Tick framerate must be at least 1");
-
     uint64_t now = SDL_GetTicksNS();
     uint64_t frameTime = now - m_lastTick;
 
@@ -168,6 +165,7 @@ void Timer::start()
     m_startTime = std::chrono::steady_clock::now();
     m_started = true;
     m_paused = false;
+    m_elapsedPausedTime = 0.0; // Reset accumulated pause time when starting
 }
 
 void Timer::pause()
@@ -185,7 +183,7 @@ void Timer::resume()
     {
         auto now = std::chrono::steady_clock::now();
         auto pauseDuration = now - m_pauseTime;
-        m_startTime += pauseDuration; // Adjust the start time to account for the pause duration
+        m_elapsedPausedTime += std::chrono::duration<double>(pauseDuration).count();
         m_paused = false;
     }
 }
@@ -194,6 +192,7 @@ void Timer::reset()
 {
     m_started = false;
     m_paused = false;
+    m_elapsedPausedTime = 0.0;
 }
 
 bool Timer::isDone() const
@@ -201,17 +200,23 @@ bool Timer::isDone() const
     if (!m_started)
         return false;
 
+    auto now = std::chrono::steady_clock::now();
+    std::chrono::duration<double> totalElapsed = now - m_startTime;
+
+    double effectiveElapsed;
     if (m_paused)
     {
-        // If paused, check elapsed time up to when we paused
-        std::chrono::duration<double> elapsed = m_pauseTime - m_startTime;
-        return (elapsed.count() >= m_duration);
+        // If currently paused, don't count time since pause started
+        std::chrono::duration<double> pausedDuration = now - m_pauseTime;
+        effectiveElapsed = totalElapsed.count() - m_elapsedPausedTime - pausedDuration.count();
+    }
+    else
+    {
+        // Not currently paused, just subtract accumulated pause time
+        effectiveElapsed = totalElapsed.count() - m_elapsedPausedTime;
     }
 
-    auto now = std::chrono::steady_clock::now();
-    std::chrono::duration<double> elapsed = now - m_startTime;
-
-    return (elapsed.count() >= m_duration);
+    return (effectiveElapsed >= m_duration);
 }
 
 double Timer::timeRemaining() const
@@ -219,18 +224,23 @@ double Timer::timeRemaining() const
     if (!m_started)
         return m_duration;
 
+    auto now = std::chrono::steady_clock::now();
+    std::chrono::duration<double> totalElapsed = now - m_startTime;
+
+    double effectiveElapsed;
     if (m_paused)
     {
-        // If paused, calculate remaining time based on when we paused
-        std::chrono::duration<double> elapsed = m_pauseTime - m_startTime;
-        double remaining = m_duration - elapsed.count();
-        return (remaining > 0.0) ? remaining : 0.0;
+        // If currently paused, don't count time since pause started
+        std::chrono::duration<double> pausedDuration = now - m_pauseTime;
+        effectiveElapsed = totalElapsed.count() - m_elapsedPausedTime - pausedDuration.count();
+    }
+    else
+    {
+        // Not currently paused, just subtract accumulated pause time
+        effectiveElapsed = totalElapsed.count() - m_elapsedPausedTime;
     }
 
-    auto now = std::chrono::steady_clock::now();
-    std::chrono::duration<double> elapsed = now - m_startTime;
-    double remaining = m_duration - elapsed.count();
-
+    double remaining = m_duration - effectiveElapsed;
     return (remaining > 0.0) ? remaining : 0.0;
 }
 
@@ -239,17 +249,23 @@ double Timer::elapsedTime() const
     if (!m_started)
         return 0.0;
 
+    auto now = std::chrono::steady_clock::now();
+    std::chrono::duration<double> totalElapsed = now - m_startTime;
+
+    double effectiveElapsed;
     if (m_paused)
     {
-        // If paused, return elapsed time up to when we paused
-        std::chrono::duration<double> elapsed = m_pauseTime - m_startTime;
-        return elapsed.count();
+        // If currently paused, don't count time since pause started
+        std::chrono::duration<double> pausedDuration = now - m_pauseTime;
+        effectiveElapsed = totalElapsed.count() - m_elapsedPausedTime - pausedDuration.count();
+    }
+    else
+    {
+        // Not currently paused, just subtract accumulated pause time
+        effectiveElapsed = totalElapsed.count() - m_elapsedPausedTime;
     }
 
-    auto now = std::chrono::steady_clock::now();
-    std::chrono::duration<double> elapsed = now - m_startTime;
-
-    return elapsed.count();
+    return std::max(effectiveElapsed, 0.0);
 }
 
 double Timer::progress() const

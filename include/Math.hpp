@@ -74,7 +74,7 @@ class Vec2
 
     template <typename T> Vec2(T x, T y) : x(static_cast<double>(x)), y(static_cast<double>(y)) {}
 
-    Vec2 copy() const;
+    Vec2* copy() const;
 
     bool isZero(double tolerance = 1e-8) const;
 

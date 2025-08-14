@@ -1,6 +1,7 @@
 #pragma once
 
 #include <pybind11/pybind11.h>
+#include <SDL3/SDL.h>
 
 namespace py = pybind11;
 
@@ -14,36 +15,36 @@ class Texture;
 class Circle;
 class Line;
 class Rect;
+class Polygon;
 
 namespace renderer
 {
 void _bind(py::module_& module);
-}
 
-class Renderer
-{
-  public:
-    explicit Renderer(const Vec2& resolution);
-    ~Renderer();
+void init(SDL_Window* window, const Vec2& resolution);
+void quit();
 
-    void clear(const Color& color);
+void clear(const Color& color);
+void present();
 
-    void present();
+Vec2 getResolution();
 
-    Vec2 toViewport(const Vec2& windowCoord) const;
+void drawTexture(const Texture& texture, Rect dstRect, const Rect& srcRect);
+void drawTexture(const Texture& texture, Vec2 pos, Anchor anchor);
 
-    Vec2 getResolution() const;
+void drawCircle(const Circle& circle, const Color& color, int thickness = 0);
 
-    void draw(const Vec2& point, const Color& color);
-    void draw(const Texture& texture, Rect dstRect, const Rect& srcRect);
-    void draw(const Texture& texture, Vec2 pos, Anchor anchor);
-    void draw(const Circle& circle, const Color& color, int thickness);
-    void draw(const Line& line, const Color& color, int thickness);
-    void draw(Rect rect, const Color& color, int thickness);
+void drawPoint(const Vec2& point, const Color& color);
+void drawPoints(const std::vector<Vec2>& points, const Color& color);
 
-    SDL_Renderer* getSDL() const;
+void drawLine(const Line& line, const Color& color, int thickness = 1);
+// void drawLines(const std::vector<Line>& lines, const Color& color, int thickness = 1);
 
-  private:
-    SDL_Renderer* m_renderer = nullptr;
-    SDL_Texture* m_target = nullptr;
-};
+void drawRect(Rect rect, const Color& color, int thickness = 0);
+void drawRects(const std::vector<Rect>& rects, const Color& color, int thickness = 0);
+
+void drawPolygon(const Polygon& polygon, const Color& color, bool filled = false);
+// void drawPolygons(const std::vector<Polygon>& polygons, const Color& color, bool filled = false);
+
+SDL_Renderer* get();
+} // namespace renderer

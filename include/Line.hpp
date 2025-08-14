@@ -36,7 +36,7 @@ class Line
 
     void move(const Vec2& offset);
 
-    Line copy() const;
+    Line* copy() const;
 
     bool operator==(const Line& other) const;
     bool operator!=(const Line& other) const;

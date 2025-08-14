@@ -484,7 +484,7 @@ Rect::Rect(const Vec2& pos, const double w, const double h) : x(pos.x), y(pos.y)
 
 Rect::Rect(const double x, const double y, const Vec2& size) : x(x), y(y), w(size.x), h(size.y) {}
 
-Rect Rect::copy() const { return {x, y, w, h}; }
+Rect* Rect::copy() const { return new Rect(x, y, w, h); }
 
 void Rect::move(const Vec2& offset)
 {

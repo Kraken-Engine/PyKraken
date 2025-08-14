@@ -2,7 +2,7 @@
 Time related functions
 """
 from __future__ import annotations
-__all__ = ['delay', 'get_elapsed_time']
+__all__ = ['delay', 'get_elapsed']
 def delay(milliseconds: int) -> None:
     """
     Delay the program execution for the specified duration.
@@ -14,7 +14,7 @@ def delay(milliseconds: int) -> None:
     Args:
         milliseconds (int): The number of milliseconds to delay.
     """
-def get_elapsed_time() -> float:
+def get_elapsed() -> float:
     """
     Get the elapsed time since the program started.
     

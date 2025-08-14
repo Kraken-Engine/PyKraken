@@ -897,7 +897,7 @@ bool PolarCoordinate::operator==(const PolarCoordinate& other) const
 
 bool PolarCoordinate::operator!=(const PolarCoordinate& other) const { return !(*this == other); }
 
-Vec2 Vec2::copy() const { return {x, y}; }
+Vec2* Vec2::copy() const { return new Vec2(x, y); }
 
 bool Vec2::isZero(double tolerance) const
 {

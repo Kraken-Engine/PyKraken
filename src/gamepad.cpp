@@ -58,7 +58,7 @@ Args:
     slot (int, optional): Gamepad slot ID (default is 0).
 
 Returns:
-    tuple[float, float]: A tuple of stick input normalized to [-1, 1], or (0, 0) if inside dead zone.
+    Vec2: A vector of stick input normalized to [-1, 1], or (0, 0) if inside dead zone.
     )doc");
 
     subGamepad.def("get_right_stick", &getRightStick, py::arg("slot") = 0, R"doc(
@@ -68,7 +68,7 @@ Args:
     slot (int, optional): Gamepad slot ID (default is 0).
 
 Returns:
-    tuple[float, float]: A tuple of stick input normalized to [-1, 1], or (0, 0) if inside dead zone.
+    Vec2: A vector of stick input normalized to [-1, 1], or (0, 0) if inside dead zone.
     )doc");
 
     subGamepad.def("get_left_trigger", &getLeftTrigger, py::arg("slot") = 0, R"doc(
@@ -152,10 +152,10 @@ bool isJustReleased(SDL_GamepadButton button, int slot)
     return buttonIt != state.justReleased.end();
 }
 
-py::tuple getLeftStick(int slot)
+Vec2 getLeftStick(int slot)
 {
     if (!verifySlot(slot))
-        return py::make_tuple(0, 0);
+        return {};
 
     SDL_JoystickID id = _gamepadSlots.at(slot).value();
     const GamepadState& state = _connectedPads.at(id);
@@ -166,13 +166,13 @@ py::tuple getLeftStick(int slot)
     if (axes.getLength() > state.deadzone)
         return axes;
 
-    return py::make_tuple(0, 0);
+    return {};
 }
 
-py::tuple getRightStick(int slot)
+Vec2 getRightStick(int slot)
 {
     if (!verifySlot(slot))
-        return py::make_tuple(0, 0);
+        return {};
 
     SDL_JoystickID id = _gamepadSlots.at(slot).value();
     const GamepadState& state = _connectedPads.at(id);
@@ -183,7 +183,7 @@ py::tuple getRightStick(int slot)
     if (axes.getLength() > state.deadzone)
         return axes;
 
-    return py::make_tuple(0, 0);
+    return {};
 }
 
 double getLeftTrigger(int slot)

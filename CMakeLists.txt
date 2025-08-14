@@ -30,6 +30,7 @@ pybind11_add_module(_core MODULE
   src/line.cpp
   src/math.cpp
   src/mouse.cpp
+  src/polygon.cpp
   src/rect.cpp
   src/renderer.cpp
   src/surface.cpp

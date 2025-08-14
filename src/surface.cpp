@@ -331,7 +331,7 @@ Vec2 Surface::getSize() const { return {m_surface->w, m_surface->h}; }
 
 Rect Surface::getRect() const { return Rect(0, 0, m_surface->w, m_surface->h); }
 
-Surface Surface::copy() const
+Surface* Surface::copy() const
 {
     SDL_Surface* surfaceCopy = SDL_CreateSurface(m_surface->w, m_surface->h, m_surface->format);
     if (!surfaceCopy)
@@ -340,8 +340,8 @@ Surface Surface::copy() const
     if (!SDL_BlitSurface(m_surface, nullptr, surfaceCopy, nullptr))
         throw std::runtime_error("Failed to blit surface copy: " + std::string(SDL_GetError()));
 
-    Surface copy;
-    copy.setSDL(surfaceCopy);
+    Surface* copy;
+    copy->setSDL(surfaceCopy);
     return copy;
 }
 

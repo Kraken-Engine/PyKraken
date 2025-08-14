@@ -35,7 +35,7 @@ class Rect
     Rect(const Vec2& pos, double w, double h);
     Rect(double x, double y, const Vec2& size);
 
-    Rect copy() const;
+    Rect* copy() const;
 
     void move(const Vec2& offset);
 

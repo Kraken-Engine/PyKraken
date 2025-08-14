@@ -1,26 +1,31 @@
 #include "Window.hpp"
 #include "Math.hpp"
+#include "Renderer.hpp"
 
 #include <SDL3/SDL.h>
+#include <SDL3_image/SDL_image.h>
 #include <stdexcept>
 
 static SDL_Window* _window = nullptr;
 static bool _isOpen = false;
+static float _scale = 1.f;
 
 namespace window
 {
 void _bind(pybind11::module_& module)
 {
     auto subWindow = module.def_submodule("window", "Window related functions");
-    subWindow.def("create", &window::create, py::arg("title"), py::arg("size"),
+
+    subWindow.def("create", &window::create, py::arg("title"), py::arg("resolution"),
                   py::arg("scaled") = false, R"doc(
 Create a window with specified title and size.
 
 Args:
     title (str): The window title. Must be non-empty and <= 255 characters.
-    size (Vec2): The window size as (width, height). Ignored if scaled=True.
-    scaled (bool, optional): If True, creates a fullscreen window using the 
-                            display's usable bounds. Defaults to False.
+    resolution (Vec2): The renderer resolution as (width, height).
+    scaled (bool, optional): If True, creates a scaled up window using the 
+                            display's usable bounds, retaining the resolution's ratio.
+                            Defaults to False.
 
 Raises:
     RuntimeError: If a window already exists or window creation fails.
@@ -57,17 +62,21 @@ Raises:
     RuntimeError: If the window is not initialized.
     )doc");
     subWindow.def(
-        "get_size",
-        []() -> py::tuple
-        {
-            Vec2 winSize = getSize();
-            return py::make_tuple(winSize.x, winSize.y);
-        },
+        "get_size", []() -> py::tuple { return getSize(); },
         R"doc(
 Get the current size of the window.
 
 Returns:
     tuple[float, float]: The window size as (width, height).
+
+Raises:
+    RuntimeError: If the window is not initialized.
+    )doc");
+    subWindow.def("get_scale", &window::getScale, R"doc(
+Get the scale of the window relative to the renderer resolution.
+
+Returns:
+    float: The window's scale
 
 Raises:
     RuntimeError: If the window is not initialized.
@@ -93,9 +102,9 @@ Raises:
     )doc");
 }
 
-SDL_Window* getWindow() { return _window; }
+SDL_Window* get() { return _window; }
 
-void create(const std::string& title, const Vec2& size, const bool scaled)
+void create(const std::string& title, const Vec2& res, const bool scaled)
 {
     if (_window)
         throw std::runtime_error("Window already created");
@@ -115,14 +124,16 @@ void create(const std::string& title, const Vec2& size, const bool scaled)
 
         winW = usableBounds.w;
         winH = usableBounds.h;
+
+        _scale = static_cast<float>(winW) / res.x;
     }
     else
     {
-        winW = static_cast<int>(size.x);
-        winH = static_cast<int>(size.y);
+        winW = static_cast<int>(res.x);
+        winH = static_cast<int>(res.y);
 
         if (winW <= 0 || winH <= 0)
-            throw std::invalid_argument("Window size values must be greater than 0");
+            throw std::invalid_argument("Window resolution values must be greater than 0");
     }
 
     _window = SDL_CreateWindow(title.c_str(), winW, winH, 0);
@@ -130,6 +141,8 @@ void create(const std::string& title, const Vec2& size, const bool scaled)
         throw std::runtime_error(SDL_GetError());
 
     _isOpen = true;
+
+    renderer::init(_window, res);
 }
 
 bool isOpen() { return _isOpen; }
@@ -145,6 +158,14 @@ Vec2 getSize()
     SDL_GetWindowSize(_window, &w, &h);
 
     return {w, h};
+}
+
+float getScale()
+{
+    if (!_window)
+        throw std::runtime_error("Window not initialized");
+
+    return _scale;
 }
 
 void setFullscreen(bool fullscreen)
@@ -191,18 +212,16 @@ std::string getTitle()
 
 void init()
 {
-    if (_window)
-        return;
-
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
         throw std::runtime_error(SDL_GetError());
 }
 
 void quit()
 {
+    renderer::quit();
+
     if (_window)
         SDL_DestroyWindow(_window);
-
     _window = nullptr;
 
     SDL_Quit();

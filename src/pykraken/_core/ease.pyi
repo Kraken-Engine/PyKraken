@@ -2,7 +2,7 @@
 Easing functions and animation utilities
 """
 from __future__ import annotations
-__all__ = ['in_back', 'in_bounce', 'in_circ', 'in_cubic', 'in_elastic', 'in_expo', 'in_out_back', 'in_out_bounce', 'in_out_circ', 'in_out_cubic', 'in_out_elastic', 'in_out_expo', 'in_out_quad', 'in_out_quart', 'in_out_quint', 'in_out_sine', 'in_quad', 'in_quart', 'in_quint', 'in_sine', 'linear', 'out_back', 'out_bounce', 'out_circ', 'out_cubic', 'out_elastic', 'out_expo', 'out_quad', 'out_quart', 'out_quint', 'out_sine']
+__all__ = ['in_back', 'in_bounce', 'in_circ', 'in_cubic', 'in_elastic', 'in_expo', 'in_out_back', 'in_out_bounce', 'in_out_circ', 'in_out_cubic', 'in_out_elastic', 'in_out_expo', 'in_out_quad', 'in_out_quart', 'in_out_quint', 'in_out_sin', 'in_quad', 'in_quart', 'in_quint', 'in_sin', 'linear', 'out_back', 'out_bounce', 'out_circ', 'out_cubic', 'out_elastic', 'out_expo', 'out_quad', 'out_quart', 'out_quint', 'out_sin']
 def in_back(t: float) -> float:
     """
     Back easing in (overshoot at start).
@@ -138,7 +138,7 @@ def in_out_quint(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def in_out_sine(t: float) -> float:
+def in_out_sin(t: float) -> float:
     """
     Sinusoidal easing in and out.
     
@@ -174,7 +174,7 @@ def in_quint(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def in_sine(t: float) -> float:
+def in_sin(t: float) -> float:
     """
     Sinusoidal easing in.
     
@@ -273,7 +273,7 @@ def out_quint(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def out_sine(t: float) -> float:
+def out_sin(t: float) -> float:
     """
     Sinusoidal easing out.
     

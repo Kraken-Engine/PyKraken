@@ -38,24 +38,20 @@ When True, the texture is mirrored vertically (top-bottom flip).
         )doc");
 
     texture
-        .def(py::init<const Renderer&, const std::string&>(), py::arg("renderer"),
-             py::arg("file_path"), R"doc(
+        .def(py::init<const std::string&>(), py::arg("file_path"), R"doc(
 Create a Texture by loading an image from a file.
 
 Args:
-    renderer (Renderer): The renderer that will own this texture.
     file_path (str): Path to the image file to load.
 
 Raises:
     ValueError: If file_path is empty.
     RuntimeError: If the file cannot be loaded or texture creation fails.
         )doc")
-        .def(py::init<const Renderer&, const Surface&>(), py::arg("renderer"), py::arg("surface"),
-             R"doc(
+        .def(py::init<const Surface&>(), py::arg("surface"), R"doc(
 Create a Texture from an existing Surface.
 
 Args:
-    renderer (Renderer): The renderer that will own this texture.
     surface (Surface): The surface to convert to a texture.
 
 Raises:
@@ -134,9 +130,9 @@ This is the default blending mode for standard transparency effects.
 }
 } // namespace texture
 
-Texture::Texture(const Renderer& renderer, const Surface& surface)
+Texture::Texture(const Surface& surface)
 {
-    m_texPtr = SDL_CreateTextureFromSurface(renderer.getSDL(), surface.getSDL());
+    m_texPtr = SDL_CreateTextureFromSurface(renderer::get(), surface.getSDL());
 
     if (!m_texPtr)
     {
@@ -147,7 +143,7 @@ Texture::Texture(const Renderer& renderer, const Surface& surface)
     SDL_SetTextureScaleMode(m_texPtr, SDL_SCALEMODE_NEAREST);
 }
 
-Texture::Texture(const Renderer& renderer, const std::string& filePath)
+Texture::Texture(const std::string& filePath)
 {
     if (filePath.empty())
         throw std::invalid_argument("File path cannot be empty");
@@ -158,7 +154,7 @@ Texture::Texture(const Renderer& renderer, const std::string& filePath)
         m_texPtr = nullptr;
     }
 
-    m_texPtr = IMG_LoadTexture(renderer.getSDL(), filePath.c_str());
+    m_texPtr = IMG_LoadTexture(renderer::get(), filePath.c_str());
     if (!m_texPtr)
         throw std::runtime_error("Failed to load texture: " + std::string(SDL_GetError()));
 

@@ -4,15 +4,19 @@
 #include "Color.hpp"
 #include "Line.hpp"
 #include "Math.hpp"
+#include "Polygon.hpp"
 #include "Rect.hpp"
 #include "Texture.hpp"
 #include "Window.hpp"
 #include "_globals.hpp"
 
-#include <SDL3/SDL.h>
 #include <gfx/SDL3_gfxPrimitives.h>
 #include <iostream>
+#include <pybind11/stl.h>
 #include <set>
+
+static SDL_Renderer* _renderer = nullptr;
+static SDL_Texture* _target = nullptr;
 
 static void _circleThin(SDL_Renderer* renderer, Vec2 center, int radius, const Color& color);
 static void _circle(SDL_Renderer* renderer, Vec2 center, int radius, const Color& color,
@@ -25,32 +29,9 @@ namespace renderer
 {
 void _bind(pybind11::module_& module)
 {
-    py::class_<Renderer>(module, "Renderer", R"doc(
-A 2D graphics renderer for drawing shapes, textures, and other visual elements.
+    auto subRenderer = module.def_submodule("renderer", "Function for rendering graphics");
 
-The Renderer manages the rendering pipeline, handles camera transformations,
-and provides methods for drawing various primitives and textures to the screen.
-    )doc")
-        .def(py::init<const Vec2&>(), py::arg("resolution"), R"doc(
-Create a Renderer with the specified resolution.
-
-Args:
-    resolution (Vec2): The rendering resolution as (width, height).
-
-Raises:
-    ValueError: If resolution width or height is <= 0.
-    RuntimeError: If renderer creation fails.
-        )doc")
-        .def("to_viewport", &Renderer::toViewport, py::arg("coordinate"), R"doc(
-Convert window coordinates to viewport coordinates.
-
-Args:
-    coordinate (Vec2): The window coordinate to convert.
-
-Returns:
-    Vec2: The equivalent viewport coordinate.
-        )doc")
-        .def("clear", &Renderer::clear, py::arg("color") = Color{0, 0, 0, 255}, R"doc(
+    subRenderer.def("clear", &clear, py::arg("color") = Color{0, 0, 0, 255}, R"doc(
 Clear the renderer with the specified color.
 
 Args:
@@ -58,22 +39,23 @@ Args:
 
 Raises:
     ValueError: If color values are not between 0 and 255.
-        )doc")
-        .def("present", &Renderer::present, R"doc(
+    )doc");
+
+    subRenderer.def("present", &present, R"doc(
 Present the rendered content to the screen.
 
 This finalizes the current frame and displays it. Should be called after
 all drawing operations for the frame are complete.
-        )doc")
-        .def("get_resolution", &Renderer::getResolution, R"doc(
+    )doc");
+
+    subRenderer.def("get_resolution", &getResolution, R"doc(
 Get the resolution of the renderer.
 
 Returns:
     Vec2: The current rendering resolution as (width, height).
-        )doc")
+    )doc");
 
-        .def("draw", py::overload_cast<const Vec2&, const Color&>(&Renderer::draw),
-             py::arg("point"), py::arg("color"), R"doc(
+    subRenderer.def("draw_point", &drawPoint, py::arg("point"), py::arg("color"), R"doc(
 Draw a single point to the renderer.
 
 Args:
@@ -82,9 +64,22 @@ Args:
 
 Raises:
     RuntimeError: If point rendering fails.
-        )doc")
-        .def("draw", py::overload_cast<const Texture&, Rect, const Rect&>(&Renderer::draw),
-             py::arg("texture"), py::arg("dst_rect"), py::arg("src_rect") = Rect(), R"doc(
+    )doc");
+
+    subRenderer.def("draw_points", &drawPoints, py::arg("points"), py::arg("color"), R"doc(
+Batch draw an array of points to the renderer.
+
+Args:
+    points (Sequence[Vec2]): The points to batch draw.
+    color (Color): The color of the points.
+
+Raises:
+    RuntimeError: If point rendering fails.
+    )doc");
+
+    subRenderer.def("draw_texture",
+                    py::overload_cast<const Texture&, Rect, const Rect&>(&drawTexture),
+                    py::arg("texture"), py::arg("dst_rect"), py::arg("src_rect") = Rect(), R"doc(
 Draw a texture with specified destination and source rectangles.
 
 Args:
@@ -92,25 +87,22 @@ Args:
     dst_rect (Rect): The destination rectangle on the renderer.
     src_rect (Rect, optional): The source rectangle from the texture. 
                               Defaults to entire texture if not specified.
+    )doc");
 
-Raises:
-    RuntimeError: If texture doesn't belong to this renderer.
-        )doc")
-        .def("draw", py::overload_cast<const Texture&, Vec2, Anchor>(&Renderer::draw),
-             py::arg("texture"), py::arg("pos") = Vec2(), py::arg("anchor") = Anchor::CENTER,
-             R"doc(
+    subRenderer.def("draw_texture", py::overload_cast<const Texture&, Vec2, Anchor>(&drawTexture),
+                    py::arg("texture"), py::arg("pos") = Vec2(), py::arg("anchor") = Anchor::CENTER,
+                    R"doc(
 Draw a texture at the specified position with anchor alignment.
 
 Args:
     texture (Texture): The texture to draw.
     pos (Vec2, optional): The position to draw at. Defaults to (0, 0).
     anchor (Anchor, optional): The anchor point for positioning. Defaults to CENTER.
+    )doc");
 
-Raises:
-    RuntimeError: If texture doesn't belong to this renderer.
-        )doc")
-        .def("draw", py::overload_cast<const Circle&, const Color&, int>(&Renderer::draw),
-             py::arg("circle"), py::arg("color"), py::arg("thickness") = 0, R"doc(
+    subRenderer.def("draw_circle", &drawCircle, py::arg("circle"), py::arg("color"),
+                    py::arg("thickness") = 0,
+                    R"doc(
 Draw a circle to the renderer.
 
 Args:
@@ -118,96 +110,124 @@ Args:
     color (Color): The color of the circle.
     thickness (int, optional): The line thickness. If 0 or >= radius, draws filled circle.
                               Defaults to 0 (filled).
-        )doc")
-        .def("draw", py::overload_cast<const Line&, const Color&, int>(&Renderer::draw),
-             py::arg("line"), py::arg("color"), py::arg("thickness") = 1, R"doc(
+    )doc");
+
+    subRenderer.def("draw_line", &drawLine, py::arg("line"), py::arg("color"),
+                    py::arg("thickness") = 1, R"doc(
 Draw a line to the renderer.
 
 Args:
     line (Line): The line to draw.
     color (Color): The color of the line.
     thickness (int, optional): The line thickness in pixels. Defaults to 1.
-        )doc")
-        .def("draw", py::overload_cast<Rect, const Color&, int>(&Renderer::draw), py::arg("rect"),
-             py::arg("color"), py::arg("thickness") = 0, R"doc(
+    )doc");
+
+    subRenderer.def("draw_rect", &drawRect, py::arg("rect"), py::arg("color"),
+                    py::arg("thickness") = 0,
+                    R"doc(
 Draw a rectangle to the renderer.
 
 Args:
     rect (Rect): The rectangle to draw.
     color (Color): The color of the rectangle.
-    thickness (int, optional): The line thickness. If 0 or >= half width/height, 
-                              draws filled rectangle. Defaults to 0 (filled).
-        )doc");
+    thickness (int, optional): The border thickness. If 0 or >= half width/height, draws filled rectangle. Defaults to 0 (filled).
+    )doc");
+
+    subRenderer.def("draw_rects", &drawRects, py::arg("rects"), py::arg("color"), py::arg("thickness") = 0, R"doc(
+Batch draw an array of rectangles to the renderer.
+
+Args:
+    rects (Sequence[Rect]): The rectangles to batch draw.
+    color (Color): The color of the rectangles.
+    thickness (int, optional): The border thickness of the rectangles. If 0 or >= half width/height, draws filled rectangles. Defaults to 0 (filled).
+    )doc");
+
+    subRenderer.def("draw_polygon", &drawPolygon, py::arg("polygon"), py::arg("color"),
+                    py::arg("filled") = false,
+                    R"doc(
+Draw a polygon to the renderer.
+
+Args:
+    polygon (Polygon): The polygon to draw.
+    color (Color): The color of the polygon.
+    filled (bool, optional): Whether to draw a filled polygon or just the outline.
+                             Defaults to True (filled). Works with both convex and concave polygons.
+    )doc");
 }
-} // namespace renderer
 
-Renderer::Renderer(const Vec2& resolution)
+void init(SDL_Window* window, const Vec2& resolution)
 {
-    if (resolution.x <= 0 || resolution.y <= 0)
-        throw std::invalid_argument("Resolution must be greater than zero");
-
-    m_renderer = SDL_CreateRenderer(window::getWindow(), nullptr);
-    if (m_renderer == nullptr)
+    _renderer = SDL_CreateRenderer(window, nullptr);
+    if (_renderer == nullptr)
         throw std::runtime_error("Renderer failed to create: " + std::string(SDL_GetError()));
 
-    SDL_SetRenderLogicalPresentation(m_renderer, resolution.x, resolution.y,
+    SDL_SetRenderLogicalPresentation(_renderer, resolution.x, resolution.y,
                                      SDL_LOGICAL_PRESENTATION_LETTERBOX);
-    SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawBlendMode(_renderer, SDL_BLENDMODE_BLEND);
 
-    m_target = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET,
-                                 resolution.x, resolution.y);
-    SDL_SetTextureScaleMode(m_target, SDL_SCALEMODE_NEAREST);
+    _target = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET,
+                                resolution.x, resolution.y);
+    SDL_SetTextureScaleMode(_target, SDL_SCALEMODE_NEAREST);
+    SDL_SetRenderTarget(_renderer, _target);
 }
 
-Renderer::~Renderer()
+void quit()
 {
-    if (m_renderer)
+    if (_renderer)
     {
-        SDL_DestroyRenderer(m_renderer);
-        m_renderer = nullptr;
+        SDL_DestroyRenderer(_renderer);
+        _renderer = nullptr;
     }
 }
 
-void Renderer::clear(const Color& color)
+void clear(const Color& color)
 {
     if (!color._isValid())
         throw std::invalid_argument("Color values must be between 0 and 255");
 
-    SDL_SetRenderTarget(m_renderer, m_target);
-    SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a);
-    SDL_RenderClear(m_renderer);
+    SDL_SetRenderDrawColor(_renderer, color.r, color.g, color.b, color.a);
+    SDL_RenderClear(_renderer);
 }
 
-Vec2 Renderer::toViewport(const Vec2& windowCoord) const
-{
-    float rCoordX, rCoordY;
-    SDL_RenderCoordinatesFromWindow(m_renderer, windowCoord.x, windowCoord.y, &rCoordX, &rCoordY);
-
-    return {rCoordX, rCoordY};
-}
-
-Vec2 Renderer::getResolution() const
+Vec2 getResolution()
 {
     int w, h;
-    SDL_GetRenderLogicalPresentation(m_renderer, &w, &h, nullptr);
+    SDL_GetRenderLogicalPresentation(_renderer, &w, &h, nullptr);
     return {w, h};
 }
 
-void Renderer::draw(const Vec2& point, const Color& color)
+void drawPoint(const Vec2& point, const Color& color)
 {
-    SDL_SetRenderTarget(m_renderer, m_target);
-    SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a);
+    SDL_SetRenderDrawColor(_renderer, color.r, color.g, color.b, color.a);
 
     SDL_FPoint sdlPoint = point - camera::getActivePos();
-    if (!SDL_RenderPoint(m_renderer, sdlPoint.x, sdlPoint.y))
+    if (!SDL_RenderPoint(_renderer, sdlPoint.x, sdlPoint.y))
         throw std::runtime_error("Failed to render point: " + std::string(SDL_GetError()));
 }
 
-void Renderer::draw(const Texture& texture, Rect dstRect, const Rect& srcRect)
+void drawPoints(const std::vector<Vec2>& points, const Color& color)
+{
+    const size_t size = points.size();
+    if (size == 0)
+        return;
+
+    SDL_SetRenderDrawColor(_renderer, color.r, color.g, color.b, color.a);
+
+    const Vec2 cameraPos = camera::getActivePos();
+
+    std::vector<SDL_FPoint> sdlPoints;
+    sdlPoints.reserve(size);
+
+    for (const Vec2& point : points)
+        sdlPoints.emplace_back(point - cameraPos);
+
+    if (!SDL_RenderPoints(_renderer, sdlPoints.data(), static_cast<int>(sdlPoints.size())))
+        throw std::runtime_error("Failed to render points: " + std::string(SDL_GetError()));
+}
+
+void drawTexture(const Texture& texture, Rect dstRect, const Rect& srcRect)
 {
     SDL_Texture* sdlTexture = texture.getSDL();
-    if (SDL_GetRendererFromTexture(sdlTexture) != m_renderer)
-        throw std::runtime_error("Texture does not belong to this renderer");
 
     Vec2 cameraPos = camera::getActivePos();
 
@@ -222,16 +242,13 @@ void Renderer::draw(const Texture& texture, Rect dstRect, const Rect& srcRect)
     SDL_FRect dstSDLRect = dstRect;
     SDL_FRect srcSDLRect = (srcRect.getSize() == Vec2()) ? texture.getRect() : srcRect;
 
-    SDL_SetRenderTarget(m_renderer, m_target);
-    SDL_RenderTextureRotated(m_renderer, sdlTexture, &srcSDLRect, &dstSDLRect, texture.angle,
+    SDL_RenderTextureRotated(_renderer, sdlTexture, &srcSDLRect, &dstSDLRect, texture.angle,
                              nullptr, flipAxis);
 }
 
-void Renderer::draw(const Texture& texture, Vec2 pos, const Anchor anchor)
+void drawTexture(const Texture& texture, Vec2 pos, const Anchor anchor)
 {
     SDL_Texture* sdlTexture = texture.getSDL();
-    if (SDL_GetRendererFromTexture(sdlTexture) != m_renderer)
-        throw std::runtime_error("Texture does not belong to this renderer");
 
     Vec2 cameraPos = camera::getActivePos();
 
@@ -275,28 +292,25 @@ void Renderer::draw(const Texture& texture, Vec2 pos, const Anchor anchor)
     }
 
     SDL_FRect dstSDLRect = rect;
-    SDL_RenderTextureRotated(m_renderer, sdlTexture, nullptr, &dstSDLRect, texture.angle, nullptr,
+    SDL_RenderTextureRotated(_renderer, sdlTexture, nullptr, &dstSDLRect, texture.angle, nullptr,
                              flipAxis);
 }
 
-void Renderer::draw(const Circle& circle, const Color& color, const int thickness)
+void drawCircle(const Circle& circle, const Color& color, const int thickness)
 {
     if (circle.radius < 1)
         return;
 
-    SDL_SetRenderTarget(m_renderer, m_target);
-    SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a);
+    SDL_SetRenderDrawColor(_renderer, color.r, color.g, color.b, color.a);
 
     if (thickness == 1)
-        _circleThin(m_renderer, circle.pos - camera::getActivePos(), circle.radius, color);
+        _circleThin(_renderer, circle.pos - camera::getActivePos(), circle.radius, color);
     else
-        _circle(m_renderer, circle.pos - camera::getActivePos(), circle.radius, color, thickness);
+        _circle(_renderer, circle.pos - camera::getActivePos(), circle.radius, color, thickness);
 }
 
-void Renderer::draw(const Line& line, const Color& color, const int thickness)
+void drawLine(const Line& line, const Color& color, const int thickness)
 {
-    SDL_SetRenderTarget(m_renderer, m_target);
-
     const Vec2 cameraPos = camera::getActivePos();
     const auto x1 = static_cast<Sint16>(line.ax - cameraPos.x);
     const auto y1 = static_cast<Sint16>(line.ay - cameraPos.y);
@@ -304,15 +318,14 @@ void Renderer::draw(const Line& line, const Color& color, const int thickness)
     const auto y2 = static_cast<Sint16>(line.by - cameraPos.y);
 
     if (thickness <= 1)
-        lineRGBA(m_renderer, x1, y1, x2, y2, color.r, color.g, color.b, color.a);
+        lineRGBA(_renderer, x1, y1, x2, y2, color.r, color.g, color.b, color.a);
     else
-        thickLineRGBA(m_renderer, x1, y1, x2, y2, thickness, color.r, color.g, color.b, color.a);
+        thickLineRGBA(_renderer, x1, y1, x2, y2, thickness, color.r, color.g, color.b, color.a);
 }
 
-void Renderer::draw(Rect rect, const Color& color, const int thickness)
+void drawRect(Rect rect, const Color& color, const int thickness)
 {
-    SDL_SetRenderTarget(m_renderer, m_target);
-    SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a);
+    SDL_SetRenderDrawColor(_renderer, color.r, color.g, color.b, color.a);
 
     const Vec2 cameraPos = camera::getActivePos();
     rect.x -= cameraPos.x;
@@ -323,27 +336,130 @@ void Renderer::draw(Rect rect, const Color& color, const int thickness)
     const auto halfHeight = static_cast<int>(rect.h / 2.0);
     if (thickness <= 0 || thickness > halfWidth || thickness > halfHeight)
     {
-        SDL_RenderFillRect(m_renderer, &sdlRect);
+        SDL_RenderFillRect(_renderer, &sdlRect);
         return;
     }
 
-    SDL_RenderRect(m_renderer, &sdlRect);
+    SDL_RenderRect(_renderer, &sdlRect);
     for (int i = 1; i < thickness; i++)
     {
         rect.inflate({-2, -2});
         sdlRect = rect;
-        SDL_RenderRect(m_renderer, &sdlRect);
+        SDL_RenderRect(_renderer, &sdlRect);
     }
 }
 
-void Renderer::present()
+void drawRects(const std::vector<Rect>& rects, const Color& color, const int thickness)
 {
-    SDL_SetRenderTarget(m_renderer, nullptr);
-    SDL_RenderTexture(m_renderer, m_target, nullptr, nullptr);
-    SDL_RenderPresent(m_renderer);
+    if (rects.empty())
+        return;
+
+    SDL_SetRenderDrawColor(_renderer, color.r, color.g, color.b, color.a);
+
+    const Vec2 cameraPos = camera::getActivePos();
+
+    // Convert to SDL_FRect array with camera offset
+    std::vector<SDL_FRect> sdlRects;
+    sdlRects.reserve(rects.size());
+
+    for (const Rect& rect : rects)
+    {
+        SDL_FRect sdlRect;
+        sdlRect.x = rect.x - cameraPos.x;
+        sdlRect.y = rect.y - cameraPos.y;
+        sdlRect.w = rect.w;
+        sdlRect.h = rect.h;
+        sdlRects.push_back(sdlRect);
+    }
+
+    // For filled rectangles or thick outlines, use batch fill
+    if (thickness <= 0)
+    {
+        SDL_RenderFillRects(_renderer, sdlRects.data(), static_cast<int>(sdlRects.size()));
+    }
+    else
+    {
+        // For outlined rectangles, use batch outline
+        SDL_RenderRects(_renderer, sdlRects.data(), static_cast<int>(sdlRects.size()));
+
+        // For thick outlines, draw additional nested rectangles
+        if (thickness > 1)
+        {
+            for (int i = 1; i < thickness; i++)
+            {
+                std::vector<SDL_FRect> innerRects;
+                innerRects.reserve(rects.size());
+
+                for (const Rect& rect : rects)
+                {
+                    const auto halfWidth = static_cast<int>(rect.w / 2.0);
+                    const auto halfHeight = static_cast<int>(rect.h / 2.0);
+
+                    // Skip if thickness would exceed rectangle dimensions
+                    if (i >= halfWidth || i >= halfHeight)
+                        continue;
+
+                    SDL_FRect innerRect;
+                    innerRect.x = rect.x - cameraPos.x + i;
+                    innerRect.y = rect.y - cameraPos.y + i;
+                    innerRect.w = rect.w - (2 * i);
+                    innerRect.h = rect.h - (2 * i);
+                    innerRects.push_back(innerRect);
+                }
+
+                if (!innerRects.empty())
+                    SDL_RenderRects(_renderer, innerRects.data(),
+                                    static_cast<int>(innerRects.size()));
+            }
+        }
+    }
 }
 
-SDL_Renderer* Renderer::getSDL() const { return m_renderer; }
+void drawPolygon(const Polygon& polygon, const Color& color, const bool filled)
+{
+    const size_t size = polygon.points.size();
+    if (size == 0)
+        return;
+    if (size == 1)
+    {
+        drawPoint(polygon.points.at(0), color);
+        return;
+    }
+    if (size == 2)
+    {
+        drawLine({polygon.points.at(0), polygon.points.at(1)}, color);
+        return;
+    }
+
+    const Vec2 cameraPos = camera::getActivePos();
+
+    std::vector<Sint16> vx(size);
+    std::vector<Sint16> vy(size);
+    for (size_t i = 0; i < size; ++i)
+    {
+        vx[i] = static_cast<Sint16>(polygon.points.at(i).x - cameraPos.x);
+        vy[i] = static_cast<Sint16>(polygon.points.at(i).y - cameraPos.y);
+    }
+
+    if (filled)
+        filledPolygonRGBA(_renderer, vx.data(), vy.data(), static_cast<int>(size), color.r, color.g,
+                          color.b, color.a);
+    else
+        polygonRGBA(_renderer, vx.data(), vy.data(), static_cast<int>(size), color.r, color.g,
+                    color.b, color.a);
+}
+
+void present()
+{
+    SDL_SetRenderTarget(_renderer, nullptr);
+    SDL_RenderTexture(_renderer, _target, nullptr, nullptr);
+    SDL_RenderPresent(_renderer);
+    SDL_SetRenderTarget(_renderer, _target);
+}
+
+SDL_Renderer* get() { return _renderer; }
+
+} // namespace renderer
 
 void _circleThin(SDL_Renderer* renderer, Vec2 center, const int radius, const Color& color)
 {
