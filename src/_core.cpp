@@ -2,6 +2,7 @@
 #include "Circle.hpp"
 #include "Color.hpp"
 #include "Constants.hpp"
+#include "Draw.hpp"
 #include "Ease.hpp"
 #include "Event.hpp"
 #include "Gamepad.hpp"
@@ -37,6 +38,7 @@ Call this once you're done using the engine to avoid memory leaks.
     math::_bind(m);
     rect::_bind(m);
     texture::_bind(m);
+    polygon::_bind(m);
 
     camera::_bind(m);
     circle::_bind(m);
@@ -48,10 +50,11 @@ Call this once you're done using the engine to avoid memory leaks.
     key::_bind(m);
     line::_bind(m);
     mouse::_bind(m);
-    polygon::_bind(m);
     renderer::_bind(m);
     surface::_bind(m);
     kn::time::_bind(m);
     transform::_bind(m);
     window::_bind(m);
+
+    draw::_bind(m);
 }
