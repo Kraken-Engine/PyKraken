@@ -8,6 +8,7 @@ struct Color;
 class Rect;
 class Renderer;
 class Surface;
+enum class Anchor;
 
 namespace py = pybind11;
 
@@ -52,6 +53,10 @@ class Texture final
     void makeMultiply() const;
 
     void makeNormal() const;
+
+    void render(Rect dstRect, const Rect& srcRect);
+
+    void render(Vec2 pos, Anchor anchor);
 
     SDL_Texture* getSDL() const;
 

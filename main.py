@@ -2,12 +2,16 @@ import pykraken as kn
 # import random
 
 kn.init()
-kn.window.create("Kraken Example", (1200, 900))
+kn.window.create("Kraken Example", (320, 240), True)
 clock = kn.Clock()
 
 bg_color = kn.Color("#141414")
 
 # rects = [kn.Rect(kn.Vec2(random.randint(0, 1200), random.randint(0, 900)), kn.Vec2(10, 10)) for _ in range(100000)]
+
+surf = kn.Surface((20, 20))
+surf.fill("#fff")
+tex = kn.Texture(surf)
 
 timer = kn.Timer(0.1)
 timer.start()
@@ -24,7 +28,12 @@ while kn.window.is_open():
         timer.start()
         kn.window.set_title(f"FPS: {clock.get_fps()}")
 
-    kn.draw.polygon([kn.Vec2(600, 100), kn.Vec2(700, 200), kn.Vec2(500, 200)], "#FF0000", True)
+    # kn.draw.polygon([(100, 100), kn.mouse.get_pos(), (150, 200)], "#FF0000")
+
+    # Draw concave polygon
+    kn.draw.polygon([kn.mouse.get_pos(), (150, 50), (200, 100), (150, 150)], "#FF0000", True)
+
+    tex.render(kn.renderer.get_res() / 2, kn.CENTER)
 
     kn.renderer.present()
 

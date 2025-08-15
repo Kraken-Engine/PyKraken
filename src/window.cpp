@@ -4,11 +4,13 @@
 
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
+#include <algorithm>
+#include <cmath>
 #include <stdexcept>
 
 static SDL_Window* _window = nullptr;
 static bool _isOpen = false;
-static float _scale = 1.f;
+static int _scale = 1;
 
 namespace window
 {
@@ -122,10 +124,18 @@ void create(const std::string& title, const Vec2& res, const bool scaled)
         if (!SDL_GetDisplayUsableBounds(SDL_GetPrimaryDisplay(), &usableBounds))
             throw std::runtime_error(SDL_GetError());
 
-        winW = usableBounds.w;
-        winH = usableBounds.h;
+        // Calculate scale factors for both dimensions
+        double scaleX = usableBounds.w / res.x;
+        double scaleY = usableBounds.h / res.y;
 
-        _scale = static_cast<float>(winW) / res.x;
+        // Use the smaller scale to maintain aspect ratio
+        double minScale = std::min(scaleX, scaleY);
+        _scale = static_cast<int>(minScale);
+        if (fmod(minScale, 1.0) == 0.0)
+            _scale = static_cast<int>(minScale) - 1;
+
+        winW = static_cast<int>(res.x * _scale);
+        winH = static_cast<int>(res.y * _scale);
     }
     else
     {

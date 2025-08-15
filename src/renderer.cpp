@@ -1,10 +1,9 @@
 #include "Renderer.hpp"
-#include "Camera.hpp"
 #include "Color.hpp"
-#include "Rect.hpp"
-#include "Texture.hpp"
+#include "Math.hpp"
 #include "Window.hpp"
-#include "_globals.hpp"
+
+#include <iostream>
 
 static SDL_Renderer* _renderer = nullptr;
 static SDL_Texture* _target = nullptr;
@@ -32,34 +31,11 @@ This finalizes the current frame and displays it. Should be called after
 all drawing operations for the frame are complete.
     )doc");
 
-    subRenderer.def("get_resolution", &getResolution, R"doc(
+    subRenderer.def("get_res", &getResolution, R"doc(
 Get the resolution of the renderer.
 
 Returns:
     Vec2: The current rendering resolution as (width, height).
-    )doc");
-
-    subRenderer.def("draw_texture",
-                    py::overload_cast<const Texture&, Rect, const Rect&>(&drawTexture),
-                    py::arg("texture"), py::arg("dst_rect"), py::arg("src_rect") = Rect(), R"doc(
-Draw a texture with specified destination and source rectangles.
-
-Args:
-    texture (Texture): The texture to draw.
-    dst_rect (Rect): The destination rectangle on the renderer.
-    src_rect (Rect, optional): The source rectangle from the texture. 
-                              Defaults to entire texture if not specified.
-    )doc");
-
-    subRenderer.def("draw_texture", py::overload_cast<const Texture&, Vec2, Anchor>(&drawTexture),
-                    py::arg("texture"), py::arg("pos") = Vec2(), py::arg("anchor") = Anchor::CENTER,
-                    R"doc(
-Draw a texture at the specified position with anchor alignment.
-
-Args:
-    texture (Texture): The texture to draw.
-    pos (Vec2, optional): The position to draw at. Defaults to (0, 0).
-    anchor (Anchor, optional): The anchor point for positioning. Defaults to CENTER.
     )doc");
 }
 
@@ -97,83 +73,7 @@ void clear(const Color& color)
     SDL_RenderClear(_renderer);
 }
 
-Vec2 getResolution()
-{
-    int w, h;
-    SDL_GetRenderLogicalPresentation(_renderer, &w, &h, nullptr);
-    return {w, h};
-}
-
-void drawTexture(const Texture& texture, Rect dstRect, const Rect& srcRect)
-{
-    SDL_Texture* sdlTexture = texture.getSDL();
-
-    Vec2 cameraPos = camera::getActivePos();
-
-    SDL_FlipMode flipAxis = SDL_FLIP_NONE;
-    if (texture.flip.h)
-        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_HORIZONTAL);
-    if (texture.flip.v)
-        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_VERTICAL);
-
-    dstRect.x -= cameraPos.x;
-    dstRect.y -= cameraPos.y;
-    SDL_FRect dstSDLRect = dstRect;
-    SDL_FRect srcSDLRect = (srcRect.getSize() == Vec2()) ? texture.getRect() : srcRect;
-
-    SDL_RenderTextureRotated(_renderer, sdlTexture, &srcSDLRect, &dstSDLRect, texture.angle,
-                             nullptr, flipAxis);
-}
-
-void drawTexture(const Texture& texture, Vec2 pos, const Anchor anchor)
-{
-    SDL_Texture* sdlTexture = texture.getSDL();
-
-    Vec2 cameraPos = camera::getActivePos();
-
-    SDL_FlipMode flipAxis = SDL_FLIP_NONE;
-    if (texture.flip.h)
-        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_HORIZONTAL);
-    if (texture.flip.v)
-        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_VERTICAL);
-
-    pos -= cameraPos;
-    Rect rect = texture.getRect();
-    switch (anchor)
-    {
-    case Anchor::TOP_LEFT:
-        rect.setTopLeft(pos);
-        break;
-    case Anchor::TOP_MID:
-        rect.setTopMid(pos);
-        break;
-    case Anchor::TOP_RIGHT:
-        rect.setTopRight(pos);
-        break;
-    case Anchor::MID_LEFT:
-        rect.setMidLeft(pos);
-        break;
-    case Anchor::CENTER:
-        rect.setCenter(pos);
-        break;
-    case Anchor::MID_RIGHT:
-        rect.setMidRight(pos);
-        break;
-    case Anchor::BOTTOM_LEFT:
-        rect.setBottomLeft(pos);
-        break;
-    case Anchor::BOTTOM_MID:
-        rect.setBottomMid(pos);
-        break;
-    case Anchor::BOTTOM_RIGHT:
-        rect.setBottomRight(pos);
-        break;
-    }
-
-    SDL_FRect dstSDLRect = rect;
-    SDL_RenderTextureRotated(_renderer, sdlTexture, nullptr, &dstSDLRect, texture.angle, nullptr,
-                             flipAxis);
-}
+Vec2 getResolution() { return {_target->w, _target->h}; }
 
 void present()
 {

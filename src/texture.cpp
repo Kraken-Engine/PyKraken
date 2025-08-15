@@ -1,10 +1,12 @@
 #include "Texture.hpp"
+#include "Camera.hpp"
 #include "Color.hpp"
 #include "Math.hpp"
 #include "Rect.hpp"
 #include "Renderer.hpp"
 #include "Surface.hpp"
 #include "Window.hpp"
+#include "_globals.hpp"
 
 #include <SDL3_image/SDL_image.h>
 
@@ -126,7 +128,25 @@ creating darkening and shadow effects.
 Set the texture to use normal (alpha) blending mode.
 
 This is the default blending mode for standard transparency effects.
-        )doc");
+        )doc")
+        .def("render", py::overload_cast<Rect, const Rect&>(&Texture::render),
+             py::arg("rect"), py::arg("src") = Rect(), R"doc(
+Render this texture with specified destination and source rectangles.
+
+Args:
+    dst_rect (Rect): The destination rectangle on the renderer.
+    src_rect (Rect, optional): The source rectangle from the texture. 
+                              Defaults to entire texture if not specified.
+    )doc")
+        .def("render", py::overload_cast<Vec2, Anchor>(&Texture::render),
+             py::arg("pos") = Vec2(), py::arg("anchor") = Anchor::CENTER,
+             R"doc(
+Render this texture at the specified position with anchor alignment.
+
+Args:
+    pos (Vec2, optional): The position to draw at. Defaults to (0, 0).
+    anchor (Anchor, optional): The anchor point for positioning. Defaults to CENTER.
+    )doc");
 }
 } // namespace texture
 
@@ -225,3 +245,70 @@ void Texture::makeMultiply() const { SDL_SetTextureBlendMode(m_texPtr, SDL_BLEND
 void Texture::makeNormal() const { SDL_SetTextureBlendMode(m_texPtr, SDL_BLENDMODE_BLEND); }
 
 SDL_Texture* Texture::getSDL() const { return m_texPtr; }
+
+void Texture::render(Rect dstRect, const Rect& srcRect)
+{
+    Vec2 cameraPos = camera::getActivePos();
+
+    SDL_FlipMode flipAxis = SDL_FLIP_NONE;
+    if (this->flip.h)
+        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_HORIZONTAL);
+    if (this->flip.v)
+        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_VERTICAL);
+
+    dstRect.x -= cameraPos.x;
+    dstRect.y -= cameraPos.y;
+    SDL_FRect dstSDLRect = dstRect;
+    SDL_FRect srcSDLRect = (srcRect.getSize() == Vec2()) ? this->getRect() : srcRect;
+
+    SDL_RenderTextureRotated(renderer::get(), m_texPtr, &srcSDLRect, &dstSDLRect, this->angle,
+                             nullptr, flipAxis);
+}
+
+void Texture::render(Vec2 pos, const Anchor anchor)
+{
+    Vec2 cameraPos = camera::getActivePos();
+
+    SDL_FlipMode flipAxis = SDL_FLIP_NONE;
+    if (this->flip.h)
+        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_HORIZONTAL);
+    if (this->flip.v)
+        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_VERTICAL);
+
+    pos -= cameraPos;
+    Rect rect = this->getRect();
+    switch (anchor)
+    {
+    case Anchor::TOP_LEFT:
+        rect.setTopLeft(pos);
+        break;
+    case Anchor::TOP_MID:
+        rect.setTopMid(pos);
+        break;
+    case Anchor::TOP_RIGHT:
+        rect.setTopRight(pos);
+        break;
+    case Anchor::MID_LEFT:
+        rect.setMidLeft(pos);
+        break;
+    case Anchor::CENTER:
+        rect.setCenter(pos);
+        break;
+    case Anchor::MID_RIGHT:
+        rect.setMidRight(pos);
+        break;
+    case Anchor::BOTTOM_LEFT:
+        rect.setBottomLeft(pos);
+        break;
+    case Anchor::BOTTOM_MID:
+        rect.setBottomMid(pos);
+        break;
+    case Anchor::BOTTOM_RIGHT:
+        rect.setBottomRight(pos);
+        break;
+    }
+
+    SDL_FRect dstSDLRect = rect;
+    SDL_RenderTextureRotated(renderer::get(), m_texPtr, nullptr, &dstSDLRect, this->angle, nullptr,
+                             flipAxis);
+}
