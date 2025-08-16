@@ -29,11 +29,11 @@ Args:
     radius (float): The radius/distance from origin.
         )doc")
         .def(py::init(
-                 [](const py::sequence& s) -> PolarCoordinate*
+                 [](const py::sequence& s) -> PolarCoordinate
                  {
                      if (s.size() != 2)
                          throw std::runtime_error("PolarCoordinate expects a 2-element sequence");
-                     return new PolarCoordinate(s[0].cast<double>(), s[1].cast<double>());
+                     return {s[0].cast<double>(), s[1].cast<double>()};
                  }),
              R"doc(
 Create a PolarCoordinate from a sequence of two elements.
@@ -162,8 +162,8 @@ Returns:
             "__hash__",
             [](const PolarCoordinate& p) -> size_t
             {
-                std::size_t ha = std::hash<double>{}(p.angle);
-                std::size_t hr = std::hash<double>{}(p.radius);
+                size_t ha = std::hash<double>{}(p.angle);
+                size_t hr = std::hash<double>{}(p.radius);
                 return ha ^ (hr << 1);
             },
             R"doc(
@@ -197,11 +197,11 @@ Args:
     y (float): The y component.
         )doc")
         .def(py::init(
-                 [](py::sequence s) -> Vec2*
+                 [](py::sequence s) -> Vec2
                  {
                      if (s.size() != 2)
                          throw std::runtime_error("Vec2 requires a 2-element sequence");
-                     return new Vec2(s[0].cast<double>(), s[1].cast<double>());
+                     return {s[0].cast<double>(), s[1].cast<double>()};
                  }),
              R"doc(
 Create a Vec2 from a sequence of two elements.
@@ -299,190 +299,66 @@ Returns:
         )doc")
 
         // Arithmetic operators
-        .def(
-            "__add__",
-            [](const Vec2& a, const py::object& b) -> Vec2*
-            {
-                if (py::isinstance<Vec2>(b))
-                    return new Vec2(a + b.cast<Vec2>());
-                if (py::isinstance<py::sequence>(b))
-                {
-                    py::sequence seq = b.cast<py::sequence>();
-                    if (seq.size() == 2)
-                        return new Vec2(a + Vec2(seq[0].cast<double>(), seq[1].cast<double>()));
-                }
-
-                throw py::type_error(
-                    "Vec2 can only be added to another Vec2 or a sequence of 2 numbers");
-            },
-            py::arg("other"), R"doc(
-Add another Vec2 or sequence to this Vec2.
+        .def("__add__", &Vec2::operator+, py::arg("other"), R"doc(
+Add another Vec2 to this Vec2.
 
 Args:
-    other (Vec2 or sequence): The Vec2 or sequence [x, y] to add.
+    other (Vec2): The Vec2 to add.
 
 Returns:
     Vec2: A new Vec2 with the result of the addition.
-
-Raises:
-    TypeError: If other is not a Vec2 or 2-element sequence.
         )doc")
-        .def(
-            "__radd__",
-            [](const Vec2& b, const py::object& a) -> Vec2*
-            {
-                if (py::isinstance<Vec2>(a))
-                    return new Vec2(a.cast<Vec2>() + b);
-                if (py::isinstance<py::sequence>(a))
-                {
-                    py::sequence seq = a.cast<py::sequence>();
-                    if (seq.size() == 2)
-                        return new Vec2(Vec2(seq[0].cast<double>(), seq[1].cast<double>()) + b);
-                }
-
-                throw py::type_error(
-                    "Vec2 can only be added to another Vec2 or a sequence of 2 numbers");
-            },
-            py::arg("other"), R"doc(
+        .def("__radd__", &Vec2::operator+, py::arg("other"), R"doc(
 Right-hand addition (other + self).
 
 Args:
-    other (Vec2 or sequence): The Vec2 or sequence [x, y] to add.
+    other (Vec2): The Vec2 to add.
 
 Returns:
     Vec2: A new Vec2 with the result of the addition.
-
-Raises:
-    TypeError: If other is not a Vec2 or 2-element sequence.
         )doc")
-        .def(
-            "__iadd__",
-            [](Vec2& a, const py::object& b) -> Vec2&
-            {
-                if (py::isinstance<Vec2>(b))
-                {
-                    a += b.cast<Vec2>();
-                    return a;
-                }
-                if (py::isinstance<py::sequence>(b))
-                {
-                    py::sequence seq = b.cast<py::sequence>();
-                    if (seq.size() == 2)
-                    {
-                        a += Vec2(seq[0].cast<double>(), seq[1].cast<double>());
-                        return a;
-                    }
-                }
-
-                throw py::type_error(
-                    "Vec2 can only be added to another Vec2 or a sequence of 2 numbers");
-            },
-            py::arg("other"), R"doc(
+        .def("__iadd__", &Vec2::operator+=, py::arg("other"), R"doc(
 In-place addition (self += other).
 
 Args:
-    other (Vec2 or sequence): The Vec2 or sequence [x, y] to add.
+    other (Vec2): The Vec2 to add.
 
 Returns:
     Vec2: Reference to self after modification.
-
-Raises:
-    TypeError: If other is not a Vec2 or 2-element sequence.
         )doc")
 
-        .def(
-            "__sub__",
-            [](const Vec2& a, const py::object& b) -> Vec2*
-            {
-                if (py::isinstance<Vec2>(b))
-                    return new Vec2(a - b.cast<Vec2>());
-                if (py::isinstance<py::sequence>(b))
-                {
-                    py::sequence seq = b.cast<py::sequence>();
-                    if (seq.size() == 2)
-                        return new Vec2(a - Vec2(seq[0].cast<double>(), seq[1].cast<double>()));
-                }
-
-                throw py::type_error(
-                    "Vec2 can only be subtracted by another Vec2 or a sequence of 2 numbers");
-            },
-            py::arg("other"), R"doc(
-Subtract another Vec2 or sequence from this Vec2.
+        .def("__sub__", py::overload_cast<const Vec2&>(&Vec2::operator-, py::const_),
+             py::arg("other"), R"doc(
+Subtract another Vec2 from this Vec2.
 
 Args:
-    other (Vec2 or sequence): The Vec2 or sequence [x, y] to subtract.
+    other (Vec2): The Vec2 to subtract.
 
 Returns:
     Vec2: A new Vec2 with the result of the subtraction.
-
-Raises:
-    TypeError: If other is not a Vec2 or 2-element sequence.
         )doc")
         .def(
-            "__rsub__",
-            [](const Vec2& b, const py::object& a) -> Vec2*
-            {
-                if (py::isinstance<Vec2>(a))
-                    return new Vec2(a.cast<Vec2>() - b);
-                if (py::isinstance<py::sequence>(a))
-                {
-                    py::sequence seq = a.cast<py::sequence>();
-                    if (seq.size() == 2)
-                        return new Vec2(Vec2(seq[0].cast<double>(), seq[1].cast<double>()) - b);
-                }
-
-                throw py::type_error(
-                    "Vec2 can only be subtracted by another Vec2 or a sequence of 2 numbers");
-            },
+            "__rsub__", [](const Vec2& self, const Vec2& other) -> Vec2 { return other - self; },
             py::arg("other"), R"doc(
 Right-hand subtraction (other - self).
 
 Args:
-    other (Vec2 or sequence): The Vec2 or sequence [x, y] to subtract from.
+    other (Vec2): The Vec2 to subtract from.
 
 Returns:
     Vec2: A new Vec2 with the result of the subtraction.
-
-Raises:
-    TypeError: If other is not a Vec2 or 2-element sequence.
         )doc")
-        .def(
-            "__isub__",
-            [](Vec2& a, const py::object& b) -> Vec2&
-            {
-                if (py::isinstance<Vec2>(b))
-                {
-                    a -= b.cast<Vec2>();
-                    return a;
-                }
-                if (py::isinstance<py::sequence>(b))
-                {
-                    py::sequence seq = b.cast<py::sequence>();
-                    if (seq.size() == 2)
-                    {
-                        a -= Vec2(seq[0].cast<double>(), seq[1].cast<double>());
-                        return a;
-                    }
-                }
-
-                throw py::type_error(
-                    "Vec2 can only be subtracted by another Vec2 or a sequence of 2 numbers");
-            },
-            py::arg("other"), R"doc(
+        .def("__isub__", &Vec2::operator-=, py::arg("other"), R"doc(
 In-place subtraction (self -= other).
 
 Args:
-    other (Vec2 or sequence): The Vec2 or sequence [x, y] to subtract.
+    other (Vec2): The Vec2 to subtract.
 
 Returns:
     Vec2: Reference to self after modification.
-
-Raises:
-    TypeError: If other is not a Vec2 or 2-element sequence.
         )doc")
 
-        .def(
-            "__neg__", [](const Vec2& v) -> Vec2* { return new Vec2(-v); }, R"doc(
+        .def("__neg__", py::overload_cast<>(&Vec2::operator-, py::const_), R"doc(
 Return the negation of this vector (-self).
 
 Returns:
@@ -545,7 +421,7 @@ Returns:
 
         .def(
             "__hash__",
-            [](const Vec2& v)
+            [](const Vec2& v) -> size_t
             {
                 std::size_t hx = std::hash<double>{}(v.x);
                 std::size_t hy = std::hash<double>{}(v.y);
@@ -729,8 +605,8 @@ Args:
 Returns:
     float: The clamped value.
         )doc");
-    subMath.def("lerp", static_cast<Vec2 (*)(const Vec2&, const Vec2&, double)>(&lerp),
-                py::arg("a"), py::arg("b"), py::arg("t"), R"doc(
+    subMath.def("lerp", py::overload_cast<const Vec2&, const Vec2&, double>(&lerp), py::arg("a"),
+                py::arg("b"), py::arg("t"), R"doc(
 Linearly interpolate between two Vec2s.
 
 Args:
@@ -741,7 +617,7 @@ Args:
 Returns:
     Vec2: The interpolated vector.
         )doc");
-    subMath.def("lerp", static_cast<double (*)(double, double, double)>(&lerp), py::arg("a"),
+    subMath.def("lerp", py::overload_cast<double, double, double>(&lerp), py::arg("a"),
                 py::arg("b"), py::arg("t"), R"doc(
 Linearly interpolate between two values.
 
@@ -822,36 +698,37 @@ Returns:
 
 Vec2 scaleToLength(const Vec2& vec, double scalar)
 {
-    const double length = vec.getLength();
-    if (length == 0.0)
+    if (vec.x == 0.0 && vec.y == 0.0 || scalar == 1.0)
         return vec;
 
-    const double scale = scalar / length;
-    return Vec2(vec.x * scale, vec.y * scale);
+    if (scalar == 0.0)
+        return {};
+
+    const double scale = scalar / vec.getLength();
+    return {vec.x * scale, vec.y * scale};
 }
 
 Vec2 fromPolar(double rad, double radius)
 {
-    return Vec2(radius * std::cos(rad), radius * std::sin(rad));
+    return {radius * std::cos(rad), radius * std::sin(rad)};
 }
 
 Vec2 fromPolar(const PolarCoordinate& polar) { return fromPolar(polar.angle, polar.radius); }
 
-Vec2 normalize(const Vec2& vec)
+Vec2 normalize(Vec2 vec)
 {
-    auto newVec = vec;
-    newVec.normalize();
-    return newVec;
+    vec.normalize();
+    return vec;
 }
 
 Vec2 clampVec(const Vec2& vec, const Vec2& min, const Vec2& max)
 {
-    return Vec2(std::clamp(vec.x, min.x, max.x), std::clamp(vec.y, min.y, max.y));
+    return {std::clamp(vec.x, min.x, max.x), std::clamp(vec.y, min.y, max.y)};
 }
 
 Vec2 lerp(const Vec2& a, const Vec2& b, double t)
 {
-    return Vec2(lerp(a.x, b.x, t), lerp(a.y, b.y, t));
+    return {lerp(a.x, b.x, t), lerp(a.y, b.y, t)};
 }
 
 double lerp(double a, double b, double t) { return a + (b - a) * t; }
@@ -897,7 +774,7 @@ bool PolarCoordinate::operator==(const PolarCoordinate& other) const
 
 bool PolarCoordinate::operator!=(const PolarCoordinate& other) const { return !(*this == other); }
 
-Vec2* Vec2::copy() const { return new Vec2(x, y); }
+Vec2 Vec2::copy() const { return {x, y}; }
 
 bool Vec2::isZero(double tolerance) const
 {
@@ -927,41 +804,40 @@ PolarCoordinate Vec2::toPolar() const { return {getAngle(), getLength()}; }
 
 void Vec2::scaleToLength(const double scalar)
 {
-    const double length = getLength();
-    if (length == 0.0)
+    if (x == 0.0 && y == 0.0 || scalar == 1.0)
         return;
 
-    const double scale = scalar / length;
+    if (scalar == 0.0)
+    {
+        x = 0.0;
+        y = 0.0;
+        return;
+    }
+
+    const double scale = scalar / getLength();
     x *= scale;
     y *= scale;
 }
 
 Vec2 Vec2::project(const Vec2& other) const
 {
-    const double lenSq = other.x * other.x + other.y * other.y;
-    if (lenSq == 0.0)
+    if (x == 0.0 && y == 0.0)
         return {};
-    return other * (math::dot(*this, other) / lenSq);
+
+    const double lenSq = other.x * other.x + other.y * other.y;
+    return other * math::dot(*this, other) / lenSq;
 }
 
-Vec2 Vec2::reject(const Vec2& other) const
-{
-    const Vec2 projection = project(other);
-    return *this - projection;
-}
+Vec2 Vec2::reject(const Vec2& other) const { return *this - project(other); }
 
-Vec2 Vec2::reflect(const Vec2& other) const
-{
-    const Vec2 projection = project(other) * 2.0;
-    return *this - projection;
-}
+Vec2 Vec2::reflect(const Vec2& other) const { return *this - project(other) * 2.0; }
 
 void Vec2::normalize()
 {
-    const double length = getLength();
-    if (length == 0.0)
+    if (x == 0.0 && y == 0.0)
         return;
 
+    const double length = getLength();
     x /= length;
     y /= length;
 }

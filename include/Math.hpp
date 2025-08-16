@@ -1,14 +1,12 @@
 #pragma once
 
 #include <pybind11/pybind11.h>
-
-namespace py = pybind11;
-
-struct SDL_Point;
-struct SDL_FPoint;
+#include <SDL3/SDL.h>
 
 class PolarCoordinate;
 class Vec2;
+
+namespace py = pybind11;
 
 namespace math
 {
@@ -20,7 +18,7 @@ Vec2 fromPolar(double rad, double radius);
 
 Vec2 fromPolar(const PolarCoordinate& polar);
 
-Vec2 normalize(const Vec2& vec);
+Vec2 normalize(Vec2 vec);
 
 Vec2 clampVec(const Vec2& vec, const Vec2& min, const Vec2& max);
 
@@ -66,6 +64,7 @@ class Vec2
     double y = 0.0;
 
     Vec2() = default;
+    ~Vec2() = default;
 
     template <typename T>
     Vec2(T value) : x(static_cast<double>(value)), y(static_cast<double>(value))
@@ -74,7 +73,7 @@ class Vec2
 
     template <typename T> Vec2(T x, T y) : x(static_cast<double>(x)), y(static_cast<double>(y)) {}
 
-    Vec2* copy() const;
+    Vec2 copy() const;
 
     bool isZero(double tolerance = 1e-8) const;
 

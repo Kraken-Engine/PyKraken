@@ -9,6 +9,11 @@ namespace kn::time
 {
 void _bind(py::module_& module);
 
+double getElapsed();
+
+void delay(uint64_t ms);
+} // namespace kn::time
+
 class Clock
 {
   public:
@@ -55,8 +60,3 @@ class Timer
     std::chrono::steady_clock::time_point m_startTime;
     std::chrono::steady_clock::time_point m_pauseTime;
 };
-
-double getElapsed();
-
-void delay(uint64_t ms);
-} // namespace kn::time

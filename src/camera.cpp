@@ -11,12 +11,24 @@ Represents a 2D camera used for rendering.
 
 Controls the viewport's translation, allowing you to move the view of the world.
     )doc")
+        .def(py::init(), R"doc(
+Create a camera at the default position (0, 0).
 
-        .def(py::init<const Vec2&>(), py::arg("pos") = Vec2(), R"doc(
+Returns:
+    Camera: A new camera instance.
+        )doc")
+        .def(py::init<const Vec2&>(), py::arg("pos"), R"doc(
 Create a camera at the given position.
 
 Args:
-    pos (Vec2, optional): The camera's initial position. Default set to (0, 0).
+    pos (Vec2): The camera's initial position.
+        )doc")
+        .def(py::init<double, double>(), py::arg("x"), py::arg("y"), R"doc(
+Create a camera at the given position.
+
+Args:
+    x (float): The x-coordinate of the camera's initial position.
+    y (float): The y-coordinate of the camera's initial position.
         )doc")
 
         .def_property("pos", &Camera::getPos, &Camera::setPos, R"doc(
@@ -36,10 +48,13 @@ Only one camera can be active at a time.
 }
 
 Vec2 getActivePos() { return _cameraPos; }
+} // namespace camera
 
 Camera* Camera::active = nullptr;
 
 Camera::Camera(const Vec2& pos) : pos(pos) {}
+
+Camera::Camera(double x, double y) : pos(x, y) {}
 
 void Camera::setPos(const Vec2& pos)
 {
@@ -55,4 +70,3 @@ void Camera::set()
     Camera::active = this;
     _cameraPos = pos;
 }
-} // namespace camera

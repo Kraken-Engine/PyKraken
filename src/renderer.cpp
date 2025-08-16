@@ -3,8 +3,6 @@
 #include "Math.hpp"
 #include "Window.hpp"
 
-#include <iostream>
-
 static SDL_Renderer* _renderer = nullptr;
 static SDL_Texture* _target = nullptr;
 
@@ -14,7 +12,8 @@ void _bind(py::module_& module)
 {
     auto subRenderer = module.def_submodule("renderer", "Functions for rendering graphics");
 
-    subRenderer.def("clear", &clear, py::arg("color") = Color{0, 0, 0, 255}, R"doc(
+    subRenderer.def("clear", py::overload_cast<py::object>(&clear), py::arg("color") = py::none(),
+                    R"doc(
 Clear the renderer with the specified color.
 
 Args:
@@ -22,6 +21,17 @@ Args:
 
 Raises:
     ValueError: If color values are not between 0 and 255.
+    )doc");
+
+    subRenderer.def("clear", py::overload_cast<uint8_t, uint8_t, uint8_t, uint8_t>(&clear),
+                    py::arg("r"), py::arg("g"), py::arg("b"), py::arg("a") = 255, R"doc(
+Clear the renderer with the specified color.
+
+Args:
+    r (int): Red component (0-255).
+    g (int): Green component (0-255).
+    b (int): Blue component (0-255).
+    a (int, optional): Alpha component (0-255). Defaults to 255.
     )doc");
 
     subRenderer.def("present", &present, R"doc(
@@ -64,12 +74,31 @@ void quit()
     }
 }
 
-void clear(const Color& color)
+void clear(py::object color)
 {
-    if (!color._isValid())
+    Color knColor;
+    if (!color.is_none())
+    {
+        try
+        {
+            knColor = color.cast<Color>();
+        }
+        catch (const py::cast_error&)
+        {
+            throw std::invalid_argument("Expected Color object, convertible sequence, or None");
+        }
+    }
+
+    if (!knColor._isValid())
         throw std::invalid_argument("Color values must be between 0 and 255");
 
-    SDL_SetRenderDrawColor(_renderer, color.r, color.g, color.b, color.a);
+    SDL_SetRenderDrawColor(_renderer, knColor.r, knColor.g, knColor.b, knColor.a);
+    SDL_RenderClear(_renderer);
+}
+
+void clear(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+{
+    SDL_SetRenderDrawColor(_renderer, r, g, b, a);
     SDL_RenderClear(_renderer);
 }
 

@@ -71,12 +71,11 @@ The flip settings for horizontal and vertical mirroring.
 Controls whether the texture is flipped horizontally and/or vertically during rendering.
         )doc")
 
-        .def(
-            "get_size", [](Texture& self) -> py::tuple { return self.getSize(); }, R"doc(
+        .def("get_size", &Texture::getSize, R"doc(
 Get the size of the texture.
 
 Returns:
-    tuple[float, float]: The texture size as (width, height).
+    Vec2: The texture size as (width, height).
         )doc")
         .def("get_rect", &Texture::getRect, R"doc(
 Get a rectangle representing the texture bounds.
@@ -129,8 +128,8 @@ Set the texture to use normal (alpha) blending mode.
 
 This is the default blending mode for standard transparency effects.
         )doc")
-        .def("render", py::overload_cast<Rect, const Rect&>(&Texture::render),
-             py::arg("rect"), py::arg("src") = Rect(), R"doc(
+        .def("render", py::overload_cast<Rect, py::object>(&Texture::render), py::arg("rect"),
+             py::arg("src") = py::none(), R"doc(
 Render this texture with specified destination and source rectangles.
 
 Args:
@@ -138,8 +137,8 @@ Args:
     src_rect (Rect, optional): The source rectangle from the texture. 
                               Defaults to entire texture if not specified.
     )doc")
-        .def("render", py::overload_cast<Vec2, Anchor>(&Texture::render),
-             py::arg("pos") = Vec2(), py::arg("anchor") = Anchor::CENTER,
+        .def("render", py::overload_cast<py::object, Anchor>(&Texture::render),
+             py::arg("pos") = py::none(), py::arg("anchor") = Anchor::CENTER,
              R"doc(
 Render this texture at the specified position with anchor alignment.
 
@@ -246,8 +245,25 @@ void Texture::makeNormal() const { SDL_SetTextureBlendMode(m_texPtr, SDL_BLENDMO
 
 SDL_Texture* Texture::getSDL() const { return m_texPtr; }
 
-void Texture::render(Rect dstRect, const Rect& srcRect)
+void Texture::render(Rect dstRect, py::object srcRect)
 {
+    SDL_FRect srcSDLRect;
+    if (!srcRect.is_none())
+    {
+        try
+        {
+            srcSDLRect = srcRect.cast<Rect>();
+        }
+        catch (const py::cast_error&)
+        {
+            throw std::runtime_error("srcRect must be a Rect");
+        }
+    }
+    else
+    {
+        srcSDLRect = this->getRect();
+    }
+
     Vec2 cameraPos = camera::getActivePos();
 
     SDL_FlipMode flipAxis = SDL_FLIP_NONE;
@@ -259,15 +275,25 @@ void Texture::render(Rect dstRect, const Rect& srcRect)
     dstRect.x -= cameraPos.x;
     dstRect.y -= cameraPos.y;
     SDL_FRect dstSDLRect = dstRect;
-    SDL_FRect srcSDLRect = (srcRect.getSize() == Vec2()) ? this->getRect() : srcRect;
 
     SDL_RenderTextureRotated(renderer::get(), m_texPtr, &srcSDLRect, &dstSDLRect, this->angle,
                              nullptr, flipAxis);
 }
 
-void Texture::render(Vec2 pos, const Anchor anchor)
+void Texture::render(py::object pos, const Anchor anchor)
 {
-    Vec2 cameraPos = camera::getActivePos();
+    Vec2 drawPos;
+    if (!pos.is_none())
+    {
+        try
+        {
+            drawPos = pos.cast<Vec2>();
+        }
+        catch (const py::cast_error&)
+        {
+            throw std::runtime_error("pos must be a Vec2");
+        }
+    }
 
     SDL_FlipMode flipAxis = SDL_FLIP_NONE;
     if (this->flip.h)
@@ -275,40 +301,40 @@ void Texture::render(Vec2 pos, const Anchor anchor)
     if (this->flip.v)
         flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_VERTICAL);
 
-    pos -= cameraPos;
+    drawPos -= camera::getActivePos();
     Rect rect = this->getRect();
     switch (anchor)
     {
     case Anchor::TOP_LEFT:
-        rect.setTopLeft(pos);
+        rect.setTopLeft(drawPos);
         break;
     case Anchor::TOP_MID:
-        rect.setTopMid(pos);
+        rect.setTopMid(drawPos);
         break;
     case Anchor::TOP_RIGHT:
-        rect.setTopRight(pos);
+        rect.setTopRight(drawPos);
         break;
     case Anchor::MID_LEFT:
-        rect.setMidLeft(pos);
+        rect.setMidLeft(drawPos);
         break;
     case Anchor::CENTER:
-        rect.setCenter(pos);
+        rect.setCenter(drawPos);
         break;
     case Anchor::MID_RIGHT:
-        rect.setMidRight(pos);
+        rect.setMidRight(drawPos);
         break;
     case Anchor::BOTTOM_LEFT:
-        rect.setBottomLeft(pos);
+        rect.setBottomLeft(drawPos);
         break;
     case Anchor::BOTTOM_MID:
-        rect.setBottomMid(pos);
+        rect.setBottomMid(drawPos);
         break;
     case Anchor::BOTTOM_RIGHT:
-        rect.setBottomRight(pos);
+        rect.setBottomRight(drawPos);
         break;
     }
 
-    SDL_FRect dstSDLRect = rect;
+    const SDL_FRect dstSDLRect = rect;
     SDL_RenderTextureRotated(renderer::get(), m_texPtr, nullptr, &dstSDLRect, this->angle, nullptr,
                              flipAxis);
 }

@@ -25,7 +25,7 @@ Args:
         )doc")
 
         .def(py::init(
-                 [](const py::sequence& pointsSeq) -> Polygon*
+                 [](const py::sequence& pointsSeq) -> Polygon
                  {
                      std::vector<Vec2> points;
                      for (auto item : pointsSeq)
@@ -48,7 +48,7 @@ Args:
                                  "Points must be Vec2 objects or 2-element sequences");
                          }
                      }
-                     return new Polygon(points);
+                     return {points};
                  }),
              py::arg("points"), R"doc(
 Create a polygon from a sequence of points.
@@ -69,7 +69,7 @@ Return an iterator over the polygon's points.
 
         .def(
             "__getitem__",
-            [](const Polygon& polygon, size_t i) -> const Vec2&
+            [](const Polygon& polygon, size_t i) -> Vec2
             {
                 if (i >= polygon.points.size())
                     throw py::index_error("Index out of range");
@@ -114,4 +114,4 @@ Returns:
 
 Polygon::Polygon(const std::vector<Vec2>& points) : points(points) {}
 
-Polygon* Polygon::copy() const { return new Polygon(points); }
+Polygon Polygon::copy() const { return {points}; }

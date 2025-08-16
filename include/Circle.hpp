@@ -42,7 +42,7 @@ class Circle
 
     Rect asRect() const;
 
-    Circle* copy() const;
+    Circle copy() const;
 
     bool operator==(const Circle& other) const;
     bool operator!=(const Circle& other) const;

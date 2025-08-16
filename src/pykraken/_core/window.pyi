@@ -36,7 +36,7 @@ def get_scale() -> float:
     Raises:
         RuntimeError: If the window is not initialized.
     """
-def get_size() -> tuple:
+def get_size() -> pykraken._core.Vec2:
     """
     Get the current size of the window.
     

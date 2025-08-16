@@ -50,13 +50,14 @@ Args:
     size (Vec2): The size as a Vec2 (width, height).
         )doc")
         .def(py::init(
-                 [](const py::sequence& s) -> Rect*
+                 [](const py::sequence& s) -> Rect
                  {
                      if (s.size() != 4)
                          throw std::runtime_error(
                              "Rect((x, y, w, h)) expects a 4-element sequence");
-                     return new Rect{s[0].cast<double>(), s[1].cast<double>(), s[2].cast<double>(),
-                                     s[3].cast<double>()};
+
+                     return {s[0].cast<double>(), s[1].cast<double>(), s[2].cast<double>(),
+                             s[3].cast<double>()};
                  }),
              R"doc(
 Create a Rect from a sequence of four elements.
@@ -93,53 +94,35 @@ The y coordinate of the top edge.
         .def_property("bottom", &Rect::getBottom, &Rect::setBottom, R"doc(
 The y coordinate of the bottom edge.
         )doc")
-        .def_property(
-            "size", [](Rect& self) -> py::tuple { return self.getSize(); }, &Rect::setSize, R"doc(
+        .def_property("size", &Rect::getSize, &Rect::setSize, R"doc(
 The size of the rectangle as (width, height).
         )doc")
-        .def_property(
-            "top_left", [](Rect& self) -> py::tuple { return self.getTopLeft(); },
-            &Rect::setTopLeft, R"doc(
+        .def_property("top_left", &Rect::getTopLeft, &Rect::setTopLeft, R"doc(
 The position of the top-left corner as (x, y).
         )doc")
-        .def_property(
-            "top_mid", [](Rect& self) -> py::tuple { return self.getTopMid(); }, &Rect::setTopMid,
-            R"doc(
+        .def_property("top_mid", &Rect::getTopMid, &Rect::setTopMid, R"doc(
 The position of the top-middle point as (x, y).
         )doc")
-        .def_property(
-            "top_right", [](Rect& self) -> py::tuple { return self.getTopRight(); },
-            &Rect::setTopRight, R"doc(
+        .def_property("top_right", &Rect::getTopRight, &Rect::setTopRight, R"doc(
 The position of the top-right corner as (x, y).
         )doc")
-        .def_property(
-            "mid_left", [](Rect& self) -> py::tuple { return self.getMidLeft(); },
-            &Rect::setMidLeft, R"doc(
+        .def_property("mid_left", &Rect::getMidLeft, &Rect::setMidLeft, R"doc(
 The position of the middle-left point as (x, y).
         )doc")
-        .def_property(
-            "center", [](Rect& self) -> py::tuple { return self.getCenter(); }, &Rect::setCenter,
-            R"doc(
+        .def_property("center", &Rect::getCenter, &Rect::setCenter,
+                      R"doc(
 The position of the center point as (x, y).
         )doc")
-        .def_property(
-            "mid_right", [](Rect& self) -> py::tuple { return self.getMidRight(); },
-            &Rect::setMidRight, R"doc(
+        .def_property("mid_right", &Rect::getMidRight, &Rect::setMidRight, R"doc(
 The position of the middle-right point as (x, y).
         )doc")
-        .def_property(
-            "bottom_left", [](Rect& self) -> py::tuple { return self.getBottomLeft(); },
-            &Rect::setBottomLeft, R"doc(
+        .def_property("bottom_left", &Rect::getBottomLeft, &Rect::setBottomLeft, R"doc(
 The position of the bottom-left corner as (x, y).
         )doc")
-        .def_property(
-            "bottom_mid", [](Rect& self) -> py::tuple { return self.getBottomMid(); },
-            &Rect::setBottomMid, R"doc(
+        .def_property("bottom_mid", &Rect::getBottomMid, &Rect::setBottomMid, R"doc(
 The position of the bottom-middle point as (x, y).
         )doc")
-        .def_property(
-            "bottom_right", [](Rect& self) -> py::tuple { return self.getBottomRight(); },
-            &Rect::setBottomRight, R"doc(
+        .def_property("bottom_right", &Rect::getBottomRight, &Rect::setBottomRight, R"doc(
 The position of the bottom-right corner as (x, y).
         )doc")
 
@@ -484,7 +467,7 @@ Rect::Rect(const Vec2& pos, const double w, const double h) : x(pos.x), y(pos.y)
 
 Rect::Rect(const double x, const double y, const Vec2& size) : x(x), y(y), w(size.x), h(size.y) {}
 
-Rect* Rect::copy() const { return new Rect(x, y, w, h); }
+Rect Rect::copy() const { return {x, y, w, h}; }
 
 void Rect::move(const Vec2& offset)
 {

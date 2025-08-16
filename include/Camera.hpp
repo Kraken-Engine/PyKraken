@@ -11,11 +11,14 @@ namespace camera
 void _bind(py::module_& module);
 
 Vec2 getActivePos();
+} // namespace camera
 
 class Camera
 {
   public:
-    explicit Camera(const Vec2& pos = {});
+    Camera() = default;
+    explicit Camera(const Vec2& pos);
+    Camera(double x, double y);
     ~Camera() = default;
 
     Vec2 getPos() const;
@@ -27,4 +30,3 @@ class Camera
   private:
     Vec2 pos;
 };
-} // namespace camera

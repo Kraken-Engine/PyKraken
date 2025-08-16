@@ -95,7 +95,7 @@ Args:
     polygon (Polygon): The polygon to draw.
     color (Color): The color of the polygon.
     filled (bool, optional): Whether to draw a filled polygon or just the outline.
-                             Defaults to True (filled). Works with both convex and concave polygons.
+                             Defaults to False (outline). Works with both convex and concave polygons.
     )doc");
 }
 
@@ -119,13 +119,11 @@ void points(const std::vector<Vec2>& points, const Color& color)
 
     SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a);
 
-    const Vec2 cameraPos = camera::getActivePos();
-
     std::vector<SDL_FPoint> sdlPoints;
     sdlPoints.reserve(size);
 
     for (const Vec2& point : points)
-        sdlPoints.emplace_back(point - cameraPos);
+        sdlPoints.emplace_back(point - camera::getActivePos());
 
     if (!SDL_RenderPoints(rend, sdlPoints.data(), static_cast<int>(sdlPoints.size())))
         throw std::runtime_error("Failed to render points: " + std::string(SDL_GetError()));
@@ -213,9 +211,7 @@ void rects(const std::vector<Rect>& rects, const Color& color, const int thickne
 
     // For filled rectangles or thick outlines, use batch fill
     if (thickness <= 0)
-    {
         SDL_RenderFillRects(rend, sdlRects.data(), static_cast<int>(sdlRects.size()));
-    }
     else
     {
         // For outlined rectangles, use batch outline

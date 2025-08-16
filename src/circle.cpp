@@ -27,7 +27,7 @@ Args:
         )doc")
 
         .def(py::init(
-                 [](const py::sequence& prSeq) -> Circle*
+                 [](const py::sequence& prSeq) -> Circle
                  {
                      if (prSeq.size() != 2)
                          throw std::invalid_argument("Circle expects a 2-element sequence");
@@ -43,8 +43,7 @@ Args:
                      if (posSeq.size() != 2)
                          throw std::invalid_argument("Position must be a 2-element sequence");
 
-                     return new Circle({posSeq[0].cast<double>(), posSeq[1].cast<double>()},
-                                       radius);
+                     return {{posSeq[0].cast<double>(), posSeq[1].cast<double>()}, radius};
                  }),
              R"doc(
 Create a circle from a nested sequence: ([x, y], radius).
@@ -194,16 +193,14 @@ bool Circle::collideCircle(const Circle& circle) const
 
 bool Circle::collideRect(const Rect& rect) const
 {
-    const Vec2 closestPos = math::clampVec(pos, rect.getTopLeft(), rect.getBottomRight());
+    auto closestPos = math::clampVec(pos, rect.getTopLeft(), rect.getBottomRight());
     return (pos - closestPos).getLength() <= radius;
 }
 
 bool Circle::collideLine(const Line& line) const
 {
     const Vec2 a = line.getA();
-    const Vec2 b = line.getA();
-
-    const Vec2 ab = b - a;
+    const Vec2 ab = line.getB() - a;
     const Vec2 ac = pos - a;
 
     const double abLengthSquared = ab.getLengthSquared();
@@ -260,7 +257,7 @@ Rect Circle::asRect() const
     return rect;
 }
 
-Circle* Circle::copy() const { return new Circle(pos, radius); }
+Circle Circle::copy() const { return {pos, radius}; }
 
 bool Circle::operator==(const Circle& other) const
 {

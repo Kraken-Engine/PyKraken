@@ -48,31 +48,30 @@ Args:
     color (Color): The color to fill the surface with.
         )doc")
         .def("blit",
-             py::overload_cast<const Surface&, const Vec2&, Anchor, const Rect&>(&Surface::blit,
-                                                                                 py::const_),
-             py::arg("source"), py::arg("pos"), py::arg("anchor") = Anchor::CENTER,
-             py::arg("src_rect") = Rect(), R"doc(
+             py::overload_cast<const Surface&, const Vec2&, Anchor, py::object>(&Surface::blit,
+                                                                                py::const_),
+             py::arg("surface"), py::arg("pos"), py::arg("anchor") = Anchor::CENTER,
+             py::arg("src") = py::none(), R"doc(
 Blit (copy) another surface onto this surface at the specified position with anchor alignment.
 
 Args:
-    source (Surface): The source surface to blit from.
+    surface (Surface): The source surface to blit from.
     pos (Vec2): The position to blit to.
     anchor (Anchor, optional): The anchor point for positioning. Defaults to CENTER.
-    src_rect (Rect, optional): The source rectangle to blit from. Defaults to entire source surface.
+    src (Rect, optional): The source rectangle to blit from. Defaults to entire source surface.
 
 Raises:
     RuntimeError: If the blit operation fails.
         )doc")
-        .def(
-            "blit",
-            py::overload_cast<const Surface&, const Rect&, const Rect&>(&Surface::blit, py::const_),
-            py::arg("source"), py::arg("dst_rect"), py::arg("src_rect") = Rect(), R"doc(
+        .def("blit",
+             py::overload_cast<const Surface&, const Rect&, py::object>(&Surface::blit, py::const_),
+             py::arg("surface"), py::arg("dst"), py::arg("src") = py::none(), R"doc(
 Blit (copy) another surface onto this surface with specified destination and source rectangles.
 
 Args:
-    source (Surface): The source surface to blit from.
-    dst_rect (Rect): The destination rectangle on this surface.
-    src_rect (Rect, optional): The source rectangle to blit from. Defaults to entire source surface.
+    surface (Surface): The source surface to blit from.
+    dst (Rect): The destination rectangle on this surface.
+    src (Rect, optional): The source rectangle to blit from. Defaults to entire source surface.
 
 Raises:
     RuntimeError: If the blit operation fails.
@@ -208,8 +207,25 @@ void Surface::fill(const Color& color) const
 }
 
 void Surface::blit(const Surface& other, const Vec2& pos, const Anchor anchor,
-                   const Rect& srcRect) const
+                   py::object srcRect) const
 {
+    SDL_Rect srcSDL;
+    if (!srcRect.is_none())
+    {
+        try
+        {
+            srcSDL = srcRect.cast<Rect>();
+        }
+        catch (const py::cast_error&)
+        {
+            throw std::runtime_error("srcRect must be a Rect");
+        }
+    }
+    else
+    {
+        srcSDL = other.getRect();
+    }
+
     Rect dstRect = other.getRect();
     switch (anchor)
     {
@@ -243,16 +259,31 @@ void Surface::blit(const Surface& other, const Vec2& pos, const Anchor anchor,
     }
 
     SDL_Rect dstSDL = dstRect;
-    SDL_Rect srcSDL = (srcRect.getSize() == Vec2()) ? other.getRect() : srcRect;
 
     if (!SDL_BlitSurface(other.getSDL(), &srcSDL, m_surface, &dstSDL))
         throw std::runtime_error("Failed to blit surface: " + std::string(SDL_GetError()));
 }
 
-void Surface::blit(const Surface& other, const Rect& dstRect, const Rect& srcRect) const
+void Surface::blit(const Surface& other, const Rect& dstRect, py::object srcRect) const
 {
     SDL_Rect dstSDL = dstRect;
-    SDL_Rect srcSDL = (srcRect.getSize() == Vec2()) ? other.getRect() : srcRect;
+    SDL_Rect srcSDL;
+
+    if (!srcRect.is_none())
+    {
+        try
+        {
+            srcSDL = srcRect.cast<Rect>();
+        }
+        catch (const py::cast_error&)
+        {
+            throw std::runtime_error("srcRect must be a Rect");
+        }
+    }
+    else
+    {
+        srcSDL = other.getRect();
+    }
 
     if (!SDL_BlitSurface(other.getSDL(), &srcSDL, m_surface, &dstSDL))
         throw std::runtime_error("Failed to blit surface: " + std::string(SDL_GetError()));
@@ -331,7 +362,7 @@ Vec2 Surface::getSize() const { return {m_surface->w, m_surface->h}; }
 
 Rect Surface::getRect() const { return Rect(0, 0, m_surface->w, m_surface->h); }
 
-Surface* Surface::copy() const
+std::unique_ptr<Surface> Surface::copy() const
 {
     SDL_Surface* surfaceCopy = SDL_CreateSurface(m_surface->w, m_surface->h, m_surface->format);
     if (!surfaceCopy)
@@ -340,20 +371,9 @@ Surface* Surface::copy() const
     if (!SDL_BlitSurface(m_surface, nullptr, surfaceCopy, nullptr))
         throw std::runtime_error("Failed to blit surface copy: " + std::string(SDL_GetError()));
 
-    Surface* copy;
-    copy->setSDL(surfaceCopy);
+    auto copy = std::make_unique<Surface>();
+    copy->m_surface = surfaceCopy;
     return copy;
 }
 
 SDL_Surface* Surface::getSDL() const { return m_surface; }
-
-void Surface::setSDL(SDL_Surface* surface)
-{
-    if (m_surface)
-    {
-        SDL_DestroySurface(m_surface);
-        m_surface = nullptr;
-    }
-
-    m_surface = surface;
-}

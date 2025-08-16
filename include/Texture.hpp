@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SDL3/SDL.h>
+#include <memory>
 #include <pybind11/pybind11.h>
 #include <string>
 
@@ -9,10 +10,9 @@ class Rect;
 class Renderer;
 class Surface;
 enum class Anchor;
+class Vec2;
 
 namespace py = pybind11;
-
-class Vec2;
 
 namespace texture
 {
@@ -54,9 +54,11 @@ class Texture final
 
     void makeNormal() const;
 
-    void render(Rect dstRect, const Rect& srcRect);
+    void render(Rect dstRect, py::object srcRect);
 
-    void render(Vec2 pos, Anchor anchor);
+    void render(py::object pos, Anchor anchor);
+
+    std::unique_ptr<Texture> copy();
 
     SDL_Texture* getSDL() const;
 

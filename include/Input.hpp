@@ -37,7 +37,7 @@ void bindInput(const std::string& name, const std::vector<InputAction>& actions)
 void unbindInput(const std::string& name);
 
 Vec2 getDirection(const std::string& up = "", const std::string& right = "",
-                  const std::string& down = "", const std::string& left = "");
+                                   const std::string& down = "", const std::string& left = "");
 
 double getAxis(const std::string& negative = "", const std::string& positive = "");
 

@@ -125,6 +125,11 @@ Args:
         )doc");
 }
 
+double getElapsed() { return static_cast<double>(SDL_GetTicksNS()) / SDL_NS_PER_SECOND; }
+
+void delay(const uint64_t ms) { SDL_DelayNS(SDL_MS_TO_NS(ms)); }
+} // namespace kn::time
+
 Clock::Clock() : m_lastTick(SDL_GetTicksNS()) {}
 
 double Clock::tick(const uint16_t frameRate)
@@ -277,8 +282,3 @@ double Timer::progress() const
 
     return std::min(elapsed / m_duration, 1.0);
 }
-
-double getElapsed() { return static_cast<double>(SDL_GetTicksNS()) / SDL_NS_PER_SECOND; }
-
-void delay(const uint64_t ms) { SDL_DelayNS(SDL_MS_TO_NS(ms)); }
-} // namespace kn::time

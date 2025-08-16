@@ -7,33 +7,32 @@ clock = kn.Clock()
 
 bg_color = kn.Color("#141414")
 
-# rects = [kn.Rect(kn.Vec2(random.randint(0, 1200), random.randint(0, 900)), kn.Vec2(10, 10)) for _ in range(100000)]
+# points = [kn.Vec2(random.randint(0, 1200), random.randint(0, 900)) for _ in range(400000)]
 
-surf = kn.Surface((20, 20))
-surf.fill("#fff")
-tex = kn.Texture(surf)
+# rect1 = kn.Rect(100, 100, 20, 20)
+# rect2 = rect1.copy()
 
 timer = kn.Timer(0.1)
 timer.start()
 
+color = kn.Color("#FFFFFF")
+
 while kn.window.is_open():
-    dt = clock.tick()
+    clock.tick()
     kn.event.poll()
 
     kn.renderer.clear(bg_color)
 
-    # kn.draw.rects(rects, "#FFFFFF")
-    
+    # kn.draw.points(points, color)
+
     if timer.done:
         timer.start()
         kn.window.set_title(f"FPS: {clock.get_fps()}")
 
-    # kn.draw.polygon([(100, 100), kn.mouse.get_pos(), (150, 200)], "#FF0000")
-
-    # Draw concave polygon
+    # Concave polygon
     kn.draw.polygon([kn.mouse.get_pos(), (150, 50), (200, 100), (150, 150)], "#FF0000", True)
 
-    tex.render(kn.renderer.get_res() / 2, kn.CENTER)
+    # tex.render(kn.renderer.get_res() / 2, kn.CENTER)
 
     kn.renderer.present()
 

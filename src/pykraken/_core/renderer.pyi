@@ -3,8 +3,10 @@ Functions for rendering graphics
 """
 from __future__ import annotations
 import pykraken._core
+import typing
 __all__ = ['clear', 'get_res', 'present']
-def clear(color: pykraken._core.Color = ...) -> None:
+@typing.overload
+def clear(color: typing.Any = None) -> None:
     """
     Clear the renderer with the specified color.
     
@@ -13,6 +15,17 @@ def clear(color: pykraken._core.Color = ...) -> None:
     
     Raises:
         ValueError: If color values are not between 0 and 255.
+    """
+@typing.overload
+def clear(r: int, g: int, b: int, a: int = 255) -> None:
+    """
+    Clear the renderer with the specified color.
+    
+    Args:
+        r (int): Red component (0-255).
+        g (int): Green component (0-255).
+        b (int): Blue component (0-255).
+        a (int, optional): Alpha component (0-255). Defaults to 255.
     """
 def get_res() -> pykraken._core.Vec2:
     """

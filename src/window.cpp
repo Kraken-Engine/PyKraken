@@ -18,7 +18,7 @@ void _bind(pybind11::module_& module)
 {
     auto subWindow = module.def_submodule("window", "Window related functions");
 
-    subWindow.def("create", &window::create, py::arg("title"), py::arg("resolution"),
+    subWindow.def("create", &create, py::arg("title"), py::arg("resolution"),
                   py::arg("scaled") = false, R"doc(
 Create a window with specified title and size.
 
@@ -33,19 +33,19 @@ Raises:
     RuntimeError: If a window already exists or window creation fails.
     ValueError: If title is empty, exceeds 255 characters, or size values are <= 0.
     )doc");
-    subWindow.def("is_open", &window::isOpen, R"doc(
+    subWindow.def("is_open", &isOpen, R"doc(
 Check if the window is open.
 
 Returns:
     bool: True if the window is open and active.
     )doc");
-    subWindow.def("close", &window::close, R"doc(
+    subWindow.def("close", &close, R"doc(
 Close the window.
 
 Marks the window as closed, typically used to signal the main loop to exit.
 This doesn't destroy the window immediately but sets the close flag.
     )doc");
-    subWindow.def("set_fullscreen", &window::setFullscreen, py::arg("fullscreen"), R"doc(
+    subWindow.def("set_fullscreen", &setFullscreen, py::arg("fullscreen"), R"doc(
 Set the fullscreen mode of the window.
 
 Args:
@@ -54,7 +54,7 @@ Args:
 Raises:
     RuntimeError: If the window is not initialized.
     )doc");
-    subWindow.def("is_fullscreen", &window::isFullscreen, R"doc(
+    subWindow.def("is_fullscreen", &isFullscreen, R"doc(
 Check if the window is in fullscreen mode.
 
 Returns:
@@ -63,9 +63,8 @@ Returns:
 Raises:
     RuntimeError: If the window is not initialized.
     )doc");
-    subWindow.def(
-        "get_size", []() -> py::tuple { return getSize(); },
-        R"doc(
+    subWindow.def("get_size", &getSize,
+                  R"doc(
 Get the current size of the window.
 
 Returns:
@@ -74,7 +73,7 @@ Returns:
 Raises:
     RuntimeError: If the window is not initialized.
     )doc");
-    subWindow.def("get_scale", &window::getScale, R"doc(
+    subWindow.def("get_scale", &getScale, R"doc(
 Get the scale of the window relative to the renderer resolution.
 
 Returns:
@@ -83,7 +82,7 @@ Returns:
 Raises:
     RuntimeError: If the window is not initialized.
     )doc");
-    subWindow.def("get_title", &window::getTitle, R"doc(
+    subWindow.def("get_title", &getTitle, R"doc(
 Get the current title of the window.
 
 Returns:
@@ -92,7 +91,7 @@ Returns:
 Raises:
     RuntimeError: If the window is not initialized.
     )doc");
-    subWindow.def("set_title", &window::setTitle, py::arg("title"), R"doc(
+    subWindow.def("set_title", &setTitle, py::arg("title"), R"doc(
 Set the title of the window.
 
 Args:

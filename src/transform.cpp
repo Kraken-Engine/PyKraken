@@ -26,12 +26,12 @@ Returns:
 Raises:
     RuntimeError: If surface creation fails.
     )doc");
-    subTransform.def("scale", &scale, py::arg("surface"), py::arg("new_size"), R"doc(
-Resize a surface to a new size.
+    subTransform.def("scale_to", &scaleTo, py::arg("surface"), py::arg("size"), R"doc(
+Scale a surface to a new exact size.
 
 Args:
-    surface (Surface): The surface to resize.
-    new_size (Vec2): The target size as (width, height).
+    surface (Surface): The surface to scale.
+    size (Vec2): The target size as (width, height).
 
 Returns:
     Surface: A new surface scaled to the specified size.
@@ -39,7 +39,8 @@ Returns:
 Raises:
     RuntimeError: If surface creation or scaling fails.
     )doc");
-    subTransform.def("scale_by", &scaleBy, py::arg("surface"), py::arg("factor"), R"doc(
+    subTransform.def("scale_by", py::overload_cast<const Surface&, double>(&scaleBy),
+                     py::arg("surface"), py::arg("factor"), R"doc(
 Scale a surface by a given factor.
 
 Args:
@@ -142,7 +143,7 @@ Raises:
     )doc");
 }
 
-Surface* flip(const Surface& surface, const bool flipX, const bool flipY)
+std::unique_ptr<Surface> flip(const Surface& surface, const bool flipX, const bool flipY)
 {
     SDL_Surface* sdlSurface = surface.getSDL();
     SDL_Surface* flipped = SDL_CreateSurface(sdlSurface->w, sdlSurface->h, SDL_PIXELFORMAT_RGBA32);
@@ -164,15 +165,15 @@ Surface* flip(const Surface& surface, const bool flipX, const bool flipY)
             memcpy(dstPixel, srcPixel, bpp);
         }
 
-    return new Surface(flipped);
+    return std::make_unique<Surface>(flipped);
 }
 
-Surface* scale(const Surface& surface, const Vec2& newSize)
+std::unique_ptr<Surface> scaleTo(const Surface& surface, const Vec2& size)
 {
     SDL_Surface* sdlSurface = surface.getSDL();
 
-    const auto newW = static_cast<int>(newSize.x);
-    const auto newH = static_cast<int>(newSize.y);
+    const auto newW = static_cast<int>(size.x);
+    const auto newH = static_cast<int>(size.y);
 
     SDL_Surface* scaled = SDL_CreateSurface(newW, newH, SDL_PIXELFORMAT_RGBA32);
     if (!scaled)
@@ -185,21 +186,27 @@ Surface* scale(const Surface& surface, const Vec2& newSize)
         throw std::runtime_error("SDL_BlitScaled failed: " + std::string(SDL_GetError()));
     }
 
-    return new Surface(scaled);
+    return std::make_unique<Surface>(scaled);
 }
 
-Surface* scaleBy(const Surface& surface, const double factor)
+std::unique_ptr<Surface> scaleBy(const Surface& surface, const double factor)
+{
+    if (factor <= 0.0)
+        throw std::invalid_argument("Scale factor must be a positive value.");
+
+    return scaleTo(surface, surface.getSize() * factor);
+}
+
+std::unique_ptr<Surface> scaleBy(const Surface& surface, const Vec2& factor)
 {
     if (factor <= 0.0)
         throw std::invalid_argument("Scale factor must be a positive value.");
 
     const Vec2 originalSize = surface.getSize();
-    const Vec2 scaledSize = originalSize * factor;
-
-    return scale(surface, scaledSize);
+    return scaleTo(surface, {originalSize.x * factor.x, originalSize.y * factor.y});
 }
 
-Surface* rotate(const Surface& surface, const double angle)
+std::unique_ptr<Surface> rotate(const Surface& surface, const double angle)
 {
     SDL_Surface* sdlSurface = surface.getSDL();
     SDL_Surface* rotated =
@@ -207,10 +214,11 @@ Surface* rotate(const Surface& surface, const double angle)
     if (!rotated)
         throw std::runtime_error("Failed to rotate surface.");
 
-    return new Surface(rotated);
+    return std::make_unique<Surface>(rotated);
 }
 
-Surface* boxBlur(const Surface& surface, const int radius, const bool repeatEdgePixels)
+std::unique_ptr<Surface> boxBlur(const Surface& surface, const int radius,
+                                 const bool repeatEdgePixels)
 {
     SDL_Surface* src = surface.getSDL();
     const int width = src->w;
@@ -221,7 +229,7 @@ Surface* boxBlur(const Surface& surface, const int radius, const bool repeatEdge
     if (!temp || !result)
         throw std::runtime_error("Failed to create surfaces for box blur.");
 
-    auto clamp = [](const int v, const int low, const int high)
+    auto clamp = [](const int v, const int low, const int high) -> int
     { return std::max(low, std::min(v, high)); };
 
     auto* srcPx = static_cast<uint32_t*>(src->pixels);
@@ -284,10 +292,10 @@ Surface* boxBlur(const Surface& surface, const int radius, const bool repeatEdge
 
     SDL_DestroySurface(temp);
 
-    return new Surface(result);
+    return std::make_unique<Surface>(result);
 }
 
-Surface* gaussianBlur(const Surface& surface, int radius, bool repeatEdgePixels)
+std::unique_ptr<Surface> gaussianBlur(const Surface& surface, int radius, bool repeatEdgePixels)
 {
     SDL_Surface* src = surface.getSDL();
 
@@ -320,7 +328,7 @@ Surface* gaussianBlur(const Surface& surface, int radius, bool repeatEdgePixels)
     if (!result)
         throw std::runtime_error("Failed to create result surface for gaussian blur.");
 
-    auto clamp = [](int v, int low, int high) { return std::max(low, std::min(v, high)); };
+    auto clamp = [](int v, int low, int high) -> int { return std::max(low, std::min(v, high)); };
     Uint32* srcPx = static_cast<Uint32*>(src->pixels);
     Uint32* tmpPx = static_cast<Uint32*>(temp->pixels);
     Uint32* dstPx = static_cast<Uint32*>(result->pixels);
@@ -380,10 +388,10 @@ Surface* gaussianBlur(const Surface& surface, int radius, bool repeatEdgePixels)
 
     SDL_DestroySurface(temp);
 
-    return new Surface(result);
+    return std::make_unique<Surface>(result);
 }
 
-Surface* invert(const Surface& surface)
+std::unique_ptr<Surface> invert(const Surface& surface)
 {
     SDL_Surface* src = surface.getSDL();
 
@@ -408,10 +416,10 @@ Surface* invert(const Surface& surface)
         dstPx[i] = SDL_MapRGBA(resDetails, nullptr, 255 - r, 255 - g, 255 - b, a);
     }
 
-    return new Surface(result);
+    return std::make_unique<Surface>(result);
 }
 
-Surface* grayscale(const Surface& surface)
+std::unique_ptr<Surface> grayscale(const Surface& surface)
 {
     SDL_Surface* src = surface.getSDL();
 
@@ -437,6 +445,6 @@ Surface* grayscale(const Surface& surface)
         dstPx[i] = SDL_MapRGBA(resDetails, nullptr, gray, gray, gray, a);
     }
 
-    return new Surface(result);
+    return std::make_unique<Surface>(result);
 }
 } // namespace transform

@@ -21,5 +21,5 @@ class Polygon
     Polygon(const std::vector<Vec2>& points);
     ~Polygon() = default;
 
-    Polygon* copy() const;
+    Polygon copy() const;
 };

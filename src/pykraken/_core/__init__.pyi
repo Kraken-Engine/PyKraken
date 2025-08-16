@@ -90,12 +90,30 @@ class Camera:
     Controls the viewport's translation, allowing you to move the view of the world.
         
     """
-    def __init__(self, pos: Vec2 = ...) -> None:
+    @typing.overload
+    def __init__(self) -> None:
+        """
+        Create a camera at the default position (0, 0).
+        
+        Returns:
+            Camera: A new camera instance.
+        """
+    @typing.overload
+    def __init__(self, pos: Vec2) -> None:
         """
         Create a camera at the given position.
         
         Args:
-            pos (Vec2, optional): The camera's initial position. Default set to (0, 0).
+            pos (Vec2): The camera's initial position.
+        """
+    @typing.overload
+    def __init__(self, x: float, y: float) -> None:
+        """
+        Create a camera at the given position.
+        
+        Args:
+            x (float): The x-coordinate of the camera's initial position.
+            y (float): The y-coordinate of the camera's initial position.
         """
     def set(self) -> None:
         """
@@ -425,7 +443,7 @@ class Color:
             h, s, v, a = color.hsv              # Get HSV values
         """
     @hsv.setter
-    def hsv(self, arg1: tuple) -> None:
+    def hsv(self, arg1: typing.Sequence) -> None:
         ...
     @property
     def r(self) -> int:
@@ -1579,7 +1597,7 @@ class Line:
             offset (Vec2 | list[float]): The amount to move.
         """
     @property
-    def a(self) -> tuple:
+    def a(self) -> Vec2:
         """
         Get or set point A as a tuple or Vec2.
         """
@@ -1603,7 +1621,7 @@ class Line:
     def ay(self, arg0: float) -> None:
         ...
     @property
-    def b(self) -> tuple:
+    def b(self) -> Vec2:
         """
         Get or set point B as a tuple or Vec2.
         """
@@ -2155,7 +2173,7 @@ class Rect:
     def bottom(self, arg1: float) -> None:
         ...
     @property
-    def bottom_left(self) -> tuple:
+    def bottom_left(self) -> Vec2:
         """
         The position of the bottom-left corner as (x, y).
         """
@@ -2163,7 +2181,7 @@ class Rect:
     def bottom_left(self, arg1: Vec2) -> None:
         ...
     @property
-    def bottom_mid(self) -> tuple:
+    def bottom_mid(self) -> Vec2:
         """
         The position of the bottom-middle point as (x, y).
         """
@@ -2171,7 +2189,7 @@ class Rect:
     def bottom_mid(self, arg1: Vec2) -> None:
         ...
     @property
-    def bottom_right(self) -> tuple:
+    def bottom_right(self) -> Vec2:
         """
         The position of the bottom-right corner as (x, y).
         """
@@ -2179,7 +2197,7 @@ class Rect:
     def bottom_right(self, arg1: Vec2) -> None:
         ...
     @property
-    def center(self) -> tuple:
+    def center(self) -> Vec2:
         """
         The position of the center point as (x, y).
         """
@@ -2203,7 +2221,7 @@ class Rect:
     def left(self, arg1: float) -> None:
         ...
     @property
-    def mid_left(self) -> tuple:
+    def mid_left(self) -> Vec2:
         """
         The position of the middle-left point as (x, y).
         """
@@ -2211,7 +2229,7 @@ class Rect:
     def mid_left(self, arg1: Vec2) -> None:
         ...
     @property
-    def mid_right(self) -> tuple:
+    def mid_right(self) -> Vec2:
         """
         The position of the middle-right point as (x, y).
         """
@@ -2227,7 +2245,7 @@ class Rect:
     def right(self, arg1: float) -> None:
         ...
     @property
-    def size(self) -> tuple:
+    def size(self) -> Vec2:
         """
         The size of the rectangle as (width, height).
         """
@@ -2243,7 +2261,7 @@ class Rect:
     def top(self, arg1: float) -> None:
         ...
     @property
-    def top_left(self) -> tuple:
+    def top_left(self) -> Vec2:
         """
         The position of the top-left corner as (x, y).
         """
@@ -2251,7 +2269,7 @@ class Rect:
     def top_left(self, arg1: Vec2) -> None:
         ...
     @property
-    def top_mid(self) -> tuple:
+    def top_mid(self) -> Vec2:
         """
         The position of the top-middle point as (x, y).
         """
@@ -2259,7 +2277,7 @@ class Rect:
     def top_mid(self, arg1: Vec2) -> None:
         ...
     @property
-    def top_right(self) -> tuple:
+    def top_right(self) -> Vec2:
         """
         The position of the top-right corner as (x, y).
         """
@@ -2712,28 +2730,28 @@ class Surface:
             RuntimeError: If the file cannot be loaded or doesn't exist.
         """
     @typing.overload
-    def blit(self, source: Surface, pos: Vec2, anchor: Anchor = Anchor.CENTER, src_rect: Rect = ...) -> None:
+    def blit(self, surface: Surface, pos: Vec2, anchor: Anchor = Anchor.CENTER, src: typing.Any = None) -> None:
         """
         Blit (copy) another surface onto this surface at the specified position with anchor alignment.
         
         Args:
-            source (Surface): The source surface to blit from.
+            surface (Surface): The source surface to blit from.
             pos (Vec2): The position to blit to.
             anchor (Anchor, optional): The anchor point for positioning. Defaults to CENTER.
-            src_rect (Rect, optional): The source rectangle to blit from. Defaults to entire source surface.
+            src (Rect, optional): The source rectangle to blit from. Defaults to entire source surface.
         
         Raises:
             RuntimeError: If the blit operation fails.
         """
     @typing.overload
-    def blit(self, source: Surface, dst_rect: Rect, src_rect: Rect = ...) -> None:
+    def blit(self, surface: Surface, dst: Rect, src: typing.Any = None) -> None:
         """
         Blit (copy) another surface onto this surface with specified destination and source rectangles.
         
         Args:
-            source (Surface): The source surface to blit from.
-            dst_rect (Rect): The destination rectangle on this surface.
-            src_rect (Rect, optional): The source rectangle to blit from. Defaults to entire source surface.
+            surface (Surface): The source surface to blit from.
+            dst (Rect): The destination rectangle on this surface.
+            src (Rect, optional): The source rectangle to blit from. Defaults to entire source surface.
         
         Raises:
             RuntimeError: If the blit operation fails.
@@ -2921,12 +2939,12 @@ class Texture:
         Returns:
             Rect: A rectangle with position (0, 0) and the texture's dimensions.
         """
-    def get_size(self) -> tuple:
+    def get_size(self) -> Vec2:
         """
         Get the size of the texture.
         
         Returns:
-            tuple[float, float]: The texture size as (width, height).
+            Vec2: The texture size as (width, height).
         """
     def get_tint(self) -> Color:
         """
@@ -2956,7 +2974,7 @@ class Texture:
         This is the default blending mode for standard transparency effects.
         """
     @typing.overload
-    def render(self, rect: Rect, src: Rect = ...) -> None:
+    def render(self, rect: Rect, src: typing.Any = None) -> None:
         """
         Render this texture with specified destination and source rectangles.
         
@@ -2966,7 +2984,7 @@ class Texture:
                                       Defaults to entire texture if not specified.
         """
     @typing.overload
-    def render(self, pos: Vec2 = ..., anchor: Anchor = Anchor.CENTER) -> None:
+    def render(self, pos: typing.Any = None, anchor: Anchor = Anchor.CENTER) -> None:
         """
         Render this texture at the specified position with anchor alignment.
         
@@ -3102,18 +3120,15 @@ class Vec2:
     Supports arithmetic operations, comparisons, and various mathematical functions.
         
     """
-    def __add__(self, other: typing.Any) -> Vec2:
+    def __add__(self, other: Vec2) -> Vec2:
         """
-        Add another Vec2 or sequence to this Vec2.
+        Add another Vec2 to this Vec2.
         
         Args:
-            other (Vec2 or sequence): The Vec2 or sequence [x, y] to add.
+            other (Vec2): The Vec2 to add.
         
         Returns:
             Vec2: A new Vec2 with the result of the addition.
-        
-        Raises:
-            TypeError: If other is not a Vec2 or 2-element sequence.
         """
     def __bool__(self) -> bool:
         """
@@ -3172,18 +3187,15 @@ class Vec2:
         Returns:
             int: Hash value based on x and y components.
         """
-    def __iadd__(self, other: typing.Any) -> Vec2:
+    def __iadd__(self, other: Vec2) -> Vec2:
         """
         In-place addition (self += other).
         
         Args:
-            other (Vec2 or sequence): The Vec2 or sequence [x, y] to add.
+            other (Vec2): The Vec2 to add.
         
         Returns:
             Vec2: Reference to self after modification.
-        
-        Raises:
-            TypeError: If other is not a Vec2 or 2-element sequence.
         """
     def __imul__(self, scalar: float) -> Vec2:
         """
@@ -3228,18 +3240,15 @@ class Vec2:
         Raises:
             RuntimeError: If sequence doesn't contain exactly 2 elements.
         """
-    def __isub__(self, other: typing.Any) -> Vec2:
+    def __isub__(self, other: Vec2) -> Vec2:
         """
         In-place subtraction (self -= other).
         
         Args:
-            other (Vec2 or sequence): The Vec2 or sequence [x, y] to subtract.
+            other (Vec2): The Vec2 to subtract.
         
         Returns:
             Vec2: Reference to self after modification.
-        
-        Raises:
-            TypeError: If other is not a Vec2 or 2-element sequence.
         """
     def __iter__(self) -> typing.Iterator:
         """
@@ -3312,18 +3321,15 @@ class Vec2:
         Returns:
             Vec2: A new Vec2 with negated x and y components.
         """
-    def __radd__(self, other: typing.Any) -> Vec2:
+    def __radd__(self, other: Vec2) -> Vec2:
         """
         Right-hand addition (other + self).
         
         Args:
-            other (Vec2 or sequence): The Vec2 or sequence [x, y] to add.
+            other (Vec2): The Vec2 to add.
         
         Returns:
             Vec2: A new Vec2 with the result of the addition.
-        
-        Raises:
-            TypeError: If other is not a Vec2 or 2-element sequence.
         """
     def __repr__(self) -> str:
         """
@@ -3342,18 +3348,15 @@ class Vec2:
         Returns:
             Vec2: A new Vec2 with multiplied components.
         """
-    def __rsub__(self, other: typing.Any) -> Vec2:
+    def __rsub__(self, other: Vec2) -> Vec2:
         """
         Right-hand subtraction (other - self).
         
         Args:
-            other (Vec2 or sequence): The Vec2 or sequence [x, y] to subtract from.
+            other (Vec2): The Vec2 to subtract from.
         
         Returns:
             Vec2: A new Vec2 with the result of the subtraction.
-        
-        Raises:
-            TypeError: If other is not a Vec2 or 2-element sequence.
         """
     def __setitem__(self, index: int, value: float) -> None:
         """
@@ -3373,18 +3376,15 @@ class Vec2:
         Returns:
             str: String in format "<x, y>".
         """
-    def __sub__(self, other: typing.Any) -> Vec2:
+    def __sub__(self, other: Vec2) -> Vec2:
         """
-        Subtract another Vec2 or sequence from this Vec2.
+        Subtract another Vec2 from this Vec2.
         
         Args:
-            other (Vec2 or sequence): The Vec2 or sequence [x, y] to subtract.
+            other (Vec2): The Vec2 to subtract.
         
         Returns:
             Vec2: A new Vec2 with the result of the subtraction.
-        
-        Raises:
-            TypeError: If other is not a Vec2 or 2-element sequence.
         """
     def __truediv__(self, scalar: float) -> Vec2:
         """

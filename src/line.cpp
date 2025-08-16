@@ -50,7 +50,7 @@ Args:
     b (Vec2): Point B.
          )doc")
         .def(py::init(
-                 [](const py::sequence& abSeq) -> Line*
+                 [](const py::sequence& abSeq) -> Line
                  {
                      if (abSeq.size() != 2)
                          throw std::invalid_argument("Line expects two 2D points");
@@ -68,8 +68,8 @@ Args:
                      if (bSeq.size() != 2)
                          throw std::invalid_argument("B point must be a 2-element sequence");
 
-                     return new Line(aSeq[0].cast<double>(), aSeq[1].cast<double>(),
-                                     bSeq[0].cast<double>(), bSeq[1].cast<double>());
+                     return {aSeq[0].cast<double>(), aSeq[1].cast<double>(), bSeq[0].cast<double>(),
+                             bSeq[1].cast<double>()};
                  }),
              R"doc(
 Create a line from two 2-element sequences: [[ax, ay], [bx, by]].
@@ -106,7 +106,8 @@ Get coordinate by index:
 Raises:
     IndexError: If index is not 0-3.
          )doc")
-        .def("__len__", [](const Line&) -> int { return 4; }, R"doc(
+        .def(
+            "__len__", [](const Line&) -> int { return 4; }, R"doc(
 Return the number of components (always 4).
 
 Returns:
@@ -131,12 +132,10 @@ Returns:
     bool: True if any component differs.
         )doc")
 
-        .def_property(
-            "a", [](const Line& self) -> py::tuple { return self.getA(); }, &Line::setA, R"doc(
+        .def_property("a", &Line::getA, &Line::setA, R"doc(
 Get or set point A as a tuple or Vec2.
         )doc")
-        .def_property(
-            "b", [](const Line& self) -> py::tuple { return self.getB(); }, &Line::setB, R"doc(
+        .def_property("b", &Line::getB, &Line::setB, R"doc(
 Get or set point B as a tuple or Vec2.
         )doc")
 
@@ -217,7 +216,7 @@ void Line::move(const Vec2& offset)
     by += offset.y;
 }
 
-Line* Line::copy() const { return new Line(ax, ay, bx, by); }
+Line Line::copy() const { return {ax, ay, bx, by}; }
 
 bool Line::operator==(const Line& other) const
 {

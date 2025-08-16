@@ -29,19 +29,21 @@ Args:
         )doc")
 
         .def(py::init(
-                 [](const py::object& objparam) -> Color*
+                 [](const py::object& objparam) -> Color
                  {
                      if (py::isinstance<py::str>(objparam))
-                         return new Color(fromHex(objparam.cast<std::string>()));
+                         return fromHex(objparam.cast<std::string>());
 
                      if (py::isinstance<py::sequence>(objparam))
                      {
                          auto seq = objparam.cast<py::sequence>();
                          if (seq.size() == 3 || seq.size() == 4)
                          {
-                             auto* c = new Color{seq[0].cast<uint8_t>(), seq[1].cast<uint8_t>(),
-                                                 seq[2].cast<uint8_t>()};
-                             c->a = seq.size() == 4 ? seq[3].cast<uint8_t>() : 255;
+                             Color c;
+                             c.r = seq[0].cast<uint8_t>();
+                             c.g = seq[1].cast<uint8_t>();
+                             c.b = seq[2].cast<uint8_t>();
+                             c.a = seq.size() == 4 ? seq[3].cast<uint8_t>() : 255;
                              return c;
                          }
                      }
@@ -101,7 +103,7 @@ Example:
 
         .def(
             "__getitem__",
-            [](const Color& c, size_t i) -> uint8_t
+            [](const Color& c, size_t i) -> int
             {
                 if (i >= 4)
                     throw py::index_error();
@@ -122,7 +124,7 @@ Raises:
 
         .def(
             "__setitem__",
-            [](Color& c, size_t i, uint8_t value)
+            [](Color& c, size_t i, uint8_t value) -> void
             {
                 if (i >= 4)
                     throw py::index_error();
@@ -140,7 +142,7 @@ Raises:
         )doc")
 
         .def(
-            "__len__", [](const Color&) { return 4; }, R"doc(
+            "__len__", [](const Color&) -> int { return 4; }, R"doc(
 Return the number of color channels.
 
 Returns:
@@ -233,8 +235,8 @@ Examples:
     from_hex("RGB")          # Without '#' prefix
         )doc");
 
-    subColor.def("from_hsv", &fromHSV, py::arg("h"), py::arg("s"), py::arg("v"),
-                 py::arg("a") = 1.0f, R"doc(
+    subColor.def("from_hsv", &fromHSV, py::arg("h"), py::arg("s"), py::arg("v"), py::arg("a") = 1.0,
+                 R"doc(
 Create a Color from HSV(A) values.
 
 Args:
@@ -360,58 +362,58 @@ Color fromHex(std::string_view hex)
     throw std::invalid_argument("Invalid hex string format");
 }
 
-Color fromHSV(const float h, const float s, const float v, const float a)
+Color fromHSV(const double h, const double s, const double v, const double a)
 {
     if (s < 0 || s > 1 || v < 0 || v > 1 || a < 0 || a > 1)
         throw std::invalid_argument("Saturation, value, and alpha must be in the range [0, 1]");
     if (h < 0 || h >= 360)
         throw std::invalid_argument("Hue must be in the range [0, 360)");
 
-    const float c = v * s;
-    const float x = c * (1 - std::fabs(fmod(h / 60.0f, 2) - 1));
-    const float m = v - c;
+    const double c = v * s;
+    const double x = c * (1 - std::fabs(fmod(h / 60.0, 2.0) - 1));
+    const double m = v - c;
 
-    float r, g, b;
+    double r, g, b;
 
-    if (h < 60)
+    if (h < 60.0)
     {
         r = c;
         g = x;
-        b = 0;
+        b = 0.0;
     }
-    else if (h < 120)
+    else if (h < 120.0)
     {
         r = x;
         g = c;
-        b = 0;
+        b = 0.0;
     }
-    else if (h < 180)
+    else if (h < 180.0)
     {
-        r = 0;
+        r = 0.0;
         g = c;
         b = x;
     }
-    else if (h < 240)
+    else if (h < 240.0)
     {
-        r = 0;
+        r = 0.0;
         g = x;
         b = c;
     }
-    else if (h < 300)
+    else if (h < 300.0)
     {
         r = x;
-        g = 0;
+        g = 0.0;
         b = c;
     }
     else
     {
         r = c;
-        g = 0;
+        g = 0.0;
         b = x;
     }
 
-    return {static_cast<uint8_t>((r + m) * 255), static_cast<uint8_t>((g + m) * 255),
-            static_cast<uint8_t>((b + m) * 255), static_cast<uint8_t>(a * 255)};
+    return {static_cast<uint8_t>((r + m) * 255.0), static_cast<uint8_t>((g + m) * 255.0),
+            static_cast<uint8_t>((b + m) * 255.0), static_cast<uint8_t>(a * 255.0)};
 }
 
 Color lerp(const Color& a, const Color& b, const double t)
@@ -446,7 +448,7 @@ std::string Color::toHex() const
     return "#" + ss.str();
 }
 
-void Color::fromHSV(const py::tuple& hsv)
+void Color::fromHSV(const py::sequence& hsv)
 {
     if (hsv.size() < 3 || hsv.size() > 4)
         throw std::invalid_argument("HSV tuple must have 3 or 4 elements.");

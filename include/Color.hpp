@@ -21,7 +21,7 @@ struct Color
     void fromHex(std::string_view hex);
 
     py::tuple toHSV() const;
-    void fromHSV(const py::tuple& hsv);
+    void fromHSV(const py::sequence& hsv);
 
     bool _isValid() const;
 };
@@ -32,7 +32,7 @@ void _bind(py::module_& module);
 
 Color fromHex(std::string_view hex);
 
-Color fromHSV(float h, float s, float v, float a = 1.0f);
+Color fromHSV(double h, double s, double v, double a = 1.0);
 
 Color lerp(const Color& a, const Color& b, double t);
 

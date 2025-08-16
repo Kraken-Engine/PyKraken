@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SDL3/SDL.h>
+#include <memory>
 #include <pybind11/pybind11.h>
 #include <string>
 
@@ -35,8 +36,9 @@ class Surface
 
     void fill(const Color& color) const;
 
-    void blit(const Surface& other, const Vec2& pos, Anchor anchor, const Rect& srcRect) const;
-    void blit(const Surface& other, const Rect& dstRect, const Rect& srcRect) const;
+    void blit(const Surface& other, const Vec2& pos, Anchor anchor, py::object srcRect) const;
+
+    void blit(const Surface& other, const Rect& dstRect, py::object srcRect) const;
 
     void setColorKey(const Color& color) const;
 
@@ -60,10 +62,8 @@ class Surface
 
     SDL_Surface* getSDL() const;
 
-    Surface* copy() const;
+    std::unique_ptr<Surface> copy() const;
 
   private:
     SDL_Surface* m_surface = nullptr;
-
-    void setSDL(SDL_Surface* surface);
 };
