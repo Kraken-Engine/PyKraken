@@ -53,7 +53,7 @@ def polygon(polygon: pykraken._core.Polygon, color: pykraken._core.Color, filled
         polygon (Polygon): The polygon to draw.
         color (Color): The color of the polygon.
         filled (bool, optional): Whether to draw a filled polygon or just the outline.
-                                 Defaults to True (filled). Works with both convex and concave polygons.
+                                 Defaults to False (outline). Works with both convex and concave polygons.
     """
 def rect(rect: pykraken._core.Rect, color: pykraken._core.Color, thickness: int = 0) -> None:
     """

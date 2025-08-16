@@ -3,7 +3,7 @@ Functions for transforming surfaces
 """
 from __future__ import annotations
 import pykraken._core
-__all__ = ['box_blur', 'flip', 'gaussian_blur', 'grayscale', 'invert', 'resize', 'rotate', 'scale_by']
+__all__ = ['box_blur', 'flip', 'gaussian_blur', 'grayscale', 'invert', 'rotate', 'scale_by', 'scale_to']
 def box_blur(surface: pykraken._core.Surface, radius: int, repeat_edge_pixels: bool = True) -> pykraken._core.Surface:
     """
     Apply a box blur effect to a surface.
@@ -93,20 +93,6 @@ def invert(surface: pykraken._core.Surface) -> pykraken._core.Surface:
     Raises:
         RuntimeError: If surface creation fails.
     """
-def resize(surface: pykraken._core.Surface, new_size: pykraken._core.Vec2) -> pykraken._core.Surface:
-    """
-    Resize a surface to a new size.
-    
-    Args:
-        surface (Surface): The surface to resize.
-        new_size (Vec2): The target size as (width, height).
-    
-    Returns:
-        Surface: A new surface scaled to the specified size.
-    
-    Raises:
-        RuntimeError: If surface creation or scaling fails.
-    """
 def rotate(surface: pykraken._core.Surface, angle: float) -> pykraken._core.Surface:
     """
     Rotate a surface by a given angle.
@@ -136,5 +122,19 @@ def scale_by(surface: pykraken._core.Surface, factor: float) -> pykraken._core.S
     
     Raises:
         ValueError: If factor is <= 0.
+        RuntimeError: If surface creation or scaling fails.
+    """
+def scale_to(surface: pykraken._core.Surface, size: pykraken._core.Vec2) -> pykraken._core.Surface:
+    """
+    Scale a surface to a new exact size.
+    
+    Args:
+        surface (Surface): The surface to scale.
+        size (Vec2): The target size as (width, height).
+    
+    Returns:
+        Surface: A new surface scaled to the specified size.
+    
+    Raises:
         RuntimeError: If surface creation or scaling fails.
     """
