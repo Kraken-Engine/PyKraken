@@ -10,6 +10,7 @@
 #include "Key.hpp"
 #include "Line.hpp"
 #include "Math.hpp"
+#include "Mixer.hpp"
 #include "Mouse.hpp"
 #include "PixelArray.hpp"
 #include "Polygon.hpp"
@@ -49,6 +50,7 @@ Call this once you're done using the engine to avoid memory leaks.
     input::_bind(m);
     key::_bind(m);
     line::_bind(m);
+    mixer::_bind(m);
     mouse::_bind(m);
     renderer::_bind(m);
     pixel_array::_bind(m);
