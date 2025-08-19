@@ -69,7 +69,7 @@ jobs:
         env:
           # Use uv and build
           CIBW_BUILD_FRONTEND: "build[uv]"
-          CIBW_SKIP: "pp* *-musllinux_*"
+          CIBW_SKIP: "*-musllinux_*"
           CIBW_BUILD_VERBOSITY: 1
           # absolutely crucial, otherwise the build step doesn't know to include the SDL*.so files from here
           # cmake puts them in /usr/local/lib by default (on Linux) during the install step

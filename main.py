@@ -10,6 +10,8 @@ points_array = np.array(
     dtype=np.float64
 )
 
+# rects = [kn.Rect(random.randint(0, 1200), random.randint(0, 900), 50, 50) for _ in range(100)]
+
 timer = kn.Timer(0.1)
 timer.start()
 
@@ -27,11 +29,13 @@ while kn.window.is_open():
         kn.key.is_pressed(kn.S_s) - kn.key.is_pressed(kn.S_w),
     )
     vec.normalize()
-    camera.pos += vec
+    camera.pos += vec * 150 * kn.time.get_delta()
         
     kn.renderer.clear("#141414")
 
     kn.draw.points_from_ndarray(points_array, "#FFF")
+    
+    # kn.draw.rects(rects, "#FF0000", 7)
 
     kn.renderer.present()
 
