@@ -1,4 +1,5 @@
 #include "Ease.hpp"
+#include "Time.hpp"
 
 #include <pybind11/functional.h>
 
@@ -16,7 +17,7 @@ namespace ease
 {
 void _bind(py::module_& module)
 {
-    py::class_<EasingAnimation>(module, "EasingAnimation", R"doc(
+    py::classh<EasingAnimation>(module, "EasingAnimation", R"doc(
 A class for animating values over time using easing functions.
 
 This class supports pausing, resuming, reversing, and checking progress.
@@ -33,11 +34,9 @@ Args:
     easeFunc (Callable): Easing function that maps [0, 1] → [0, 1].
         )doc")
 
-        .def("step", &EasingAnimation::step, py::arg("delta"), R"doc(
-Advance the animation by delta time and return the current position.
+        .def("step", &EasingAnimation::step, R"doc(
+Advance the animation get its current position.
 
-Args:
-    delta (float): Time step to progress the animation.
 Returns:
     Vec2: Interpolated position.
         )doc")
@@ -351,12 +350,13 @@ EasingAnimation::EasingAnimation(const Vec2& start, const Vec2& end, double dura
 {
 }
 
-Vec2 EasingAnimation::step(const double deltaTime)
+Vec2 EasingAnimation::step()
 {
     if (state == State::PAUSED || state == State::DONE)
         return getCurrentPosition();
 
-    elapsedTime += (forward ? deltaTime : -deltaTime);
+    const double delta = kn::time::getDelta();
+    elapsedTime += (forward ? delta : -delta);
     elapsedTime = std::max(0.0, std::min(elapsedTime, duration));
 
     if (elapsedTime == duration || elapsedTime == 0.0)

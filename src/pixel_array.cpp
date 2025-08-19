@@ -1,38 +1,39 @@
-#include "Surface.hpp"
 #include "Color.hpp"
 #include "Math.hpp"
+#include "PixelArray.hpp"
 #include "Rect.hpp"
 
 #include <SDL3_image/SDL_image.h>
 
-namespace surface
+namespace pixel_array
 {
 void _bind(py::module_& module)
 {
-    // py::enum_<ScrollType>(module, "ScrollType", py::arithmetic())
+    // py::native_enum<ScrollType>(module, "ScrollType", "enum.IntEnum")
     //     .value("SCROLL_SMEAR", ScrollType::SCROLL_SMEAR)
     //     .value("SCROLL_ERASE", ScrollType::SCROLL_ERASE)
     //     .value("SCROLL_REPEAT", ScrollType::SCROLL_REPEAT)
-    //     .export_values();
+    //     .export_values()
+    //     .finalize();
 
-    py::class_<Surface>(module, "Surface", R"doc(
+    py::classh<PixelArray>(module, "PixelArray", R"doc(
 Represents a 2D pixel buffer for image manipulation and blitting operations.
 
-A Surface is a collection of pixels that can be manipulated, drawn on, and used as a source
-for texture creation or blitting to other surfaces. Supports pixel-level operations,
+A PixelArray is a 2D array of pixels that can be manipulated, drawn on, and used as a source
+for texture creation or blitting to other PixelArrays. Supports pixel-level operations,
 color key transparency, and alpha blending.
     )doc")
         .def(py::init<const Vec2&>(), py::arg("size"), R"doc(
-Create a new Surface with the specified dimensions.
+Create a new PixelArray with the specified dimensions.
 
 Args:
-    size (Vec2): The size of the surface as (width, height).
+    size (Vec2): The size of the pixel array as (width, height).
 
 Raises:
-    RuntimeError: If surface creation fails.
+    RuntimeError: If pixel array creation fails.
         )doc")
         .def(py::init<const std::string&>(), py::arg("file_path"), R"doc(
-Create a Surface by loading an image from a file.
+Create a PixelArray by loading an image from a file.
 
 Args:
     file_path (str): Path to the image file to load.
@@ -41,42 +42,43 @@ Raises:
     RuntimeError: If the file cannot be loaded or doesn't exist.
         )doc")
 
-        .def("fill", &Surface::fill, py::arg("color"), R"doc(
-Fill the entire surface with a solid color.
+        .def("fill", &PixelArray::fill, py::arg("color"), R"doc(
+Fill the entire pixel array with a solid color.
 
 Args:
-    color (Color): The color to fill the surface with.
+    color (Color): The color to fill the pixel array with.
         )doc")
         .def("blit",
-             py::overload_cast<const Surface&, const Vec2&, Anchor, py::object>(&Surface::blit,
-                                                                                py::const_),
-             py::arg("surface"), py::arg("pos"), py::arg("anchor") = Anchor::CENTER,
+             py::overload_cast<const PixelArray&, const Vec2&, Anchor, py::object>(
+                 &PixelArray::blit, py::const_),
+             py::arg("pixel_array"), py::arg("pos"), py::arg("anchor") = Anchor::CENTER,
              py::arg("src") = py::none(), R"doc(
-Blit (copy) another surface onto this surface at the specified position with anchor alignment.
+Blit (copy) another pixel array onto this pixel array at the specified position with anchor alignment.
 
 Args:
-    surface (Surface): The source surface to blit from.
+    pixel_array (PixelArray): The source pixel array to blit from.
     pos (Vec2): The position to blit to.
     anchor (Anchor, optional): The anchor point for positioning. Defaults to CENTER.
-    src (Rect, optional): The source rectangle to blit from. Defaults to entire source surface.
+    src (Rect, optional): The source rectangle to blit from. Defaults to entire source pixel array.
 
 Raises:
     RuntimeError: If the blit operation fails.
         )doc")
         .def("blit",
-             py::overload_cast<const Surface&, const Rect&, py::object>(&Surface::blit, py::const_),
-             py::arg("surface"), py::arg("dst"), py::arg("src") = py::none(), R"doc(
-Blit (copy) another surface onto this surface with specified destination and source rectangles.
+             py::overload_cast<const PixelArray&, const Rect&, py::object>(&PixelArray::blit,
+                                                                           py::const_),
+             py::arg("pixel_array"), py::arg("dst"), py::arg("src") = py::none(), R"doc(
+Blit (copy) another pixel array onto this pixel array with specified destination and source rectangles.
 
 Args:
-    surface (Surface): The source surface to blit from.
-    dst (Rect): The destination rectangle on this surface.
-    src (Rect, optional): The source rectangle to blit from. Defaults to entire source surface.
+    pixel_array (PixelArray): The source pixel array to blit from.
+    dst (Rect): The destination rectangle on this pixel array.
+    src (Rect, optional): The source rectangle to blit from. Defaults to entire source pixel array.
 
 Raises:
     RuntimeError: If the blit operation fails.
         )doc")
-        .def("get_at", &Surface::getAt, py::arg("coord"), R"doc(
+        .def("get_at", &PixelArray::getAt, py::arg("coord"), R"doc(
 Get the color of a pixel at the specified coordinates.
 
 Args:
@@ -86,9 +88,9 @@ Returns:
     Color: The color of the pixel at the specified coordinates.
 
 Raises:
-    IndexError: If coordinates are outside the surface bounds.
+    IndexError: If coordinates are outside the pixel array bounds.
         )doc")
-        .def("set_at", &Surface::setAt, py::arg("coord"), py::arg("color"), R"doc(
+        .def("set_at", &PixelArray::setAt, py::arg("coord"), py::arg("color"), R"doc(
 Set the color of a pixel at the specified coordinates.
 
 Args:
@@ -96,19 +98,19 @@ Args:
     color (Color): The color to set the pixel to.
 
 Raises:
-    IndexError: If coordinates are outside the surface bounds.
+    IndexError: If coordinates are outside the pixel array bounds.
         )doc")
-        .def("copy", &Surface::copy, R"doc(
-Create a copy of this surface.
+        .def("copy", &PixelArray::copy, R"doc(
+Create a copy of this pixel array.
 
 Returns:
-    Surface: A new Surface that is an exact copy of this one.
+    PixelArray: A new PixelArray that is an exact copy of this one.
 
 Raises:
-    RuntimeError: If surface copying fails.
+    RuntimeError: If pixel array copying fails.
         )doc")
 
-        .def_property("color_key", &Surface::getColorKey, &Surface::setColorKey, R"doc(
+        .def_property("color_key", &PixelArray::getColorKey, &PixelArray::setColorKey, R"doc(
 The color key for transparency.
 
 When set, pixels of this color will be treated as transparent during blitting operations.
@@ -120,10 +122,10 @@ Returns:
 Raises:
     RuntimeError: If getting the color key fails.
         )doc")
-        .def_property("alpha_mod", &Surface::getAlpha, &Surface::setAlpha, R"doc(
-The alpha modulation value for the surface.
+        .def_property("alpha_mod", &PixelArray::getAlpha, &PixelArray::setAlpha, R"doc(
+The alpha modulation value for the pixel array.
 
-Controls the overall transparency of the surface. Values range from 0 (fully transparent)
+Controls the overall transparency of the pixel array. Values range from 0 (fully transparent)
 to 255 (fully opaque).
 
 Returns:
@@ -133,36 +135,36 @@ Raises:
     RuntimeError: If getting the alpha value fails.
         )doc")
 
-        .def_property_readonly("width", &Surface::getWidth, R"doc(
-The width of the surface in pixels.
+        .def_property_readonly("width", &PixelArray::getWidth, R"doc(
+The width of the pixel array.
 
 Returns:
-    int: The surface width.
+    int: The pixel array width.
         )doc")
-        .def_property_readonly("height", &Surface::getHeight, R"doc(
-The height of the surface in pixels.
+        .def_property_readonly("height", &PixelArray::getHeight, R"doc(
+The height of the pixel array.
 
 Returns:
-    int: The surface height.
+    int: The pixel array height.
         )doc")
-        .def_property_readonly("size", &Surface::getSize, R"doc(
-The size of the surface as a Vec2.
+        .def_property_readonly("size", &PixelArray::getSize, R"doc(
+The size of the pixel array as a Vec2.
 
 Returns:
-    Vec2: The surface size as (width, height).
+    Vec2: The pixel array size as (width, height).
         )doc")
-        .def_property_readonly("rect", &Surface::getRect, R"doc(
-A rectangle representing the surface bounds.
+        .def_property_readonly("rect", &PixelArray::getRect, R"doc(
+A rectangle representing the pixel array bounds.
 
 Returns:
-    Rect: A rectangle with position (0, 0) and the surface's dimensions.
+    Rect: A rectangle with position (0, 0) and the pixel array's dimensions.
         )doc");
 }
-} // namespace surface
+} // namespace pixel_array
 
-Surface::Surface(SDL_Surface* sdlSurface) : m_surface(sdlSurface) {}
+PixelArray::PixelArray(SDL_Surface* sdlSurface) : m_surface(sdlSurface) {}
 
-Surface::Surface(const Vec2& size)
+PixelArray::PixelArray(const Vec2& size)
 {
     if (m_surface)
     {
@@ -174,10 +176,10 @@ Surface::Surface(const Vec2& size)
                                   SDL_PIXELFORMAT_RGBA32);
 
     if (!m_surface)
-        throw std::runtime_error("Surface failed to create: " + std::string(SDL_GetError()));
+        throw std::runtime_error("PixelArray failed to create: " + std::string(SDL_GetError()));
 }
 
-Surface::Surface(const std::string& filePath)
+PixelArray::PixelArray(const std::string& filePath)
 {
     if (m_surface)
     {
@@ -187,11 +189,11 @@ Surface::Surface(const std::string& filePath)
 
     m_surface = IMG_Load(filePath.c_str());
     if (!m_surface)
-        throw std::runtime_error("Failed to load surface from file '" + filePath +
+        throw std::runtime_error("Failed to load pixel array from file '" + filePath +
                                  "': " + std::string(SDL_GetError()));
 }
 
-Surface::~Surface()
+PixelArray::~PixelArray()
 {
     if (m_surface)
     {
@@ -200,14 +202,14 @@ Surface::~Surface()
     }
 }
 
-void Surface::fill(const Color& color) const
+void PixelArray::fill(const Color& color) const
 {
     auto colorMap = SDL_MapSurfaceRGBA(m_surface, color.r, color.g, color.b, color.a);
     SDL_FillSurfaceRect(m_surface, nullptr, colorMap);
 }
 
-void Surface::blit(const Surface& other, const Vec2& pos, const Anchor anchor,
-                   py::object srcRect) const
+void PixelArray::blit(const PixelArray& other, const Vec2& pos, const Anchor anchor,
+                      py::object srcRect) const
 {
     SDL_Rect srcSDL;
     if (!srcRect.is_none())
@@ -218,7 +220,7 @@ void Surface::blit(const Surface& other, const Vec2& pos, const Anchor anchor,
         }
         catch (const py::cast_error&)
         {
-            throw std::runtime_error("srcRect must be a Rect");
+            throw std::invalid_argument("'src' must be a Rect");
         }
     }
     else
@@ -261,10 +263,10 @@ void Surface::blit(const Surface& other, const Vec2& pos, const Anchor anchor,
     SDL_Rect dstSDL = dstRect;
 
     if (!SDL_BlitSurface(other.getSDL(), &srcSDL, m_surface, &dstSDL))
-        throw std::runtime_error("Failed to blit surface: " + std::string(SDL_GetError()));
+        throw std::runtime_error("Failed to blit pixel array: " + std::string(SDL_GetError()));
 }
 
-void Surface::blit(const Surface& other, const Rect& dstRect, py::object srcRect) const
+void PixelArray::blit(const PixelArray& other, const Rect& dstRect, py::object srcRect) const
 {
     SDL_Rect dstSDL = dstRect;
     SDL_Rect srcSDL;
@@ -277,7 +279,7 @@ void Surface::blit(const Surface& other, const Rect& dstRect, py::object srcRect
         }
         catch (const py::cast_error&)
         {
-            throw std::runtime_error("srcRect must be a Rect");
+            throw std::invalid_argument("'src' must be a Rect");
         }
     }
     else
@@ -286,20 +288,21 @@ void Surface::blit(const Surface& other, const Rect& dstRect, py::object srcRect
     }
 
     if (!SDL_BlitSurface(other.getSDL(), &srcSDL, m_surface, &dstSDL))
-        throw std::runtime_error("Failed to blit surface: " + std::string(SDL_GetError()));
+        throw std::runtime_error("Failed to blit pixel array: " + std::string(SDL_GetError()));
 }
 
-void Surface::setColorKey(const Color& color) const
+void PixelArray::setColorKey(const Color& color) const
 {
     SDL_SetSurfaceColorKey(m_surface, true,
                            SDL_MapSurfaceRGBA(m_surface, color.r, color.g, color.b, color.a));
 }
 
-Color Surface::getColorKey() const
+Color PixelArray::getColorKey() const
 {
     uint32_t key;
     if (!SDL_GetSurfaceColorKey(m_surface, &key))
-        throw std::runtime_error("Failed to get surface color key: " + std::string(SDL_GetError()));
+        throw std::runtime_error("Failed to get pixel array color key: " +
+                                 std::string(SDL_GetError()));
 
     Color color;
     color.r = static_cast<uint8_t>((key >> 24) & 0xFF);
@@ -310,20 +313,20 @@ Color Surface::getColorKey() const
     return color;
 }
 
-void Surface::setAlpha(const uint8_t alpha) const { SDL_SetSurfaceAlphaMod(m_surface, alpha); }
+void PixelArray::setAlpha(const uint8_t alpha) const { SDL_SetSurfaceAlphaMod(m_surface, alpha); }
 
-int Surface::getAlpha() const
+int PixelArray::getAlpha() const
 {
     uint8_t alpha;
     if (!SDL_GetSurfaceAlphaMod(m_surface, &alpha))
-        throw std::runtime_error("Failed to get surface alpha: " + std::string(SDL_GetError()));
+        throw std::runtime_error("Failed to get pixel array alpha: " + std::string(SDL_GetError()));
     return alpha;
 }
 
-Color Surface::getAt(const Vec2& coord) const
+Color PixelArray::getAt(const Vec2& coord) const
 {
     if (coord.x < 0 || coord.x >= m_surface->w || coord.y < 0 || coord.y >= m_surface->h)
-        throw std::out_of_range("Coordinates out of bounds for surface");
+        throw std::out_of_range("Coordinates out of bounds for pixel array");
 
     auto* pixels = static_cast<uint8_t*>(m_surface->pixels);
     int pitch = m_surface->pitch;
@@ -339,10 +342,10 @@ Color Surface::getAt(const Vec2& coord) const
     return color;
 }
 
-void Surface::setAt(const Vec2& coord, const Color& color) const
+void PixelArray::setAt(const Vec2& coord, const Color& color) const
 {
     if (coord.x < 0 || coord.x >= m_surface->w || coord.y < 0 || coord.y >= m_surface->h)
-        throw std::out_of_range("Coordinates out of bounds for surface");
+        throw std::out_of_range("Coordinates out of bounds for pixel array");
 
     auto* pixels = static_cast<uint8_t*>(m_surface->pixels);
     int pitch = m_surface->pitch;
@@ -354,26 +357,27 @@ void Surface::setAt(const Vec2& coord, const Color& color) const
     *reinterpret_cast<uint32_t*>(pixels + y * pitch + x * sizeof(uint32_t)) = pixel;
 }
 
-int Surface::getWidth() const { return m_surface->w; }
+int PixelArray::getWidth() const { return m_surface->w; }
 
-int Surface::getHeight() const { return m_surface->h; }
+int PixelArray::getHeight() const { return m_surface->h; }
 
-Vec2 Surface::getSize() const { return {m_surface->w, m_surface->h}; }
+Vec2 PixelArray::getSize() const { return {m_surface->w, m_surface->h}; }
 
-Rect Surface::getRect() const { return Rect(0, 0, m_surface->w, m_surface->h); }
+Rect PixelArray::getRect() const { return Rect(0, 0, m_surface->w, m_surface->h); }
 
-std::unique_ptr<Surface> Surface::copy() const
+std::unique_ptr<PixelArray> PixelArray::copy() const
 {
     SDL_Surface* surfaceCopy = SDL_CreateSurface(m_surface->w, m_surface->h, m_surface->format);
     if (!surfaceCopy)
-        throw std::runtime_error("Failed to create copy surface: " + std::string(SDL_GetError()));
+        throw std::runtime_error("Failed to create copy pixel array: " +
+                                 std::string(SDL_GetError()));
 
     if (!SDL_BlitSurface(m_surface, nullptr, surfaceCopy, nullptr))
-        throw std::runtime_error("Failed to blit surface copy: " + std::string(SDL_GetError()));
+        throw std::runtime_error("Failed to blit pixel array copy: " + std::string(SDL_GetError()));
 
-    auto copy = std::make_unique<Surface>();
+    auto copy = std::make_unique<PixelArray>();
     copy->m_surface = surfaceCopy;
     return copy;
 }
 
-SDL_Surface* Surface::getSDL() const { return m_surface; }
+SDL_Surface* PixelArray::getSDL() const { return m_surface; }

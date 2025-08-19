@@ -1,7 +1,7 @@
 #include "Transform.hpp"
 #include "Color.hpp"
 #include "Math.hpp"
-#include "Surface.hpp"
+#include "PixelArray.hpp"
 
 #include <gfx/SDL3_rotozoom.h>
 
@@ -9,147 +9,147 @@ namespace transform
 {
 void _bind(py::module_& module)
 {
-    auto subTransform = module.def_submodule("transform", "Functions for transforming surfaces");
+    auto subTransform = module.def_submodule("transform", "Functions for transforming pixel arrays");
 
-    subTransform.def("flip", &flip, py::arg("surface"), py::arg("flip_x"), py::arg("flip_y"),
+    subTransform.def("flip", &flip, py::arg("pixel_array"), py::arg("flip_x"), py::arg("flip_y"),
                      R"doc(
-Flip a surface horizontally, vertically, or both.
+Flip a pixel array horizontally, vertically, or both.
 
 Args:
-    surface (Surface): The surface to flip.
+    pixel_array (PixelArray): The pixel array to flip.
     flip_x (bool): Whether to flip horizontally (mirror left-right).
     flip_y (bool): Whether to flip vertically (mirror top-bottom).
 
 Returns:
-    Surface: A new surface with the flipped image.
+    PixelArray: A new pixel array with the flipped image.
 
 Raises:
-    RuntimeError: If surface creation fails.
+    RuntimeError: If pixel array creation fails.
     )doc");
-    subTransform.def("scale_to", &scaleTo, py::arg("surface"), py::arg("size"), R"doc(
-Scale a surface to a new exact size.
+    subTransform.def("scale_to", &scaleTo, py::arg("pixel_array"), py::arg("size"), R"doc(
+Scale a pixel array to a new exact size.
 
 Args:
-    surface (Surface): The surface to scale.
+    pixel_array (PixelArray): The pixel array to scale.
     size (Vec2): The target size as (width, height).
 
 Returns:
-    Surface: A new surface scaled to the specified size.
+    PixelArray: A new pixel array scaled to the specified size.
 
 Raises:
-    RuntimeError: If surface creation or scaling fails.
+    RuntimeError: If pixel array creation or scaling fails.
     )doc");
-    subTransform.def("scale_by", py::overload_cast<const Surface&, double>(&scaleBy),
-                     py::arg("surface"), py::arg("factor"), R"doc(
-Scale a surface by a given factor.
+    subTransform.def("scale_by", py::overload_cast<const PixelArray&, double>(&scaleBy),
+                     py::arg("pixel_array"), py::arg("factor"), R"doc(
+Scale a pixel array by a given factor.
 
 Args:
-    surface (Surface): The surface to scale.
+    pixel_array (PixelArray): The pixel array to scale.
     factor (float): The scaling factor (must be > 0). Values > 1.0 enlarge,
-                   values < 1.0 shrink the surface.
+                   values < 1.0 shrink the pixel array.
 
 Returns:
-    Surface: A new surface scaled by the specified factor.
+    PixelArray: A new pixel array scaled by the specified factor.
 
 Raises:
     ValueError: If factor is <= 0.
-    RuntimeError: If surface creation or scaling fails.
+    RuntimeError: If pixel array creation or scaling fails.
     )doc");
-    subTransform.def("rotate", &rotate, py::arg("surface"), py::arg("angle"), R"doc(
-Rotate a surface by a given angle.
+    subTransform.def("rotate", &rotate, py::arg("pixel_array"), py::arg("angle"), R"doc(
+Rotate a pixel array by a given angle.
 
 Args:
-    surface (Surface): The surface to rotate.
+    pixel_array (PixelArray): The pixel array to rotate.
     angle (float): The rotation angle in degrees. Positive values rotate clockwise.
 
 Returns:
-    Surface: A new surface containing the rotated image. The output surface may be
+    PixelArray: A new pixel array containing the rotated image. The output pixel array may be
             larger than the input to accommodate the rotated image.
 
 Raises:
-    RuntimeError: If surface rotation fails.
+    RuntimeError: If pixel array rotation fails.
     )doc");
-    subTransform.def("box_blur", &boxBlur, py::arg("surface"), py::arg("radius"),
+    subTransform.def("box_blur", &boxBlur, py::arg("pixel_array"), py::arg("radius"),
                      py::arg("repeat_edge_pixels") = true, R"doc(
-Apply a box blur effect to a surface.
+Apply a box blur effect to a pixel array.
 
 Box blur creates a uniform blur effect by averaging pixels within a square kernel.
 It's faster than Gaussian blur but produces a more uniform, less natural look.
 
 Args:
-    surface (Surface): The surface to blur.
+    pixel_array (PixelArray): The pixel array to blur.
     radius (int): The blur radius in pixels. Larger values create stronger blur.
     repeat_edge_pixels (bool, optional): Whether to repeat edge pixels when sampling
-                                        outside the surface bounds. Defaults to True.
+                                        outside the pixel array bounds. Defaults to True.
 
 Returns:
-    Surface: A new surface with the box blur effect applied.
+    PixelArray: A new pixel array with the box blur effect applied.
 
 Raises:
-    RuntimeError: If surface creation fails during the blur process.
+    RuntimeError: If pixel array creation fails during the blur process.
     )doc");
-    subTransform.def("gaussian_blur", &gaussianBlur, py::arg("surface"), py::arg("radius"),
+    subTransform.def("gaussian_blur", &gaussianBlur, py::arg("pixel_array"), py::arg("radius"),
                      py::arg("repeat_edge_pixels") = true, R"doc(
-Apply a Gaussian blur effect to a surface.
+Apply a Gaussian blur effect to a pixel array.
 
 Gaussian blur creates a natural, smooth blur effect using a Gaussian distribution
 for pixel weighting. It produces higher quality results than box blur but is
 computationally more expensive.
 
 Args:
-    surface (Surface): The surface to blur.
+    pixel_array (PixelArray): The pixel array to blur.
     radius (int): The blur radius in pixels. Larger values create stronger blur.
     repeat_edge_pixels (bool, optional): Whether to repeat edge pixels when sampling
-                                        outside the surface bounds. Defaults to True.
+                                        outside the pixel array bounds. Defaults to True.
 
 Returns:
-    Surface: A new surface with the Gaussian blur effect applied.
+    PixelArray: A new pixel array with the Gaussian blur effect applied.
 
 Raises:
-    RuntimeError: If surface creation fails during the blur process.
+    RuntimeError: If pixel array creation fails during the blur process.
     )doc");
-    subTransform.def("invert", &invert, py::arg("surface"), R"doc(
-Invert the colors of a surface.
+    subTransform.def("invert", &invert, py::arg("pixel_array"), R"doc(
+Invert the colors of a pixel array.
 
 Creates a negative image effect by inverting each color channel (RGB).
 The alpha channel is preserved unchanged.
 
 Args:
-    surface (Surface): The surface to invert.
+    pixel_array (PixelArray): The pixel array to invert.
 
 Returns:
-    Surface: A new surface with inverted colors.
+    PixelArray: A new pixel array with inverted colors.
 
 Raises:
-    RuntimeError: If surface creation fails.
+    RuntimeError: If pixel array creation fails.
     )doc");
-    subTransform.def("grayscale", &grayscale, py::arg("surface"), R"doc(
-Convert a surface to grayscale.
+    subTransform.def("grayscale", &grayscale, py::arg("pixel_array"), R"doc(
+Convert a pixel array to grayscale.
 
-Converts the surface to grayscale using the standard luminance formula:
+Converts the pixel array to grayscale using the standard luminance formula:
 gray = 0.299 * red + 0.587 * green + 0.114 * blue
 
 This formula accounts for human perception of brightness across different colors.
 The alpha channel is preserved unchanged.
 
 Args:
-    surface (Surface): The surface to convert to grayscale.
+    pixel_array (PixelArray): The pixel array to convert to grayscale.
 
 Returns:
-    Surface: A new surface converted to grayscale.
+    PixelArray: A new pixel array converted to grayscale.
 
 Raises:
-    RuntimeError: If surface creation fails.
+    RuntimeError: If pixel array creation fails.
     )doc");
 }
 
-std::unique_ptr<Surface> flip(const Surface& surface, const bool flipX, const bool flipY)
+std::unique_ptr<PixelArray> flip(const PixelArray& pixelArray, const bool flipX, const bool flipY)
 {
-    SDL_Surface* sdlSurface = surface.getSDL();
+    SDL_Surface* sdlSurface = pixelArray.getSDL();
     SDL_Surface* flipped = SDL_CreateSurface(sdlSurface->w, sdlSurface->h, SDL_PIXELFORMAT_RGBA32);
 
     if (!flipped)
-        throw std::runtime_error("Failed to create flipped surface.");
+        throw std::runtime_error("Failed to create flipped pixel array.");
 
     int bpp = SDL_GetPixelFormatDetails(sdlSurface->format)->bytes_per_pixel;
 
@@ -165,19 +165,19 @@ std::unique_ptr<Surface> flip(const Surface& surface, const bool flipX, const bo
             memcpy(dstPixel, srcPixel, bpp);
         }
 
-    return std::make_unique<Surface>(flipped);
+    return std::make_unique<PixelArray>(flipped);
 }
 
-std::unique_ptr<Surface> scaleTo(const Surface& surface, const Vec2& size)
+std::unique_ptr<PixelArray> scaleTo(const PixelArray& pixelArray, const Vec2& size)
 {
-    SDL_Surface* sdlSurface = surface.getSDL();
+    SDL_Surface* sdlSurface = pixelArray.getSDL();
 
     const auto newW = static_cast<int>(size.x);
     const auto newH = static_cast<int>(size.y);
 
     SDL_Surface* scaled = SDL_CreateSurface(newW, newH, SDL_PIXELFORMAT_RGBA32);
     if (!scaled)
-        throw std::runtime_error("Failed to create scaled surface.");
+        throw std::runtime_error("Failed to create scaled pixel array.");
 
     SDL_Rect dstRect = {0, 0, newW, newH};
     if (!SDL_BlitSurfaceScaled(sdlSurface, nullptr, scaled, &dstRect, SDL_SCALEMODE_NEAREST))
@@ -186,41 +186,41 @@ std::unique_ptr<Surface> scaleTo(const Surface& surface, const Vec2& size)
         throw std::runtime_error("SDL_BlitScaled failed: " + std::string(SDL_GetError()));
     }
 
-    return std::make_unique<Surface>(scaled);
+    return std::make_unique<PixelArray>(scaled);
 }
 
-std::unique_ptr<Surface> scaleBy(const Surface& surface, const double factor)
+std::unique_ptr<PixelArray> scaleBy(const PixelArray& pixelArray, const double factor)
 {
     if (factor <= 0.0)
         throw std::invalid_argument("Scale factor must be a positive value.");
 
-    return scaleTo(surface, surface.getSize() * factor);
+    return scaleTo(pixelArray, pixelArray.getSize() * factor);
 }
 
-std::unique_ptr<Surface> scaleBy(const Surface& surface, const Vec2& factor)
+std::unique_ptr<PixelArray> scaleBy(const PixelArray& pixelArray, const Vec2& factor)
 {
     if (factor <= 0.0)
         throw std::invalid_argument("Scale factor must be a positive value.");
 
-    const Vec2 originalSize = surface.getSize();
-    return scaleTo(surface, {originalSize.x * factor.x, originalSize.y * factor.y});
+    const Vec2 originalSize = pixelArray.getSize();
+    return scaleTo(pixelArray, {originalSize.x * factor.x, originalSize.y * factor.y});
 }
 
-std::unique_ptr<Surface> rotate(const Surface& surface, const double angle)
+std::unique_ptr<PixelArray> rotate(const PixelArray& pixelArray, const double angle)
 {
-    SDL_Surface* sdlSurface = surface.getSDL();
+    SDL_Surface* sdlSurface = pixelArray.getSDL();
     SDL_Surface* rotated =
         rotozoomSurface(sdlSurface, angle, 1.0, SMOOTHING_OFF); // rotate, don't scale
     if (!rotated)
-        throw std::runtime_error("Failed to rotate surface.");
+        throw std::runtime_error("Failed to rotate pixel array.");
 
-    return std::make_unique<Surface>(rotated);
+    return std::make_unique<PixelArray>(rotated);
 }
 
-std::unique_ptr<Surface> boxBlur(const Surface& surface, const int radius,
+std::unique_ptr<PixelArray> boxBlur(const PixelArray& pixelArray, const int radius,
                                  const bool repeatEdgePixels)
 {
-    SDL_Surface* src = surface.getSDL();
+    SDL_Surface* src = pixelArray.getSDL();
     const int width = src->w;
     const int height = src->h;
 
@@ -292,12 +292,12 @@ std::unique_ptr<Surface> boxBlur(const Surface& surface, const int radius,
 
     SDL_DestroySurface(temp);
 
-    return std::make_unique<Surface>(result);
+    return std::make_unique<PixelArray>(result);
 }
 
-std::unique_ptr<Surface> gaussianBlur(const Surface& surface, int radius, bool repeatEdgePixels)
+std::unique_ptr<PixelArray> gaussianBlur(const PixelArray& pixelArray, int radius, bool repeatEdgePixels)
 {
-    SDL_Surface* src = surface.getSDL();
+    SDL_Surface* src = pixelArray.getSDL();
 
     const int w = src->w, h = src->h;
     int diameter = radius * 2 + 1;
@@ -388,12 +388,12 @@ std::unique_ptr<Surface> gaussianBlur(const Surface& surface, int radius, bool r
 
     SDL_DestroySurface(temp);
 
-    return std::make_unique<Surface>(result);
+    return std::make_unique<PixelArray>(result);
 }
 
-std::unique_ptr<Surface> invert(const Surface& surface)
+std::unique_ptr<PixelArray> invert(const PixelArray& pixelArray)
 {
-    SDL_Surface* src = surface.getSDL();
+    SDL_Surface* src = pixelArray.getSDL();
 
     const int w = src->w;
     const int h = src->h;
@@ -416,12 +416,12 @@ std::unique_ptr<Surface> invert(const Surface& surface)
         dstPx[i] = SDL_MapRGBA(resDetails, nullptr, 255 - r, 255 - g, 255 - b, a);
     }
 
-    return std::make_unique<Surface>(result);
+    return std::make_unique<PixelArray>(result);
 }
 
-std::unique_ptr<Surface> grayscale(const Surface& surface)
+std::unique_ptr<PixelArray> grayscale(const PixelArray& pixelArray)
 {
-    SDL_Surface* src = surface.getSDL();
+    SDL_Surface* src = pixelArray.getSDL();
 
     const int w = src->w;
     const int h = src->h;
@@ -445,6 +445,6 @@ std::unique_ptr<Surface> grayscale(const Surface& surface)
         dstPx[i] = SDL_MapRGBA(resDetails, nullptr, gray, gray, gray, a);
     }
 
-    return std::make_unique<Surface>(result);
+    return std::make_unique<PixelArray>(result);
 }
 } // namespace transform

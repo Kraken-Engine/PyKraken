@@ -7,7 +7,7 @@ namespace polygon
 {
 void _bind(py::module_& module)
 {
-    py::class_<Polygon>(module, "Polygon", R"doc(
+    py::classh<Polygon>(module, "Polygon", R"doc(
 Represents a polygon shape defined by a sequence of points.
 
 A polygon is a closed shape made up of connected line segments. The points define

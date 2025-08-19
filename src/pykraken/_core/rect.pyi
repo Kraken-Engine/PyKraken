@@ -48,7 +48,7 @@ def move(rect: pykraken._core.Rect, offset: pykraken._core.Vec2) -> pykraken._co
         Rect: A new rectangle moved by the offset.
     """
 @typing.overload
-def scale_by(rect: pykraken._core.Rect, factor: float) -> pykraken._core.Rect:
+def scale_by(rect: pykraken._core.Rect, factor: typing.SupportsFloat) -> pykraken._core.Rect:
     """
     Scale a rectangle by a uniform factor.
     

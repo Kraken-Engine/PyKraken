@@ -2,9 +2,13 @@
 Functions for drawing shape objects
 """
 from __future__ import annotations
+import collections.abc
+import numpy
+import numpy.typing
 import pykraken._core
-__all__ = ['circle', 'line', 'point', 'points', 'polygon', 'rect', 'rects']
-def circle(circle: pykraken._core.Circle, color: pykraken._core.Color, thickness: int = 0) -> None:
+import typing
+__all__ = ['circle', 'line', 'point', 'points', 'points_from_ndarray', 'polygon', 'rect', 'rects']
+def circle(circle: pykraken._core.Circle, color: pykraken._core.Color, thickness: typing.SupportsInt = 0) -> None:
     """
     Draw a circle to the renderer.
     
@@ -14,7 +18,7 @@ def circle(circle: pykraken._core.Circle, color: pykraken._core.Color, thickness
         thickness (int, optional): The line thickness. If 0 or >= radius, draws filled circle.
                                   Defaults to 0 (filled).
     """
-def line(line: pykraken._core.Line, color: pykraken._core.Color, thickness: int = 1) -> None:
+def line(line: pykraken._core.Line, color: pykraken._core.Color, thickness: typing.SupportsInt = 1) -> None:
     """
     Draw a line to the renderer.
     
@@ -34,7 +38,7 @@ def point(point: pykraken._core.Vec2, color: pykraken._core.Color) -> None:
     Raises:
         RuntimeError: If point rendering fails.
     """
-def points(points: list[pykraken._core.Vec2], color: pykraken._core.Color) -> None:
+def points(points: collections.abc.Sequence[pykraken._core.Vec2], color: pykraken._core.Color) -> None:
     """
     Batch draw an array of points to the renderer.
     
@@ -43,6 +47,22 @@ def points(points: list[pykraken._core.Vec2], color: pykraken._core.Color) -> No
         color (Color): The color of the points.
     
     Raises:
+        RuntimeError: If point rendering fails.
+    """
+def points_from_ndarray(points: typing.Annotated[numpy.typing.ArrayLike, numpy.float64], color: pykraken._core.Color) -> None:
+    """
+    Batch draw points from a NumPy array.
+    
+    This fast path accepts a contiguous NumPy array of shape (N,2) (dtype float64) and
+    reads coordinates directly with minimal overhead. Use this to measure the best-case
+    zero-copy/buffer-backed path.
+    
+    Args:
+        points (numpy.ndarray): Array with shape (N,2) containing x,y coordinates.
+        color (Color): The color of the points.
+    
+    Raises:
+        ValueError: If the array shape is not (N,2).
         RuntimeError: If point rendering fails.
     """
 def polygon(polygon: pykraken._core.Polygon, color: pykraken._core.Color, filled: bool = False) -> None:
@@ -55,7 +75,7 @@ def polygon(polygon: pykraken._core.Polygon, color: pykraken._core.Color, filled
         filled (bool, optional): Whether to draw a filled polygon or just the outline.
                                  Defaults to False (outline). Works with both convex and concave polygons.
     """
-def rect(rect: pykraken._core.Rect, color: pykraken._core.Color, thickness: int = 0) -> None:
+def rect(rect: pykraken._core.Rect, color: pykraken._core.Color, thickness: typing.SupportsInt = 0) -> None:
     """
     Draw a rectangle to the renderer.
     
@@ -64,7 +84,7 @@ def rect(rect: pykraken._core.Rect, color: pykraken._core.Color, thickness: int 
         color (Color): The color of the rectangle.
         thickness (int, optional): The border thickness. If 0 or >= half width/height, draws filled rectangle. Defaults to 0 (filled).
     """
-def rects(rects: list[pykraken._core.Rect], color: pykraken._core.Color, thickness: int = 0) -> None:
+def rects(rects: collections.abc.Sequence[pykraken._core.Rect], color: pykraken._core.Color, thickness: typing.SupportsInt = 0) -> None:
     """
     Batch draw an array of rectangles to the renderer.
     

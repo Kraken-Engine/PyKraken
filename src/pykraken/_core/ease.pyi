@@ -2,8 +2,9 @@
 Easing functions and animation utilities
 """
 from __future__ import annotations
+import typing
 __all__ = ['in_back', 'in_bounce', 'in_circ', 'in_cubic', 'in_elastic', 'in_expo', 'in_out_back', 'in_out_bounce', 'in_out_circ', 'in_out_cubic', 'in_out_elastic', 'in_out_expo', 'in_out_quad', 'in_out_quart', 'in_out_quint', 'in_out_sin', 'in_quad', 'in_quart', 'in_quint', 'in_sin', 'linear', 'out_back', 'out_bounce', 'out_circ', 'out_cubic', 'out_elastic', 'out_expo', 'out_quad', 'out_quart', 'out_quint', 'out_sin']
-def in_back(t: float) -> float:
+def in_back(t: typing.SupportsFloat) -> float:
     """
     Back easing in (overshoot at start).
     
@@ -12,7 +13,7 @@ def in_back(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def in_bounce(t: float) -> float:
+def in_bounce(t: typing.SupportsFloat) -> float:
     """
     Bounce easing in (bounces toward target).
     
@@ -21,7 +22,7 @@ def in_bounce(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def in_circ(t: float) -> float:
+def in_circ(t: typing.SupportsFloat) -> float:
     """
     Circular easing in.
     
@@ -30,7 +31,7 @@ def in_circ(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def in_cubic(t: float) -> float:
+def in_cubic(t: typing.SupportsFloat) -> float:
     """
     Cubic easing in (very slow start).
     
@@ -39,7 +40,7 @@ def in_cubic(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def in_elastic(t: float) -> float:
+def in_elastic(t: typing.SupportsFloat) -> float:
     """
     Elastic easing in (springy start).
     
@@ -48,7 +49,7 @@ def in_elastic(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def in_expo(t: float) -> float:
+def in_expo(t: typing.SupportsFloat) -> float:
     """
     Exponential easing in.
     
@@ -57,7 +58,7 @@ def in_expo(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def in_out_back(t: float) -> float:
+def in_out_back(t: typing.SupportsFloat) -> float:
     """
     Back easing in and out.
     
@@ -66,7 +67,7 @@ def in_out_back(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def in_out_bounce(t: float) -> float:
+def in_out_bounce(t: typing.SupportsFloat) -> float:
     """
     Bounce easing in and out.
     
@@ -75,7 +76,7 @@ def in_out_bounce(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def in_out_circ(t: float) -> float:
+def in_out_circ(t: typing.SupportsFloat) -> float:
     """
     Circular easing in and out.
     
@@ -84,7 +85,7 @@ def in_out_circ(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def in_out_cubic(t: float) -> float:
+def in_out_cubic(t: typing.SupportsFloat) -> float:
     """
     Cubic easing in and out.
     
@@ -93,7 +94,7 @@ def in_out_cubic(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def in_out_elastic(t: float) -> float:
+def in_out_elastic(t: typing.SupportsFloat) -> float:
     """
     Elastic easing in and out.
     
@@ -102,7 +103,7 @@ def in_out_elastic(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def in_out_expo(t: float) -> float:
+def in_out_expo(t: typing.SupportsFloat) -> float:
     """
     Exponential easing in and out.
     
@@ -111,7 +112,7 @@ def in_out_expo(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def in_out_quad(t: float) -> float:
+def in_out_quad(t: typing.SupportsFloat) -> float:
     """
     Quadratic easing in and out.
     
@@ -120,7 +121,7 @@ def in_out_quad(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def in_out_quart(t: float) -> float:
+def in_out_quart(t: typing.SupportsFloat) -> float:
     """
     Quartic easing in and out.
     
@@ -129,7 +130,7 @@ def in_out_quart(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def in_out_quint(t: float) -> float:
+def in_out_quint(t: typing.SupportsFloat) -> float:
     """
     Quintic easing in and out.
     
@@ -138,7 +139,7 @@ def in_out_quint(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def in_out_sin(t: float) -> float:
+def in_out_sin(t: typing.SupportsFloat) -> float:
     """
     Sinusoidal easing in and out.
     
@@ -147,7 +148,7 @@ def in_out_sin(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def in_quad(t: float) -> float:
+def in_quad(t: typing.SupportsFloat) -> float:
     """
     Quadratic easing in (slow start).
     
@@ -156,7 +157,7 @@ def in_quad(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def in_quart(t: float) -> float:
+def in_quart(t: typing.SupportsFloat) -> float:
     """
     Quartic easing in.
     
@@ -165,7 +166,7 @@ def in_quart(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def in_quint(t: float) -> float:
+def in_quint(t: typing.SupportsFloat) -> float:
     """
     Quintic easing in.
     
@@ -174,7 +175,7 @@ def in_quint(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def in_sin(t: float) -> float:
+def in_sin(t: typing.SupportsFloat) -> float:
     """
     Sinusoidal easing in.
     
@@ -183,7 +184,7 @@ def in_sin(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def linear(t: float) -> float:
+def linear(t: typing.SupportsFloat) -> float:
     """
     Linear easing.
     
@@ -192,7 +193,7 @@ def linear(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def out_back(t: float) -> float:
+def out_back(t: typing.SupportsFloat) -> float:
     """
     Back easing out (overshoot at end).
     
@@ -201,7 +202,7 @@ def out_back(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def out_bounce(t: float) -> float:
+def out_bounce(t: typing.SupportsFloat) -> float:
     """
     Bounce easing out (bounces after start).
     
@@ -210,7 +211,7 @@ def out_bounce(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def out_circ(t: float) -> float:
+def out_circ(t: typing.SupportsFloat) -> float:
     """
     Circular easing out.
     
@@ -219,7 +220,7 @@ def out_circ(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def out_cubic(t: float) -> float:
+def out_cubic(t: typing.SupportsFloat) -> float:
     """
     Cubic easing out (fast then smooth).
     
@@ -228,7 +229,7 @@ def out_cubic(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def out_elastic(t: float) -> float:
+def out_elastic(t: typing.SupportsFloat) -> float:
     """
     Elastic easing out (springy end).
     
@@ -237,7 +238,7 @@ def out_elastic(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def out_expo(t: float) -> float:
+def out_expo(t: typing.SupportsFloat) -> float:
     """
     Exponential easing out.
     
@@ -246,7 +247,7 @@ def out_expo(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def out_quad(t: float) -> float:
+def out_quad(t: typing.SupportsFloat) -> float:
     """
     Quadratic easing out (fast start).
     
@@ -255,7 +256,7 @@ def out_quad(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def out_quart(t: float) -> float:
+def out_quart(t: typing.SupportsFloat) -> float:
     """
     Quartic easing out.
     
@@ -264,7 +265,7 @@ def out_quart(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def out_quint(t: float) -> float:
+def out_quint(t: typing.SupportsFloat) -> float:
     """
     Quintic easing out.
     
@@ -273,7 +274,7 @@ def out_quint(t: float) -> float:
     Returns:
         float: Eased result.
     """
-def out_sin(t: float) -> float:
+def out_sin(t: typing.SupportsFloat) -> float:
     """
     Sinusoidal easing out.
     

@@ -13,7 +13,7 @@ namespace event
 
 void _bind(py::module_& module)
 {
-    py::class_<knEvent>(module, "Event", R"doc(
+    py::classh<knEvent>(module, "Event", R"doc(
 Represents a single input event such as keyboard, mouse, or gamepad activity.
 
 Attributes:

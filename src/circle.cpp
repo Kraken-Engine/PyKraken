@@ -12,7 +12,7 @@ namespace circle
 {
 void _bind(py::module_& module)
 {
-    py::class_<Circle>(module, "Circle", R"doc(
+    py::classh<Circle>(module, "Circle", R"doc(
 Represents a circle shape with position and radius.
 
 Supports collision detection with points, rectangles, other circles, and lines.

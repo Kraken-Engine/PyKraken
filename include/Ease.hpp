@@ -19,7 +19,7 @@ class EasingAnimation
     EasingAnimation(const Vec2& start, const Vec2& end, double duration, EasingFunction easeFunc);
     ~EasingAnimation() = default;
 
-    Vec2 step(double delta);
+    Vec2 step();
 
     void pause();
 

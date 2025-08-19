@@ -7,7 +7,7 @@ namespace line
 {
 void _bind(py::module_& module)
 {
-    py::class_<Line>(module, "Line", R"doc(
+    py::classh<Line>(module, "Line", R"doc(
 A 2D line segment defined by two points: A and B.
 You can access or modify points using `.a`, `.b`, or directly via `.ax`, `.ay`, `.bx`, `.by`.
     )doc")

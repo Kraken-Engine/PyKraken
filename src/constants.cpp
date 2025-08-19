@@ -2,12 +2,13 @@
 #include "_globals.hpp"
 
 #include <SDL3/SDL.h>
+#include <pybind11/native_enum.h>
 #include <unordered_map>
 
 void constants::_bind(py::module_& module)
 {
     // Define Anchor enum
-    py::enum_<Anchor>(module, "Anchor", py::arithmetic())
+    py::native_enum<Anchor>(module, "Anchor", "enum.IntEnum")
         .value("TOP_LEFT", Anchor::TOP_LEFT)
         .value("TOP_MID", Anchor::TOP_MID)
         .value("TOP_RIGHT", Anchor::TOP_RIGHT)
@@ -17,10 +18,11 @@ void constants::_bind(py::module_& module)
         .value("BOTTOM_LEFT", Anchor::BOTTOM_LEFT)
         .value("BOTTOM_MID", Anchor::BOTTOM_MID)
         .value("BOTTOM_RIGHT", Anchor::BOTTOM_RIGHT)
-        .export_values();
+        .export_values()
+        .finalize();
 
     // Define event types
-    py::enum_<SDL_EventType>(module, "EventType", py::arithmetic())
+    py::native_enum<SDL_EventType>(module, "EventType", "enum.IntEnum")
         .value("QUIT", SDL_EVENT_QUIT)
         .value("WINDOW_SHOWN", SDL_EVENT_WINDOW_SHOWN)
         .value("WINDOW_HIDDEN", SDL_EVENT_WINDOW_HIDDEN)
@@ -76,19 +78,21 @@ void constants::_bind(py::module_& module)
         .value("CAMERA_REMOVED", SDL_EVENT_CAMERA_DEVICE_REMOVED)
         .value("CAMERA_APPROVED", SDL_EVENT_CAMERA_DEVICE_APPROVED)
         .value("CAMERA_DENIED", SDL_EVENT_CAMERA_DEVICE_DENIED)
-        .export_values();
+        .export_values()
+        .finalize();
 
     // Mouse buttons
-    py::enum_<knMouseButton>(module, "MouseButton", py::arithmetic())
+    py::native_enum<knMouseButton>(module, "MouseButton", "enum.IntEnum")
         .value("M_LEFT", knMouseButton::M_LEFT)
         .value("M_MIDDLE", knMouseButton::M_MIDDLE)
         .value("M_RIGHT", knMouseButton::M_RIGHT)
         .value("M_SIDE1", knMouseButton::M_SIDE1)
         .value("M_SIDE2", knMouseButton::M_SIDE2)
-        .export_values();
+        .export_values()
+        .finalize();
 
     // Scancodes
-    py::enum_<SDL_Scancode>(module, "Scancode", py::arithmetic())
+    py::native_enum<SDL_Scancode>(module, "Scancode", "enum.IntEnum")
         .value("S_a", SDL_SCANCODE_A)
         .value("S_b", SDL_SCANCODE_B)
         .value("S_c", SDL_SCANCODE_C)
@@ -201,10 +205,11 @@ void constants::_bind(py::module_& module)
         .value("S_RSHIFT", SDL_SCANCODE_RSHIFT)
         .value("S_RALT", SDL_SCANCODE_RALT)
         .value("S_RGUI", SDL_SCANCODE_RGUI)
-        .export_values();
+        .export_values()
+        .finalize();
 
     // Keycodes
-    py::enum_<KnKeycode>(module, "Keycode", py::arithmetic())
+    py::native_enum<KnKeycode>(module, "Keycode", "enum.IntEnum")
         .value("K_BACKSPACE", KnKeycode::K_BACKSPACE)
         .value("K_TAB", KnKeycode::K_TAB)
         .value("K_RETURN", KnKeycode::K_RETURN)
@@ -338,10 +343,11 @@ void constants::_bind(py::module_& module)
         .value("K_RSHIFT", KnKeycode::K_RSHIFT)
         .value("K_RALT", KnKeycode::K_RALT)
         .value("K_RGUI", KnKeycode::K_RGUI)
-        .export_values();
+        .export_values()
+        .finalize();
 
     // Gamepad buttons
-    py::enum_<SDL_GamepadButton>(module, "GamepadButton", py::arithmetic())
+    py::native_enum<SDL_GamepadButton>(module, "GamepadButton", "enum.IntEnum")
         .value("C_SOUTH", SDL_GAMEPAD_BUTTON_SOUTH)
         .value("C_EAST", SDL_GAMEPAD_BUTTON_EAST)
         .value("C_WEST", SDL_GAMEPAD_BUTTON_WEST)
@@ -357,20 +363,22 @@ void constants::_bind(py::module_& module)
         .value("C_DPAD_DOWN", SDL_GAMEPAD_BUTTON_DPAD_DOWN)
         .value("C_DPAD_LEFT", SDL_GAMEPAD_BUTTON_DPAD_LEFT)
         .value("C_DPAD_RIGHT", SDL_GAMEPAD_BUTTON_DPAD_RIGHT)
-        .export_values();
+        .export_values()
+        .finalize();
 
     // Gamepad axes
-    py::enum_<SDL_GamepadAxis>(module, "GamepadAxis", py::arithmetic())
+    py::native_enum<SDL_GamepadAxis>(module, "GamepadAxis", "enum.IntEnum")
         .value("C_LX", SDL_GAMEPAD_AXIS_LEFTX)
         .value("C_LY", SDL_GAMEPAD_AXIS_LEFTY)
         .value("C_RX", SDL_GAMEPAD_AXIS_RIGHTX)
         .value("C_RY", SDL_GAMEPAD_AXIS_RIGHTY)
         .value("C_LTRIGGER", SDL_GAMEPAD_AXIS_LEFT_TRIGGER)
         .value("C_RTRIGGER", SDL_GAMEPAD_AXIS_RIGHT_TRIGGER)
-        .export_values();
+        .export_values()
+        .finalize();
 
     // Gamepad types
-    py::enum_<SDL_GamepadType>(module, "GamepadType", py::arithmetic())
+    py::native_enum<SDL_GamepadType>(module, "GamepadType", "enum.IntEnum")
         .value("C_STANDARD", SDL_GAMEPAD_TYPE_STANDARD)
         .value("C_XBOX_360", SDL_GAMEPAD_TYPE_XBOX360)
         .value("C_XBOX_ONE", SDL_GAMEPAD_TYPE_XBOXONE)
@@ -381,5 +389,6 @@ void constants::_bind(py::module_& module)
         .value("C_SWITCH_JOYCON_LEFT", SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_LEFT)
         .value("C_SWITCH_JOYCON_RIGHT", SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_RIGHT)
         .value("C_SWITCH_JOYCON_PAIR", SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_PAIR)
-        .export_values();
+        .export_values()
+        .finalize();
 }

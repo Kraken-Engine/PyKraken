@@ -5,7 +5,7 @@ namespace rect
 {
 void _bind(py::module_& module)
 {
-    py::class_<Rect>(module, "Rect", R"doc(
+    py::classh<Rect>(module, "Rect", R"doc(
 Represents a rectangle with position and size.
 
 A Rect is defined by its top-left corner position (x, y) and dimensions (w, h).

@@ -2,9 +2,9 @@
 #include "Camera.hpp"
 #include "Color.hpp"
 #include "Math.hpp"
+#include "PixelArray.hpp"
 #include "Rect.hpp"
 #include "Renderer.hpp"
-#include "Surface.hpp"
 #include "Window.hpp"
 #include "_globals.hpp"
 
@@ -14,15 +14,15 @@ namespace texture
 {
 void _bind(py::module_& module)
 {
-    py::class_<Texture> texture(module, "Texture", R"doc(
+    py::classh<Texture> texture(module, "Texture", R"doc(
 Represents a hardware-accelerated image that can be efficiently rendered.
 
 Textures are optimized for fast rendering operations and support various effects
 like rotation, flipping, tinting, alpha blending, and different blend modes.
-They are created from image files or surfaces and must be associated with a renderer.
+They can be created from image files or pixel arrays.
     )doc");
 
-    py::class_<Texture::Flip>(texture, "Flip", R"doc(
+    py::classh<Texture::Flip>(texture, "Flip", R"doc(
 Controls horizontal and vertical flipping of a texture during rendering.
 
 Used to mirror textures along the horizontal and/or vertical axes without
@@ -50,14 +50,14 @@ Raises:
     ValueError: If file_path is empty.
     RuntimeError: If the file cannot be loaded or texture creation fails.
         )doc")
-        .def(py::init<const Surface&>(), py::arg("surface"), R"doc(
-Create a Texture from an existing Surface.
+        .def(py::init<const PixelArray&>(), py::arg("pixel_array"), R"doc(
+Create a Texture from an existing PixelArray.
 
 Args:
-    surface (Surface): The surface to convert to a texture.
+    pixel_array (PixelArray): The pixel array to convert to a texture.
 
 Raises:
-    RuntimeError: If texture creation from surface fails.
+    RuntimeError: If texture creation from pixel array fails.
         )doc")
 
         .def_readwrite("angle", &Texture::angle, R"doc(
@@ -128,14 +128,13 @@ Set the texture to use normal (alpha) blending mode.
 
 This is the default blending mode for standard transparency effects.
         )doc")
-        .def("render", py::overload_cast<Rect, py::object>(&Texture::render), py::arg("rect"),
+        .def("render", py::overload_cast<Rect, py::object>(&Texture::render), py::arg("dst"),
              py::arg("src") = py::none(), R"doc(
 Render this texture with specified destination and source rectangles.
 
 Args:
-    dst_rect (Rect): The destination rectangle on the renderer.
-    src_rect (Rect, optional): The source rectangle from the texture. 
-                              Defaults to entire texture if not specified.
+    dst (Rect): The destination rectangle on the renderer.
+    src (Rect, optional): The source rectangle from the texture. Defaults to entire texture if not specified.
     )doc")
         .def("render", py::overload_cast<py::object, Anchor>(&Texture::render),
              py::arg("pos") = py::none(), py::arg("anchor") = Anchor::CENTER,
@@ -149,13 +148,13 @@ Args:
 }
 } // namespace texture
 
-Texture::Texture(const Surface& surface)
+Texture::Texture(const PixelArray& pixelArray)
 {
-    m_texPtr = SDL_CreateTextureFromSurface(renderer::get(), surface.getSDL());
+    m_texPtr = SDL_CreateTextureFromSurface(renderer::get(), pixelArray.getSDL());
 
     if (!m_texPtr)
     {
-        throw std::runtime_error("Failed to create texture from surface: " +
+        throw std::runtime_error("Failed to create texture from PixelArray: " +
                                  std::string(SDL_GetError()));
     }
 
@@ -256,7 +255,7 @@ void Texture::render(Rect dstRect, py::object srcRect)
         }
         catch (const py::cast_error&)
         {
-            throw std::runtime_error("srcRect must be a Rect");
+            throw std::invalid_argument("'src' must be a Rect");
         }
     }
     else
@@ -291,7 +290,7 @@ void Texture::render(py::object pos, const Anchor anchor)
         }
         catch (const py::cast_error&)
         {
-            throw std::runtime_error("pos must be a Vec2");
+            throw std::invalid_argument("'pos' must be a Vec2");
         }
     }
 

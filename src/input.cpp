@@ -20,7 +20,7 @@ static std::unordered_map<std::string, std::vector<InputAction>> _inputBindings;
 
 void _bind(py::module_& module)
 {
-    py::class_<InputAction>(module, "InputAction", R"doc(
+    py::classh<InputAction>(module, "InputAction", R"doc(
 Represents a single input trigger such as a key, mouse button, or gamepad control.
     )doc")
 

@@ -17,7 +17,7 @@ def clear(color: typing.Any = None) -> None:
         ValueError: If color values are not between 0 and 255.
     """
 @typing.overload
-def clear(r: int, g: int, b: int, a: int = 255) -> None:
+def clear(r: typing.SupportsInt, g: typing.SupportsInt, b: typing.SupportsInt, a: typing.SupportsInt = 255) -> None:
     """
     Clear the renderer with the specified color.
     

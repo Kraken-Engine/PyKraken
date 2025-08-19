@@ -8,6 +8,7 @@ as well as commonly used color constants for convenience.
 """
 from __future__ import annotations
 import pykraken._core
+import typing
 __all__ = ['BLACK', 'BLUE', 'BROWN', 'CYAN', 'DARK_GRAY', 'DARK_GREY', 'GRAY', 'GREEN', 'GREY', 'LIGHT_GRAY', 'LIGHT_GREY', 'MAGENTA', 'MAROON', 'NAVY', 'OLIVE', 'ORANGE', 'PINK', 'PURPLE', 'RED', 'TEAL', 'WHITE', 'YELLOW', 'from_hex', 'from_hsv', 'grayscale', 'invert', 'lerp']
 def from_hex(hex: str) -> pykraken._core.Color:
     """
@@ -31,7 +32,7 @@ def from_hex(hex: str) -> pykraken._core.Color:
         from_hex("#F0F")         # Same as "#FF00FF"
         from_hex("RGB")          # Without '#' prefix
     """
-def from_hsv(h: float, s: float, v: float, a: float = 1.0) -> pykraken._core.Color:
+def from_hsv(h: typing.SupportsFloat, s: typing.SupportsFloat, v: typing.SupportsFloat, a: typing.SupportsFloat = 1.0) -> pykraken._core.Color:
     """
     Create a Color from HSV(A) values.
     
@@ -69,7 +70,7 @@ def invert(color: pykraken._core.Color) -> pykraken._core.Color:
     Example:
         invert(Color(255, 0, 128, 200))  # Returns Color(0, 255, 127, 200)
     """
-def lerp(a: pykraken._core.Color, b: pykraken._core.Color, t: float) -> pykraken._core.Color:
+def lerp(a: pykraken._core.Color, b: pykraken._core.Color, t: typing.SupportsFloat) -> pykraken._core.Color:
     """
     Linearly interpolate between two colors.
     

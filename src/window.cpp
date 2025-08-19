@@ -1,6 +1,7 @@
 #include "Window.hpp"
 #include "Math.hpp"
 #include "Renderer.hpp"
+#include "Time.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
@@ -154,7 +155,11 @@ void create(const std::string& title, const Vec2& res, const bool scaled)
     renderer::init(_window, res);
 }
 
-bool isOpen() { return _isOpen; }
+bool isOpen()
+{
+    kn::time::_tick();
+    return _isOpen;
+}
 
 void close() { _isOpen = false; }
 

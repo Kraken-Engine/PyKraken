@@ -31,10 +31,10 @@ pybind11_add_module(_core MODULE
   src/line.cpp
   src/math.cpp
   src/mouse.cpp
+  src/pixel_array.cpp
   src/polygon.cpp
   src/rect.cpp
   src/renderer.cpp
-  src/surface.cpp
   src/texture.cpp
   src/time.cpp
   src/transform.cpp

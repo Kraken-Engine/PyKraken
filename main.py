@@ -1,38 +1,37 @@
 import pykraken as kn
-# import random
+import random
+import numpy as np
 
 kn.init()
 kn.window.create("Kraken Example", (320, 240), True)
-clock = kn.Clock()
 
-bg_color = kn.Color("#141414")
-
-# points = [kn.Vec2(random.randint(0, 1200), random.randint(0, 900)) for _ in range(400000)]
-
-# rect1 = kn.Rect(100, 100, 20, 20)
-# rect2 = rect1.copy()
+points_array = np.array(
+    [kn.Vec2(random.randint(0, 1200), random.randint(0, 900)) for _ in range(100000)],
+    dtype=np.float64
+)
 
 timer = kn.Timer(0.1)
 timer.start()
 
-color = kn.Color("#FFFFFF")
+camera = kn.Camera()
+camera.set()
 
 while kn.window.is_open():
-    clock.tick()
     kn.event.poll()
-
-    kn.renderer.clear(bg_color)
-
-    # kn.draw.points(points, color)
-
     if timer.done:
         timer.start()
-        kn.window.set_title(f"FPS: {clock.get_fps()}")
+        kn.window.set_title(f"FPS: {kn.time.get_fps():.2f}")
 
-    # Concave polygon
-    kn.draw.polygon([kn.mouse.get_pos(), (150, 50), (200, 100), (150, 150)], "#FF0000", True)
+    vec = kn.Vec2(
+        kn.key.is_pressed(kn.S_d) - kn.key.is_pressed(kn.S_a),
+        kn.key.is_pressed(kn.S_s) - kn.key.is_pressed(kn.S_w),
+    )
+    vec.normalize()
+    camera.pos += vec
+        
+    kn.renderer.clear("#141414")
 
-    # tex.render(kn.renderer.get_res() / 2, kn.CENTER)
+    kn.draw.points_from_ndarray(points_array, "#FFF")
 
     kn.renderer.present()
 

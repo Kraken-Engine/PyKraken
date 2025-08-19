@@ -1,2 +1,2 @@
-pybind11
-scikit_build_core
+pybind11==3.0.0
+scikit_build_core==0.11.5

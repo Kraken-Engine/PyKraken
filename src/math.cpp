@@ -12,7 +12,7 @@ namespace math
 {
 void _bind(py::module_& module)
 {
-    py::class_<PolarCoordinate>(module, "PolarCoordinate", R"doc(
+    py::classh<PolarCoordinate>(module, "PolarCoordinate", R"doc(
 Represents a polar coordinate with angle and radius components.
 
 A polar coordinate system uses an angle (in radians) and radius to define a position
@@ -174,7 +174,7 @@ Returns:
         )doc");
     py::implicitly_convertible<py::sequence, PolarCoordinate>();
 
-    py::class_<Vec2>(module, "Vec2", R"doc(
+    py::classh<Vec2>(module, "Vec2", R"doc(
 Represents a 2D vector with x and y components.
 
 Vec2 is used for positions, directions, velocities, and other 2D vector operations.
@@ -726,10 +726,7 @@ Vec2 clampVec(const Vec2& vec, const Vec2& min, const Vec2& max)
     return {std::clamp(vec.x, min.x, max.x), std::clamp(vec.y, min.y, max.y)};
 }
 
-Vec2 lerp(const Vec2& a, const Vec2& b, double t)
-{
-    return {lerp(a.x, b.x, t), lerp(a.y, b.y, t)};
-}
+Vec2 lerp(const Vec2& a, const Vec2& b, double t) { return {lerp(a.x, b.x, t), lerp(a.y, b.y, t)}; }
 
 double lerp(double a, double b, double t) { return a + (b - a) * t; }
 

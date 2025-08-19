@@ -13,10 +13,10 @@ class Vec2;
 struct Color;
 class Rect;
 
-namespace surface
+namespace pixel_array
 {
 void _bind(py::module_& module);
-} // namespace surface
+} // namespace pixel_array
 
 // enum class ScrollType
 // {
@@ -25,20 +25,20 @@ void _bind(py::module_& module);
 //     SCROLL_REPEAT,
 // };
 
-class Surface
+class PixelArray
 {
   public:
-    Surface() = default;
-    Surface(SDL_Surface* sdlSurface);
-    Surface(const Vec2& size);
-    Surface(const std::string& filePath);
-    ~Surface();
+    PixelArray() = default;
+    PixelArray(SDL_Surface* sdlSurface);
+    PixelArray(const Vec2& size);
+    PixelArray(const std::string& filePath);
+    ~PixelArray();
 
     void fill(const Color& color) const;
 
-    void blit(const Surface& other, const Vec2& pos, Anchor anchor, py::object srcRect) const;
+    void blit(const PixelArray& other, const Vec2& pos, Anchor anchor, py::object srcRect) const;
 
-    void blit(const Surface& other, const Rect& dstRect, py::object srcRect) const;
+    void blit(const PixelArray& other, const Rect& dstRect, py::object srcRect) const;
 
     void setColorKey(const Color& color) const;
 
@@ -62,7 +62,7 @@ class Surface
 
     SDL_Surface* getSDL() const;
 
-    std::unique_ptr<Surface> copy() const;
+    std::unique_ptr<PixelArray> copy() const;
 
   private:
     SDL_Surface* m_surface = nullptr;

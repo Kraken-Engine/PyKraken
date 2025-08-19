@@ -4,14 +4,14 @@ Mouse related functions
 from __future__ import annotations
 import pykraken._core
 __all__ = ['get_pos', 'get_rel', 'hide', 'is_hidden', 'is_just_pressed', 'is_just_released', 'is_locked', 'is_pressed', 'lock', 'show', 'unlock']
-def get_pos() -> tuple:
+def get_pos() -> pykraken._core.Vec2:
     """
     Get the current position of the mouse cursor.
     
     Returns:
         tuple[float, float]: The current mouse position as (x, y) coordinates.
     """
-def get_rel() -> tuple:
+def get_rel() -> pykraken._core.Vec2:
     """
     Get the relative mouse movement since the last frame.
     

@@ -9,25 +9,18 @@ namespace kn::time
 {
 void _bind(py::module_& module);
 
+double getDelta();
+
+void setCap(uint16_t frameRate);
+
+double getFPS();
+
 double getElapsed();
 
 void delay(uint64_t ms);
+
+void _tick();
 } // namespace kn::time
-
-class Clock
-{
-  public:
-    Clock();
-    ~Clock() = default;
-
-    double tick(uint16_t frameRate = 0);
-
-    uint64_t getFPS() const;
-
-  private:
-    uint64_t m_lastTick;
-    uint64_t m_fps = 0;
-};
 
 class Timer
 {

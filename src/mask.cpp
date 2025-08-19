@@ -1,7 +1,7 @@
 #include "Mask.hpp"
 #include "Math.hpp"
+#include "PixelArray.hpp"
 #include "Rect.hpp"
-#include "Surface.hpp"
 
 #include <pybind11/stl.h>
 
@@ -9,23 +9,23 @@ namespace mask
 {
 void _bind(py::module_& module)
 {
-    py::class_<Mask>(module, "Mask", R"doc(
+    py::classh<Mask>(module, "Mask", R"doc(
 A collision mask for pixel-perfect collision detection.
 
-A Mask represents a 2D bitmap used for precise collision detection based on 
-non-transparent pixels. It's created from a Surface by analyzing pixel alpha values
-against a threshold to determine solid areas.
+A Mask represents a 2D bitmap, typically used for precise collision detection based on 
+non-transparent pixels.
     )doc")
-        .def(py::init<const Surface&, uint8_t>(), py::arg("surface"), py::arg("threshold") = 0,
+        .def(py::init<const PixelArray&, uint8_t>(), py::arg("pixel_array"),
+             py::arg("threshold") = 0,
              R"doc(
-Create a mask from a surface based on alpha threshold.
+Create a mask from a pixel array based on alpha threshold.
 
 Args:
-    surface (Surface): The source surface to create the mask from.
+    pixel_array (PixelArray): The source pixel array to create the mask from.
     threshold (int): Alpha threshold value (0-255). Pixels with alpha >= threshold are solid.
 
 Raises:
-    RuntimeError: If the surface is invalid.
+    RuntimeError: If the pixel array is invalid.
         )doc")
 
         .def("collide_mask",
@@ -81,13 +81,13 @@ Mask::Mask(const Vec2& size, bool filled)
 {
 }
 
-Mask::Mask(const Surface& surface, const uint8_t threshold)
-    : m_width(surface.getWidth()), m_height(surface.getHeight()),
+Mask::Mask(const PixelArray& pixelArray, const uint8_t threshold)
+    : m_width(pixelArray.getWidth()), m_height(pixelArray.getHeight()),
       m_maskData(m_width * m_height, false)
 {
-    SDL_Surface* rawSurface = surface.getSDL();
+    SDL_Surface* rawSurface = pixelArray.getSDL();
     if (!rawSurface)
-        throw std::runtime_error("Surface object internal pointer is null");
+        throw std::runtime_error("PixelArray object internal SDL surface pointer is null");
 
     const auto* pixels = static_cast<uint8_t*>(rawSurface->pixels);
     const int pitch = rawSurface->pitch;

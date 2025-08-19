@@ -6,7 +6,6 @@
 namespace py = pybind11;
 
 enum class knMouseButton : uint8_t;
-
 class Vec2;
 
 namespace event
@@ -18,9 +17,9 @@ namespace mouse
 {
 void _bind(py::module_& module);
 
-py::tuple getPos();
+Vec2 getPos();
 
-py::tuple getRel();
+Vec2 getRel();
 
 bool isPressed(knMouseButton button);
 

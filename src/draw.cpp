@@ -45,6 +45,23 @@ Raises:
     RuntimeError: If point rendering fails.
     )doc");
 
+    subDraw.def("points_from_ndarray", &pointsFromNDarray, py::arg("points"), py::arg("color"),
+                R"doc(
+Batch draw points from a NumPy array.
+
+This fast path accepts a contiguous NumPy array of shape (N,2) (dtype float64) and
+reads coordinates directly with minimal overhead. Use this to measure the best-case
+zero-copy/buffer-backed path.
+
+Args:
+    points (numpy.ndarray): Array with shape (N,2) containing x,y coordinates.
+    color (Color): The color of the points.
+
+Raises:
+    ValueError: If the array shape is not (N,2).
+    RuntimeError: If point rendering fails.
+    )doc");
+
     subDraw.def("circle", &circle, py::arg("circle"), py::arg("color"), py::arg("thickness") = 0,
                 R"doc(
 Draw a circle to the renderer.
@@ -111,8 +128,7 @@ void point(const Vec2& point, const Color& color)
 
 void points(const std::vector<Vec2>& points, const Color& color)
 {
-    const size_t size = points.size();
-    if (size == 0)
+    if (points.empty())
         return;
 
     SDL_Renderer* rend = renderer::get();
@@ -120,10 +136,53 @@ void points(const std::vector<Vec2>& points, const Color& color)
     SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a);
 
     std::vector<SDL_FPoint> sdlPoints;
-    sdlPoints.reserve(size);
+    sdlPoints.reserve(points.size());
 
+    const Vec2 cameraPos = camera::getActivePos();
+    const Vec2 max = renderer::getResolution() - cameraPos;
+    const Vec2 min = -cameraPos;
     for (const Vec2& point : points)
-        sdlPoints.emplace_back(point - camera::getActivePos());
+    {
+        const Vec2 pos = point - cameraPos;
+        if (min < pos && pos < max)
+            sdlPoints.emplace_back(pos);
+    }
+
+    if (!SDL_RenderPoints(rend, sdlPoints.data(), static_cast<int>(sdlPoints.size())))
+        throw std::runtime_error("Failed to render points: " + std::string(SDL_GetError()));
+}
+
+// Accept a NumPy ndarray with shape (N,2) and dtype float64 for the fastest path.
+void pointsFromNDarray(py::array_t<double, py::array::c_style | py::array::forcecast> arr,
+                       const Color& color)
+{
+    auto info = arr.request();
+    if (info.ndim != 2 || info.shape[1] != 2)
+        throw std::invalid_argument("Expected array shape (N,2)");
+
+    const auto n = static_cast<size_t>(info.shape[0]);
+    if (n == 0)
+        return;
+
+    const double* data = static_cast<double*>(info.ptr);
+
+    SDL_Renderer* rend = renderer::get();
+    SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a);
+
+    std::vector<SDL_FPoint> sdlPoints;
+    sdlPoints.reserve(n);
+
+    const Vec2 res = renderer::getResolution();
+    const Vec2 cameraPos = camera::getActivePos();
+    const Vec2 zero;
+
+    for (size_t i = 0; i < n; ++i)
+    {
+        Vec2 pos = {data[i * 2 + 0], data[i * 2 + 1]};
+        pos -= cameraPos;
+        if (pos > zero && pos < res)
+            sdlPoints.emplace_back(pos);
+    }
 
     if (!SDL_RenderPoints(rend, sdlPoints.data(), static_cast<int>(sdlPoints.size())))
         throw std::runtime_error("Failed to render points: " + std::string(SDL_GetError()));

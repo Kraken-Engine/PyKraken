@@ -1,4 +1,5 @@
 #include "Mouse.hpp"
+#include "Camera.hpp"
 #include "Event.hpp"
 #include "Math.hpp"
 #include "Window.hpp"
@@ -84,20 +85,20 @@ Returns:
     )doc");
 }
 
-py::tuple getPos()
+Vec2 getPos()
 {
     float x, y;
     SDL_GetMouseState(&x, &y);
-    float scale = window::getScale();
-    return py::make_tuple(x / scale, y / scale);
+    auto pos = Vec2{x, y} / window::getScale();
+    return pos + camera::getActivePos();
 }
 
-py::tuple getRel()
+Vec2 getRel()
 {
     float dx, dy;
     SDL_GetRelativeMouseState(&dx, &dy);
     float scale = window::getScale();
-    return py::make_tuple(dx / scale, dy / scale);
+    return {dx / scale, dy / scale};
 }
 
 bool isPressed(knMouseButton button)

@@ -2,9 +2,10 @@
 Input handling and action binding
 """
 from __future__ import annotations
+import collections.abc
 import pykraken._core
 __all__ = ['bind', 'get_axis', 'get_direction', 'is_just_pressed', 'is_just_released', 'is_pressed', 'unbind']
-def bind(name: str, actions: list[pykraken._core.InputAction]) -> None:
+def bind(name: str, actions: collections.abc.Sequence[pykraken._core.InputAction]) -> None:
     """
     Bind a name to a list of InputActions.
     

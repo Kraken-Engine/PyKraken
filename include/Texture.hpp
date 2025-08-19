@@ -8,7 +8,7 @@
 struct Color;
 class Rect;
 class Renderer;
-class Surface;
+class PixelArray;
 enum class Anchor;
 class Vec2;
 
@@ -30,7 +30,7 @@ class Texture final
     } flip;
 
     explicit Texture(SDL_Texture* sdlTexture);
-    Texture(const Surface& surface);
+    Texture(const PixelArray& pixelArray);
     Texture(const std::string& filePath);
     ~Texture();
 

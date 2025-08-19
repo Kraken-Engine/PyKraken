@@ -3,7 +3,7 @@
 #include <pybind11/pybind11.h>
 #include <vector>
 
-class Surface;
+class PixelArray;
 class Vec2;
 class Rect;
 
@@ -19,7 +19,7 @@ class Mask
   public:
     Mask() = default;
     Mask(const Vec2& size, bool filled = false);
-    Mask(const Surface& surface, uint8_t threshold = 1);
+    Mask(const PixelArray& pixelArray, uint8_t threshold = 1);
     ~Mask() = default;
 
     Mask copy() const;

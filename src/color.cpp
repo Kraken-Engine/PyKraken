@@ -7,7 +7,7 @@ namespace color
 {
 void _bind(py::module_& module)
 {
-    py::class_<Color>(module, "Color", R"doc(
+    py::classh<Color>(module, "Color", R"doc(
 Represents an RGBA color.
 
 Each channel (r, g, b, a) is an 8-bit unsigned integer.

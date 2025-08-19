@@ -6,7 +6,7 @@ namespace camera
 {
 void _bind(py::module_& module)
 {
-    py::class_<Camera>(module, "Camera", R"doc(
+    py::classh<Camera>(module, "Camera", R"doc(
 Represents a 2D camera used for rendering.
 
 Controls the viewport's translation, allowing you to move the view of the world.

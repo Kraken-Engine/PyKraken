@@ -1,44 +1,17 @@
 #include "Time.hpp"
 #include <SDL3/SDL.h>
 
+static uint64_t _lastTick = 0;
+static double _fps = 0.0;
+static uint16_t _frameCap = 0;
+static double _timeStep = 1.0 / 60.0;
+static double _delta = 0.0;
+
 namespace kn::time
 {
 void _bind(py::module_& module)
 {
-    py::class_<Clock>(module, "Clock", R"doc(
-A clock for tracking frame time and controlling framerate.
-
-The Clock class is used to measure time between frames and optionally
-limit the framerate of your application. It's essential for creating
-smooth, frame-rate independent animations and game loops.
-    )doc")
-        .def(py::init(), R"doc(
-Create a new Clock instance.
-
-The clock starts measuring time immediately upon creation.
-        )doc")
-        .def("tick", &Clock::tick, py::arg("frame_rate") = 0, R"doc(
-Get the time since the last frame and optionally cap the framerate.
-
-This method should be called once per frame in your main loop. It returns
-the time elapsed since the last call to tick(), which can be used for
-frame-rate independent animations.
-
-Args:
-    frame_rate (int, optional): Maximum framerate to enforce. If 0, no limit is applied.
-                               Defaults to 0 (unlimited).
-
-Returns:
-    float: The time elapsed since the last tick() call, in seconds.
-        )doc")
-        .def("get_fps", &Clock::getFPS, R"doc(
-Get the current frames per second of the program.
-
-Returns:
-    int: The current FPS based on the last frame time.
-        )doc");
-
-    py::class_<Timer>(module, "Timer", R"doc(
+    py::classh<Timer>(module, "Timer", R"doc(
 A timer for tracking countdown durations with pause/resume functionality.
 
 The Timer class provides a simple countdown timer that can be started, paused,
@@ -107,6 +80,32 @@ is complete. Useful for progress bars and interpolated animations.
 
     auto subTime = module.def_submodule("time", "Time related functions");
 
+    subTime.def("get_delta", &getDelta, R"doc(
+Get the time elapsed since the last frame in seconds.
+
+For stability, the returned delta is clamped so it will not be
+smaller than 1/12 seconds (equivalent to capping at 12 FPS). This prevents
+unstable calculations that rely on delta when very small frame times are
+measured.
+
+Returns:
+    float: The time elapsed since the last frame, in seconds.
+        )doc");
+
+    subTime.def("get_fps", &getFPS, R"doc(
+Get the current frames per second of the program.
+
+Returns:
+    float: The current FPS based on the last frame time.
+        )doc");
+
+    subTime.def("set_cap", &setCap, py::arg("frame_rate"), R"doc(
+Set the maximum framerate for the application.
+
+Args:
+    frame_rate (int): Maximum framerate to enforce. Set to 0 for unlimited.
+        )doc");
+
     subTime.def("get_elapsed", &getElapsed, R"doc(
 Get the elapsed time since the program started.
 
@@ -117,47 +116,61 @@ Returns:
 Delay the program execution for the specified duration.
 
 This function pauses execution for the given number of milliseconds.
-Useful for simple timing control, though using Clock.tick() is generally
-preferred for frame rate control.
+Useful for simple timing control, though using time.set_cap() is generally
+preferred for precise frame rate control with nanosecond accuracy.
 
 Args:
     milliseconds (int): The number of milliseconds to delay.
         )doc");
 }
 
+double getDelta() { return _delta; }
+
+double getFPS() { return _fps; }
+
+void setCap(const uint16_t frameRate) { _frameCap = frameRate; }
+
 double getElapsed() { return static_cast<double>(SDL_GetTicksNS()) / SDL_NS_PER_SECOND; }
 
-void delay(const uint64_t ms) { SDL_DelayNS(SDL_MS_TO_NS(ms)); }
-} // namespace kn::time
+void delay(const uint64_t ms) { SDL_Delay(ms); }
 
-Clock::Clock() : m_lastTick(SDL_GetTicksNS()) {}
-
-double Clock::tick(const uint16_t frameRate)
+void _tick()
 {
     uint64_t now = SDL_GetTicksNS();
-    uint64_t frameTime = now - m_lastTick;
 
-    if (frameRate > 0)
+    // Stable first frame
+    if (_lastTick == 0)
     {
-        const uint64_t targetFrameTimeNS = SDL_NS_PER_SECOND / frameRate;
+        _lastTick = now;
+        _delta = 0.0;
+        _fps = 0;
+        return;
+    }
+
+    uint64_t frameTime = now - _lastTick;
+
+    if (_frameCap > 0)
+    {
+        const uint64_t targetFrameTimeNS = SDL_NS_PER_SECOND / _frameCap;
         if (frameTime < targetFrameTimeNS)
         {
             SDL_DelayNS(targetFrameTimeNS - frameTime);
             now = SDL_GetTicksNS();
-            frameTime = now - m_lastTick;
+            frameTime = now - _lastTick;
         }
     }
 
-    m_lastTick = now;
-    double delta = static_cast<double>(frameTime) / SDL_NS_PER_SECOND;
+    _lastTick = now;
+    _delta = static_cast<double>(frameTime) / SDL_NS_PER_SECOND;
 
     // Prevent division by zero and handle very small delta times
-    m_fps = (delta > 0.0) ? static_cast<uint64_t>(1.0 / delta) : 0;
+    _fps = (_delta > 0.0) ? (1.0 / _delta) : 0.0;
 
-    return delta;
+    // Cap delta at 12fps
+    if (_fps < 12.0)
+        _delta = 1.0 / 12.0;
 }
-
-uint64_t Clock::getFPS() const { return m_fps; }
+} // namespace kn::time
 
 Timer::Timer(const double duration) : m_duration(duration)
 {

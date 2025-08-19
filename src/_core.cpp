@@ -11,10 +11,10 @@
 #include "Line.hpp"
 #include "Math.hpp"
 #include "Mouse.hpp"
+#include "PixelArray.hpp"
 #include "Polygon.hpp"
 #include "Rect.hpp"
 #include "Renderer.hpp"
-#include "Surface.hpp"
 #include "Texture.hpp"
 #include "Time.hpp"
 #include "Transform.hpp"
@@ -51,7 +51,7 @@ Call this once you're done using the engine to avoid memory leaks.
     line::_bind(m);
     mouse::_bind(m);
     renderer::_bind(m);
-    surface::_bind(m);
+    pixel_array::_bind(m);
     kn::time::_bind(m);
     transform::_bind(m);
     window::_bind(m);
