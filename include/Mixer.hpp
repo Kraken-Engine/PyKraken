@@ -37,11 +37,13 @@ class Audio
     float getVolume() const;
 
   private:
+    static const ma_uint32 m_flags =
+        MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_NO_SPATIALIZATION | MA_SOUND_FLAG_NO_PITCH;
+
     struct Voice
     {
         ma_sound snd;
         std::atomic<bool> done{false};
-        float volume = 1.f;
     };
 
     std::string m_path;
@@ -58,4 +60,35 @@ class Audio
     void cleanup(); // Internal cleanup method
 
     friend void mixer::_tick(); // Allow mixer::_tick to access private cleanup
+};
+
+class AudioStream
+{
+  public:
+    AudioStream(const std::string& filePath, float volume = 1.f);
+    ~AudioStream();
+
+    void play(int fadeInMs = 0, bool loop = false);
+
+    void stop(int fadeOutMs = 0);
+
+    void pause();
+
+    void resume();
+
+    void rewind();
+
+    void setVolume(float volume);
+
+    float getVolume();
+
+    void setLooping(bool loop);
+
+  private:
+    static const ma_uint32 m_flags =
+        MA_SOUND_FLAG_STREAM | MA_SOUND_FLAG_NO_SPATIALIZATION | MA_SOUND_FLAG_NO_PITCH;
+
+    ma_sound m_snd;
+
+    ma_uint64 msToFrames(int ms) const;
 };
