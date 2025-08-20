@@ -1,121 +1,61 @@
 #pragma once
-#include <pybind11/pybind11.h>
-#include <iostream>
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_audio.h>
-#include <SDL3/SDL_stdinc.h>
 
-#include "miniaudio.h"
+#include <atomic>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <vector>
+
+#include <miniaudio/miniaudio.h>
+#include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
 namespace mixer
 {
-inline const size_t DefaultStreamBufferSize = 12288;
-inline const int StreamBufferThreshold = 8192;
+void _bind(py::module_& module);
 
-void init();
-void quit();
+void _init();
 
+void _quit();
 
-class MAFileDecoder;
-
-class VirtualDevice;
-class Audio;
-class AudioStream;
-
-class VirtualDevice
-{
-public:
-    VirtualDevice();
-    ~VirtualDevice();
-
-    SDL_AudioDeviceID audioDevice;
-    std::vector<Audio*> connectedAudio;
-    std::vector<AudioStream*> connectedStreams;
-
-    void play();
-    void pause();
-private:
-    float cachedVolume;
-};
+void _tick(); // Internal cleanup function, not exposed to Python
+} // namespace mixer
 
 class Audio
 {
-public:
-    Audio(const std::string& filepath,VirtualDevice& device, const float volume = 1.0f);
+  public:
+    Audio(const std::string& path, float volume = 1.f);
     ~Audio();
 
-    void start(int fadeInSeconds = 0,int fadeOutSeconds = 0);
-    void stop(int fadeOutSeconds);
+    void play(int fadeInMs = 0, bool loop = false);
 
-    float volume;
+    void stop(int fadeOutMs = 0);
 
-    int length();
-    bool ended();
+    void setVolume(float volume);
 
-    bool load(const std::string p_filepath);
+    float getVolume() const;
 
-private:
-    SDL_AudioStream* stream = nullptr;
-    std::vector<Uint8> rawData;
-    SDL_AudioSpec spec;
+  private:
+    struct Voice
+    {
+        ma_sound snd;
+        std::atomic<bool> done{false};
+        float volume = 1.f;
+    };
 
-    VirtualDevice* connectedDevice;
+    std::string m_path;
+    ma_sound m_proto;
+    std::mutex m_mutex;
+    std::vector<std::unique_ptr<Voice>> m_voices;
+    int m_nextId = 0;
+    float m_volume;
+
+    ma_uint64 msToFrames(int ms) const;
+
+    void doFadeStop(ma_sound& snd, float currentVol, int fadeOutMs);
+
+    void cleanup(); // Internal cleanup method
+
+    friend void mixer::_tick(); // Allow mixer::_tick to access private cleanup
 };
-
-class MAFileDecoder
-{
-public:
-    ma_decoder decoder;
-    SDL_AudioSpec spec;
-
-    MAFileDecoder(const std::string& path);
-    ~MAFileDecoder();
-
-    size_t read(Uint8* buffer,const size_t numBytes);
-    void rewind();
-};
-
-class AudioStream {
-public:
-    AudioStream(const std::string& filepath,VirtualDevice& device,const float volume = 1.0f);
-    ~AudioStream();
-
-    void play(const int fadeInSeconds,const int fadeOutSeconds,const bool reFadeIn);
-    void pause(const int fadeOutSeconds);
-    void rewind();
-
-    float volume;
-    bool playing;
-
-    int length();
-    bool ended();
-
-    void __update__();
-
-private:
-    SDL_AudioStream* stream = nullptr;
-    MAFileDecoder audioDecoder;
-    SDL_AudioSpec spec;
-    std::vector<Uint8> grabbedData;
-
-    size_t framesPlayed,framesRemaining;
-
-    VirtualDevice* connectedDevice;
-
-    int fadeInFrames,fadeOutFrames;
-    ma_uint64 totalFrames;
-};
-
-void applyFade( Uint8* buffer,const size_t bufferLength,const SDL_AudioSpec spec,
-                int fadeInFrames,int fadeOutFrames,
-                const bool fadeOutFromStart = false,
-                const int pcurrentFrame = 0,const int totalFrames = 0,
-                const bool audio = false, const bool audioStream = false);
-void setVolume(Uint8* srcBuffer,size_t srcLength,Uint8* dstBuffer,float volume,SDL_AudioSpec spec);
-void stream();
-
-void _bind(py::module_& module);
-
-} // namespace mixer

@@ -1,5 +1,6 @@
 #include "Window.hpp"
 #include "Math.hpp"
+#include "Mixer.hpp"
 #include "Renderer.hpp"
 #include "Time.hpp"
 
@@ -129,7 +130,7 @@ void create(const std::string& title, const Vec2& res, const bool scaled)
         double scaleY = usableBounds.h / res.y;
 
         // Use the smaller scale to maintain aspect ratio
-        double minScale = std::min(scaleX, scaleY);
+        const double minScale = (scaleX < scaleY) ? scaleX : scaleY;
         _scale = static_cast<int>(minScale);
         if (fmod(minScale, 1.0) == 0.0)
             _scale = static_cast<int>(minScale) - 1;
@@ -228,10 +229,13 @@ void init()
 {
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
         throw std::runtime_error(SDL_GetError());
+
+    mixer::_init();
 }
 
 void quit()
 {
+    mixer::_quit();
     renderer::quit();
 
     if (_window)

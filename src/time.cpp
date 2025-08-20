@@ -1,4 +1,5 @@
 #include "Time.hpp"
+#include "Mixer.hpp"
 #include <SDL3/SDL.h>
 
 static uint64_t _lastTick = 0;
@@ -169,6 +170,9 @@ void _tick()
     // Cap delta at 12fps
     if (_fps < 12.0)
         _delta = 1.0 / 12.0;
+
+    // Automatic audio cleanup
+    mixer::_tick();
 }
 } // namespace kn::time
 
