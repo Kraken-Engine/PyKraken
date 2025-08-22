@@ -1,7 +1,10 @@
 #pragma once
 
+#include <memory>
 #include <pybind11/pybind11.h>
 #include <vector>
+
+#include "Color.hpp"
 
 class PixelArray;
 class Vec2;
@@ -31,7 +34,7 @@ class Mask
     bool getAt(const Vec2& pos) const;
 
     void setAt(const Vec2& pos, bool value);
-    
+
     int getOverlapArea(const Mask& other, const Vec2& offset) const;
 
     Mask getOverlapMask(const Mask& other, const Vec2& offset) const;
@@ -58,14 +61,13 @@ class Mask
 
     std::vector<Vec2> getCollisionPoints(const Mask& other, const Vec2& offset) const;
 
-    std::vector<Vec2> getCollisionPoints(const Mask& other, const Rect& rectA,
-                                         const Rect& rectB) const;
-
     bool isEmpty() const;
 
     int getWidth() const;
 
     int getHeight() const;
+
+    std::unique_ptr<PixelArray> getPixelArray(const Color& color = {255, 255, 255, 255}) const;
 
   private:
     int m_width, m_height;

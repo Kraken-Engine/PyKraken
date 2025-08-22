@@ -16,6 +16,11 @@ struct Color
 
     operator SDL_Color() const { return {r, g, b, a}; }
     operator SDL_FColor() const { return {r / 255.f, g / 255.f, b / 255.f, a / 255.f}; }
+    operator uint32_t() const
+    {
+        return (static_cast<uint32_t>(a) << 24) | (static_cast<uint32_t>(b) << 16) |
+               (static_cast<uint32_t>(g) << 8) | static_cast<uint32_t>(r);
+    }
 
     std::string toHex() const;
     void fromHex(std::string_view hex);

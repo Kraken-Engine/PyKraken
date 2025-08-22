@@ -29,6 +29,7 @@ pybind11_add_module(_core MODULE
   src/input.cpp
   src/key.cpp
   src/line.cpp
+  src/mask.cpp
   src/math.cpp
   src/mixer.cpp
   src/mouse.cpp
