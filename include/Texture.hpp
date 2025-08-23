@@ -58,8 +58,6 @@ class Texture final
 
     void render(py::object pos, Anchor anchor);
 
-    std::unique_ptr<Texture> copy();
-
     SDL_Texture* getSDL() const;
 
   private:

@@ -5,163 +5,6 @@
 
 #include <SDL3_image/SDL_image.h>
 
-namespace pixel_array
-{
-void _bind(py::module_& module)
-{
-    // py::native_enum<ScrollType>(module, "ScrollType", "enum.IntEnum")
-    //     .value("SCROLL_SMEAR", ScrollType::SCROLL_SMEAR)
-    //     .value("SCROLL_ERASE", ScrollType::SCROLL_ERASE)
-    //     .value("SCROLL_REPEAT", ScrollType::SCROLL_REPEAT)
-    //     .export_values()
-    //     .finalize();
-
-    py::classh<PixelArray>(module, "PixelArray", R"doc(
-Represents a 2D pixel buffer for image manipulation and blitting operations.
-
-A PixelArray is a 2D array of pixels that can be manipulated, drawn on, and used as a source
-for texture creation or blitting to other PixelArrays. Supports pixel-level operations,
-color key transparency, and alpha blending.
-    )doc")
-        .def(py::init<const Vec2&>(), py::arg("size"), R"doc(
-Create a new PixelArray with the specified dimensions.
-
-Args:
-    size (Vec2): The size of the pixel array as (width, height).
-
-Raises:
-    RuntimeError: If pixel array creation fails.
-        )doc")
-        .def(py::init<const std::string&>(), py::arg("file_path"), R"doc(
-Create a PixelArray by loading an image from a file.
-
-Args:
-    file_path (str): Path to the image file to load.
-
-Raises:
-    RuntimeError: If the file cannot be loaded or doesn't exist.
-        )doc")
-
-        .def("fill", &PixelArray::fill, py::arg("color"), R"doc(
-Fill the entire pixel array with a solid color.
-
-Args:
-    color (Color): The color to fill the pixel array with.
-        )doc")
-        .def("blit",
-             py::overload_cast<const PixelArray&, const Vec2&, Anchor, py::object>(
-                 &PixelArray::blit, py::const_),
-             py::arg("pixel_array"), py::arg("pos"), py::arg("anchor") = Anchor::CENTER,
-             py::arg("src") = py::none(), R"doc(
-Blit (copy) another pixel array onto this pixel array at the specified position with anchor alignment.
-
-Args:
-    pixel_array (PixelArray): The source pixel array to blit from.
-    pos (Vec2): The position to blit to.
-    anchor (Anchor, optional): The anchor point for positioning. Defaults to CENTER.
-    src (Rect, optional): The source rectangle to blit from. Defaults to entire source pixel array.
-
-Raises:
-    RuntimeError: If the blit operation fails.
-        )doc")
-        .def("blit",
-             py::overload_cast<const PixelArray&, const Rect&, py::object>(&PixelArray::blit,
-                                                                           py::const_),
-             py::arg("pixel_array"), py::arg("dst"), py::arg("src") = py::none(), R"doc(
-Blit (copy) another pixel array onto this pixel array with specified destination and source rectangles.
-
-Args:
-    pixel_array (PixelArray): The source pixel array to blit from.
-    dst (Rect): The destination rectangle on this pixel array.
-    src (Rect, optional): The source rectangle to blit from. Defaults to entire source pixel array.
-
-Raises:
-    RuntimeError: If the blit operation fails.
-        )doc")
-        .def("get_at", &PixelArray::getAt, py::arg("coord"), R"doc(
-Get the color of a pixel at the specified coordinates.
-
-Args:
-    coord (Vec2): The coordinates of the pixel as (x, y).
-
-Returns:
-    Color: The color of the pixel at the specified coordinates.
-
-Raises:
-    IndexError: If coordinates are outside the pixel array bounds.
-        )doc")
-        .def("set_at", &PixelArray::setAt, py::arg("coord"), py::arg("color"), R"doc(
-Set the color of a pixel at the specified coordinates.
-
-Args:
-    coord (Vec2): The coordinates of the pixel as (x, y).
-    color (Color): The color to set the pixel to.
-
-Raises:
-    IndexError: If coordinates are outside the pixel array bounds.
-        )doc")
-        .def("copy", &PixelArray::copy, R"doc(
-Create a copy of this pixel array.
-
-Returns:
-    PixelArray: A new PixelArray that is an exact copy of this one.
-
-Raises:
-    RuntimeError: If pixel array copying fails.
-        )doc")
-
-        .def_property("color_key", &PixelArray::getColorKey, &PixelArray::setColorKey, R"doc(
-The color key for transparency.
-
-When set, pixels of this color will be treated as transparent during blitting operations.
-Used for simple transparency effects.
-
-Returns:
-    Color: The current color key.
-
-Raises:
-    RuntimeError: If getting the color key fails.
-        )doc")
-        .def_property("alpha_mod", &PixelArray::getAlpha, &PixelArray::setAlpha, R"doc(
-The alpha modulation value for the pixel array.
-
-Controls the overall transparency of the pixel array. Values range from 0 (fully transparent)
-to 255 (fully opaque).
-
-Returns:
-    int: The current alpha modulation value [0-255].
-
-Raises:
-    RuntimeError: If getting the alpha value fails.
-        )doc")
-
-        .def_property_readonly("width", &PixelArray::getWidth, R"doc(
-The width of the pixel array.
-
-Returns:
-    int: The pixel array width.
-        )doc")
-        .def_property_readonly("height", &PixelArray::getHeight, R"doc(
-The height of the pixel array.
-
-Returns:
-    int: The pixel array height.
-        )doc")
-        .def_property_readonly("size", &PixelArray::getSize, R"doc(
-The size of the pixel array as a Vec2.
-
-Returns:
-    Vec2: The pixel array size as (width, height).
-        )doc")
-        .def_property_readonly("rect", &PixelArray::getRect, R"doc(
-A rectangle representing the pixel array bounds.
-
-Returns:
-    Rect: A rectangle with position (0, 0) and the pixel array's dimensions.
-        )doc");
-}
-} // namespace pixel_array
-
 PixelArray::PixelArray(SDL_Surface* sdlSurface) : m_surface(sdlSurface) {}
 
 PixelArray::PixelArray(const Vec2& size)
@@ -375,9 +218,164 @@ std::unique_ptr<PixelArray> PixelArray::copy() const
     if (!SDL_BlitSurface(m_surface, nullptr, surfaceCopy, nullptr))
         throw std::runtime_error("Failed to blit pixel array copy: " + std::string(SDL_GetError()));
 
-    auto copy = std::make_unique<PixelArray>();
-    copy->m_surface = surfaceCopy;
-    return copy;
+    return std::make_unique<PixelArray>(surfaceCopy);
 }
 
 SDL_Surface* PixelArray::getSDL() const { return m_surface; }
+
+namespace pixel_array
+{
+void _bind(py::module_& module)
+{
+    // py::native_enum<ScrollType>(module, "ScrollType", "enum.IntEnum")
+    //     .value("SCROLL_SMEAR", ScrollType::SCROLL_SMEAR)
+    //     .value("SCROLL_ERASE", ScrollType::SCROLL_ERASE)
+    //     .value("SCROLL_REPEAT", ScrollType::SCROLL_REPEAT)
+    //     .export_values()
+    //     .finalize();
+
+    py::classh<PixelArray>(module, "PixelArray", R"doc(
+Represents a 2D pixel buffer for image manipulation and blitting operations.
+
+A PixelArray is a 2D array of pixels that can be manipulated, drawn on, and used as a source
+for texture creation or blitting to other PixelArrays. Supports pixel-level operations,
+color key transparency, and alpha blending.
+    )doc")
+        .def(py::init<const Vec2&>(), py::arg("size"), R"doc(
+Create a new PixelArray with the specified dimensions.
+
+Args:
+    size (Vec2): The size of the pixel array as (width, height).
+
+Raises:
+    RuntimeError: If pixel array creation fails.
+        )doc")
+        .def(py::init<const std::string&>(), py::arg("file_path"), R"doc(
+Create a PixelArray by loading an image from a file.
+
+Args:
+    file_path (str): Path to the image file to load.
+
+Raises:
+    RuntimeError: If the file cannot be loaded or doesn't exist.
+        )doc")
+
+        .def("fill", &PixelArray::fill, py::arg("color"), R"doc(
+Fill the entire pixel array with a solid color.
+
+Args:
+    color (Color): The color to fill the pixel array with.
+        )doc")
+        .def("blit",
+             py::overload_cast<const PixelArray&, const Vec2&, Anchor, py::object>(
+                 &PixelArray::blit, py::const_),
+             py::arg("pixel_array"), py::arg("pos"), py::arg("anchor") = Anchor::CENTER,
+             py::arg("src") = py::none(), R"doc(
+Blit (copy) another pixel array onto this pixel array at the specified position with anchor alignment.
+
+Args:
+    pixel_array (PixelArray): The source pixel array to blit from.
+    pos (Vec2): The position to blit to.
+    anchor (Anchor, optional): The anchor point for positioning. Defaults to CENTER.
+    src (Rect, optional): The source rectangle to blit from. Defaults to entire source pixel array.
+
+Raises:
+    RuntimeError: If the blit operation fails.
+        )doc")
+        .def("blit",
+             py::overload_cast<const PixelArray&, const Rect&, py::object>(&PixelArray::blit,
+                                                                           py::const_),
+             py::arg("pixel_array"), py::arg("dst"), py::arg("src") = py::none(), R"doc(
+Blit (copy) another pixel array onto this pixel array with specified destination and source rectangles.
+
+Args:
+    pixel_array (PixelArray): The source pixel array to blit from.
+    dst (Rect): The destination rectangle on this pixel array.
+    src (Rect, optional): The source rectangle to blit from. Defaults to entire source pixel array.
+
+Raises:
+    RuntimeError: If the blit operation fails.
+        )doc")
+        .def("get_at", &PixelArray::getAt, py::arg("coord"), R"doc(
+Get the color of a pixel at the specified coordinates.
+
+Args:
+    coord (Vec2): The coordinates of the pixel as (x, y).
+
+Returns:
+    Color: The color of the pixel at the specified coordinates.
+
+Raises:
+    IndexError: If coordinates are outside the pixel array bounds.
+        )doc")
+        .def("set_at", &PixelArray::setAt, py::arg("coord"), py::arg("color"), R"doc(
+Set the color of a pixel at the specified coordinates.
+
+Args:
+    coord (Vec2): The coordinates of the pixel as (x, y).
+    color (Color): The color to set the pixel to.
+
+Raises:
+    IndexError: If coordinates are outside the pixel array bounds.
+        )doc")
+        .def("copy", &PixelArray::copy, R"doc(
+Create a copy of this pixel array.
+
+Returns:
+    PixelArray: A new PixelArray that is an exact copy of this one.
+
+Raises:
+    RuntimeError: If pixel array copying fails.
+        )doc")
+
+        .def_property("color_key", &PixelArray::getColorKey, &PixelArray::setColorKey, R"doc(
+The color key for transparency.
+
+When set, pixels of this color will be treated as transparent during blitting operations.
+Used for simple transparency effects.
+
+Returns:
+    Color: The current color key.
+
+Raises:
+    RuntimeError: If getting the color key fails.
+        )doc")
+        .def_property("alpha_mod", &PixelArray::getAlpha, &PixelArray::setAlpha, R"doc(
+The alpha modulation value for the pixel array.
+
+Controls the overall transparency of the pixel array. Values range from 0 (fully transparent)
+to 255 (fully opaque).
+
+Returns:
+    int: The current alpha modulation value [0-255].
+
+Raises:
+    RuntimeError: If getting the alpha value fails.
+        )doc")
+
+        .def_property_readonly("width", &PixelArray::getWidth, R"doc(
+The width of the pixel array.
+
+Returns:
+    int: The pixel array width.
+        )doc")
+        .def_property_readonly("height", &PixelArray::getHeight, R"doc(
+The height of the pixel array.
+
+Returns:
+    int: The pixel array height.
+        )doc")
+        .def_property_readonly("size", &PixelArray::getSize, R"doc(
+The size of the pixel array as a Vec2.
+
+Returns:
+    Vec2: The pixel array size as (width, height).
+        )doc")
+        .def_property_readonly("rect", &PixelArray::getRect, R"doc(
+A rectangle representing the pixel array bounds.
+
+Returns:
+    Rect: A rectangle with position (0, 0) and the pixel array's dimensions.
+        )doc");
+}
+} // namespace pixel_array

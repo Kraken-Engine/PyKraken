@@ -17,7 +17,7 @@ from . import renderer
 from . import time
 from . import transform
 from . import window
-__all__ = ['AUDIO_DEVICE_ADDED', 'AUDIO_DEVICE_REMOVED', 'Anchor', 'Audio', 'AudioStream', 'BOTTOM_LEFT', 'BOTTOM_MID', 'BOTTOM_RIGHT', 'CAMERA_ADDED', 'CAMERA_APPROVED', 'CAMERA_DENIED', 'CAMERA_REMOVED', 'CENTER', 'C_BACK', 'C_DPAD_DOWN', 'C_DPAD_LEFT', 'C_DPAD_RIGHT', 'C_DPAD_UP', 'C_EAST', 'C_GUIDE', 'C_LSHOULDER', 'C_LSTICK', 'C_LTRIGGER', 'C_LX', 'C_LY', 'C_NORTH', 'C_PS3', 'C_PS4', 'C_PS5', 'C_RSHOULDER', 'C_RSTICK', 'C_RTRIGGER', 'C_RX', 'C_RY', 'C_SOUTH', 'C_STANDARD', 'C_START', 'C_SWITCH_JOYCON_LEFT', 'C_SWITCH_JOYCON_PAIR', 'C_SWITCH_JOYCON_RIGHT', 'C_SWITCH_PRO', 'C_WEST', 'C_XBOX_360', 'C_XBOX_ONE', 'Camera', 'Circle', 'Color', 'DROP_BEGIN', 'DROP_COMPLETE', 'DROP_FILE', 'DROP_POSITION', 'DROP_TEXT', 'EasingAnimation', 'Event', 'EventType', 'GAMEPAD_ADDED', 'GAMEPAD_AXIS_MOTION', 'GAMEPAD_BUTTON_DOWN', 'GAMEPAD_BUTTON_UP', 'GAMEPAD_REMOVED', 'GAMEPAD_TOUCHPAD_DOWN', 'GAMEPAD_TOUCHPAD_MOTION', 'GAMEPAD_TOUCHPAD_UP', 'GamepadAxis', 'GamepadButton', 'GamepadType', 'InputAction', 'KEYBOARD_ADDED', 'KEYBOARD_REMOVED', 'KEY_DOWN', 'KEY_UP', 'K_0', 'K_1', 'K_2', 'K_3', 'K_4', 'K_5', 'K_6', 'K_7', 'K_8', 'K_9', 'K_AGAIN', 'K_AMPERSAND', 'K_ASTERISK', 'K_AT', 'K_BACKSLASH', 'K_BACKSPACE', 'K_CAPS', 'K_CARET', 'K_COLON', 'K_COMMA', 'K_COPY', 'K_CUT', 'K_DBLQUOTE', 'K_DEL', 'K_DOLLAR', 'K_DOWN', 'K_END', 'K_EQ', 'K_ESC', 'K_EXCLAIM', 'K_F1', 'K_F10', 'K_F11', 'K_F12', 'K_F2', 'K_F3', 'K_F4', 'K_F5', 'K_F6', 'K_F7', 'K_F8', 'K_F9', 'K_FIND', 'K_GRAVE', 'K_GT', 'K_HASH', 'K_HOME', 'K_INS', 'K_KP_0', 'K_KP_1', 'K_KP_2', 'K_KP_3', 'K_KP_4', 'K_KP_5', 'K_KP_6', 'K_KP_7', 'K_KP_8', 'K_KP_9', 'K_KP_DIV', 'K_KP_ENTER', 'K_KP_MINUS', 'K_KP_MULT', 'K_KP_PERIOD', 'K_KP_PLUS', 'K_LALT', 'K_LBRACE', 'K_LBRACKET', 'K_LCTRL', 'K_LEFT', 'K_LGUI', 'K_LPAREN', 'K_LSHIFT', 'K_LT', 'K_MINUS', 'K_MUTE', 'K_NUMLOCK', 'K_PASTE', 'K_PAUSE', 'K_PERCENT', 'K_PERIOD', 'K_PGDOWN', 'K_PGUP', 'K_PIPE', 'K_PLUS', 'K_PRTSCR', 'K_QUESTION', 'K_RALT', 'K_RBRACE', 'K_RBRACKET', 'K_RCTRL', 'K_RETURN', 'K_RGUI', 'K_RIGHT', 'K_RPAREN', 'K_RSHIFT', 'K_SCRLK', 'K_SEMICOLON', 'K_SGLQUOTE', 'K_SLASH', 'K_SPACE', 'K_TAB', 'K_TILDE', 'K_UNDERSCORE', 'K_UNDO', 'K_UP', 'K_VOLDOWN', 'K_VOLUP', 'K_a', 'K_b', 'K_c', 'K_d', 'K_e', 'K_f', 'K_g', 'K_h', 'K_i', 'K_j', 'K_k', 'K_l', 'K_m', 'K_n', 'K_o', 'K_p', 'K_q', 'K_r', 'K_s', 'K_t', 'K_u', 'K_v', 'K_w', 'K_x', 'K_y', 'K_z', 'Keycode', 'Line', 'MID_LEFT', 'MID_RIGHT', 'MOUSE_ADDED', 'MOUSE_BUTTON_DOWN', 'MOUSE_BUTTON_UP', 'MOUSE_MOTION', 'MOUSE_REMOVED', 'MOUSE_WHEEL', 'M_LEFT', 'M_MIDDLE', 'M_RIGHT', 'M_SIDE1', 'M_SIDE2', 'MouseButton', 'PEN_AXIS', 'PEN_BUTTON_DOWN', 'PEN_BUTTON_UP', 'PEN_DOWN', 'PEN_MOTION', 'PEN_PROXIMITY_IN', 'PEN_PROXIMITY_OUT', 'PEN_UP', 'PixelArray', 'PolarCoordinate', 'Polygon', 'QUIT', 'Rect', 'S_0', 'S_1', 'S_2', 'S_3', 'S_4', 'S_5', 'S_6', 'S_7', 'S_8', 'S_9', 'S_AGAIN', 'S_APOSTROPHE', 'S_BACKSLASH', 'S_BACKSPACE', 'S_CAPS', 'S_COMMA', 'S_COPY', 'S_CUT', 'S_DEL', 'S_DOWN', 'S_END', 'S_EQ', 'S_ESC', 'S_F1', 'S_F10', 'S_F11', 'S_F12', 'S_F2', 'S_F3', 'S_F4', 'S_F5', 'S_F6', 'S_F7', 'S_F8', 'S_F9', 'S_FIND', 'S_GRAVE', 'S_HOME', 'S_INS', 'S_KP_0', 'S_KP_1', 'S_KP_2', 'S_KP_3', 'S_KP_4', 'S_KP_5', 'S_KP_6', 'S_KP_7', 'S_KP_8', 'S_KP_9', 'S_KP_DIV', 'S_KP_ENTER', 'S_KP_MINUS', 'S_KP_MULT', 'S_KP_PERIOD', 'S_KP_PLUS', 'S_LALT', 'S_LBRACKET', 'S_LCTRL', 'S_LEFT', 'S_LGUI', 'S_LSHIFT', 'S_MINUS', 'S_MUTE', 'S_NUMLOCK', 'S_PASTE', 'S_PAUSE', 'S_PERIOD', 'S_PGDOWN', 'S_PGUP', 'S_PRTSCR', 'S_RALT', 'S_RBRACKET', 'S_RCTRL', 'S_RETURN', 'S_RGUI', 'S_RIGHT', 'S_RSHIFT', 'S_SCRLK', 'S_SEMICOLON', 'S_SLASH', 'S_SPACE', 'S_TAB', 'S_UNDO', 'S_UP', 'S_VOLDOWN', 'S_VOLUP', 'S_a', 'S_b', 'S_c', 'S_d', 'S_e', 'S_f', 'S_g', 'S_h', 'S_i', 'S_j', 'S_k', 'S_l', 'S_m', 'S_n', 'S_o', 'S_p', 'S_q', 'S_r', 'S_s', 'S_t', 'S_u', 'S_v', 'S_w', 'S_x', 'S_y', 'S_z', 'Scancode', 'TEXT_EDITING', 'TEXT_INPUT', 'TOP_LEFT', 'TOP_MID', 'TOP_RIGHT', 'Texture', 'Timer', 'Vec2', 'WINDOW_ENTER_FULLSCREEN', 'WINDOW_EXPOSED', 'WINDOW_FOCUS_GAINED', 'WINDOW_FOCUS_LOST', 'WINDOW_HIDDEN', 'WINDOW_LEAVE_FULLSCREEN', 'WINDOW_MAXIMIZED', 'WINDOW_MINIMIZED', 'WINDOW_MOUSE_ENTER', 'WINDOW_MOUSE_LEAVE', 'WINDOW_MOVED', 'WINDOW_OCCLUDED', 'WINDOW_RESIZED', 'WINDOW_RESTORED', 'WINDOW_SHOWN', 'color', 'draw', 'ease', 'event', 'gamepad', 'init', 'input', 'key', 'line', 'math', 'mouse', 'quit', 'rect', 'renderer', 'time', 'transform', 'window']
+__all__ = ['AUDIO_DEVICE_ADDED', 'AUDIO_DEVICE_REMOVED', 'Anchor', 'Audio', 'AudioStream', 'BOTTOM_LEFT', 'BOTTOM_MID', 'BOTTOM_RIGHT', 'CAMERA_ADDED', 'CAMERA_APPROVED', 'CAMERA_DENIED', 'CAMERA_REMOVED', 'CENTER', 'C_BACK', 'C_DPAD_DOWN', 'C_DPAD_LEFT', 'C_DPAD_RIGHT', 'C_DPAD_UP', 'C_EAST', 'C_GUIDE', 'C_LSHOULDER', 'C_LSTICK', 'C_LTRIGGER', 'C_LX', 'C_LY', 'C_NORTH', 'C_PS3', 'C_PS4', 'C_PS5', 'C_RSHOULDER', 'C_RSTICK', 'C_RTRIGGER', 'C_RX', 'C_RY', 'C_SOUTH', 'C_STANDARD', 'C_START', 'C_SWITCH_JOYCON_LEFT', 'C_SWITCH_JOYCON_PAIR', 'C_SWITCH_JOYCON_RIGHT', 'C_SWITCH_PRO', 'C_WEST', 'C_XBOX_360', 'C_XBOX_ONE', 'Camera', 'Circle', 'Color', 'DROP_BEGIN', 'DROP_COMPLETE', 'DROP_FILE', 'DROP_POSITION', 'DROP_TEXT', 'EasingAnimation', 'Event', 'EventType', 'GAMEPAD_ADDED', 'GAMEPAD_AXIS_MOTION', 'GAMEPAD_BUTTON_DOWN', 'GAMEPAD_BUTTON_UP', 'GAMEPAD_REMOVED', 'GAMEPAD_TOUCHPAD_DOWN', 'GAMEPAD_TOUCHPAD_MOTION', 'GAMEPAD_TOUCHPAD_UP', 'GamepadAxis', 'GamepadButton', 'GamepadType', 'InputAction', 'KEYBOARD_ADDED', 'KEYBOARD_REMOVED', 'KEY_DOWN', 'KEY_UP', 'K_0', 'K_1', 'K_2', 'K_3', 'K_4', 'K_5', 'K_6', 'K_7', 'K_8', 'K_9', 'K_AGAIN', 'K_AMPERSAND', 'K_ASTERISK', 'K_AT', 'K_BACKSLASH', 'K_BACKSPACE', 'K_CAPS', 'K_CARET', 'K_COLON', 'K_COMMA', 'K_COPY', 'K_CUT', 'K_DBLQUOTE', 'K_DEL', 'K_DOLLAR', 'K_DOWN', 'K_END', 'K_EQ', 'K_ESC', 'K_EXCLAIM', 'K_F1', 'K_F10', 'K_F11', 'K_F12', 'K_F2', 'K_F3', 'K_F4', 'K_F5', 'K_F6', 'K_F7', 'K_F8', 'K_F9', 'K_FIND', 'K_GRAVE', 'K_GT', 'K_HASH', 'K_HOME', 'K_INS', 'K_KP_0', 'K_KP_1', 'K_KP_2', 'K_KP_3', 'K_KP_4', 'K_KP_5', 'K_KP_6', 'K_KP_7', 'K_KP_8', 'K_KP_9', 'K_KP_DIV', 'K_KP_ENTER', 'K_KP_MINUS', 'K_KP_MULT', 'K_KP_PERIOD', 'K_KP_PLUS', 'K_LALT', 'K_LBRACE', 'K_LBRACKET', 'K_LCTRL', 'K_LEFT', 'K_LGUI', 'K_LPAREN', 'K_LSHIFT', 'K_LT', 'K_MINUS', 'K_MUTE', 'K_NUMLOCK', 'K_PASTE', 'K_PAUSE', 'K_PERCENT', 'K_PERIOD', 'K_PGDOWN', 'K_PGUP', 'K_PIPE', 'K_PLUS', 'K_PRTSCR', 'K_QUESTION', 'K_RALT', 'K_RBRACE', 'K_RBRACKET', 'K_RCTRL', 'K_RETURN', 'K_RGUI', 'K_RIGHT', 'K_RPAREN', 'K_RSHIFT', 'K_SCRLK', 'K_SEMICOLON', 'K_SGLQUOTE', 'K_SLASH', 'K_SPACE', 'K_TAB', 'K_TILDE', 'K_UNDERSCORE', 'K_UNDO', 'K_UP', 'K_VOLDOWN', 'K_VOLUP', 'K_a', 'K_b', 'K_c', 'K_d', 'K_e', 'K_f', 'K_g', 'K_h', 'K_i', 'K_j', 'K_k', 'K_l', 'K_m', 'K_n', 'K_o', 'K_p', 'K_q', 'K_r', 'K_s', 'K_t', 'K_u', 'K_v', 'K_w', 'K_x', 'K_y', 'K_z', 'Keycode', 'Line', 'MID_LEFT', 'MID_RIGHT', 'MOUSE_ADDED', 'MOUSE_BUTTON_DOWN', 'MOUSE_BUTTON_UP', 'MOUSE_MOTION', 'MOUSE_REMOVED', 'MOUSE_WHEEL', 'M_LEFT', 'M_MIDDLE', 'M_RIGHT', 'M_SIDE1', 'M_SIDE2', 'Mask', 'MouseButton', 'PEN_AXIS', 'PEN_BUTTON_DOWN', 'PEN_BUTTON_UP', 'PEN_DOWN', 'PEN_MOTION', 'PEN_PROXIMITY_IN', 'PEN_PROXIMITY_OUT', 'PEN_UP', 'PixelArray', 'PolarCoordinate', 'Polygon', 'QUIT', 'Rect', 'S_0', 'S_1', 'S_2', 'S_3', 'S_4', 'S_5', 'S_6', 'S_7', 'S_8', 'S_9', 'S_AGAIN', 'S_APOSTROPHE', 'S_BACKSLASH', 'S_BACKSPACE', 'S_CAPS', 'S_COMMA', 'S_COPY', 'S_CUT', 'S_DEL', 'S_DOWN', 'S_END', 'S_EQ', 'S_ESC', 'S_F1', 'S_F10', 'S_F11', 'S_F12', 'S_F2', 'S_F3', 'S_F4', 'S_F5', 'S_F6', 'S_F7', 'S_F8', 'S_F9', 'S_FIND', 'S_GRAVE', 'S_HOME', 'S_INS', 'S_KP_0', 'S_KP_1', 'S_KP_2', 'S_KP_3', 'S_KP_4', 'S_KP_5', 'S_KP_6', 'S_KP_7', 'S_KP_8', 'S_KP_9', 'S_KP_DIV', 'S_KP_ENTER', 'S_KP_MINUS', 'S_KP_MULT', 'S_KP_PERIOD', 'S_KP_PLUS', 'S_LALT', 'S_LBRACKET', 'S_LCTRL', 'S_LEFT', 'S_LGUI', 'S_LSHIFT', 'S_MINUS', 'S_MUTE', 'S_NUMLOCK', 'S_PASTE', 'S_PAUSE', 'S_PERIOD', 'S_PGDOWN', 'S_PGUP', 'S_PRTSCR', 'S_RALT', 'S_RBRACKET', 'S_RCTRL', 'S_RETURN', 'S_RGUI', 'S_RIGHT', 'S_RSHIFT', 'S_SCRLK', 'S_SEMICOLON', 'S_SLASH', 'S_SPACE', 'S_TAB', 'S_UNDO', 'S_UP', 'S_VOLDOWN', 'S_VOLUP', 'S_a', 'S_b', 'S_c', 'S_d', 'S_e', 'S_f', 'S_g', 'S_h', 'S_i', 'S_j', 'S_k', 'S_l', 'S_m', 'S_n', 'S_o', 'S_p', 'S_q', 'S_r', 'S_s', 'S_t', 'S_u', 'S_v', 'S_w', 'S_x', 'S_y', 'S_z', 'Scancode', 'TEXT_EDITING', 'TEXT_INPUT', 'TOP_LEFT', 'TOP_MID', 'TOP_RIGHT', 'Texture', 'Timer', 'Vec2', 'WINDOW_ENTER_FULLSCREEN', 'WINDOW_EXPOSED', 'WINDOW_FOCUS_GAINED', 'WINDOW_FOCUS_LOST', 'WINDOW_HIDDEN', 'WINDOW_LEAVE_FULLSCREEN', 'WINDOW_MAXIMIZED', 'WINDOW_MINIMIZED', 'WINDOW_MOUSE_ENTER', 'WINDOW_MOUSE_LEAVE', 'WINDOW_MOVED', 'WINDOW_OCCLUDED', 'WINDOW_RESIZED', 'WINDOW_RESTORED', 'WINDOW_SHOWN', 'color', 'draw', 'ease', 'event', 'gamepad', 'init', 'input', 'key', 'line', 'math', 'mouse', 'quit', 'rect', 'renderer', 'time', 'transform', 'window']
 class Anchor(enum.IntEnum):
     BOTTOM_LEFT: typing.ClassVar[Anchor]  # value = <Anchor.BOTTOM_LEFT: 6>
     BOTTOM_MID: typing.ClassVar[Anchor]  # value = <Anchor.BOTTOM_MID: 7>
@@ -1049,6 +1049,217 @@ class Line:
     def length(self) -> float:
         """
         The Euclidean length of the line segment.
+        """
+class Mask:
+    """
+    
+    A collision mask for pixel-perfect collision detection.
+    
+    A Mask represents a 2D bitmap, typically used for precise collision detection based on 
+    non-transparent pixels.
+        
+    """
+    @typing.overload
+    def __init__(self) -> None:
+        """
+        Create an empty mask with size (0, 0).
+        """
+    @typing.overload
+    def __init__(self, size: Vec2, filled: bool = False) -> None:
+        """
+        Create a mask with specified size.
+        
+        Args:
+            size (Vec2): The size of the mask as (width, height).
+            filled (bool): Whether to fill the mask with solid pixels. Defaults to False.
+        """
+    @typing.overload
+    def __init__(self, pixel_array: PixelArray, threshold: typing.SupportsInt = 1) -> None:
+        """
+        Create a mask from a pixel array based on alpha threshold.
+        
+        Args:
+            pixel_array (PixelArray): The source pixel array to create the mask from.
+            threshold (int): Alpha threshold value (0-255). Pixels with alpha >= threshold are solid.
+        
+        Raises:
+            RuntimeError: If the pixel array is invalid.
+        """
+    def add(self, other: Mask, offset: typing.Any = None) -> None:
+        """
+        Add another mask to this mask with an offset.
+        
+        Performs a bitwise OR operation between the masks.
+        
+        Args:
+            other (Mask): The mask to add.
+            offset (Vec2): Position offset for the other mask. Defaults to (0, 0).
+        """
+    def clear(self) -> None:
+        """
+        Clear the entire mask, setting all pixels to transparent.
+        """
+    def collide_mask(self, other: Mask, offset: typing.Any = None) -> bool:
+        """
+        Check collision between this mask and another mask with an offset.
+        
+        Args:
+            other (Mask): The other mask to test collision with.
+            offset (Vec2): Position offset between the masks. Defaults to (0, 0).
+        
+        Returns:
+            bool: True if the masks collide, False otherwise.
+        """
+    def copy(self) -> Mask:
+        """
+        Create a copy of this mask.
+        
+        Returns:
+            Mask: A new Mask with the same dimensions and pixel data.
+        """
+    def fill(self) -> None:
+        """
+        Fill the entire mask with solid pixels.
+        """
+    def get_at(self, pos: Vec2) -> bool:
+        """
+        Get the pixel value at a specific position.
+        
+        Args:
+            pos (Vec2): The position to check.
+        
+        Returns:
+            bool: True if the pixel is solid (above threshold), False otherwise.
+        """
+    def get_bounding_rect(self) -> Rect:
+        """
+        Get the bounding rectangle that contains all solid pixels.
+        
+        Returns:
+            Rect: The smallest rectangle containing all solid pixels. 
+                  Returns empty rect if mask has no solid pixels.
+        """
+    def get_center_of_mass(self) -> Vec2:
+        """
+        Calculate the center of mass of all solid pixels.
+        
+        Returns:
+            Vec2: The center of mass position. Returns (0, 0) if mask is empty.
+        """
+    def get_collision_points(self, other: Mask, offset: typing.Any = None) -> list[Vec2]:
+        """
+        Get all points where this mask collides with another mask.
+        
+        Args:
+            other (Mask): The other mask to test collision with.
+            offset (Vec2): Position offset between the masks. Defaults to (0, 0).
+        
+        Returns:
+            list[Vec2]: A list of collision points.
+        """
+    def get_count(self) -> int:
+        """
+        Get the number of solid pixels in the mask.
+        
+        Returns:
+            int: The count of solid pixels.
+        """
+    def get_outline(self) -> list[Vec2]:
+        """
+        Get the outline points of the mask.
+        
+        Returns a list of points that form the outline of all solid regions.
+        
+        Returns:
+            list[Vec2]: A list of outline points.
+        """
+    def get_overlap_area(self, other: Mask, offset: typing.Any = None) -> int:
+        """
+        Get the number of overlapping pixels between this mask and another.
+        
+        Args:
+            other (Mask): The other mask to check overlap with.
+            offset (Vec2): Position offset between the masks. Defaults to (0, 0).
+        
+        Returns:
+            int: The number of overlapping solid pixels.
+        """
+    def get_overlap_mask(self, other: Mask, offset: typing.Any = None) -> Mask:
+        """
+        Get a mask representing the overlapping area between this mask and another.
+        
+        Args:
+            other (Mask): The other mask to check overlap with.
+            offset (Vec2): Position offset between the masks. Defaults to (0, 0).
+        
+        Returns:
+            Mask: A new mask containing only the overlapping pixels.
+        """
+    def get_pixel_array(self, color: typing.Any = None) -> PixelArray:
+        """
+        Convert the mask to a pixel array with the specified color.
+        
+        Solid pixels become the specified color, transparent pixels become transparent.
+        
+        Args:
+            color (Color): The color to use for solid pixels. Defaults to white (255, 255, 255, 255).
+        
+        Returns:
+            PixelArray: A new pixel array representation of the mask.
+        
+        Raises:
+            RuntimeError: If pixel array creation fails.
+        """
+    def invert(self) -> None:
+        """
+        Invert all pixels in the mask.
+        
+        Solid pixels become transparent and transparent pixels become solid.
+        """
+    def is_empty(self) -> bool:
+        """
+        Check if the mask contains no solid pixels.
+        
+        Returns:
+            bool: True if the mask is empty, False otherwise.
+        """
+    def set_at(self, pos: Vec2, value: bool) -> None:
+        """
+        Set the pixel value at a specific position.
+        
+        Args:
+            pos (Vec2): The position to set.
+            value (bool): The pixel value (True for solid, False for transparent).
+        """
+    def subtract(self, other: Mask, offset: typing.Any = None) -> None:
+        """
+        Subtract another mask from this mask with an offset.
+        
+        Removes pixels where the other mask has solid pixels.
+        
+        Args:
+            other (Mask): The mask to subtract.
+            offset (Vec2): Position offset for the other mask. Defaults to (0, 0).
+        """
+    @property
+    def height(self) -> int:
+        """
+        The height of the mask in pixels.
+        """
+    @property
+    def rect(self) -> Rect:
+        """
+        The bounding rectangle of the mask starting at (0, 0).
+        """
+    @property
+    def size(self) -> Vec2:
+        """
+        The size of the mask as a Vec2.
+        """
+    @property
+    def width(self) -> int:
+        """
+        The width of the mask in pixels.
         """
 class MouseButton(enum.IntEnum):
     M_LEFT: typing.ClassVar[MouseButton]  # value = <MouseButton.M_LEFT: 1>

@@ -459,14 +459,6 @@ Rect scaleTo(const Rect& rect, const Vec2& size)
 
 Rect::Rect(const Vec2& pos, const Vec2& size) : x(pos.x), y(pos.y), w(size.x), h(size.y) {}
 
-Rect::Rect(const double x, const double y, const double w, const double h) : x(x), y(y), w(w), h(h)
-{
-}
-
-Rect::Rect(const Vec2& pos, const double w, const double h) : x(pos.x), y(pos.y), w(w), h(h) {}
-
-Rect::Rect(const double x, const double y, const Vec2& size) : x(x), y(y), w(size.x), h(size.y) {}
-
 Rect Rect::copy() const { return {x, y, w, h}; }
 
 void Rect::move(const Vec2& offset)

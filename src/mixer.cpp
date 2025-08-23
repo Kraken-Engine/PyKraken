@@ -15,6 +15,8 @@ namespace mixer
 {
 void _bind(pybind11::module_& module)
 {
+    // ------------ Audio -------------
+
     py::classh<Audio>(module, "Audio", R"doc(
 A decoded audio object that supports multiple simultaneous playbacks.
 
@@ -66,6 +68,8 @@ volume for future playbacks. Volume can exceed 1.0 for amplification.
 Type:
     float: Volume level (0.0 = silent, 1.0 = original volume, >1.0 = amplified).
         )doc");
+
+    // ------------ AudioStream -------------
 
     py::classh<AudioStream>(module, "AudioStream", R"doc(
 A streaming audio object for single-instance playback of large audio files.

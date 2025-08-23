@@ -9,6 +9,7 @@
 #include "_globals.hpp"
 
 #include <SDL3_image/SDL_image.h>
+#include <cmath>
 
 namespace texture
 {
@@ -273,7 +274,12 @@ void Texture::render(Rect dstRect, py::object srcRect)
 
     dstRect.x -= cameraPos.x;
     dstRect.y -= cameraPos.y;
-    SDL_FRect dstSDLRect = dstRect;
+    const SDL_FRect dstSDLRect = {
+        std::floorf(static_cast<float>(dstRect.x)),
+        std::floorf(static_cast<float>(dstRect.y)),
+        std::floorf(static_cast<float>(dstRect.w)),
+        std::floorf(static_cast<float>(dstRect.h)),
+    };
 
     SDL_RenderTextureRotated(renderer::get(), m_texPtr, &srcSDLRect, &dstSDLRect, this->angle,
                              nullptr, flipAxis);
@@ -333,7 +339,12 @@ void Texture::render(py::object pos, const Anchor anchor)
         break;
     }
 
-    const SDL_FRect dstSDLRect = rect;
+    const SDL_FRect dstSDLRect = {
+        std::floorf(static_cast<float>(rect.x)),
+        std::floorf(static_cast<float>(rect.y)),
+        std::floorf(static_cast<float>(rect.w)),
+        std::floorf(static_cast<float>(rect.h)),
+    };
     SDL_RenderTextureRotated(renderer::get(), m_texPtr, nullptr, &dstSDLRect, this->angle, nullptr,
                              flipAxis);
 }
