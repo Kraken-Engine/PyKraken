@@ -4,7 +4,7 @@ Functions for transforming pixel arrays
 from __future__ import annotations
 import pykraken._core
 import typing
-__all__ = ['box_blur', 'flip', 'gaussian_blur', 'grayscale', 'invert', 'rotate', 'scale_by', 'scale_to']
+__all__: list[str] = ['box_blur', 'flip', 'gaussian_blur', 'grayscale', 'invert', 'rotate', 'scale_by', 'scale_to']
 def box_blur(pixel_array: pykraken._core.PixelArray, radius: typing.SupportsInt, repeat_edge_pixels: bool = True) -> pykraken._core.PixelArray:
     """
     Apply a box blur effect to a pixel array.

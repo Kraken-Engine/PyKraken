@@ -1,18 +1,14 @@
 #pragma once
 
-#include <pybind11/pybind11.h>
-
 #include "Math.hpp"
-
-class Rect;
-class Line;
+#include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
-namespace circle
+namespace kn
 {
-void _bind(py::module_& module);
-}
+class Line;
+class Rect;
 
 class Circle
 {
@@ -24,26 +20,32 @@ class Circle
     Circle(const Vec2& center, double radius);
     ~Circle() = default;
 
-    double getArea() const;
+    [[nodiscard]] double getArea() const;
 
-    double getCircumference() const;
+    [[nodiscard]] double getCircumference() const;
 
-    bool collidePoint(const Vec2& point) const;
+    [[nodiscard]] bool collidePoint(const Vec2& point) const;
 
-    bool collideCircle(const Circle& circle) const;
+    [[nodiscard]] bool collideCircle(const Circle& circle) const;
 
-    bool collideRect(const Rect& rect) const;
+    [[nodiscard]] bool collideRect(const Rect& rect) const;
 
-    bool collideLine(const Line& line) const;
+    [[nodiscard]] bool collideLine(const Line& line) const;
 
-    bool contains(const Circle& circle) const;
-    bool contains(const Rect& rect) const;
-    bool contains(const Line& line) const;
+    [[nodiscard]] bool contains(const Circle& circle) const;
+    [[nodiscard]] bool contains(const Rect& rect) const;
+    [[nodiscard]] bool contains(const Line& line) const;
 
-    Rect asRect() const;
+    [[nodiscard]] Rect asRect() const;
 
-    Circle copy() const;
+    [[nodiscard]] Circle copy() const;
 
     bool operator==(const Circle& other) const;
     bool operator!=(const Circle& other) const;
 };
+
+namespace circle
+{
+void _bind(const py::module_& module);
+} // namespace circle
+} // namespace kn

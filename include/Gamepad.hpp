@@ -6,17 +6,15 @@
 
 namespace py = pybind11;
 
-class Vec2;
-
-namespace event
+namespace kn
 {
-struct knEvent;
-}
+struct Event;
+class Vec2;
 
 struct GamepadState
 {
     SDL_Gamepad* pad = nullptr;
-    float deadzone = 0.1f;
+    float deadZone = 0.1f;
     std::unordered_map<SDL_GamepadButton, bool> justPressed;
     std::unordered_map<SDL_GamepadButton, bool> justReleased;
 };
@@ -39,13 +37,14 @@ double getLeftTrigger(int slot = 0);
 
 double getRightTrigger(int slot = 0);
 
-void setDeadzone(float deadZone, int slot = 0);
+void setDeadZone(float deadZone, int slot = 0);
 
-float getDeadzone(int slot = 0);
+float getDeadZone(int slot = 0);
 
 std::vector<int> getConnectedSlots();
 
 void _clearStates();
 
-void _handleEvents(const SDL_Event& sdle, event::knEvent& e);
+void _handleEvents(const SDL_Event& sdlEvent, Event& e);
 } // namespace gamepad
+} // namespace kn

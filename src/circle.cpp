@@ -1,16 +1,104 @@
-#include "Circle.hpp"
 #include "Line.hpp"
 #include "Rect.hpp"
 
-#include <cmath>
+#include "Circle.hpp"
 
 #ifndef M_PI
 #define M_PI 3.1415926535897932384626433832795
 #endif
 
+namespace kn
+{
+Circle::Circle(const Vec2& center, const double radius) : pos(center), radius(radius) {}
+
+double Circle::getArea() const { return M_PI * radius * radius; }
+
+double Circle::getCircumference() const { return 2 * M_PI * radius; }
+
+bool Circle::collidePoint(const Vec2& point) const
+{
+    const double diff = (point - pos).getLength();
+    return diff <= radius;
+}
+
+bool Circle::collideCircle(const Circle& circle) const
+{
+    const double diff = (pos - circle.pos).getLength();
+    return diff <= radius + circle.radius;
+}
+
+bool Circle::collideRect(const Rect& rect) const
+{
+    const auto closestPos = math::clampVec(pos, rect.getTopLeft(), rect.getBottomRight());
+    return (pos - closestPos).getLength() <= radius;
+}
+
+bool Circle::collideLine(const Line& line) const
+{
+    const Vec2 a = line.getA();
+    const Vec2 ab = line.getB() - a;
+    const Vec2 ac = pos - a;
+
+    const double abLengthSquared = ab.getLengthSquared();
+    if (abLengthSquared == 0.0)
+        return ac.getLength() <= radius;
+
+    const double t = std::clamp(math::dot(ac, ab) / abLengthSquared, 0.0, 1.0);
+    const Vec2 closestPoint = a + ab * t;
+    const double distSquared = (closestPoint - pos).getLengthSquared();
+
+    return distSquared <= radius * radius;
+}
+
+bool Circle::contains(const Circle& circle) const
+{
+    const double centerDist = (pos - circle.pos).getLength();
+    return centerDist + circle.radius <= radius;
+}
+
+bool Circle::contains(const Rect& rect) const
+{
+    const Vec2 corners[] = {
+        rect.getTopLeft(),
+        rect.getTopRight(),
+        rect.getBottomLeft(),
+        rect.getBottomRight(),
+    };
+
+    return std::ranges::all_of(corners, [&](const Vec2& corner)
+                               { return (corner - pos).getLengthSquared() <= radius * radius; });
+}
+
+bool Circle::contains(const Line& line) const
+{
+    const double radiusSquared = radius * radius;
+
+    const double distA = (line.getA() - pos).getLengthSquared();
+    const double distB = (line.getB() - pos).getLengthSquared();
+
+    return distA <= radiusSquared && distB <= radiusSquared;
+}
+
+Rect Circle::asRect() const
+{
+    Rect rect;
+    rect.setSize(Vec2{radius * 2});
+    rect.setCenter(pos);
+    return rect;
+}
+
+Circle Circle::copy() const { return {pos, radius}; }
+
+bool Circle::operator==(const Circle& other) const
+{
+    return pos == other.pos && radius == other.radius;
+}
+
+bool Circle::operator!=(const Circle& other) const { return !(*this == other); }
+
 namespace circle
 {
-void _bind(py::module_& module)
+void _bind(const py::module_& module)
 {
     py::classh<Circle>(module, "Circle", R"doc(
 Represents a circle shape with position and radius.
@@ -37,8 +125,8 @@ Args:
                      if (!py::isinstance<double>(prSeq[1]))
                          throw std::invalid_argument("Radius must be an int or float");
 
-                     py::sequence posSeq = prSeq[0].cast<py::sequence>();
-                     double radius = prSeq[1].cast<double>();
+                     const auto posSeq = prSeq[0].cast<py::sequence>();
+                     auto radius = prSeq[1].cast<double>();
 
                      if (posSeq.size() != 2)
                          throw std::invalid_argument("Position must be a 2-element sequence");
@@ -65,7 +153,7 @@ Return an iterator over (x, y, radius).
 
         .def(
             "__getitem__",
-            [](const Circle& circle, size_t i) -> double
+            [](const Circle& circle, const size_t i) -> double
             {
                 switch (i)
                 {
@@ -146,12 +234,12 @@ Args:
             {
                 if (py::isinstance<Vec2>(shapeObject))
                     return self.collidePoint(shapeObject.cast<Vec2>());
-                else if (py::isinstance<Circle>(shapeObject))
+                if (py::isinstance<Circle>(shapeObject))
                     return self.contains(shapeObject.cast<Circle>());
-                else if (py::isinstance<Rect>(shapeObject))
+                if (py::isinstance<Rect>(shapeObject))
                     return self.contains(shapeObject.cast<Rect>());
-                else
-                    throw std::invalid_argument("Shape must be a Vec2, Circle, or Rect");
+
+                throw std::invalid_argument("Shape must be a Vec2, Circle, or Rect");
             },
             py::arg("shape"), R"doc(
 Check if the circle fully contains the given shape.
@@ -170,98 +258,5 @@ Return a copy of the circle.
 
     py::implicitly_convertible<py::sequence, Circle>();
 }
-
 } // namespace circle
-
-Circle::Circle(const Vec2& center, const double radius) : pos(center), radius(radius) {}
-
-double Circle::getArea() const { return M_PI * radius * radius; }
-
-double Circle::getCircumference() const { return 2 * M_PI * radius; }
-
-bool Circle::collidePoint(const Vec2& point) const
-{
-    const double diff = (point - pos).getLength();
-    return diff <= radius;
-}
-
-bool Circle::collideCircle(const Circle& circle) const
-{
-    const double diff = (pos - circle.pos).getLength();
-    return diff <= (radius + circle.radius);
-}
-
-bool Circle::collideRect(const Rect& rect) const
-{
-    auto closestPos = math::clampVec(pos, rect.getTopLeft(), rect.getBottomRight());
-    return (pos - closestPos).getLength() <= radius;
-}
-
-bool Circle::collideLine(const Line& line) const
-{
-    const Vec2 a = line.getA();
-    const Vec2 ab = line.getB() - a;
-    const Vec2 ac = pos - a;
-
-    const double abLengthSquared = ab.getLengthSquared();
-    if (abLengthSquared == 0.0)
-        return ac.getLength() <= radius;
-
-    const double t = std::clamp(math::dot(ac, ab) / abLengthSquared, 0.0, 1.0);
-    const Vec2 closestPoint = a + ab * t;
-    const double distSquared = (closestPoint - pos).getLengthSquared();
-
-    return distSquared <= (radius * radius);
-}
-
-bool Circle::contains(const Circle& circle) const
-{
-    const double centerDist = (pos - circle.pos).getLength();
-    return (centerDist + circle.radius) <= radius;
-}
-
-bool Circle::contains(const Rect& rect) const
-{
-    const Vec2 corners[] = {
-        rect.getTopLeft(),
-        rect.getTopRight(),
-        rect.getBottomLeft(),
-        rect.getBottomRight(),
-    };
-
-    for (const auto& corner : corners)
-    {
-        const double dist = (corner - pos).getLength();
-        if (dist > radius)
-            return false;
-    }
-
-    return true;
-}
-
-bool Circle::contains(const Line& line) const
-{
-    const double radiusSquared = radius * radius;
-
-    const double distA = (line.getA() - pos).getLengthSquared();
-    const double distB = (line.getB() - pos).getLengthSquared();
-
-    return (distA <= radiusSquared) && (distB <= radiusSquared);
-}
-
-Rect Circle::asRect() const
-{
-    Rect rect;
-    rect.setSize({radius * 2});
-    rect.setCenter(pos);
-    return rect;
-}
-
-Circle Circle::copy() const { return {pos, radius}; }
-
-bool Circle::operator==(const Circle& other) const
-{
-    return pos == other.pos && radius == other.radius;
-}
-
-bool Circle::operator!=(const Circle& other) const { return !(*this == other); }
+} // namespace kn

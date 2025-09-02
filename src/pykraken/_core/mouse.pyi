@@ -3,7 +3,7 @@ Mouse related functions
 """
 from __future__ import annotations
 import pykraken._core
-__all__ = ['get_pos', 'get_rel', 'hide', 'is_hidden', 'is_just_pressed', 'is_just_released', 'is_locked', 'is_pressed', 'lock', 'show', 'unlock']
+__all__: list[str] = ['get_pos', 'get_rel', 'hide', 'is_hidden', 'is_just_pressed', 'is_just_released', 'is_locked', 'is_pressed', 'lock', 'show', 'unlock']
 def get_pos() -> pykraken._core.Vec2:
     """
     Get the current position of the mouse cursor.

@@ -1,19 +1,183 @@
 #include "Texture.hpp"
 #include "Camera.hpp"
 #include "Color.hpp"
-#include "Math.hpp"
 #include "PixelArray.hpp"
-#include "Rect.hpp"
 #include "Renderer.hpp"
-#include "Window.hpp"
-#include "_globals.hpp"
 
 #include <SDL3_image/SDL_image.h>
-#include <cmath>
+
+namespace kn
+{
+Texture::Texture(const PixelArray& pixelArray)
+{
+    m_texPtr = SDL_CreateTextureFromSurface(renderer::_get(), pixelArray.getSDL());
+
+    if (!m_texPtr)
+    {
+        throw std::runtime_error("Failed to create texture from PixelArray: " +
+                                 std::string(SDL_GetError()));
+    }
+
+    SDL_SetTextureScaleMode(m_texPtr, SDL_SCALEMODE_NEAREST);
+}
+
+Texture::Texture(const std::string& filePath)
+{
+    if (filePath.empty())
+        throw std::invalid_argument("File path cannot be empty");
+
+    m_texPtr = IMG_LoadTexture(renderer::_get(), filePath.c_str());
+    if (!m_texPtr)
+        throw std::runtime_error("Failed to load texture: " + std::string(SDL_GetError()));
+
+    SDL_SetTextureScaleMode(m_texPtr, SDL_SCALEMODE_NEAREST);
+}
+
+Texture::Texture(SDL_Texture* sdlTexture) { this->loadFromSDL(sdlTexture); }
+
+Texture::~Texture()
+{
+    if (m_texPtr)
+    {
+        SDL_DestroyTexture(m_texPtr);
+        m_texPtr = nullptr;
+    }
+}
+
+void Texture::loadFromSDL(SDL_Texture* sdlTexture)
+{
+    if (m_texPtr)
+    {
+        SDL_DestroyTexture(m_texPtr);
+        m_texPtr = nullptr;
+    }
+
+    m_texPtr = sdlTexture;
+}
+
+Vec2 Texture::getSize() const
+{
+    float w, h;
+    SDL_GetTextureSize(m_texPtr, &w, &h);
+    return {w, h};
+}
+
+Rect Texture::getRect() const
+{
+    float w, h;
+    SDL_GetTextureSize(m_texPtr, &w, &h);
+    return {0.f, 0.f, w, h};
+}
+
+void Texture::setTint(const Color& tint) const
+{
+    SDL_SetTextureColorMod(m_texPtr, tint.r, tint.g, tint.b);
+}
+
+Color Texture::getTint() const
+{
+    Color colorMod;
+    SDL_GetTextureColorMod(m_texPtr, &colorMod.r, &colorMod.g, &colorMod.b);
+    return colorMod;
+}
+
+void Texture::setAlpha(const float alpha) const { SDL_SetTextureAlphaModFloat(m_texPtr, alpha); }
+
+float Texture::getAlpha() const
+{
+    float alphaMod;
+    SDL_GetTextureAlphaModFloat(m_texPtr, &alphaMod);
+    return alphaMod;
+}
+
+void Texture::makeAdditive() const { SDL_SetTextureBlendMode(m_texPtr, SDL_BLENDMODE_ADD); }
+
+void Texture::makeMultiply() const { SDL_SetTextureBlendMode(m_texPtr, SDL_BLENDMODE_MUL); }
+
+void Texture::makeNormal() const { SDL_SetTextureBlendMode(m_texPtr, SDL_BLENDMODE_BLEND); }
+
+SDL_Texture* Texture::getSDL() const { return m_texPtr; }
+
+void Texture::render(Rect dstRect, const Rect& srcRect) const
+{
+    const auto srcSDLRect =
+        static_cast<SDL_FRect>(srcRect.w == 0.0 && srcRect.h == 0.0 ? this->getRect() : srcRect);
+
+    const Vec2 cameraPos = camera::getActivePos();
+
+    SDL_FlipMode flipAxis = SDL_FLIP_NONE;
+    if (this->flip.h)
+        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_HORIZONTAL);
+    if (this->flip.v)
+        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_VERTICAL);
+
+    dstRect.x -= cameraPos.x;
+    dstRect.y -= cameraPos.y;
+    const SDL_FRect dstSDLRect = {
+        std::floorf(static_cast<float>(dstRect.x)),
+        std::floorf(static_cast<float>(dstRect.y)),
+        std::floorf(static_cast<float>(dstRect.w)),
+        std::floorf(static_cast<float>(dstRect.h)),
+    };
+
+    SDL_RenderTextureRotated(renderer::_get(), m_texPtr, &srcSDLRect, &dstSDLRect, this->angle,
+                             nullptr, flipAxis);
+}
+
+void Texture::render(Vec2 pos, const Anchor anchor) const
+{
+    SDL_FlipMode flipAxis = SDL_FLIP_NONE;
+    if (this->flip.h)
+        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_HORIZONTAL);
+    if (this->flip.v)
+        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_VERTICAL);
+
+    pos -= camera::getActivePos();
+    Rect rect = this->getRect();
+    switch (anchor)
+    {
+    case Anchor::TopLeft:
+        rect.setTopLeft(pos);
+        break;
+    case Anchor::TopMid:
+        rect.setTopMid(pos);
+        break;
+    case Anchor::TopRight:
+        rect.setTopRight(pos);
+        break;
+    case Anchor::MidLeft:
+        rect.setMidLeft(pos);
+        break;
+    case Anchor::Center:
+        rect.setCenter(pos);
+        break;
+    case Anchor::MidRight:
+        rect.setMidRight(pos);
+        break;
+    case Anchor::BottomLeft:
+        rect.setBottomLeft(pos);
+        break;
+    case Anchor::BottomMid:
+        rect.setBottomMid(pos);
+        break;
+    case Anchor::BottomRight:
+        rect.setBottomRight(pos);
+        break;
+    }
+
+    const SDL_FRect dstSDLRect = {
+        std::floorf(static_cast<float>(rect.x)),
+        std::floorf(static_cast<float>(rect.y)),
+        std::floorf(static_cast<float>(rect.w)),
+        std::floorf(static_cast<float>(rect.h)),
+    };
+    SDL_RenderTextureRotated(renderer::_get(), m_texPtr, nullptr, &dstSDLRect, this->angle, nullptr,
+                             flipAxis);
+}
 
 namespace texture
 {
-void _bind(py::module_& module)
+void _bind(const py::module_& module)
 {
     py::classh<Texture> texture(module, "Texture", R"doc(
 Represents a hardware-accelerated image that can be efficiently rendered.
@@ -129,17 +293,42 @@ Set the texture to use normal (alpha) blending mode.
 
 This is the default blending mode for standard transparency effects.
         )doc")
-        .def("render", py::overload_cast<Rect, py::object>(&Texture::render), py::arg("dst"),
-             py::arg("src") = py::none(), R"doc(
+        .def(
+            "render",
+            [](const Texture& self, const Rect& dstRect, const py::object& srcObj)
+            {
+                try
+                {
+                    srcObj.is_none() ? self.render(dstRect)
+                                     : self.render(dstRect, srcObj.cast<Rect>());
+                }
+                catch (const py::cast_error&)
+                {
+                    throw std::invalid_argument("'src' must be a Rect");
+                }
+            },
+            py::arg("dst"), py::arg("src") = py::none(), R"doc(
 Render this texture with specified destination and source rectangles.
 
 Args:
     dst (Rect): The destination rectangle on the renderer.
     src (Rect, optional): The source rectangle from the texture. Defaults to entire texture if not specified.
     )doc")
-        .def("render", py::overload_cast<py::object, Anchor>(&Texture::render),
-             py::arg("pos") = py::none(), py::arg("anchor") = Anchor::CENTER,
-             R"doc(
+        .def(
+            "render",
+            [](const Texture& self, const py::object& pos, const Anchor anchor)
+            {
+                try
+                {
+                    pos.is_none() ? self.render({}, anchor) : self.render(pos.cast<Vec2>(), anchor);
+                }
+                catch (const py::cast_error&)
+                {
+                    throw std::invalid_argument("'pos' must be a Vec2");
+                }
+            },
+            py::arg("pos") = py::none(), py::arg("anchor") = Anchor::Center,
+            R"doc(
 Render this texture at the specified position with anchor alignment.
 
 Args:
@@ -148,203 +337,4 @@ Args:
     )doc");
 }
 } // namespace texture
-
-Texture::Texture(const PixelArray& pixelArray)
-{
-    m_texPtr = SDL_CreateTextureFromSurface(renderer::get(), pixelArray.getSDL());
-
-    if (!m_texPtr)
-    {
-        throw std::runtime_error("Failed to create texture from PixelArray: " +
-                                 std::string(SDL_GetError()));
-    }
-
-    SDL_SetTextureScaleMode(m_texPtr, SDL_SCALEMODE_NEAREST);
-}
-
-Texture::Texture(const std::string& filePath)
-{
-    if (filePath.empty())
-        throw std::invalid_argument("File path cannot be empty");
-
-    if (m_texPtr)
-    {
-        SDL_DestroyTexture(m_texPtr);
-        m_texPtr = nullptr;
-    }
-
-    m_texPtr = IMG_LoadTexture(renderer::get(), filePath.c_str());
-    if (!m_texPtr)
-        throw std::runtime_error("Failed to load texture: " + std::string(SDL_GetError()));
-
-    SDL_SetTextureScaleMode(m_texPtr, SDL_SCALEMODE_NEAREST);
-}
-
-Texture::Texture(SDL_Texture* sdlTexture) { this->loadFromSDL(sdlTexture); }
-
-Texture::~Texture()
-{
-    if (m_texPtr)
-    {
-        SDL_DestroyTexture(m_texPtr);
-        m_texPtr = nullptr;
-    }
-}
-
-void Texture::loadFromSDL(SDL_Texture* sdlTexture)
-{
-    if (m_texPtr)
-    {
-        SDL_DestroyTexture(m_texPtr);
-        m_texPtr = nullptr;
-    }
-
-    m_texPtr = sdlTexture;
-}
-
-Vec2 Texture::getSize() const
-{
-    float w, h;
-    SDL_GetTextureSize(m_texPtr, &w, &h);
-    return {w, h};
-}
-
-Rect Texture::getRect() const
-{
-    float w, h;
-    SDL_GetTextureSize(m_texPtr, &w, &h);
-    return {0.f, 0.f, w, h};
-}
-
-void Texture::setTint(const Color& tint) const
-{
-    SDL_SetTextureColorMod(m_texPtr, tint.r, tint.g, tint.b);
-}
-
-Color Texture::getTint() const
-{
-    Color colorMod;
-    SDL_GetTextureColorMod(m_texPtr, &colorMod.r, &colorMod.g, &colorMod.b);
-    return colorMod;
-}
-
-void Texture::setAlpha(float alpha) const { SDL_SetTextureAlphaModFloat(m_texPtr, alpha); }
-
-float Texture::getAlpha() const
-{
-    float alphaMod;
-    SDL_GetTextureAlphaModFloat(m_texPtr, &alphaMod);
-    return alphaMod;
-}
-
-void Texture::makeAdditive() const { SDL_SetTextureBlendMode(m_texPtr, SDL_BLENDMODE_ADD); }
-
-void Texture::makeMultiply() const { SDL_SetTextureBlendMode(m_texPtr, SDL_BLENDMODE_MUL); }
-
-void Texture::makeNormal() const { SDL_SetTextureBlendMode(m_texPtr, SDL_BLENDMODE_BLEND); }
-
-SDL_Texture* Texture::getSDL() const { return m_texPtr; }
-
-void Texture::render(Rect dstRect, py::object srcRect)
-{
-    SDL_FRect srcSDLRect;
-    if (!srcRect.is_none())
-    {
-        try
-        {
-            srcSDLRect = srcRect.cast<Rect>();
-        }
-        catch (const py::cast_error&)
-        {
-            throw std::invalid_argument("'src' must be a Rect");
-        }
-    }
-    else
-    {
-        srcSDLRect = this->getRect();
-    }
-
-    Vec2 cameraPos = camera::getActivePos();
-
-    SDL_FlipMode flipAxis = SDL_FLIP_NONE;
-    if (this->flip.h)
-        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_HORIZONTAL);
-    if (this->flip.v)
-        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_VERTICAL);
-
-    dstRect.x -= cameraPos.x;
-    dstRect.y -= cameraPos.y;
-    const SDL_FRect dstSDLRect = {
-        std::floorf(static_cast<float>(dstRect.x)),
-        std::floorf(static_cast<float>(dstRect.y)),
-        std::floorf(static_cast<float>(dstRect.w)),
-        std::floorf(static_cast<float>(dstRect.h)),
-    };
-
-    SDL_RenderTextureRotated(renderer::get(), m_texPtr, &srcSDLRect, &dstSDLRect, this->angle,
-                             nullptr, flipAxis);
-}
-
-void Texture::render(py::object pos, const Anchor anchor)
-{
-    Vec2 drawPos;
-    if (!pos.is_none())
-    {
-        try
-        {
-            drawPos = pos.cast<Vec2>();
-        }
-        catch (const py::cast_error&)
-        {
-            throw std::invalid_argument("'pos' must be a Vec2");
-        }
-    }
-
-    SDL_FlipMode flipAxis = SDL_FLIP_NONE;
-    if (this->flip.h)
-        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_HORIZONTAL);
-    if (this->flip.v)
-        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_VERTICAL);
-
-    drawPos -= camera::getActivePos();
-    Rect rect = this->getRect();
-    switch (anchor)
-    {
-    case Anchor::TOP_LEFT:
-        rect.setTopLeft(drawPos);
-        break;
-    case Anchor::TOP_MID:
-        rect.setTopMid(drawPos);
-        break;
-    case Anchor::TOP_RIGHT:
-        rect.setTopRight(drawPos);
-        break;
-    case Anchor::MID_LEFT:
-        rect.setMidLeft(drawPos);
-        break;
-    case Anchor::CENTER:
-        rect.setCenter(drawPos);
-        break;
-    case Anchor::MID_RIGHT:
-        rect.setMidRight(drawPos);
-        break;
-    case Anchor::BOTTOM_LEFT:
-        rect.setBottomLeft(drawPos);
-        break;
-    case Anchor::BOTTOM_MID:
-        rect.setBottomMid(drawPos);
-        break;
-    case Anchor::BOTTOM_RIGHT:
-        rect.setBottomRight(drawPos);
-        break;
-    }
-
-    const SDL_FRect dstSDLRect = {
-        std::floorf(static_cast<float>(rect.x)),
-        std::floorf(static_cast<float>(rect.y)),
-        std::floorf(static_cast<float>(rect.w)),
-        std::floorf(static_cast<float>(rect.h)),
-    };
-    SDL_RenderTextureRotated(renderer::get(), m_texPtr, nullptr, &dstSDLRect, this->angle, nullptr,
-                             flipAxis);
-}
+} // namespace kn

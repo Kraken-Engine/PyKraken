@@ -1,10 +1,36 @@
+#include "Math.hpp"
+
 #include "Camera.hpp"
 
+namespace kn
+{
 static Vec2 _cameraPos;
+Camera* Camera::active = nullptr;
+
+Camera::Camera(const Vec2& pos) : pos(pos) {}
+
+Camera::Camera(const double x, const double y) : pos(x, y) {}
+
+void Camera::setPos(const Vec2& newPos)
+{
+    this->pos = newPos;
+    if (active == this)
+        _cameraPos = newPos;
+}
+
+Vec2 Camera::getPos() const { return pos; }
+
+void Camera::set()
+{
+    active = this;
+    _cameraPos = pos;
+}
 
 namespace camera
 {
-void _bind(py::module_& module)
+Vec2 getActivePos() { return _cameraPos; }
+
+void _bind(const py::module_& module)
 {
     py::classh<Camera>(module, "Camera", R"doc(
 Represents a 2D camera used for rendering.
@@ -46,27 +72,5 @@ Set this camera as the active one for rendering.
 Only one camera can be active at a time.
         )doc");
 }
-
-Vec2 getActivePos() { return _cameraPos; }
 } // namespace camera
-
-Camera* Camera::active = nullptr;
-
-Camera::Camera(const Vec2& pos) : pos(pos) {}
-
-Camera::Camera(double x, double y) : pos(x, y) {}
-
-void Camera::setPos(const Vec2& pos)
-{
-    this->pos = pos;
-    if (Camera::active == this)
-        _cameraPos = pos;
-}
-
-Vec2 Camera::getPos() const { return pos; }
-
-void Camera::set()
-{
-    Camera::active = this;
-    _cameraPos = pos;
-}
+} // namespace kn

@@ -1,9 +1,9 @@
 import pykraken as kn
 
 kn.init()
-kn.window.create("Kraken Example", (320, 240), True)
+kn.window.create("Kraken Example", kn.Vec2(320, 240), True)
 
-# paths written to run from parent directory
+# paths written to run from the parent directory
 booth = kn.PixelArray("example/phone-booth.png")
 player = kn.PixelArray("example/idle.png")
 

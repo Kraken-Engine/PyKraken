@@ -1,15 +1,15 @@
-#include "Transform.hpp"
-#include "Color.hpp"
 #include "Math.hpp"
 #include "PixelArray.hpp"
 
+#include "Transform.hpp"
 #include <gfx/SDL3_rotozoom.h>
 
-namespace transform
+namespace kn::transform
 {
 void _bind(py::module_& module)
 {
-    auto subTransform = module.def_submodule("transform", "Functions for transforming pixel arrays");
+    auto subTransform =
+        module.def_submodule("transform", "Functions for transforming pixel arrays");
 
     subTransform.def("flip", &flip, py::arg("pixel_array"), py::arg("flip_x"), py::arg("flip_y"),
                      R"doc(
@@ -145,22 +145,24 @@ Raises:
 
 std::unique_ptr<PixelArray> flip(const PixelArray& pixelArray, const bool flipX, const bool flipY)
 {
-    SDL_Surface* sdlSurface = pixelArray.getSDL();
+    const SDL_Surface* sdlSurface = pixelArray.getSDL();
     SDL_Surface* flipped = SDL_CreateSurface(sdlSurface->w, sdlSurface->h, SDL_PIXELFORMAT_RGBA32);
 
     if (!flipped)
         throw std::runtime_error("Failed to create flipped pixel array.");
 
-    int bpp = SDL_GetPixelFormatDetails(sdlSurface->format)->bytes_per_pixel;
+    const int bpp = SDL_GetPixelFormatDetails(sdlSurface->format)->bytes_per_pixel;
 
     for (int y = 0; y < sdlSurface->h; ++y)
         for (int x = 0; x < sdlSurface->w; ++x)
         {
-            int srcX = flipX ? (sdlSurface->w - 1 - x) : x;
-            int srcY = flipY ? (sdlSurface->h - 1 - y) : y;
+            const int srcX = flipX ? sdlSurface->w - 1 - x : x;
+            const int srcY = flipY ? sdlSurface->h - 1 - y : y;
 
-            Uint8* srcPixel = (Uint8*)sdlSurface->pixels + srcY * sdlSurface->pitch + srcX * bpp;
-            Uint8* dstPixel = (Uint8*)flipped->pixels + y * flipped->pitch + x * bpp;
+            const uint8_t* srcPixel =
+                static_cast<uint8_t*>(sdlSurface->pixels) + srcY * sdlSurface->pitch + srcX * bpp;
+            uint8_t* dstPixel =
+                static_cast<uint8_t*>(flipped->pixels) + y * flipped->pitch + x * bpp;
 
             memcpy(dstPixel, srcPixel, bpp);
         }
@@ -179,7 +181,7 @@ std::unique_ptr<PixelArray> scaleTo(const PixelArray& pixelArray, const Vec2& si
     if (!scaled)
         throw std::runtime_error("Failed to create scaled pixel array.");
 
-    SDL_Rect dstRect = {0, 0, newW, newH};
+    const SDL_Rect dstRect = {0, 0, newW, newH};
     if (!SDL_BlitSurfaceScaled(sdlSurface, nullptr, scaled, &dstRect, SDL_SCALEMODE_NEAREST))
     {
         SDL_DestroySurface(scaled);
@@ -199,7 +201,7 @@ std::unique_ptr<PixelArray> scaleBy(const PixelArray& pixelArray, const double f
 
 std::unique_ptr<PixelArray> scaleBy(const PixelArray& pixelArray, const Vec2& factor)
 {
-    if (factor <= 0.0)
+    if (factor <= Vec2{})
         throw std::invalid_argument("Scale factor must be a positive value.");
 
     const Vec2 originalSize = pixelArray.getSize();
@@ -218,9 +220,9 @@ std::unique_ptr<PixelArray> rotate(const PixelArray& pixelArray, const double an
 }
 
 std::unique_ptr<PixelArray> boxBlur(const PixelArray& pixelArray, const int radius,
-                                 const bool repeatEdgePixels)
+                                    const bool repeatEdgePixels)
 {
-    SDL_Surface* src = pixelArray.getSDL();
+    const SDL_Surface* src = pixelArray.getSDL();
     const int width = src->w;
     const int height = src->h;
 
@@ -232,7 +234,7 @@ std::unique_ptr<PixelArray> boxBlur(const PixelArray& pixelArray, const int radi
     auto clamp = [](const int v, const int low, const int high) -> int
     { return std::max(low, std::min(v, high)); };
 
-    auto* srcPx = static_cast<uint32_t*>(src->pixels);
+    const uint32_t* srcPx = static_cast<uint32_t*>(src->pixels);
     auto* tmpPx = static_cast<uint32_t*>(temp->pixels);
     auto* dstPx = static_cast<uint32_t*>(result->pixels);
 
@@ -248,7 +250,7 @@ std::unique_ptr<PixelArray> boxBlur(const PixelArray& pixelArray, const int radi
             uint8_t r = 0, g = 0, b = 0, a = 0;
             for (int dx = -radius; dx <= radius; ++dx)
             {
-                int sx = repeatEdgePixels ? clamp(x + dx, 0, width - 1) : x + dx;
+                const int sx = repeatEdgePixels ? clamp(x + dx, 0, width - 1) : x + dx;
                 if (sx < 0 || sx >= width)
                     continue;
 
@@ -273,7 +275,7 @@ std::unique_ptr<PixelArray> boxBlur(const PixelArray& pixelArray, const int radi
             uint8_t r = 0, g = 0, b = 0, a = 0;
             for (int dy = -radius; dy <= radius; ++dy)
             {
-                int sy = repeatEdgePixels ? clamp(y + dy, 0, height - 1) : y + dy;
+                const int sy = repeatEdgePixels ? clamp(y + dy, 0, height - 1) : y + dy;
                 if (sy < 0 || sy >= height)
                     continue;
                 uint8_t pr, pg, pb, pa;
@@ -295,27 +297,28 @@ std::unique_ptr<PixelArray> boxBlur(const PixelArray& pixelArray, const int radi
     return std::make_unique<PixelArray>(result);
 }
 
-std::unique_ptr<PixelArray> gaussianBlur(const PixelArray& pixelArray, int radius, bool repeatEdgePixels)
+std::unique_ptr<PixelArray> gaussianBlur(const PixelArray& pixelArray, const int radius,
+                                         const bool repeatEdgePixels)
 {
-    SDL_Surface* src = pixelArray.getSDL();
+    const SDL_Surface* src = pixelArray.getSDL();
 
     const int w = src->w, h = src->h;
-    int diameter = radius * 2 + 1;
+    const int diameter = radius * 2 + 1;
 
     // Build Gaussian kernel (σ = radius/2)
-    float sigma = radius > 0 ? (radius / 2.0f) : 1.0f;
-    float twoSigmaSq = 2.0f * sigma * sigma;
-    float invSigmaRoot = 1.0f / (std::sqrt(2.0f * M_PI) * sigma);
+    const float sigma = radius > 0 ? static_cast<float>(radius) / 2.f : 1.f;
+    const float twoSigmaSq = 2.f * sigma * sigma;
+    const auto invSigmaRoot = static_cast<float>(1.0 / (std::sqrt(2 * M_PI) * sigma));
     std::vector<float> kernel(diameter);
     for (int i = 0; i < diameter; ++i)
     {
-        int x = i - radius;
-        kernel[i] = invSigmaRoot * std::exp(-(x * x) / twoSigmaSq);
+        const int x = i - radius;
+        kernel[i] = invSigmaRoot * std::exp(-static_cast<float>(x * x) / twoSigmaSq);
     }
 
     // Normalize
     float sum = 0;
-    for (float v : kernel)
+    for (const float v : kernel)
         sum += v;
     for (float& v : kernel)
         v /= sum;
@@ -328,10 +331,11 @@ std::unique_ptr<PixelArray> gaussianBlur(const PixelArray& pixelArray, int radiu
     if (!result)
         throw std::runtime_error("Failed to create result surface for gaussian blur.");
 
-    auto clamp = [](int v, int low, int high) -> int { return std::max(low, std::min(v, high)); };
-    Uint32* srcPx = static_cast<Uint32*>(src->pixels);
-    Uint32* tmpPx = static_cast<Uint32*>(temp->pixels);
-    Uint32* dstPx = static_cast<Uint32*>(result->pixels);
+    auto clamp = [](const int v, const int low, const int high) -> int
+    { return std::max(low, std::min(v, high)); };
+    const uint32_t* srcPx = static_cast<uint32_t*>(src->pixels);
+    auto* tmpPx = static_cast<uint32_t*>(temp->pixels);
+    auto* dstPx = static_cast<uint32_t*>(result->pixels);
 
     const auto srcDetails = SDL_GetPixelFormatDetails(src->format);
     const auto tmpDetails = SDL_GetPixelFormatDetails(temp->format);
@@ -352,10 +356,10 @@ std::unique_ptr<PixelArray> gaussianBlur(const PixelArray& pixelArray, int radiu
 
                 Uint8 pr, pg, pb, pa;
                 SDL_GetRGBA(srcPx[y * w + sx], srcDetails, nullptr, &pr, &pg, &pb, &pa);
-                fr += pr * kernel[k];
-                fg += pg * kernel[k];
-                fb += pb * kernel[k];
-                fa += pa * kernel[k];
+                fr += static_cast<float>(pr) * kernel[k];
+                fg += static_cast<float>(pg) * kernel[k];
+                fb += static_cast<float>(pb) * kernel[k];
+                fa += static_cast<float>(pa) * kernel[k];
             }
             tmpPx[y * w + x] =
                 SDL_MapRGBA(tmpDetails, nullptr, static_cast<Uint8>(fr), static_cast<Uint8>(fg),
@@ -376,14 +380,14 @@ std::unique_ptr<PixelArray> gaussianBlur(const PixelArray& pixelArray, int radiu
                     continue;
                 uint8_t pr, pg, pb, pa;
                 SDL_GetRGBA(tmpPx[sy * w + x], tmpDetails, nullptr, &pr, &pg, &pb, &pa);
-                fr += pr * kernel[k];
-                fg += pg * kernel[k];
-                fb += pb * kernel[k];
-                fa += pa * kernel[k];
+                fr += static_cast<float>(pr) * kernel[k];
+                fg += static_cast<float>(pg) * kernel[k];
+                fb += static_cast<float>(pb) * kernel[k];
+                fa += static_cast<float>(pa) * kernel[k];
             }
             dstPx[y * w + x] =
-                SDL_MapRGBA(resDetails, nullptr, static_cast<Uint8>(fr), static_cast<Uint8>(fg),
-                            static_cast<Uint8>(fb), static_cast<Uint8>(fa));
+                SDL_MapRGBA(resDetails, nullptr, static_cast<uint8_t>(fr), static_cast<uint8_t>(fg),
+                            static_cast<uint8_t>(fb), static_cast<uint8_t>(fa));
         }
 
     SDL_DestroySurface(temp);
@@ -393,7 +397,7 @@ std::unique_ptr<PixelArray> gaussianBlur(const PixelArray& pixelArray, int radiu
 
 std::unique_ptr<PixelArray> invert(const PixelArray& pixelArray)
 {
-    SDL_Surface* src = pixelArray.getSDL();
+    const SDL_Surface* src = pixelArray.getSDL();
 
     const int w = src->w;
     const int h = src->h;
@@ -403,11 +407,11 @@ std::unique_ptr<PixelArray> invert(const PixelArray& pixelArray)
     if (!result)
         throw std::runtime_error("Failed to create result surface for invert.");
 
-    auto srcPx = static_cast<uint32_t*>(src->pixels);
-    auto dstPx = static_cast<uint32_t*>(result->pixels);
+    const uint32_t* srcPx = static_cast<uint32_t*>(src->pixels);
+    auto* dstPx = static_cast<uint32_t*>(result->pixels);
 
-    auto srcDetails = SDL_GetPixelFormatDetails(src->format);
-    auto resDetails = SDL_GetPixelFormatDetails(result->format);
+    const SDL_PixelFormatDetails* srcDetails = SDL_GetPixelFormatDetails(src->format);
+    const SDL_PixelFormatDetails* resDetails = SDL_GetPixelFormatDetails(result->format);
 
     uint8_t r, g, b, a;
     for (int i = 0; i < w * h; ++i)
@@ -421,30 +425,30 @@ std::unique_ptr<PixelArray> invert(const PixelArray& pixelArray)
 
 std::unique_ptr<PixelArray> grayscale(const PixelArray& pixelArray)
 {
-    SDL_Surface* src = pixelArray.getSDL();
+    const SDL_Surface* src = pixelArray.getSDL();
 
     const int w = src->w;
     const int h = src->h;
 
-    // Create output surface with its own memory
+    // Create an output surface with its own memory
     SDL_Surface* result = SDL_CreateSurface(w, h, src->format);
     if (!result)
         throw std::runtime_error("Failed to create surface for grayscale.");
 
-    auto srcPx = static_cast<uint32_t*>(src->pixels);
-    auto dstPx = static_cast<uint32_t*>(result->pixels);
+    const uint32_t* srcPx = static_cast<uint32_t*>(src->pixels);
+    auto* dstPx = static_cast<uint32_t*>(result->pixels);
 
-    auto srcDetails = SDL_GetPixelFormatDetails(src->format);
-    auto resDetails = SDL_GetPixelFormatDetails(result->format);
+    const SDL_PixelFormatDetails* srcDetails = SDL_GetPixelFormatDetails(src->format);
+    const SDL_PixelFormatDetails* resDetails = SDL_GetPixelFormatDetails(result->format);
 
     uint8_t r, g, b, a;
     for (int i = 0; i < w * h; ++i)
     {
         SDL_GetRGBA(srcPx[i], srcDetails, nullptr, &r, &g, &b, &a);
-        auto gray = static_cast<uint8_t>(0.299 * r + 0.587 * g + 0.114 * b);
+        const auto gray = static_cast<uint8_t>(0.299 * r + 0.587 * g + 0.114 * b);
         dstPx[i] = SDL_MapRGBA(resDetails, nullptr, gray, gray, gray, a);
     }
 
     return std::make_unique<PixelArray>(result);
 }
-} // namespace transform
+} // namespace kn::transform

@@ -1,10 +1,16 @@
-#include "Line.hpp"
 #include "Math.hpp"
 
-#include <cmath>
+#include "Line.hpp"
 
+namespace kn
+{
 namespace line
 {
+Line move(const Line& line, const Vec2& offset)
+{
+    return {line.ax + offset.x, line.ay + offset.y, line.bx + offset.x, line.by + offset.y};
+}
+
 void _bind(py::module_& module)
 {
     py::classh<Line>(module, "Line", R"doc(
@@ -60,8 +66,8 @@ Args:
                      if (!py::isinstance<py::sequence>(abSeq[1]))
                          throw std::invalid_argument("B point must be a sequence");
 
-                     py::sequence aSeq = abSeq[0].cast<py::sequence>();
-                     py::sequence bSeq = abSeq[1].cast<py::sequence>();
+                     const auto aSeq = abSeq[0].cast<py::sequence>();
+                     const auto bSeq = abSeq[1].cast<py::sequence>();
 
                      if (aSeq.size() != 2)
                          throw std::invalid_argument("A point must be a 2-element sequence");
@@ -83,7 +89,7 @@ Raises:
             { return py::make_iterator(&self.ax, &self.ax + 4); }, py::keep_alive<0, 1>())
         .def(
             "__getitem__",
-            [](const Line& self, size_t i) -> double
+            [](const Line& self, const size_t i) -> double
             {
                 switch (i)
                 {
@@ -168,20 +174,18 @@ Args:
     offset (Vec2 | list[float]): The amount to move.
         )doc");
 }
-
-Line move(const Line& line, const Vec2& offset)
-{
-    return {line.ax + offset.x, line.ay + offset.y, line.bx + offset.x, line.by + offset.y};
-}
 } // namespace line
 
 Line::Line() : ax(0.0), ay(0.0), bx(0.0), by(0.0) {}
 
-Line::Line(double ax, double ay, double bx, double by) : ax(ax), ay(ay), bx(bx), by(by) {}
+Line::Line(const double ax, const double ay, const double bx, const double by)
+    : ax(ax), ay(ay), bx(bx), by(by)
+{
+}
 
-Line::Line(double ax, double ay, const Vec2& b) : ax(ax), ay(ay), bx(b.x), by(b.y) {}
+Line::Line(const double ax, const double ay, const Vec2& b) : ax(ax), ay(ay), bx(b.x), by(b.y) {}
 
-Line::Line(const Vec2& a, double bx, double by) : ax(a.x), ay(a.y), bx(bx), by(by) {}
+Line::Line(const Vec2& a, const double bx, const double by) : ax(a.x), ay(a.y), bx(bx), by(by) {}
 
 Line::Line(const Vec2& a, const Vec2& b) : ax(a.x), ay(a.y), bx(b.x), by(b.y) {}
 
@@ -224,3 +228,4 @@ bool Line::operator==(const Line& other) const
 }
 
 bool Line::operator!=(const Line& other) const { return !(*this == other); }
+} // namespace kn

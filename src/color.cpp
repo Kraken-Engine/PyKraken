@@ -3,6 +3,8 @@
 #include <iomanip>
 #include <sstream>
 
+namespace kn
+{
 namespace color
 {
 void _bind(py::module_& module)
@@ -29,14 +31,14 @@ Args:
         )doc")
 
         .def(py::init(
-                 [](const py::object& objparam) -> Color
+                 [](const py::object& objParam) -> Color
                  {
-                     if (py::isinstance<py::str>(objparam))
-                         return fromHex(objparam.cast<std::string>());
+                     if (py::isinstance<py::str>(objParam))
+                         return fromHex(objParam.cast<std::string>());
 
-                     if (py::isinstance<py::sequence>(objparam))
+                     if (py::isinstance<py::sequence>(objParam))
                      {
-                         auto seq = objparam.cast<py::sequence>();
+                         const auto seq = objParam.cast<py::sequence>();
                          if (seq.size() == 3 || seq.size() == 4)
                          {
                              Color c;
@@ -103,7 +105,7 @@ Example:
 
         .def(
             "__getitem__",
-            [](const Color& c, size_t i) -> int
+            [](const Color& c, const size_t i) -> int
             {
                 if (i >= 4)
                     throw py::index_error();
@@ -124,7 +126,7 @@ Raises:
 
         .def(
             "__setitem__",
-            [](Color& c, size_t i, uint8_t value) -> void
+            [](Color& c, const size_t i, const uint8_t value) -> void
             {
                 if (i >= 4)
                     throw py::index_error();
@@ -185,7 +187,27 @@ Example:
     color.hex = "#FF00FF"     # Set to magenta
     print(color.hex)          # Returns "#FF00FFFF"
         )doc")
-        .def_property("hsv", &Color::toHSV, &Color::fromHSV, R"doc(
+        .def_property(
+            "hsv",
+            [](const Color& self)
+            {
+                const auto [h, s, v, a] = self.toHSV();
+                return std::make_tuple(h, s, v, a);
+            },
+            [](Color& self, const py::sequence& hsvSeq)
+            {
+                const size_t seqSize = hsvSeq.size();
+                if (seqSize < 3 || seqSize > 4)
+                    throw std::invalid_argument("HSV tuple must have 3 or 4 elements.");
+
+                const auto h = hsvSeq[0].cast<double>();
+                const auto s = hsvSeq[1].cast<double>();
+                const auto v = hsvSeq[2].cast<double>();
+                const auto a = seqSize == 4 ? hsvSeq[3].cast<double>() : 1.0;
+
+                self.fromHSV({h, s, v, a});
+            },
+            R"doc(
 Get or set the color as an HSV tuple.
 
 When getting, returns a tuple of (hue, saturation, value, alpha).
@@ -235,8 +257,10 @@ Examples:
     from_hex("RGB")          # Without '#' prefix
         )doc");
 
-    subColor.def("from_hsv", &fromHSV, py::arg("h"), py::arg("s"), py::arg("v"), py::arg("a") = 1.0,
-                 R"doc(
+    subColor.def(
+        "from_hsv", [](const double h, const double s, const double v, const double a)
+        { return fromHSV({h, s, v, a}); }, py::arg("h"), py::arg("s"), py::arg("v"),
+        py::arg("a") = 1.0, R"doc(
 Create a Color from HSV(A) values.
 
 Args:
@@ -325,7 +349,7 @@ Color fromHex(std::string_view hex)
     if (hex[0] == '#')
         hex.remove_prefix(1);
 
-    auto hexToByte = [](std::string_view str) -> uint8_t
+    auto hexToByte = [](const std::string_view str) -> uint8_t
     {
         uint32_t byte;
         std::stringstream ss;
@@ -340,19 +364,22 @@ Color fromHex(std::string_view hex)
         return {hexToByte(hex.substr(0, 2)), hexToByte(hex.substr(2, 2)),
                 hexToByte(hex.substr(4, 2)), 255};
     }
-    else if (hex.length() == 8)
+
+    if (hex.length() == 8)
     {
         // RRGGBBAA
         return {hexToByte(hex.substr(0, 2)), hexToByte(hex.substr(2, 2)),
                 hexToByte(hex.substr(4, 2)), hexToByte(hex.substr(6, 2))};
     }
-    else if (hex.length() == 3)
+
+    if (hex.length() == 3)
     {
         // RGB → duplicate each
         return {hexToByte(std::string(2, hex[0])), hexToByte(std::string(2, hex[1])),
                 hexToByte(std::string(2, hex[2])), 255};
     }
-    else if (hex.length() == 4)
+
+    if (hex.length() == 4)
     {
         // RGBA → duplicate each
         return {hexToByte(std::string(2, hex[0])), hexToByte(std::string(2, hex[1])),
@@ -362,44 +389,44 @@ Color fromHex(std::string_view hex)
     throw std::invalid_argument("Invalid hex string format");
 }
 
-Color fromHSV(const double h, const double s, const double v, const double a)
+Color fromHSV(const HSV& hsv)
 {
-    if (s < 0 || s > 1 || v < 0 || v > 1 || a < 0 || a > 1)
+    if (hsv.s < 0.0 || hsv.s > 1.0 || hsv.v < 0.0 || hsv.v > 1.0 || hsv.a < 0.0 || hsv.a > 1.0)
         throw std::invalid_argument("Saturation, value, and alpha must be in the range [0, 1]");
-    if (h < 0 || h >= 360)
+    if (hsv.h < 0.0 || hsv.h >= 360.0)
         throw std::invalid_argument("Hue must be in the range [0, 360)");
 
-    const double c = v * s;
-    const double x = c * (1 - std::fabs(fmod(h / 60.0, 2.0) - 1));
-    const double m = v - c;
+    const double c = hsv.v * hsv.s;
+    const double x = c * (1.0 - std::fabs(fmod(hsv.h / 60.0, 2.0) - 1.0));
+    const double m = hsv.v - c;
 
     double r, g, b;
 
-    if (h < 60.0)
+    if (hsv.h < 60.0)
     {
         r = c;
         g = x;
         b = 0.0;
     }
-    else if (h < 120.0)
+    else if (hsv.h < 120.0)
     {
         r = x;
         g = c;
         b = 0.0;
     }
-    else if (h < 180.0)
+    else if (hsv.h < 180.0)
     {
         r = 0.0;
         g = c;
         b = x;
     }
-    else if (h < 240.0)
+    else if (hsv.h < 240.0)
     {
         r = 0.0;
         g = x;
         b = c;
     }
-    else if (h < 300.0)
+    else if (hsv.h < 300.0)
     {
         r = x;
         g = 0.0;
@@ -413,7 +440,7 @@ Color fromHSV(const double h, const double s, const double v, const double a)
     }
 
     return {static_cast<uint8_t>((r + m) * 255.0), static_cast<uint8_t>((g + m) * 255.0),
-            static_cast<uint8_t>((b + m) * 255.0), static_cast<uint8_t>(a * 255.0)};
+            static_cast<uint8_t>((b + m) * 255.0), static_cast<uint8_t>(hsv.a * 255.0)};
 }
 
 Color lerp(const Color& a, const Color& b, const double t)
@@ -431,12 +458,12 @@ Color invert(const Color& color)
 
 Color grayscale(const Color& color)
 {
-    uint8_t gray = static_cast<uint8_t>(0.299 * color.r + 0.587 * color.g + 0.114 * color.b);
+    const auto gray = static_cast<uint8_t>(0.299 * color.r + 0.587 * color.g + 0.114 * color.b);
     return {gray, gray, gray, color.a};
 }
 } // namespace color
 
-void Color::fromHex(std::string_view hex) { *this = color::fromHex(hex); }
+void Color::fromHex(const std::string_view hex) { *this = color::fromHex(hex); }
 
 std::string Color::toHex() const
 {
@@ -448,30 +475,20 @@ std::string Color::toHex() const
     return "#" + ss.str();
 }
 
-void Color::fromHSV(const py::sequence& hsv)
+void Color::fromHSV(const color::HSV& hsv) { *this = color::fromHSV(hsv); }
+
+color::HSV Color::toHSV() const
 {
-    if (hsv.size() < 3 || hsv.size() > 4)
-        throw std::invalid_argument("HSV tuple must have 3 or 4 elements.");
+    double rNorm = r / 255.0;
+    double gNorm = g / 255.0;
+    double bNorm = b / 255.0;
 
-    const auto h = hsv[0].cast<float>();
-    const auto s = hsv[1].cast<float>();
-    const auto v = hsv[2].cast<float>();
-    const auto a = hsv.size() == 4 ? hsv[3].cast<float>() : 1.0f;
+    const double maxVal = std::max({rNorm, gNorm, bNorm});
+    const double minVal = std::min({rNorm, gNorm, bNorm});
+    const double delta = maxVal - minVal;
 
-    *this = color::fromHSV(h, s, v, a);
-}
-
-py::tuple Color::toHSV() const
-{
-    float rNorm = r / 255.f;
-    float gNorm = g / 255.f;
-    float bNorm = b / 255.f;
-
-    float maxVal = std::max({rNorm, gNorm, bNorm});
-    float minVal = std::min({rNorm, gNorm, bNorm});
-    float delta = maxVal - minVal;
-
-    float h, s, v = maxVal;
+    double h, s;
+    const double v = maxVal;
 
     if (delta < 0.00001f)
     {
@@ -483,19 +500,15 @@ py::tuple Color::toHSV() const
         s = delta / maxVal;
 
         if (maxVal == rNorm)
-            h = (gNorm - bNorm) / delta + (gNorm < bNorm ? 6 : 0);
+            h = (gNorm - bNorm) / delta + (gNorm < bNorm ? 6.0 : 0.0);
         else if (maxVal == gNorm)
-            h = (bNorm - rNorm) / delta + 2;
+            h = (bNorm - rNorm) / delta + 2.0;
         else
-            h = (rNorm - gNorm) / delta + 4;
+            h = (rNorm - gNorm) / delta + 4.0;
 
-        h *= 60; // Convert to degrees
+        h *= 60.0; // Convert to degrees
     }
 
-    return py::make_tuple(h, s, v, a / 255.f);
+    return {h, s, v, a / 255.0};
 }
-
-bool Color::_isValid() const
-{
-    return 0 <= r && r <= 255 && 0 <= g && g <= 255 && 0 <= b && b <= 255 && 0 <= a && a <= 255;
-}
+} // namespace kn

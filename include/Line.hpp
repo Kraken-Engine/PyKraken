@@ -2,22 +2,15 @@
 
 #include <pybind11/pybind11.h>
 
-class Line;
-
 namespace py = pybind11;
 
-class Vec2;
-
-namespace line
+namespace kn
 {
-void _bind(py::module_& module);
-
-Line move(const Line& line, const Vec2& offset);
-} // namespace line
+class Vec2;
 
 class Line
 {
-  public:
+public:
     double ax, ay, bx, by;
 
     Line();
@@ -27,17 +20,25 @@ class Line
     Line(const Vec2& a, const Vec2& b);
     ~Line() = default;
 
-    double getLength() const;
+    [[nodiscard]] double getLength() const;
 
-    Vec2 getA() const;
+    [[nodiscard]] Vec2 getA() const;
     void setA(const Vec2& pos);
-    Vec2 getB() const;
+    [[nodiscard]] Vec2 getB() const;
     void setB(const Vec2& pos);
 
     void move(const Vec2& offset);
 
-    Line copy() const;
+    [[nodiscard]] Line copy() const;
 
     bool operator==(const Line& other) const;
     bool operator!=(const Line& other) const;
 };
+
+namespace line
+{
+void _bind(py::module_& module);
+
+Line move(const Line& line, const Vec2& offset);
+} // namespace line
+} // namespace kn

@@ -1,26 +1,14 @@
 #pragma once
 
-#include "Math.hpp"
-
 #include <SDL3/SDL.h>
 #include <pybind11/pybind11.h>
 
+#include "Math.hpp"
+
 namespace py = pybind11;
 
-class Rect;
-
-namespace rect
+namespace kn
 {
-void _bind(py::module_& module);
-
-Rect move(const Rect& rect, const Vec2& offset);
-Rect clamp(const Rect& rect, const Vec2& min, const Vec2& max);
-Rect clamp(const Rect& rect, const Rect& other);
-Rect scaleBy(const Rect& rect, double factor);
-Rect scaleBy(const Rect& rect, const Vec2& factor);
-Rect scaleTo(const Rect& rect, const Vec2& size);
-} // namespace rect
-
 class Rect
 {
   public:
@@ -47,7 +35,7 @@ class Rect
     }
     ~Rect() = default;
 
-    Rect copy() const;
+    [[nodiscard]] Rect copy() const;
 
     void move(const Vec2& offset);
 
@@ -55,11 +43,11 @@ class Rect
 
     void fit(const Rect& other);
 
-    bool contains(const Rect& other) const;
+    [[nodiscard]] bool contains(const Rect& other) const;
 
-    bool collidePoint(const Vec2& point) const;
+    [[nodiscard]] bool collidePoint(const Vec2& point) const;
 
-    bool collideRect(const Rect& other) const;
+    [[nodiscard]] bool collideRect(const Rect& other) const;
 
     void clamp(const Vec2& min, const Vec2& max);
 
@@ -74,8 +62,8 @@ class Rect
     bool operator==(const Rect& other) const;
     bool operator!=(const Rect& other) const;
 
-    operator SDL_Rect() const;
-    operator SDL_FRect() const;
+    explicit operator SDL_Rect() const;
+    explicit operator SDL_FRect() const;
 
     void setSize(const Vec2& size);
     void setLeft(double left);
@@ -86,24 +74,37 @@ class Rect
     void setTopMid(const Vec2& topMid);
     void setTopRight(const Vec2& topRight);
     void setMidLeft(const Vec2& midLeft);
-    void setCenter(const Vec2& mid);
+    void setCenter(const Vec2& center);
     void setMidRight(const Vec2& midRight);
     void setBottomLeft(const Vec2& bottomLeft);
     void setBottomMid(const Vec2& bottomMid);
     void setBottomRight(const Vec2& bottomRight);
 
-    Vec2 getSize() const;
-    double getLeft() const;
-    double getRight() const;
-    double getTop() const;
-    double getBottom() const;
-    Vec2 getTopLeft() const;
-    Vec2 getTopMid() const;
-    Vec2 getTopRight() const;
-    Vec2 getMidLeft() const;
-    Vec2 getCenter() const;
-    Vec2 getMidRight() const;
-    Vec2 getBottomLeft() const;
-    Vec2 getBottomMid() const;
-    Vec2 getBottomRight() const;
+    [[nodiscard]] Vec2 getSize() const;
+    [[nodiscard]] double getLeft() const;
+    [[nodiscard]] double getRight() const;
+    [[nodiscard]] double getTop() const;
+    [[nodiscard]] double getBottom() const;
+    [[nodiscard]] Vec2 getTopLeft() const;
+    [[nodiscard]] Vec2 getTopMid() const;
+    [[nodiscard]] Vec2 getTopRight() const;
+    [[nodiscard]] Vec2 getMidLeft() const;
+    [[nodiscard]] Vec2 getCenter() const;
+    [[nodiscard]] Vec2 getMidRight() const;
+    [[nodiscard]] Vec2 getBottomLeft() const;
+    [[nodiscard]] Vec2 getBottomMid() const;
+    [[nodiscard]] Vec2 getBottomRight() const;
 };
+
+namespace rect
+{
+void _bind(py::module_& module);
+
+Rect move(const Rect& rect, const Vec2& offset);
+Rect clamp(const Rect& rect, const Vec2& min, const Vec2& max);
+Rect clamp(const Rect& rect, const Rect& other);
+Rect scaleBy(const Rect& rect, double factor);
+Rect scaleBy(const Rect& rect, const Vec2& factor);
+Rect scaleTo(const Rect& rect, const Vec2& size);
+} // namespace rect
+} // namespace kn

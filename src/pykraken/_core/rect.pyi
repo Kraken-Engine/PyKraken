@@ -4,7 +4,7 @@ Rectangle related functions
 from __future__ import annotations
 import pykraken._core
 import typing
-__all__ = ['clamp', 'move', 'scale_by', 'scale_to']
+__all__: list[str] = ['clamp', 'move', 'scale_by', 'scale_to']
 @typing.overload
 def clamp(rect: pykraken._core.Rect, min: pykraken._core.Vec2, max: pykraken._core.Vec2) -> pykraken._core.Rect:
     """

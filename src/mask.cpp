@@ -1,11 +1,14 @@
-#include "Mask.hpp"
+#include "Color.hpp"
 #include "Math.hpp"
 #include "PixelArray.hpp"
 #include "Rect.hpp"
 
+#include "Mask.hpp"
 #include <pybind11/stl.h>
 
-Mask::Mask(const Vec2& size, bool filled)
+namespace kn
+{
+Mask::Mask(const Vec2& size, const bool filled)
     : m_width(static_cast<int>(size.x)), m_height(static_cast<int>(size.y)),
       m_maskData(m_width * m_height, filled)
 {
@@ -24,7 +27,7 @@ Mask::Mask(const PixelArray& pixelArray, const uint8_t threshold)
         for (int x = 0; x < m_width; x++)
         {
             SDL_ReadSurfacePixel(rawSurface, x, y, nullptr, nullptr, nullptr, &alpha);
-            m_maskData[y * m_width + x] = (alpha >= threshold);
+            m_maskData[y * m_width + x] = alpha >= threshold;
         }
 }
 
@@ -37,15 +40,15 @@ bool Mask::getAt(const Vec2& pos) const
     if (pos.x < 0 || pos.x >= m_width || pos.y < 0 || pos.y >= m_height)
         return false;
 
-    return m_maskData[pos.y * m_width + pos.x];
+    return m_maskData[static_cast<int>(pos.y * m_width + pos.x)];
 }
 
-void Mask::setAt(const Vec2& pos, bool value)
+void Mask::setAt(const Vec2& pos, const bool value)
 {
     if (pos.x < 0 || pos.x >= m_width || pos.y < 0 || pos.y >= m_height)
         return;
 
-    m_maskData[pos.y * m_width + pos.x] = value;
+    m_maskData[static_cast<int>(pos.y * m_width + pos.x)] = value;
 }
 
 int Mask::getOverlapArea(const Mask& other, const Vec2& offset) const
@@ -77,8 +80,9 @@ Mask Mask::getOverlapMask(const Mask& other, const Vec2& offset) const
     const int xEnd = std::min(m_width, other.m_width - xOffset);
     const int yEnd = std::min(m_height, other.m_height - yOffset);
 
+    // No overlap
     if (xStart >= xEnd || yStart >= yEnd)
-        return Mask(); // No overlap
+        return {};
 
     Mask overlapMask({xEnd - xStart, yEnd - yStart}, false);
 
@@ -128,10 +132,7 @@ void Mask::subtract(const Mask& other, const Vec2& offset)
         }
 }
 
-int Mask::getCount() const
-{
-    return static_cast<int>(std::count(m_maskData.begin(), m_maskData.end(), true));
-}
+int Mask::getCount() const { return static_cast<int>(std::ranges::count(m_maskData, true)); }
 
 Vec2 Mask::getCenterOfMass() const
 {
@@ -165,8 +166,8 @@ std::vector<Vec2> Mask::getOutline() const
 
             for (const auto& dir : directions)
             {
-                int nx = x + dir[0];
-                int ny = y + dir[1];
+                const int nx = x + dir[0];
+                const int ny = y + dir[1];
                 if (nx < 0 || nx >= m_width || ny < 0 || ny >= m_height ||
                     !m_maskData[ny * m_width + nx])
                 {
@@ -249,7 +250,7 @@ std::vector<Vec2> Mask::getCollisionPoints(const Mask& other, const Vec2& offset
 
 bool Mask::isEmpty() const
 {
-    return std::none_of(m_maskData.begin(), m_maskData.end(), [](bool v) { return v; });
+    return std::ranges::none_of(m_maskData, [](const bool v) { return v; });
 }
 
 int Mask::getWidth() const { return m_width; }
@@ -286,7 +287,7 @@ Mask Mask::copy() const
 
 namespace mask
 {
-void _bind(py::module_& module)
+void _bind(const py::module_& module)
 {
     py::classh<Mask>(module, "Mask", R"doc(
 A collision mask for pixel-perfect collision detection.
@@ -342,7 +343,7 @@ Args:
         )doc")
         .def(
             "get_overlap_area",
-            [](Mask& self, const Mask& other, py::object offsetObj) -> int
+            [](const Mask& self, const Mask& other, const py::object& offsetObj) -> int
             {
                 if (offsetObj.is_none())
                     return self.getOverlapArea(other, {});
@@ -369,7 +370,7 @@ Returns:
         )doc")
         .def(
             "get_overlap_mask",
-            [](const Mask& self, const Mask& other, py::object offsetObj) -> Mask
+            [](const Mask& self, const Mask& other, const py::object& offsetObj) -> Mask
             {
                 if (offsetObj.is_none())
                     return self.getOverlapMask(other, {});
@@ -407,7 +408,7 @@ Solid pixels become transparent and transparent pixels become solid.
         )doc")
         .def(
             "add",
-            [](Mask& self, const Mask& other, py::object offsetObj) -> void
+            [](Mask& self, const Mask& other, const py::object& offsetObj) -> void
             {
                 if (offsetObj.is_none())
                 {
@@ -436,7 +437,7 @@ Args:
         )doc")
         .def(
             "subtract",
-            [](Mask& self, const Mask& other, py::object offsetObj) -> void
+            [](Mask& self, const Mask& other, const py::object& offsetObj) -> void
             {
                 if (offsetObj.is_none())
                 {
@@ -492,7 +493,7 @@ Returns:
         )doc")
         .def(
             "collide_mask",
-            [](const Mask& self, const Mask& other, py::object offsetObj) -> bool
+            [](const Mask& self, const Mask& other, const py::object& offsetObj) -> bool
             {
                 if (offsetObj.is_none())
                     return self.collideMask(other, {});
@@ -519,7 +520,8 @@ Returns:
         )doc")
         .def(
             "get_collision_points",
-            [](const Mask& self, const Mask& other, py::object offsetObj) -> std::vector<Vec2>
+            [](const Mask& self, const Mask& other,
+               const py::object& offsetObj) -> std::vector<Vec2>
             {
                 if (offsetObj.is_none())
                     return self.getCollisionPoints(other, {});
@@ -552,7 +554,7 @@ Returns:
         )doc")
         .def(
             "get_pixel_array",
-            [](const Mask& self, py::object colorObj) -> std::unique_ptr<PixelArray>
+            [](const Mask& self, const py::object& colorObj) -> std::unique_ptr<PixelArray>
             {
                 if (colorObj.is_none())
                     return self.getPixelArray();
@@ -596,3 +598,4 @@ The bounding rectangle of the mask starting at (0, 0).
         )doc");
 }
 } // namespace mask
+} // namespace kn

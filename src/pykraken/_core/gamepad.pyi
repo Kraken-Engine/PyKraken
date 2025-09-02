@@ -4,7 +4,7 @@ Gamepad input handling functions
 from __future__ import annotations
 import pykraken._core
 import typing
-__all__ = ['get_connected_slots', 'get_deadzone', 'get_left_stick', 'get_left_trigger', 'get_right_stick', 'get_right_trigger', 'is_just_pressed', 'is_just_released', 'is_pressed', 'set_deadzone']
+__all__: list[str] = ['get_connected_slots', 'get_deadzone', 'get_left_stick', 'get_left_trigger', 'get_right_stick', 'get_right_trigger', 'is_just_pressed', 'is_just_released', 'is_pressed', 'set_deadzone']
 def get_connected_slots() -> list[int]:
     """
     Get a list of connected gamepad slot indices.

@@ -3,7 +3,7 @@ Time related functions
 """
 from __future__ import annotations
 import typing
-__all__ = ['delay', 'get_delta', 'get_elapsed', 'get_fps', 'set_cap']
+__all__: list[str] = ['delay', 'get_delta', 'get_elapsed', 'get_fps', 'set_cap']
 def delay(milliseconds: typing.SupportsInt) -> None:
     """
     Delay the program execution for the specified duration.

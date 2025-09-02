@@ -1,31 +1,32 @@
 #pragma once
 
 #include <SDL3/SDL.h>
-#include <unordered_map>
 
-enum class knMouseButton : uint8_t
+namespace kn
 {
-    M_LEFT = SDL_BUTTON_LEFT,
-    M_MIDDLE = SDL_BUTTON_MIDDLE,
-    M_RIGHT = SDL_BUTTON_RIGHT,
-    M_SIDE1 = SDL_BUTTON_X1,
-    M_SIDE2 = SDL_BUTTON_X2,
+enum class MouseButton : uint8_t
+{
+    Left = SDL_BUTTON_LEFT,
+    Middle = SDL_BUTTON_MIDDLE,
+    Right = SDL_BUTTON_RIGHT,
+    Side1 = SDL_BUTTON_X1,
+    Side2 = SDL_BUTTON_X2,
 };
 
 enum class Anchor
 {
-    TOP_LEFT,
-    TOP_MID,
-    TOP_RIGHT,
-    MID_LEFT,
-    CENTER,
-    MID_RIGHT,
-    BOTTOM_LEFT,
-    BOTTOM_MID,
-    BOTTOM_RIGHT,
+    TopLeft,
+    TopMid,
+    TopRight,
+    MidLeft,
+    Center,
+    MidRight,
+    BottomLeft,
+    BottomMid,
+    BottomRight,
 };
 
-enum class KnKeycode : SDL_Keycode
+enum class Keycode : SDL_Keycode
 {
     K_BACKSPACE = SDLK_BACKSPACE,
     K_TAB = SDLK_TAB,
@@ -161,3 +162,4 @@ enum class KnKeycode : SDL_Keycode
     K_RALT = SDLK_RALT,
     K_RGUI = SDLK_RGUI,
 };
+} // namespace kn

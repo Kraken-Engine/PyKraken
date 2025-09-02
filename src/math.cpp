@@ -2,12 +2,13 @@
 
 #include <SDL3/SDL.h>
 #include <algorithm>
-#include <cmath>
 
 #ifndef M_PI
 #define M_PI 3.1415926535897932384626433832795
 #endif
 
+namespace kn
+{
 Vec2 PolarCoordinate::toCartesian() const
 {
     return {radius * std::cos(angle), radius * std::sin(angle)};
@@ -22,7 +23,7 @@ bool PolarCoordinate::operator!=(const PolarCoordinate& other) const { return !(
 
 Vec2 Vec2::copy() const { return {x, y}; }
 
-bool Vec2::isZero(double tolerance) const
+bool Vec2::isZero(const double tolerance) const
 {
     return std::abs(x) < tolerance && std::abs(y) < tolerance;
 }
@@ -94,8 +95,8 @@ Vec2 Vec2::operator-() const { return {-x, -y}; }
 
 Vec2 Vec2::operator+(const Vec2& other) const { return {x + other.x, y + other.y}; }
 Vec2 Vec2::operator-(const Vec2& other) const { return {x - other.x, y - other.y}; }
-Vec2 Vec2::operator*(double scalar) const { return {x * scalar, y * scalar}; }
-Vec2 Vec2::operator/(double scalar) const { return {x / scalar, y / scalar}; }
+Vec2 Vec2::operator*(const double scalar) const { return {x * scalar, y * scalar}; }
+Vec2 Vec2::operator/(const double scalar) const { return {x / scalar, y / scalar}; }
 
 Vec2& Vec2::operator+=(const Vec2& other)
 {
@@ -103,42 +104,43 @@ Vec2& Vec2::operator+=(const Vec2& other)
     y += other.y;
     return *this;
 }
+
 Vec2& Vec2::operator-=(const Vec2& other)
 {
     x -= other.x;
     y -= other.y;
     return *this;
 }
-Vec2& Vec2::operator*=(double scalar)
+
+Vec2& Vec2::operator*=(const double scalar)
 {
     x *= scalar;
     y *= scalar;
     return *this;
 }
-Vec2& Vec2::operator/=(double scalar)
+
+Vec2& Vec2::operator/=(const double scalar)
 {
     x /= scalar;
     y /= scalar;
     return *this;
 }
 
-Vec2 operator*(double lhs, const Vec2& rhs) { return rhs * lhs; }
+Vec2 operator*(const double lhs, const Vec2& rhs) { return rhs * lhs; }
 
 bool Vec2::operator==(const Vec2& other) const { return (*this - other).isZero(); }
 bool Vec2::operator!=(const Vec2& other) const { return !(*this == other); }
-bool Vec2::operator<(const Vec2& other) const { return (x < other.x && y < other.y); }
-bool Vec2::operator>(const Vec2& other) const { return (x > other.x && y > other.y); }
+bool Vec2::operator<(const Vec2& other) const { return x < other.x && y < other.y; }
+bool Vec2::operator>(const Vec2& other) const { return x > other.x && y > other.y; }
 bool Vec2::operator<=(const Vec2& other) const { return !(*this > other); }
 bool Vec2::operator>=(const Vec2& other) const { return !(*this < other); }
 
 Vec2::operator SDL_Point() const { return {static_cast<int>(x), static_cast<int>(y)}; }
 Vec2::operator SDL_FPoint() const { return {static_cast<float>(x), static_cast<float>(y)}; }
 
-Vec2::operator py::tuple() const { return py::make_tuple(x, y); }
-
 namespace math
 {
-Vec2 scaleToLength(const Vec2& vec, double scalar)
+Vec2 scaleToLength(const Vec2& vec, const double scalar)
 {
     if (vec.x == 0.0 && vec.y == 0.0 || scalar == 1.0)
         return vec;
@@ -150,7 +152,7 @@ Vec2 scaleToLength(const Vec2& vec, double scalar)
     return {vec.x * scale, vec.y * scale};
 }
 
-Vec2 fromPolar(double rad, double radius)
+Vec2 fromPolar(const double rad, const double radius)
 {
     return {radius * std::cos(rad), radius * std::sin(rad)};
 }
@@ -168,11 +170,15 @@ Vec2 clampVec(const Vec2& vec, const Vec2& min, const Vec2& max)
     return {std::clamp(vec.x, min.x, max.x), std::clamp(vec.y, min.y, max.y)};
 }
 
-Vec2 lerp(const Vec2& a, const Vec2& b, double t) { return {lerp(a.x, b.x, t), lerp(a.y, b.y, t)}; }
+Vec2 lerp(const Vec2& a, const Vec2& b, const double t)
+{
+    return {lerp(a.x, b.x, t), lerp(a.y, b.y, t)};
+}
 
-double lerp(double a, double b, double t) { return a + (b - a) * t; }
+double lerp(const double a, const double b, const double t) { return a + (b - a) * t; }
 
-double remap(double in_min, double in_max, double out_min, double out_max, double value)
+double remap(const double in_min, const double in_max, const double out_min, const double out_max,
+             const double value)
 {
     if (in_min == in_max)
         throw std::invalid_argument("in_min and in_max must not be equal");
@@ -181,9 +187,9 @@ double remap(double in_min, double in_max, double out_min, double out_max, doubl
     return out_min + scale * (out_max - out_min);
 }
 
-double toDegrees(double angle) { return angle * (180.0 / M_PI); }
+double toDegrees(const double angle) { return angle * (180.0 / M_PI); }
 
-double toRadians(double angle) { return angle * (M_PI / 180.0); }
+double toRadians(const double angle) { return angle * (M_PI / 180.0); }
 
 double dot(const Vec2& a, const Vec2& b) { return a.x * b.x + a.y * b.y; }
 
@@ -202,6 +208,13 @@ double angleBetween(const Vec2& a, const Vec2& b)
 
 void _bind(py::module_& module)
 {
+    auto vecPyClass = py::classh<Vec2>(module, "Vec2", R"doc(
+Represents a 2D vector with x and y components.
+
+Vec2 is used for positions, directions, velocities, and other 2D vector operations.
+Supports arithmetic operations, comparisons, and various mathematical functions.
+    )doc");
+
     // -------------- PolarCoordinate ----------------
     py::classh<PolarCoordinate>(module, "PolarCoordinate", R"doc(
 Represents a polar coordinate with angle and radius components.
@@ -304,10 +317,9 @@ Returns:
             {
                 if (i == 0)
                     return p.angle;
-                else if (i == 1)
+                if (i == 1)
                     return p.radius;
-                else
-                    throw py::index_error("Index out of range");
+                throw py::index_error("Index out of range");
             },
             py::arg("index"), R"doc(
 Access polar coordinate components by index.
@@ -353,9 +365,9 @@ Returns:
             "__hash__",
             [](const PolarCoordinate& p) -> size_t
             {
-                size_t ha = std::hash<double>{}(p.angle);
-                size_t hr = std::hash<double>{}(p.radius);
-                return ha ^ (hr << 1);
+                const size_t ha = std::hash<double>{}(p.angle);
+                const size_t hr = std::hash<double>{}(p.radius);
+                return ha ^ hr << 1;
             },
             R"doc(
 Return a hash value for the PolarCoordinate.
@@ -367,12 +379,7 @@ Returns:
 
     // -------------- Vec2 ----------------
 
-    py::classh<Vec2>(module, "Vec2", R"doc(
-Represents a 2D vector with x and y components.
-
-Vec2 is used for positions, directions, velocities, and other 2D vector operations.
-Supports arithmetic operations, comparisons, and various mathematical functions.
-    )doc")
+    vecPyClass
         .def(py::init(), R"doc(
 Create a zero vector (0, 0).
         )doc")
@@ -390,7 +397,7 @@ Args:
     y (float): The y component.
         )doc")
         .def(py::init(
-                 [](py::sequence s) -> Vec2
+                 [](const py::sequence& s) -> Vec2
                  {
                      if (s.size() != 2)
                          throw std::runtime_error("Vec2 requires a 2-element sequence");
@@ -445,10 +452,10 @@ Returns:
             {
                 if (i == 0)
                     return v.x;
-                else if (i == 1)
+                if (i == 1)
                     return v.y;
-                else
-                    throw py::index_error("Index out of range");
+
+                throw py::index_error("Index out of range");
             },
             py::arg("index"), R"doc(
 Access vector components by index.
@@ -616,9 +623,9 @@ Returns:
             "__hash__",
             [](const Vec2& v) -> size_t
             {
-                std::size_t hx = std::hash<double>{}(v.x);
-                std::size_t hy = std::hash<double>{}(v.y);
-                return hx ^ (hy << 1);
+                const std::size_t hx = std::hash<double>{}(v.x);
+                const std::size_t hy = std::hash<double>{}(v.y);
+                return hx ^ hy << 1;
             },
             R"doc(
 Return a hash value for the Vec2.
@@ -785,7 +792,7 @@ Returns:
     Vec2: A new vector with components clamped between min and max.
         )doc");
     subMath.def(
-        "clamp", [](double value, double min_val, double max_val) -> double
+        "clamp", [](const double value, const double min_val, const double max_val) -> double
         { return std::clamp(value, min_val, max_val); }, py::arg("value"), py::arg("min_val"),
         py::arg("max_val"), R"doc(
 Clamp a value between two boundaries.
@@ -889,3 +896,4 @@ Returns:
         )doc");
 }
 } // namespace math
+} // namespace kn

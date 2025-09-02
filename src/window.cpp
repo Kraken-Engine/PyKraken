@@ -1,22 +1,21 @@
-#include "Window.hpp"
 #include "Math.hpp"
 #include "Mixer.hpp"
 #include "Renderer.hpp"
 #include "Time.hpp"
 
+#include "Window.hpp"
 #include <SDL3/SDL.h>
-#include <SDL3_image/SDL_image.h>
-#include <algorithm>
-#include <cmath>
 #include <stdexcept>
 
+namespace kn
+{
+namespace window
+{
 static SDL_Window* _window = nullptr;
 static bool _isOpen = false;
 static int _scale = 1;
 
-namespace window
-{
-void _bind(pybind11::module_& module)
+void _bind(py::module_& module)
 {
     auto subWindow = module.def_submodule("window", "Window related functions");
 
@@ -79,7 +78,7 @@ Raises:
 Get the scale of the window relative to the renderer resolution.
 
 Returns:
-    float: The window's scale
+    int: The window's scale
 
 Raises:
     RuntimeError: If the window is not initialized.
@@ -105,7 +104,7 @@ Raises:
     )doc");
 }
 
-SDL_Window* get() { return _window; }
+SDL_Window* _get() { return _window; }
 
 void create(const std::string& title, const Vec2& res, const bool scaled)
 {
@@ -126,11 +125,11 @@ void create(const std::string& title, const Vec2& res, const bool scaled)
             throw std::runtime_error(SDL_GetError());
 
         // Calculate scale factors for both dimensions
-        double scaleX = usableBounds.w / res.x;
-        double scaleY = usableBounds.h / res.y;
+        const double scaleX = usableBounds.w / res.x;
+        const double scaleY = usableBounds.h / res.y;
 
-        // Use the smaller scale to maintain aspect ratio
-        const double minScale = (scaleX < scaleY) ? scaleX : scaleY;
+        // Use the smaller scale to maintain an aspect ratio
+        const double minScale = scaleX < scaleY ? scaleX : scaleY;
         _scale = static_cast<int>(minScale);
         if (fmod(minScale, 1.0) == 0.0)
             _scale = static_cast<int>(minScale) - 1;
@@ -153,7 +152,7 @@ void create(const std::string& title, const Vec2& res, const bool scaled)
 
     _isOpen = true;
 
-    renderer::init(_window, res);
+    renderer::_init(_window, res);
 }
 
 bool isOpen()
@@ -175,7 +174,7 @@ Vec2 getSize()
     return {w, h};
 }
 
-float getScale()
+int getScale()
 {
     if (!_window)
         throw std::runtime_error("Window not initialized");
@@ -183,7 +182,7 @@ float getScale()
     return _scale;
 }
 
-void setFullscreen(bool fullscreen)
+void setFullscreen(const bool fullscreen)
 {
     if (!_window)
         throw std::runtime_error("Window not initialized");
@@ -221,7 +220,7 @@ std::string getTitle()
 
     const char* title = SDL_GetWindowTitle(_window);
 
-    return std::string(title);
+    return {title};
 }
 } // namespace window
 
@@ -236,11 +235,12 @@ void init()
 void quit()
 {
     mixer::_quit();
-    renderer::quit();
+    renderer::_quit();
 
-    if (_window)
-        SDL_DestroyWindow(_window);
-    _window = nullptr;
+    if (window::_window)
+        SDL_DestroyWindow(window::_window);
+    window::_window = nullptr;
 
     SDL_Quit();
 }
+} // namespace kn

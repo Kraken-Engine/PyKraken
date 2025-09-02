@@ -1,22 +1,189 @@
 #define MINIAUDIO_IMPLEMENTATION
 
 #include "Mixer.hpp"
-
 #include <algorithm>
 #include <stdexcept>
 
+namespace kn
+{
 static ma_engine _engine;
-
-// Global list of Audio instances for automatic cleanup
 static std::vector<Audio*> _audioInstances;
 static std::mutex _instancesMutex;
 
+Audio::Audio(const std::string& path, const float volume) : m_path(path), m_volume(volume)
+{
+    if (ma_sound_init_from_file(&_engine, m_path.c_str(), m_flags, nullptr, nullptr, &m_proto) !=
+        MA_SUCCESS)
+        throw std::runtime_error("ma_sound_init_from_file(DECODE) failed: " + path);
+
+    // Register this instance for automatic cleanup
+    std::lock_guard g(_instancesMutex);
+    _audioInstances.push_back(this);
+}
+
+Audio::~Audio()
+{
+    stop();
+    {
+        std::lock_guard g(m_mutex);
+        for (const auto& v : m_voices)
+        {
+            ma_sound_uninit(&v->snd);
+        }
+        m_voices.clear();
+    }
+    ma_sound_uninit(&m_proto);
+
+    // Unregister this instance
+    std::lock_guard g(_instancesMutex);
+    std::erase(_audioInstances, this);
+}
+
+void Audio::play(const int fadeInMs, const bool loop)
+{
+    auto v = std::make_unique<Voice>();
+
+    if (ma_sound_init_copy(&_engine, &m_proto, m_flags, nullptr, &v->snd) != MA_SUCCESS)
+        throw std::runtime_error("ma_sound_init_copy() failed");
+
+    ma_sound_set_looping(&v->snd, loop ? MA_TRUE : MA_FALSE);
+    ma_sound_set_volume(&v->snd, m_volume);
+
+    if (fadeInMs > 0)
+    {
+        const ma_uint64 frames = msToFrames(fadeInMs);
+        ma_sound_set_fade_in_pcm_frames(&v->snd, 0.0f, m_volume, frames);
+    }
+
+    // Mark for GC on end.
+    ma_sound_set_end_callback(
+        &v->snd, [](void* user, ma_sound*)
+        { static_cast<Voice*>(user)->done.store(true, std::memory_order_relaxed); }, v.get());
+
+    ma_sound_start(&v->snd);
+
+    std::lock_guard g(m_mutex);
+    m_voices.push_back(std::move(v));
+}
+
+void Audio::stop(const int fadeOutMs)
+{
+    std::lock_guard g(m_mutex);
+    for (const auto& v : m_voices)
+        doFadeStop(v->snd, m_volume, fadeOutMs);
+}
+
+void Audio::setVolume(const float volume)
+{
+    m_volume = volume;
+    std::lock_guard g(m_mutex);
+    for (const auto& v : m_voices)
+        ma_sound_set_volume(&v->snd, volume);
+}
+
+float Audio::getVolume() const { return m_volume; }
+
+void Audio::cleanup()
+{
+    std::lock_guard g(m_mutex);
+    std::erase_if(m_voices,
+                  [&](const std::unique_ptr<Voice>& v)
+                  {
+                      if (v->done.load(std::memory_order_relaxed) && !ma_sound_is_playing(&v->snd))
+                      {
+                          ma_sound_uninit(&v->snd);
+                          return true;
+                      }
+                      return false;
+                  });
+}
+
+ma_uint64 Audio::msToFrames(const int ms)
+{
+    return ma_engine_get_sample_rate(&_engine) * static_cast<ma_uint64>(ms) / 1000;
+}
+
+void Audio::doFadeStop(ma_sound& snd, const float currentVol, const int fadeOutMs)
+{
+    if (fadeOutMs <= 0)
+    {
+        ma_sound_stop(&snd);
+        return;
+    }
+
+    const ma_uint64 fadeFrames = msToFrames(fadeOutMs);
+    ma_sound_set_fade_in_pcm_frames(&snd, currentVol, 0.0f, fadeFrames);
+
+    // Schedule the stop for exactly when the fade hits 0.
+    const ma_uint64 now = ma_engine_get_time_in_pcm_frames(&_engine);
+    ma_sound_set_stop_time_in_pcm_frames(&snd, now + fadeFrames);
+}
+
+AudioStream::AudioStream(const std::string& filePath, const float volume)
+{
+    if (ma_sound_init_from_file(&_engine, filePath.c_str(), m_flags, nullptr, nullptr, &m_snd) !=
+        MA_SUCCESS)
+        throw std::runtime_error("ma_sound_init_from_file(STREAM) failed: " + filePath);
+
+    setVolume(volume);
+}
+
+AudioStream::~AudioStream() { ma_sound_uninit(&m_snd); }
+
+void AudioStream::play(const int fadeInMs, const bool loop)
+{
+    rewind();
+
+    ma_sound_set_looping(&m_snd, loop ? MA_TRUE : MA_FALSE);
+    const float volume = ma_sound_get_volume(&m_snd);
+    if (fadeInMs > 0)
+    {
+        const ma_uint64 frames = msToFrames(fadeInMs);
+        ma_sound_set_fade_in_pcm_frames(&m_snd, 0.0f, volume, frames);
+    }
+    ma_sound_start(&m_snd);
+}
+
+void AudioStream::stop(const int fadeOutMs)
+{
+    if (fadeOutMs <= 0)
+    {
+        ma_sound_stop(&m_snd);
+        return;
+    }
+
+    const float cur = ma_sound_get_volume(&m_snd);
+    const ma_uint64 frames = msToFrames(fadeOutMs);
+    ma_sound_set_fade_in_pcm_frames(&m_snd, cur, 0.0f, frames);
+    const ma_uint64 now = ma_engine_get_time_in_pcm_frames(&_engine);
+    ma_sound_set_stop_time_in_pcm_frames(&m_snd, now + frames);
+}
+
+void AudioStream::pause() { ma_sound_stop(&m_snd); }
+
+void AudioStream::resume() { ma_sound_start(&m_snd); }
+
+void AudioStream::rewind() { ma_sound_seek_to_pcm_frame(&m_snd, 0); }
+
+void AudioStream::setVolume(const float volume) { ma_sound_set_volume(&m_snd, volume); }
+
+float AudioStream::getVolume() const { return ma_sound_get_volume(&m_snd); }
+
+void AudioStream::setLooping(const bool loop)
+{
+    ma_sound_set_looping(&m_snd, loop ? MA_TRUE : MA_FALSE);
+}
+
+ma_uint64 AudioStream::msToFrames(const int ms)
+{
+    return ma_engine_get_sample_rate(&_engine) * static_cast<ma_uint64>(ms) / 1000;
+}
+
 namespace mixer
 {
-void _bind(pybind11::module_& module)
+void _bind(const py::module_& module)
 {
     // ------------ Audio -------------
-
     py::classh<Audio>(module, "Audio", R"doc(
 A decoded audio object that supports multiple simultaneous playbacks.
 
@@ -154,182 +321,11 @@ void _quit() { ma_engine_uninit(&_engine); }
 void _tick()
 {
     // Clean up all audio instances automatically
-    std::lock_guard<std::mutex> g(_instancesMutex);
+    std::lock_guard g(_instancesMutex);
     for (Audio* audio : _audioInstances)
     {
         audio->cleanup();
     }
 }
 } // namespace mixer
-
-Audio::Audio(const std::string& filePath, const float volume) : m_path(filePath), m_volume(volume)
-{
-    if (ma_sound_init_from_file(&_engine, m_path.c_str(), m_flags, nullptr, nullptr, &m_proto) !=
-        MA_SUCCESS)
-        throw std::runtime_error("ma_sound_init_from_file(DECODE) failed: " + filePath);
-
-    // Register this instance for automatic cleanup
-    std::lock_guard<std::mutex> g(_instancesMutex);
-    _audioInstances.push_back(this);
-}
-
-Audio::~Audio()
-{
-    stop();
-    {
-        std::lock_guard<std::mutex> g(m_mutex);
-        for (auto& v : m_voices)
-        {
-            ma_sound_uninit(&v->snd);
-        }
-        m_voices.clear();
-    }
-    ma_sound_uninit(&m_proto);
-
-    // Unregister this instance
-    std::lock_guard<std::mutex> g(_instancesMutex);
-    _audioInstances.erase(std::remove(_audioInstances.begin(), _audioInstances.end(), this),
-                          _audioInstances.end());
-}
-
-void Audio::play(const int fadeInMs, const bool loop)
-{
-    auto v = std::make_unique<Voice>();
-
-    if (ma_sound_init_copy(&_engine, &m_proto, m_flags, nullptr, &v->snd) != MA_SUCCESS)
-        throw std::runtime_error("ma_sound_init_copy() failed");
-
-    ma_sound_set_looping(&v->snd, loop ? MA_TRUE : MA_FALSE);
-    ma_sound_set_volume(&v->snd, m_volume);
-
-    if (fadeInMs > 0)
-    {
-        ma_uint64 frames = msToFrames(fadeInMs);
-        ma_sound_set_fade_in_pcm_frames(&v->snd, 0.0f, m_volume, frames);
-    }
-
-    // Mark for GC on end.
-    ma_sound_set_end_callback(
-        &v->snd, [](void* user, ma_sound*)
-        { reinterpret_cast<Voice*>(user)->done.store(true, std::memory_order_relaxed); }, v.get());
-
-    ma_sound_start(&v->snd);
-
-    std::lock_guard<std::mutex> g(m_mutex);
-    m_voices.push_back(std::move(v));
-}
-
-void Audio::stop(const int fadeOutMs)
-{
-    std::lock_guard<std::mutex> g(m_mutex);
-    for (auto& v : m_voices)
-        doFadeStop(v->snd, m_volume, fadeOutMs);
-}
-
-void Audio::setVolume(const float volume)
-{
-    m_volume = volume;
-    std::lock_guard<std::mutex> g(m_mutex);
-    for (auto& v : m_voices)
-        ma_sound_set_volume(&v->snd, volume);
-}
-
-float Audio::getVolume() const { return m_volume; }
-
-void Audio::cleanup()
-{
-    std::lock_guard<std::mutex> g(m_mutex);
-    m_voices.erase(std::remove_if(m_voices.begin(), m_voices.end(),
-                                  [&](const std::unique_ptr<Voice>& v)
-                                  {
-                                      if (v->done.load(std::memory_order_relaxed) &&
-                                          !ma_sound_is_playing(&v->snd))
-                                      {
-                                          ma_sound_uninit(&v->snd);
-                                          return true;
-                                      }
-                                      return false;
-                                  }),
-                   m_voices.end());
-}
-
-ma_uint64 Audio::msToFrames(const int ms) const
-{
-    return (ma_uint64)((ma_engine_get_sample_rate(&_engine) * (ma_uint64)ms) / 1000);
-}
-
-void Audio::doFadeStop(ma_sound& snd, const float currentVol, const int fadeOutMs)
-{
-    if (fadeOutMs <= 0)
-    {
-        ma_sound_stop(&snd);
-        return;
-    }
-
-    ma_uint64 fadeFrames = msToFrames(fadeOutMs);
-    ma_sound_set_fade_in_pcm_frames(&snd, currentVol, 0.0f, fadeFrames);
-
-    // Schedule the stop for exactly when the fade hits 0.
-    ma_uint64 now = ma_engine_get_time_in_pcm_frames(&_engine);
-    ma_sound_set_stop_time_in_pcm_frames(&snd, now + fadeFrames);
-}
-
-AudioStream::AudioStream(const std::string& filePath, const float volume)
-{
-    if (ma_sound_init_from_file(&_engine, filePath.c_str(), m_flags, nullptr, nullptr, &m_snd) !=
-        MA_SUCCESS)
-        throw std::runtime_error("ma_sound_init_from_file(STREAM) failed: " + filePath);
-
-    setVolume(volume);
-}
-
-AudioStream::~AudioStream() { ma_sound_uninit(&m_snd); }
-
-void AudioStream::play(const int fadeInMs, const bool loop)
-{
-    rewind();
-
-    ma_sound_set_looping(&m_snd, loop ? MA_TRUE : MA_FALSE);
-    const float volume = ma_sound_get_volume(&m_snd);
-    if (fadeInMs > 0)
-    {
-        ma_uint64 frames = msToFrames(fadeInMs);
-        ma_sound_set_fade_in_pcm_frames(&m_snd, 0.0f, volume, frames);
-    }
-    ma_sound_start(&m_snd);
-}
-
-void AudioStream::stop(const int fadeOutMs)
-{
-    if (fadeOutMs <= 0)
-    {
-        ma_sound_stop(&m_snd);
-        return;
-    }
-
-    float cur = ma_sound_get_volume(&m_snd);
-    ma_uint64 frames = msToFrames(fadeOutMs);
-    ma_sound_set_fade_in_pcm_frames(&m_snd, cur, 0.0f, frames);
-    ma_uint64 now = ma_engine_get_time_in_pcm_frames(&_engine);
-    ma_sound_set_stop_time_in_pcm_frames(&m_snd, now + frames);
-}
-
-void AudioStream::pause() { ma_sound_stop(&m_snd); }
-
-void AudioStream::resume() { ma_sound_start(&m_snd); }
-
-void AudioStream::rewind() { ma_sound_seek_to_pcm_frame(&m_snd, 0); }
-
-void AudioStream::setVolume(const float v) { ma_sound_set_volume(&m_snd, v); }
-
-float AudioStream::getVolume() { return ma_sound_get_volume(&m_snd); }
-
-void AudioStream::setLooping(const bool loop)
-{
-    ma_sound_set_looping(&m_snd, loop ? MA_TRUE : MA_FALSE);
-}
-
-ma_uint64 AudioStream::msToFrames(int ms) const
-{
-    return (ma_uint64)((ma_engine_get_sample_rate(&_engine) * (ma_uint64)ms) / 1000);
-}
+} // namespace kn

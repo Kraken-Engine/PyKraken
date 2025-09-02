@@ -7,7 +7,7 @@ import numpy
 import numpy.typing
 import pykraken._core
 import typing
-__all__ = ['circle', 'line', 'point', 'points', 'points_from_ndarray', 'polygon', 'rect', 'rects']
+__all__: list[str] = ['circle', 'line', 'point', 'points', 'points_from_ndarray', 'polygon', 'rect', 'rects']
 def circle(circle: pykraken._core.Circle, color: pykraken._core.Color, thickness: typing.SupportsInt = 0) -> None:
     """
     Draw a circle to the renderer.

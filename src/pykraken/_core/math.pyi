@@ -4,7 +4,7 @@ Math related functions
 from __future__ import annotations
 import pykraken._core
 import typing
-__all__ = ['angle_between', 'clamp', 'cross', 'dot', 'from_polar', 'lerp', 'normalize', 'remap', 'scale_to_length', 'to_deg', 'to_rad']
+__all__: list[str] = ['angle_between', 'clamp', 'cross', 'dot', 'from_polar', 'lerp', 'normalize', 'remap', 'scale_to_length', 'to_deg', 'to_rad']
 def angle_between(a: pykraken._core.Vec2, b: pykraken._core.Vec2) -> float:
     """
     Calculate the angle between two vectors.
