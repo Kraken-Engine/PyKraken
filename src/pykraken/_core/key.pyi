@@ -4,7 +4,7 @@ Keyboard key state checks
 from __future__ import annotations
 import pykraken._core
 import typing
-__all__ = ['is_just_pressed', 'is_just_released', 'is_pressed']
+__all__: list[str] = ['is_just_pressed', 'is_just_released', 'is_pressed']
 @typing.overload
 def is_just_pressed(scancode: pykraken._core.Scancode) -> bool:
     """

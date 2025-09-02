@@ -7,49 +7,13 @@
 
 namespace py = pybind11;
 
+namespace kn
+{
 namespace ease
 {
-void _bind(py::module_& module);
-
 using EasingFunction = std::function<double(double)>;
 
-class EasingAnimation
-{
-  public:
-    EasingAnimation(const Vec2& start, const Vec2& end, double duration, EasingFunction easeFunc);
-    ~EasingAnimation() = default;
-
-    Vec2 step();
-
-    void pause();
-
-    void resume();
-
-    void restart();
-
-    void reverse();
-
-    bool isDone();
-
-  private:
-    enum class State
-    {
-        PLAYING,
-        PAUSED,
-        DONE,
-    };
-
-    Vec2 startPos;
-    Vec2 endPos;
-    double duration;
-    EasingFunction easingFunc;
-
-    double elapsedTime = 0.0;
-    State state = State::PLAYING;
-    bool forward = true;
-
-    Vec2 getCurrentPosition() const;
-};
+void _bind(py::module_& module);
 
 double linear(double t);
 
@@ -113,3 +77,43 @@ double outBounce(double t);
 
 double inOutBounce(double t);
 } // namespace ease
+
+class EasingAnimation
+{
+  public:
+    EasingAnimation(const Vec2& start, const Vec2& end, double duration,
+                    ease::EasingFunction easeFunc);
+    ~EasingAnimation() = default;
+
+    Vec2 step();
+
+    void pause();
+
+    void resume();
+
+    void restart();
+
+    void reverse();
+
+    bool isDone() const;
+
+  private:
+    enum class State
+    {
+        PLAYING,
+        PAUSED,
+        DONE,
+    };
+
+    Vec2 startPos;
+    Vec2 endPos;
+    double duration;
+    ease::EasingFunction easingFunc;
+
+    double elapsedTime = 0.0;
+    State state = State::PLAYING;
+    bool forward = true;
+
+    [[nodiscard]] Vec2 getCurrentPosition() const;
+};
+} // namespace kn

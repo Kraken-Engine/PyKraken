@@ -1,9 +1,10 @@
 #pragma once
+
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
-namespace constants
+namespace kn::constants
 {
-void _bind(py::module_& module);
-} // namespace constants
+void _bind(const py::module_& module);
+} // namespace kn::constants

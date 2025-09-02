@@ -1,27 +1,23 @@
 #pragma once
 
 #include <SDL3/SDL.h>
-#include <memory>
 #include <pybind11/pybind11.h>
 #include <string>
 
-struct Color;
-class Rect;
-class Renderer;
-class PixelArray;
-enum class Anchor;
-class Vec2;
+#include "_globals.hpp"
+#include "Rect.hpp"
+#include "Math.hpp"
 
 namespace py = pybind11;
 
-namespace texture
+namespace kn
 {
-void _bind(py::module_& module);
-}
+class PixelArray;
+struct Color;
 
-class Texture final
+class Texture
 {
-  public:
+public:
     double angle = 0.0;
     struct Flip
     {
@@ -30,23 +26,23 @@ class Texture final
     } flip;
 
     explicit Texture(SDL_Texture* sdlTexture);
-    Texture(const PixelArray& pixelArray);
-    Texture(const std::string& filePath);
+    explicit Texture(const PixelArray& pixelArray);
+    explicit Texture(const std::string& filePath);
     ~Texture();
 
     void loadFromSDL(SDL_Texture* sdlTexture);
 
-    Vec2 getSize() const;
+    [[nodiscard]] Vec2 getSize() const;
 
-    Rect getRect() const;
+    [[nodiscard]] Rect getRect() const;
 
     void setTint(const Color& tint) const;
 
-    Color getTint() const;
+    [[nodiscard]] Color getTint() const;
 
     void setAlpha(float alpha) const;
 
-    float getAlpha() const;
+    [[nodiscard]] float getAlpha() const;
 
     void makeAdditive() const;
 
@@ -54,14 +50,18 @@ class Texture final
 
     void makeNormal() const;
 
-    void render(Rect dstRect, py::object srcRect);
+    void render(Rect dstRect, const Rect& srcRect = {}) const;
 
-    void render(py::object pos, Anchor anchor);
+    void render(Vec2 pos = {}, Anchor anchor = Anchor::Center) const;
 
-    std::unique_ptr<Texture> copy();
+    [[nodiscard]] SDL_Texture* getSDL() const;
 
-    SDL_Texture* getSDL() const;
-
-  private:
+private:
     SDL_Texture* m_texPtr = nullptr;
 };
+
+namespace texture
+{
+void _bind(const py::module_& module);
+} // namespace texture
+} // namespace kn

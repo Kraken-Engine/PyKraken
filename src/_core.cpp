@@ -9,7 +9,9 @@
 #include "Input.hpp"
 #include "Key.hpp"
 #include "Line.hpp"
+#include "Mask.hpp"
 #include "Math.hpp"
+#include "Mixer.hpp"
 #include "Mouse.hpp"
 #include "PixelArray.hpp"
 #include "Polygon.hpp"
@@ -22,39 +24,39 @@
 
 PYBIND11_MODULE(_core, m)
 {
-    m.def("init", &init, R"doc(
+    m.def("init", &kn::init, R"doc(
 Initialize the Kraken Engine.
 
 This sets up internal systems and must be called before using any other features.
     )doc");
 
-    m.def("quit", &quit, R"doc(
+    m.def("quit", &kn::quit, R"doc(
 Shut down the Kraken Engine and clean up resources.
 
 Call this once you're done using the engine to avoid memory leaks.
     )doc");
 
-    constants::_bind(m);
-    math::_bind(m);
-    rect::_bind(m);
-    texture::_bind(m);
-    polygon::_bind(m);
-
-    camera::_bind(m);
-    circle::_bind(m);
-    color::_bind(m);
-    ease::_bind(m);
-    event::_bind(m);
-    gamepad::_bind(m);
-    input::_bind(m);
-    key::_bind(m);
-    line::_bind(m);
-    mouse::_bind(m);
-    renderer::_bind(m);
-    pixel_array::_bind(m);
+    kn::color::_bind(m);
+    kn::constants::_bind(m);
+    kn::math::_bind(m);
+    kn::rect::_bind(m);
+    kn::pixel_array::_bind(m);
+    kn::texture::_bind(m);
+    kn::polygon::_bind(m);
+    kn::camera::_bind(m);
+    kn::line::_bind(m);
+    kn::circle::_bind(m);
+    kn::ease::_bind(m);
+    kn::event::_bind(m);
+    kn::gamepad::_bind(m);
+    kn::input::_bind(m);
+    kn::key::_bind(m);
+    kn::mask::_bind(m);
+    kn::mixer::_bind(m);
+    kn::mouse::_bind(m);
+    kn::renderer::_bind(m);
     kn::time::_bind(m);
-    transform::_bind(m);
-    window::_bind(m);
-
-    draw::_bind(m);
+    kn::transform::_bind(m);
+    kn::window::_bind(m);
+    kn::draw::_bind(m);
 }

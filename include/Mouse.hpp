@@ -3,15 +3,14 @@
 #include <SDL3/SDL.h>
 #include <pybind11/pybind11.h>
 
+#include "_globals.hpp"
+
 namespace py = pybind11;
 
-enum class knMouseButton : uint8_t;
-class Vec2;
-
-namespace event
+namespace kn
 {
-struct knEvent;
-}
+class Vec2;
+struct Event;
 
 namespace mouse
 {
@@ -21,11 +20,11 @@ Vec2 getPos();
 
 Vec2 getRel();
 
-bool isPressed(knMouseButton button);
+bool isPressed(MouseButton button);
 
-bool isJustPressed(knMouseButton button);
+bool isJustPressed(MouseButton button);
 
-bool isJustReleased(knMouseButton button);
+bool isJustReleased(MouseButton button);
 
 void lock();
 
@@ -41,5 +40,6 @@ bool isHidden();
 
 void _clearStates();
 
-void _handleEvents(const SDL_Event& sdle, event::knEvent& e);
+void _handleEvents(const SDL_Event& sdlEvent, const Event& e);
 } // namespace mouse
+} // namespace kn

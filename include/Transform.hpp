@@ -5,6 +5,8 @@
 
 namespace py = pybind11;
 
+namespace kn
+{
 class PixelArray;
 class Vec2;
 
@@ -23,7 +25,7 @@ std::unique_ptr<PixelArray> scaleBy(const PixelArray& pixelArray, const Vec2& fa
 std::unique_ptr<PixelArray> rotate(const PixelArray& pixelArray, double angle);
 
 std::unique_ptr<PixelArray> boxBlur(const PixelArray& pixelArray, int radius,
-                                     bool repeatEdgePixels = true);
+                                    bool repeatEdgePixels = true);
 
 std::unique_ptr<PixelArray> gaussianBlur(const PixelArray& pixelArray, int radius,
                                          bool repeatEdgePixels = true);
@@ -32,3 +34,4 @@ std::unique_ptr<PixelArray> invert(const PixelArray& pixelArray);
 
 std::unique_ptr<PixelArray> grayscale(const PixelArray& pixelArray);
 } // namespace transform
+} // namespace kn

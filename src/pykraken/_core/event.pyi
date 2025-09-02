@@ -3,7 +3,7 @@ Input event handling
 """
 from __future__ import annotations
 import pykraken._core
-__all__ = ['poll']
+__all__: list[str] = ['poll']
 def poll() -> list[pykraken._core.Event]:
     """
     Poll for all pending user input events.

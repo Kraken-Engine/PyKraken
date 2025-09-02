@@ -3,20 +3,22 @@
 
 namespace py = pybind11;
 
-namespace event
+namespace kn
 {
-class knEvent
+struct Event
 {
-  public:
     uint32_t type;
     py::dict data;
 
-    knEvent(uint32_t type);
+    explicit Event(uint32_t type);
 
-    py::object getAttr(const std::string& name) const;
+    [[nodiscard]] py::object getAttr(const std::string& name) const;
 };
 
+namespace event
+{
 void _bind(py::module_& module);
 
-std::vector<knEvent> poll();
+std::vector<Event> poll();
 } // namespace event
+} // namespace kn

@@ -4,7 +4,7 @@ Functions for rendering graphics
 from __future__ import annotations
 import pykraken._core
 import typing
-__all__ = ['clear', 'get_res', 'present']
+__all__: list[str] = ['clear', 'get_res', 'present']
 @typing.overload
 def clear(color: typing.Any = None) -> None:
     """

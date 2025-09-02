@@ -1,13 +1,191 @@
 #include "Color.hpp"
 #include "Math.hpp"
-#include "PixelArray.hpp"
 #include "Rect.hpp"
 
+#include "PixelArray.hpp"
 #include <SDL3_image/SDL_image.h>
+
+namespace kn
+{
+PixelArray::PixelArray(SDL_Surface* sdlSurface) : m_surface(sdlSurface) {}
+
+PixelArray::PixelArray(const Vec2& size)
+{
+    m_surface = SDL_CreateSurface(static_cast<int>(size.x), static_cast<int>(size.y),
+                                  SDL_PIXELFORMAT_RGBA32);
+
+    if (!m_surface)
+        throw std::runtime_error("PixelArray failed to create: " + std::string(SDL_GetError()));
+}
+
+PixelArray::PixelArray(const std::string& filePath)
+{
+    m_surface = IMG_Load(filePath.c_str());
+    if (!m_surface)
+        throw std::runtime_error("Failed to load pixel array from file '" + filePath +
+                                 "': " + std::string(SDL_GetError()));
+}
+
+PixelArray::~PixelArray()
+{
+    if (m_surface)
+    {
+        SDL_DestroySurface(m_surface);
+        m_surface = nullptr;
+    }
+}
+
+void PixelArray::fill(const Color& color) const
+{
+    const auto colorMap = SDL_MapSurfaceRGBA(m_surface, color.r, color.g, color.b, color.a);
+    SDL_FillSurfaceRect(m_surface, nullptr, colorMap);
+}
+
+void PixelArray::blit(const PixelArray& other, const Vec2& pos, const Anchor anchor,
+                      const Rect& srcRect) const
+{
+    Rect dstRect = other.getRect();
+    switch (anchor)
+    {
+    case Anchor::TopLeft:
+        dstRect.setTopLeft(pos);
+        break;
+    case Anchor::TopMid:
+        dstRect.setTopMid(pos);
+        break;
+    case Anchor::TopRight:
+        dstRect.setTopRight(pos);
+        break;
+    case Anchor::MidLeft:
+        dstRect.setMidLeft(pos);
+        break;
+    case Anchor::Center:
+        dstRect.setCenter(pos);
+        break;
+    case Anchor::MidRight:
+        dstRect.setMidRight(pos);
+        break;
+    case Anchor::BottomLeft:
+        dstRect.setBottomLeft(pos);
+        break;
+    case Anchor::BottomMid:
+        dstRect.setBottomMid(pos);
+        break;
+    case Anchor::BottomRight:
+        dstRect.setBottomRight(pos);
+        break;
+    }
+
+    const auto dstSDL = static_cast<SDL_Rect>(dstRect);
+    const auto srcSDL =
+        static_cast<SDL_Rect>(srcRect.w == 0.0 && srcRect.h == 0.0 ? this->getRect() : srcRect);
+
+    if (!SDL_BlitSurface(other.getSDL(), &srcSDL, m_surface, &dstSDL))
+        throw std::runtime_error("Failed to blit pixel array: " + std::string(SDL_GetError()));
+}
+
+void PixelArray::blit(const PixelArray& other, const Rect& dstRect, const Rect& srcRect) const
+{
+    const auto dstSDL = static_cast<SDL_Rect>(dstRect);
+    const auto srcSDL =
+        static_cast<SDL_Rect>(srcRect.w == 0.0 && srcRect.h == 0.0 ? this->getRect() : srcRect);
+
+    if (!SDL_BlitSurface(other.getSDL(), &srcSDL, m_surface, &dstSDL))
+        throw std::runtime_error("Failed to blit pixel array: " + std::string(SDL_GetError()));
+}
+
+void PixelArray::setColorKey(const Color& color) const
+{
+    SDL_SetSurfaceColorKey(m_surface, true,
+                           SDL_MapSurfaceRGBA(m_surface, color.r, color.g, color.b, color.a));
+}
+
+Color PixelArray::getColorKey() const
+{
+    uint32_t key;
+    if (!SDL_GetSurfaceColorKey(m_surface, &key))
+        throw std::runtime_error("Failed to get pixel array color key: " +
+                                 std::string(SDL_GetError()));
+
+    Color color;
+    color.r = static_cast<uint8_t>(key >> 24 & 0xFF);
+    color.g = static_cast<uint8_t>(key >> 16 & 0xFF);
+    color.b = static_cast<uint8_t>(key >> 8 & 0xFF);
+    color.a = static_cast<uint8_t>(key & 0xFF);
+
+    return color;
+}
+
+void PixelArray::setAlpha(const uint8_t alpha) const { SDL_SetSurfaceAlphaMod(m_surface, alpha); }
+
+int PixelArray::getAlpha() const
+{
+    uint8_t alpha;
+    if (!SDL_GetSurfaceAlphaMod(m_surface, &alpha))
+        throw std::runtime_error("Failed to get pixel array alpha: " + std::string(SDL_GetError()));
+    return alpha;
+}
+
+Color PixelArray::getAt(const Vec2& coord) const
+{
+    if (coord.x < 0 || coord.x >= m_surface->w || coord.y < 0 || coord.y >= m_surface->h)
+        throw std::out_of_range("Coordinates out of bounds for pixel array");
+
+    auto* pixels = static_cast<uint8_t*>(m_surface->pixels);
+    const int pitch = m_surface->pitch;
+    const auto x = static_cast<int>(coord.x);
+    const auto y = static_cast<int>(coord.y);
+
+    const uint32_t pixel = *reinterpret_cast<uint32_t*>(pixels + y * pitch + x * sizeof(uint32_t));
+
+    Color color;
+    const auto formatDetails = SDL_GetPixelFormatDetails(m_surface->format);
+    SDL_GetRGBA(pixel, formatDetails, nullptr, &color.r, &color.g, &color.b, &color.a);
+
+    return color;
+}
+
+void PixelArray::setAt(const Vec2& coord, const Color& color) const
+{
+    if (coord.x < 0 || coord.x >= m_surface->w || coord.y < 0 || coord.y >= m_surface->h)
+        throw std::out_of_range("Coordinates out of bounds for pixel array");
+
+    auto* pixels = static_cast<uint8_t*>(m_surface->pixels);
+    const int pitch = m_surface->pitch;
+    const auto x = static_cast<int>(coord.x);
+    const auto y = static_cast<int>(coord.y);
+
+    const auto formatDetails = SDL_GetPixelFormatDetails(m_surface->format);
+    const uint32_t pixel = SDL_MapRGBA(formatDetails, nullptr, color.r, color.g, color.b, color.a);
+    *reinterpret_cast<uint32_t*>(pixels + y * pitch + x * sizeof(uint32_t)) = pixel;
+}
+
+int PixelArray::getWidth() const { return m_surface->w; }
+
+int PixelArray::getHeight() const { return m_surface->h; }
+
+Vec2 PixelArray::getSize() const { return {m_surface->w, m_surface->h}; }
+
+Rect PixelArray::getRect() const { return {0, 0, m_surface->w, m_surface->h}; }
+
+std::unique_ptr<PixelArray> PixelArray::copy() const
+{
+    SDL_Surface* surfaceCopy = SDL_CreateSurface(m_surface->w, m_surface->h, m_surface->format);
+    if (!surfaceCopy)
+        throw std::runtime_error("Failed to create copy pixel array: " +
+                                 std::string(SDL_GetError()));
+
+    if (!SDL_BlitSurface(m_surface, nullptr, surfaceCopy, nullptr))
+        throw std::runtime_error("Failed to blit pixel array copy: " + std::string(SDL_GetError()));
+
+    return std::make_unique<PixelArray>(surfaceCopy);
+}
+
+SDL_Surface* PixelArray::getSDL() const { return m_surface; }
 
 namespace pixel_array
 {
-void _bind(py::module_& module)
+void _bind(const py::module_& module)
 {
     // py::native_enum<ScrollType>(module, "ScrollType", "enum.IntEnum")
     //     .value("SCROLL_SMEAR", ScrollType::SCROLL_SMEAR)
@@ -48,11 +226,23 @@ Fill the entire pixel array with a solid color.
 Args:
     color (Color): The color to fill the pixel array with.
         )doc")
-        .def("blit",
-             py::overload_cast<const PixelArray&, const Vec2&, Anchor, py::object>(
-                 &PixelArray::blit, py::const_),
-             py::arg("pixel_array"), py::arg("pos"), py::arg("anchor") = Anchor::CENTER,
-             py::arg("src") = py::none(), R"doc(
+        .def(
+            "blit",
+            [](const PixelArray& self, const PixelArray& other, const Vec2& pos,
+               const Anchor anchor, const py::object& srcObj)
+            {
+                try
+                {
+                    srcObj.is_none() ? self.blit(other, pos, anchor)
+                                     : self.blit(other, pos, anchor, srcObj.cast<Rect>());
+                }
+                catch (const py::cast_error&)
+                {
+                    throw std::invalid_argument("'src' must be a Rect");
+                }
+            },
+            py::arg("pixel_array"), py::arg("pos"), py::arg("anchor") = Anchor::Center,
+            py::arg("src") = py::none(), R"doc(
 Blit (copy) another pixel array onto this pixel array at the specified position with anchor alignment.
 
 Args:
@@ -64,10 +254,21 @@ Args:
 Raises:
     RuntimeError: If the blit operation fails.
         )doc")
-        .def("blit",
-             py::overload_cast<const PixelArray&, const Rect&, py::object>(&PixelArray::blit,
-                                                                           py::const_),
-             py::arg("pixel_array"), py::arg("dst"), py::arg("src") = py::none(), R"doc(
+        .def(
+            "blit",
+            [](const PixelArray& self, const PixelArray& other, const Rect& dst,
+               const py::object& src)
+            {
+                try
+                {
+                    src.is_none() ? self.blit(other, dst) : self.blit(other, dst, src.cast<Rect>());
+                }
+                catch (const py::cast_error&)
+                {
+                    throw std::invalid_argument("'src' must be a Rect");
+                }
+            },
+            py::arg("pixel_array"), py::arg("dst"), py::arg("src") = py::none(), R"doc(
 Blit (copy) another pixel array onto this pixel array with specified destination and source rectangles.
 
 Args:
@@ -161,223 +362,4 @@ Returns:
         )doc");
 }
 } // namespace pixel_array
-
-PixelArray::PixelArray(SDL_Surface* sdlSurface) : m_surface(sdlSurface) {}
-
-PixelArray::PixelArray(const Vec2& size)
-{
-    if (m_surface)
-    {
-        SDL_DestroySurface(m_surface);
-        m_surface = nullptr;
-    }
-
-    m_surface = SDL_CreateSurface(static_cast<int>(size.x), static_cast<int>(size.y),
-                                  SDL_PIXELFORMAT_RGBA32);
-
-    if (!m_surface)
-        throw std::runtime_error("PixelArray failed to create: " + std::string(SDL_GetError()));
-}
-
-PixelArray::PixelArray(const std::string& filePath)
-{
-    if (m_surface)
-    {
-        SDL_DestroySurface(m_surface);
-        m_surface = nullptr;
-    }
-
-    m_surface = IMG_Load(filePath.c_str());
-    if (!m_surface)
-        throw std::runtime_error("Failed to load pixel array from file '" + filePath +
-                                 "': " + std::string(SDL_GetError()));
-}
-
-PixelArray::~PixelArray()
-{
-    if (m_surface)
-    {
-        SDL_DestroySurface(m_surface);
-        m_surface = nullptr;
-    }
-}
-
-void PixelArray::fill(const Color& color) const
-{
-    auto colorMap = SDL_MapSurfaceRGBA(m_surface, color.r, color.g, color.b, color.a);
-    SDL_FillSurfaceRect(m_surface, nullptr, colorMap);
-}
-
-void PixelArray::blit(const PixelArray& other, const Vec2& pos, const Anchor anchor,
-                      py::object srcRect) const
-{
-    SDL_Rect srcSDL;
-    if (!srcRect.is_none())
-    {
-        try
-        {
-            srcSDL = srcRect.cast<Rect>();
-        }
-        catch (const py::cast_error&)
-        {
-            throw std::invalid_argument("'src' must be a Rect");
-        }
-    }
-    else
-    {
-        srcSDL = other.getRect();
-    }
-
-    Rect dstRect = other.getRect();
-    switch (anchor)
-    {
-    case Anchor::TOP_LEFT:
-        dstRect.setTopLeft(pos);
-        break;
-    case Anchor::TOP_MID:
-        dstRect.setTopMid(pos);
-        break;
-    case Anchor::TOP_RIGHT:
-        dstRect.setTopRight(pos);
-        break;
-    case Anchor::MID_LEFT:
-        dstRect.setMidLeft(pos);
-        break;
-    case Anchor::CENTER:
-        dstRect.setCenter(pos);
-        break;
-    case Anchor::MID_RIGHT:
-        dstRect.setMidRight(pos);
-        break;
-    case Anchor::BOTTOM_LEFT:
-        dstRect.setBottomLeft(pos);
-        break;
-    case Anchor::BOTTOM_MID:
-        dstRect.setBottomMid(pos);
-        break;
-    case Anchor::BOTTOM_RIGHT:
-        dstRect.setBottomRight(pos);
-        break;
-    }
-
-    SDL_Rect dstSDL = dstRect;
-
-    if (!SDL_BlitSurface(other.getSDL(), &srcSDL, m_surface, &dstSDL))
-        throw std::runtime_error("Failed to blit pixel array: " + std::string(SDL_GetError()));
-}
-
-void PixelArray::blit(const PixelArray& other, const Rect& dstRect, py::object srcRect) const
-{
-    SDL_Rect dstSDL = dstRect;
-    SDL_Rect srcSDL;
-
-    if (!srcRect.is_none())
-    {
-        try
-        {
-            srcSDL = srcRect.cast<Rect>();
-        }
-        catch (const py::cast_error&)
-        {
-            throw std::invalid_argument("'src' must be a Rect");
-        }
-    }
-    else
-    {
-        srcSDL = other.getRect();
-    }
-
-    if (!SDL_BlitSurface(other.getSDL(), &srcSDL, m_surface, &dstSDL))
-        throw std::runtime_error("Failed to blit pixel array: " + std::string(SDL_GetError()));
-}
-
-void PixelArray::setColorKey(const Color& color) const
-{
-    SDL_SetSurfaceColorKey(m_surface, true,
-                           SDL_MapSurfaceRGBA(m_surface, color.r, color.g, color.b, color.a));
-}
-
-Color PixelArray::getColorKey() const
-{
-    uint32_t key;
-    if (!SDL_GetSurfaceColorKey(m_surface, &key))
-        throw std::runtime_error("Failed to get pixel array color key: " +
-                                 std::string(SDL_GetError()));
-
-    Color color;
-    color.r = static_cast<uint8_t>((key >> 24) & 0xFF);
-    color.g = static_cast<uint8_t>((key >> 16) & 0xFF);
-    color.b = static_cast<uint8_t>((key >> 8) & 0xFF);
-    color.a = static_cast<uint8_t>(key & 0xFF);
-
-    return color;
-}
-
-void PixelArray::setAlpha(const uint8_t alpha) const { SDL_SetSurfaceAlphaMod(m_surface, alpha); }
-
-int PixelArray::getAlpha() const
-{
-    uint8_t alpha;
-    if (!SDL_GetSurfaceAlphaMod(m_surface, &alpha))
-        throw std::runtime_error("Failed to get pixel array alpha: " + std::string(SDL_GetError()));
-    return alpha;
-}
-
-Color PixelArray::getAt(const Vec2& coord) const
-{
-    if (coord.x < 0 || coord.x >= m_surface->w || coord.y < 0 || coord.y >= m_surface->h)
-        throw std::out_of_range("Coordinates out of bounds for pixel array");
-
-    auto* pixels = static_cast<uint8_t*>(m_surface->pixels);
-    int pitch = m_surface->pitch;
-    auto x = static_cast<int>(coord.x);
-    auto y = static_cast<int>(coord.y);
-
-    uint32_t pixel = *reinterpret_cast<uint32_t*>(pixels + y * pitch + x * sizeof(uint32_t));
-
-    Color color;
-    auto formatDetails = SDL_GetPixelFormatDetails(m_surface->format);
-    SDL_GetRGBA(pixel, formatDetails, nullptr, &color.r, &color.g, &color.b, &color.a);
-
-    return color;
-}
-
-void PixelArray::setAt(const Vec2& coord, const Color& color) const
-{
-    if (coord.x < 0 || coord.x >= m_surface->w || coord.y < 0 || coord.y >= m_surface->h)
-        throw std::out_of_range("Coordinates out of bounds for pixel array");
-
-    auto* pixels = static_cast<uint8_t*>(m_surface->pixels);
-    int pitch = m_surface->pitch;
-    auto x = static_cast<int>(coord.x);
-    auto y = static_cast<int>(coord.y);
-
-    auto formatDetails = SDL_GetPixelFormatDetails(m_surface->format);
-    uint32_t pixel = SDL_MapRGBA(formatDetails, nullptr, color.r, color.g, color.b, color.a);
-    *reinterpret_cast<uint32_t*>(pixels + y * pitch + x * sizeof(uint32_t)) = pixel;
-}
-
-int PixelArray::getWidth() const { return m_surface->w; }
-
-int PixelArray::getHeight() const { return m_surface->h; }
-
-Vec2 PixelArray::getSize() const { return {m_surface->w, m_surface->h}; }
-
-Rect PixelArray::getRect() const { return Rect(0, 0, m_surface->w, m_surface->h); }
-
-std::unique_ptr<PixelArray> PixelArray::copy() const
-{
-    SDL_Surface* surfaceCopy = SDL_CreateSurface(m_surface->w, m_surface->h, m_surface->format);
-    if (!surfaceCopy)
-        throw std::runtime_error("Failed to create copy pixel array: " +
-                                 std::string(SDL_GetError()));
-
-    if (!SDL_BlitSurface(m_surface, nullptr, surfaceCopy, nullptr))
-        throw std::runtime_error("Failed to blit pixel array copy: " + std::string(SDL_GetError()));
-
-    auto copy = std::make_unique<PixelArray>();
-    copy->m_surface = surfaceCopy;
-    return copy;
-}
-
-SDL_Surface* PixelArray::getSDL() const { return m_surface; }
+} // namespace kn

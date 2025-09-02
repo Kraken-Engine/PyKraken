@@ -5,21 +5,24 @@
 
 namespace py = pybind11;
 
-namespace polygon
+namespace kn
 {
-void _bind(py::module_& module);
-} // namespace polygon
-
 class Vec2;
 
 class Polygon
 {
-  public:
+public:
     std::vector<Vec2> points;
 
     Polygon() = default;
-    Polygon(const std::vector<Vec2>& points);
+    explicit Polygon(const std::vector<Vec2>& points);
     ~Polygon() = default;
 
-    Polygon copy() const;
+    [[nodiscard]] Polygon copy() const;
 };
+
+namespace polygon
+{
+void _bind(const py::module_& module);
+} // namespace polygon
+} // namespace kn

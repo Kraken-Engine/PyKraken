@@ -1,11 +1,17 @@
-#include "Polygon.hpp"
 #include "Math.hpp"
 
+#include "Polygon.hpp"
 #include <pybind11/stl.h>
+
+namespace kn
+{
+Polygon::Polygon(const std::vector<Vec2>& points) : points(points) {}
+
+Polygon Polygon::copy() const { return Polygon{points}; }
 
 namespace polygon
 {
-void _bind(py::module_& module)
+void _bind(const py::module_& module)
 {
     py::classh<Polygon>(module, "Polygon", R"doc(
 Represents a polygon shape defined by a sequence of points.
@@ -36,7 +42,7 @@ Args:
                          }
                          else if (py::isinstance<py::sequence>(item))
                          {
-                             py::sequence point = item.cast<py::sequence>();
+                             auto point = item.cast<py::sequence>();
                              if (point.size() != 2)
                                  throw std::invalid_argument(
                                      "Each point must be a 2-element sequence");
@@ -48,7 +54,7 @@ Args:
                                  "Points must be Vec2 objects or 2-element sequences");
                          }
                      }
-                     return {points};
+                     return Polygon{points};
                  }),
              py::arg("points"), R"doc(
 Create a polygon from a sequence of points.
@@ -69,7 +75,7 @@ Return an iterator over the polygon's points.
 
         .def(
             "__getitem__",
-            [](const Polygon& polygon, size_t i) -> Vec2
+            [](const Polygon& polygon, const size_t i) -> Vec2
             {
                 if (i >= polygon.points.size())
                     throw py::index_error("Index out of range");
@@ -111,7 +117,4 @@ Returns:
     py::implicitly_convertible<py::sequence, Polygon>();
 }
 } // namespace polygon
-
-Polygon::Polygon(const std::vector<Vec2>& points) : points(points) {}
-
-Polygon Polygon::copy() const { return {points}; }
+} // namespace kn

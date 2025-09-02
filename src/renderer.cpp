@@ -1,19 +1,30 @@
-#include "Renderer.hpp"
-#include "Color.hpp"
 #include "Math.hpp"
-#include "Window.hpp"
 
+#include "Renderer.hpp"
+
+namespace kn::renderer
+{
 static SDL_Renderer* _renderer = nullptr;
 static SDL_Texture* _target = nullptr;
 
-namespace renderer
-{
 void _bind(py::module_& module)
 {
     auto subRenderer = module.def_submodule("renderer", "Functions for rendering graphics");
 
-    subRenderer.def("clear", py::overload_cast<py::object>(&clear), py::arg("color") = py::none(),
-                    R"doc(
+    subRenderer.def(
+        "clear",
+        [](const py::object& colorObj)
+        {
+            try
+            {
+                clear(colorObj.is_none() ? Color() : colorObj.cast<Color>());
+            }
+            catch (const py::cast_error&)
+            {
+                throw std::invalid_argument("Expected Color object, convertible sequence, or None");
+            }
+        },
+        py::arg("color") = py::none(), R"doc(
 Clear the renderer with the specified color.
 
 Args:
@@ -49,23 +60,24 @@ Returns:
     )doc");
 }
 
-void init(SDL_Window* window, const Vec2& resolution)
+void _init(SDL_Window* window, const Vec2& resolution)
 {
     _renderer = SDL_CreateRenderer(window, nullptr);
     if (_renderer == nullptr)
         throw std::runtime_error("Renderer failed to create: " + std::string(SDL_GetError()));
 
-    SDL_SetRenderLogicalPresentation(_renderer, resolution.x, resolution.y,
+    SDL_SetRenderLogicalPresentation(_renderer, static_cast<int>(resolution.x),
+                                     static_cast<int>(resolution.y),
                                      SDL_LOGICAL_PRESENTATION_LETTERBOX);
     SDL_SetRenderDrawBlendMode(_renderer, SDL_BLENDMODE_BLEND);
 
     _target = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET,
-                                resolution.x, resolution.y);
+                                static_cast<int>(resolution.x), static_cast<int>(resolution.y));
     SDL_SetTextureScaleMode(_target, SDL_SCALEMODE_NEAREST);
     SDL_SetRenderTarget(_renderer, _target);
 }
 
-void quit()
+void _quit()
 {
     if (_renderer)
     {
@@ -74,29 +86,13 @@ void quit()
     }
 }
 
-void clear(py::object color)
+void clear(const Color& color)
 {
-    Color knColor;
-    if (!color.is_none())
-    {
-        try
-        {
-            knColor = color.cast<Color>();
-        }
-        catch (const py::cast_error&)
-        {
-            throw std::invalid_argument("Expected Color object, convertible sequence, or None");
-        }
-    }
-
-    if (!knColor._isValid())
-        throw std::invalid_argument("Color values must be between 0 and 255");
-
-    SDL_SetRenderDrawColor(_renderer, knColor.r, knColor.g, knColor.b, knColor.a);
+    SDL_SetRenderDrawColor(_renderer, color.r, color.g, color.b, color.a);
     SDL_RenderClear(_renderer);
 }
 
-void clear(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+void clear(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a)
 {
     SDL_SetRenderDrawColor(_renderer, r, g, b, a);
     SDL_RenderClear(_renderer);
@@ -112,6 +108,5 @@ void present()
     SDL_SetRenderTarget(_renderer, _target);
 }
 
-SDL_Renderer* get() { return _renderer; }
-
-} // namespace renderer
+SDL_Renderer* _get() { return _renderer; }
+} // namespace kn::renderer

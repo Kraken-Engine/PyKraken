@@ -3,19 +3,18 @@
 #include <SDL3/SDL.h>
 #include <pybind11/pybind11.h>
 
+#include "_globals.hpp"
+
 namespace py = pybind11;
 
-enum class KnKeycode : SDL_Keycode;
-namespace event
+namespace kn
 {
-class knEvent;
-}
-
+struct Event;
 namespace key
 {
 void _bind(py::module_& module);
 
-void _handleEvents(const SDL_Event& sdle, event::knEvent& e);
+void _handleEvents(const SDL_Event& sdlEvent, const Event& e);
 
 void _clearStates();
 
@@ -25,9 +24,10 @@ bool isJustPressed(SDL_Scancode scancode);
 
 bool isJustReleased(SDL_Scancode scancode);
 
-bool isPressed(KnKeycode keycode);
+bool isPressed(Keycode keycode);
 
-bool isJustPressed(KnKeycode keycode);
+bool isJustPressed(Keycode keycode);
 
-bool isJustReleased(KnKeycode keycode);
+bool isJustReleased(Keycode keycode);
 } // namespace key
+} // namespace kn

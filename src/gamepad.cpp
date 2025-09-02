@@ -1,17 +1,18 @@
-#include "Gamepad.hpp"
 #include "Event.hpp"
 #include "Math.hpp"
 
+#include "Gamepad.hpp"
 #include <pybind11/stl.h>
+#include <ranges>
+
+namespace kn::gamepad
+{
+static bool verifySlot(int slot);
 
 constexpr int MAX_GAMEPADS = 4;
 static std::array<std::optional<SDL_JoystickID>, MAX_GAMEPADS> _gamepadSlots;
 static std::unordered_map<SDL_JoystickID, GamepadState> _connectedPads;
 
-static bool verifySlot(int slot);
-
-namespace gamepad
-{
 void _bind(py::module_& module)
 {
     auto subGamepad = module.def_submodule("gamepad", "Gamepad input handling functions");
@@ -91,7 +92,7 @@ Returns:
     float: Trigger value in range [0.0, 1.0].
     )doc");
 
-    subGamepad.def("set_deadzone", &setDeadzone, py::arg("deadzone"), py::arg("slot") = 0, R"doc(
+    subGamepad.def("set_deadzone", &setDeadZone, py::arg("deadzone"), py::arg("slot") = 0, R"doc(
 Set the dead zone threshold for a gamepad's analog sticks.
 
 Args:
@@ -99,7 +100,7 @@ Args:
     slot (int, optional): Gamepad slot ID (default is 0).
     )doc");
 
-    subGamepad.def("get_deadzone", &getDeadzone, py::arg("slot") = 0, R"doc(
+    subGamepad.def("get_deadzone", &getDeadZone, py::arg("slot") = 0, R"doc(
 Get the current dead zone value for a gamepad's analog sticks.
 
 Args:
@@ -117,119 +118,117 @@ Returns:
     )doc");
 }
 
-bool isPressed(SDL_GamepadButton button, int slot)
+bool isPressed(const SDL_GamepadButton button, const int slot)
 {
     if (!verifySlot(slot))
         return false;
 
-    SDL_JoystickID id = _gamepadSlots.at(slot).value();
+    const SDL_JoystickID id = _gamepadSlots.at(slot).value();
     const GamepadState& state = _connectedPads.at(id);
 
     return SDL_GetGamepadButton(state.pad, button);
 }
 
-bool isJustPressed(SDL_GamepadButton button, int slot)
+bool isJustPressed(const SDL_GamepadButton button, const int slot)
 {
     if (!verifySlot(slot))
         return false;
 
-    SDL_JoystickID id = _gamepadSlots.at(slot).value();
+    const SDL_JoystickID id = _gamepadSlots.at(slot).value();
     const GamepadState& state = _connectedPads.at(id);
 
-    auto buttonIt = state.justPressed.find(button);
-    return buttonIt != state.justPressed.end();
+    return state.justPressed.contains(button);
 }
 
-bool isJustReleased(SDL_GamepadButton button, int slot)
+bool isJustReleased(const SDL_GamepadButton button, const int slot)
 {
     if (!verifySlot(slot))
         return false;
 
-    SDL_JoystickID id = _gamepadSlots.at(slot).value();
+    const SDL_JoystickID id = _gamepadSlots.at(slot).value();
     const GamepadState& state = _connectedPads.at(id);
 
-    auto buttonIt = state.justReleased.find(button);
-    return buttonIt != state.justReleased.end();
+    return state.justReleased.contains(button);
 }
 
-Vec2 getLeftStick(int slot)
+Vec2 getLeftStick(const int slot)
 {
     if (!verifySlot(slot))
         return {};
 
-    SDL_JoystickID id = _gamepadSlots.at(slot).value();
+    const SDL_JoystickID id = _gamepadSlots.at(slot).value();
     const GamepadState& state = _connectedPads.at(id);
 
     Vec2 axes = {SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_LEFTX),
                  SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_LEFTY)};
     axes /= SDL_MAX_SINT16;
-    if (axes.getLength() > state.deadzone)
+    if (axes.getLength() > state.deadZone)
         return axes;
 
     return {};
 }
 
-Vec2 getRightStick(int slot)
+Vec2 getRightStick(const int slot)
 {
     if (!verifySlot(slot))
         return {};
 
-    SDL_JoystickID id = _gamepadSlots.at(slot).value();
+    const SDL_JoystickID id = _gamepadSlots.at(slot).value();
     const GamepadState& state = _connectedPads.at(id);
 
     Vec2 axes = {SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_RIGHTX),
                  SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_RIGHTY)};
     axes /= SDL_MAX_SINT16;
-    if (axes.getLength() > state.deadzone)
+    if (axes.getLength() > state.deadZone)
         return axes;
 
     return {};
 }
 
-double getLeftTrigger(int slot)
+double getLeftTrigger(const int slot)
 {
     if (!verifySlot(slot))
         return 0.0;
 
-    SDL_JoystickID id = _gamepadSlots.at(slot).value();
+    const SDL_JoystickID id = _gamepadSlots.at(slot).value();
     const GamepadState& state = _connectedPads.at(id);
 
     return SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_LEFT_TRIGGER) /
            static_cast<double>(SDL_MAX_SINT16);
 }
 
-double getRightTrigger(int slot)
+double getRightTrigger(const int slot)
 {
     if (!verifySlot(slot))
         return 0.0;
 
-    SDL_JoystickID id = _gamepadSlots.at(slot).value();
+    const SDL_JoystickID id = _gamepadSlots.at(slot).value();
     const GamepadState& state = _connectedPads.at(id);
 
     return SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER) /
            static_cast<double>(SDL_MAX_SINT16);
 }
 
-void setDeadzone(float deadZone, int slot)
+void setDeadZone(const float deadZone, const int slot)
 {
     if (!verifySlot(slot))
         return;
 
-    SDL_JoystickID id = _gamepadSlots.at(slot).value();
+    const SDL_JoystickID id = _gamepadSlots.at(slot).value();
     GamepadState& state = _connectedPads.at(id);
 
-    state.deadzone = deadZone;
+    state.deadZone = deadZone;
 }
 
-float getDeadzone(int slot)
+float getDeadZone(const int slot)
 {
     if (!verifySlot(slot))
         return 0.1f;
 
-    SDL_JoystickID id = _gamepadSlots.at(slot).value();
+    const SDL_JoystickID id = _gamepadSlots.at(slot).value();
     const GamepadState& state = _connectedPads.at(id);
 
-    return state.deadzone;
+    return state.deadZone;
 }
 
 std::vector<int> getConnectedSlots()
@@ -247,21 +246,20 @@ std::vector<int> getConnectedSlots()
 
 void _clearStates()
 {
-    for (auto& [id, state] : _connectedPads)
+    for (auto& state : _connectedPads | std::views::values)
     {
         state.justPressed.clear();
         state.justReleased.clear();
     }
 }
 
-void _handleEvents(const SDL_Event& sdle, event::knEvent& e)
+void _handleEvents(const SDL_Event& sdlEvent, kn::Event& e)
 {
-    switch (sdle.type)
+    switch (sdlEvent.type)
     {
     case SDL_EVENT_GAMEPAD_ADDED:
     {
-        SDL_Gamepad* pad = SDL_OpenGamepad(sdle.gdevice.which);
-        if (pad)
+        if (SDL_Gamepad* pad = SDL_OpenGamepad(sdlEvent.gdevice.which))
         {
             SDL_JoystickID id = SDL_GetGamepadID(pad);
 
@@ -279,7 +277,7 @@ void _handleEvents(const SDL_Event& sdle, event::knEvent& e)
     }
     case SDL_EVENT_GAMEPAD_REMOVED:
     {
-        SDL_JoystickID id = sdle.gdevice.which;
+        const SDL_JoystickID id = sdlEvent.gdevice.which;
         SDL_CloseGamepad(_connectedPads.at(id).pad);
         _connectedPads.erase(id);
 
@@ -296,34 +294,33 @@ void _handleEvents(const SDL_Event& sdle, event::knEvent& e)
     case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
     case SDL_EVENT_GAMEPAD_BUTTON_UP:
     {
-        SDL_JoystickID id = sdle.gbutton.which;
-        if (_connectedPads.find(id) == _connectedPads.end())
+        const SDL_JoystickID id = sdlEvent.gbutton.which;
+        if (!_connectedPads.contains(id))
             return;
 
         GamepadState& state = _connectedPads.at(id);
-        auto button = static_cast<SDL_GamepadButton>(sdle.gbutton.button);
+        const auto button = static_cast<SDL_GamepadButton>(sdlEvent.gbutton.button);
 
-        bool cond = (sdle.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN);
-        if (sdle.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
+        // bool cond = (sdlEvent.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN);
+        if (sdlEvent.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
             state.justPressed[button] = true;
         else
             state.justReleased[button] = true;
         break;
     }
+    default:
+        break;
     }
 }
-} // namespace gamepad
 
-bool verifySlot(int slot)
+bool verifySlot(const int slot)
 {
     if (slot < 0 || slot >= MAX_GAMEPADS)
-    {
         throw std::out_of_range("Gamepad slot out of range");
-        return false;
-    }
 
     if (!_gamepadSlots.at(slot).has_value())
         return false; // No gamepad connected in this slot
 
     return true;
 }
+} // namespace kn::gamepad
