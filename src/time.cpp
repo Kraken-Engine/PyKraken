@@ -1,5 +1,4 @@
 #include "Time.hpp"
-#include "Mixer.hpp"
 
 #include <SDL3/SDL.h>
 #include <algorithm>
@@ -8,7 +7,7 @@ namespace kn
 {
 static uint64_t _lastTick = 0;
 static double _fps = 0.0;
-static uint16_t _frameCap = 0;
+static uint16_t _frameTarget = 0;
 static double _delta = 0.0;
 
 Timer::Timer(const double duration) : m_duration(duration)
@@ -140,7 +139,7 @@ double getDelta() { return _delta; }
 
 double getFPS() { return _fps; }
 
-void setCap(const uint16_t frameRate) { _frameCap = frameRate; }
+void setTarget(const uint16_t frameRate) { _frameTarget = frameRate; }
 
 double getElapsed() { return static_cast<double>(SDL_GetTicksNS()) / SDL_NS_PER_SECOND; }
 
@@ -161,9 +160,9 @@ void _tick()
 
     uint64_t frameTime = now - _lastTick;
 
-    if (_frameCap > 0)
+    if (_frameTarget > 0)
     {
-        const uint64_t targetFrameTimeNS = SDL_NS_PER_SECOND / _frameCap;
+        const uint64_t targetFrameTimeNS = SDL_NS_PER_SECOND / _frameTarget;
         if (frameTime < targetFrameTimeNS)
         {
             SDL_DelayNS(targetFrameTimeNS - frameTime);
@@ -181,9 +180,6 @@ void _tick()
     // Cap delta at 12fps
     if (_fps < 12.0)
         _delta = 1.0 / 12.0;
-
-    // Automatic audio cleanup
-    mixer::_tick();
 }
 
 void _bind(py::module_& module)
@@ -276,11 +272,11 @@ Returns:
     float: The current FPS based on the last frame time.
         )doc");
 
-    subTime.def("set_cap", &setCap, py::arg("frame_rate"), R"doc(
-Set the maximum framerate for the application.
+    subTime.def("set_target", &setTarget, py::arg("frame_rate"), R"doc(
+Set the target framerate for the application.
 
 Args:
-    frame_rate (int): Maximum framerate to enforce. Set to 0 for unlimited.
+    frame_rate (int): Target framerate to enforce. Values <= 0 disable frame rate limiting.
         )doc");
 
     subTime.def("get_elapsed", &getElapsed, R"doc(

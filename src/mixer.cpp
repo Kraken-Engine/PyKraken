@@ -181,6 +181,26 @@ ma_uint64 AudioStream::msToFrames(const int ms)
 
 namespace mixer
 {
+void _init()
+{
+    if (ma_engine_init(nullptr, &_engine) != MA_SUCCESS)
+        throw std::runtime_error("Audio engine init failed");
+
+    ma_engine_listener_set_enabled(&_engine, 0, MA_FALSE);
+}
+
+void _quit() { ma_engine_uninit(&_engine); }
+
+void _tick()
+{
+    // Clean up all audio instances automatically
+    std::lock_guard g(_instancesMutex);
+    for (Audio* audio : _audioInstances)
+    {
+        audio->cleanup();
+    }
+}
+
 void _bind(const py::module_& module)
 {
     // ------------ Audio -------------
@@ -306,26 +326,6 @@ Volume can exceed 1.0 for amplification.
 Type:
     float: Volume level (0.0 = silent, 1.0 = original volume, >1.0 = amplified).
         )doc");
-}
-
-void _init()
-{
-    if (ma_engine_init(nullptr, &_engine) != MA_SUCCESS)
-        throw std::runtime_error("Audio engine init failed");
-
-    ma_engine_listener_set_enabled(&_engine, 0, MA_FALSE);
-}
-
-void _quit() { ma_engine_uninit(&_engine); }
-
-void _tick()
-{
-    // Clean up all audio instances automatically
-    std::lock_guard g(_instancesMutex);
-    for (Audio* audio : _audioInstances)
-    {
-        audio->cleanup();
-    }
 }
 } // namespace mixer
 } // namespace kn

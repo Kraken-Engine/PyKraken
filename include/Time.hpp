@@ -45,7 +45,7 @@ void _bind(py::module_& module);
 
 double getDelta();
 
-void setCap(uint16_t frameRate);
+void setTarget(uint16_t frameRate);
 
 double getFPS();
 
