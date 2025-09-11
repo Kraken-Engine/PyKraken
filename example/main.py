@@ -19,6 +19,7 @@ while kn.window.is_open():
     kn.renderer.clear()
     
     curr_frame = anim_controller.current_frame
+    curr_frame.tex.flip.h = True
     curr_frame.tex.render(anim_rect, curr_frame.rect)
     
     kn.renderer.present()
