@@ -3,7 +3,7 @@ Time related functions
 """
 from __future__ import annotations
 import typing
-__all__: list[str] = ['delay', 'get_delta', 'get_elapsed', 'get_fps', 'set_cap']
+__all__: list[str] = ['delay', 'get_delta', 'get_elapsed', 'get_fps', 'set_target']
 def delay(milliseconds: typing.SupportsInt) -> None:
     """
     Delay the program execution for the specified duration.
@@ -41,10 +41,10 @@ def get_fps() -> float:
     Returns:
         float: The current FPS based on the last frame time.
     """
-def set_cap(frame_rate: typing.SupportsInt) -> None:
+def set_target(frame_rate: typing.SupportsInt) -> None:
     """
-    Set the maximum framerate for the application.
+    Set the target framerate for the application.
     
     Args:
-        frame_rate (int): Maximum framerate to enforce. Set to 0 for unlimited.
+        frame_rate (int): Target framerate to enforce. Values <= 0 disable frame rate limiting.
     """

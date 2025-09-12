@@ -1,3 +1,4 @@
+#include "AnimationController.hpp"
 #include "Camera.hpp"
 #include "Circle.hpp"
 #include "Color.hpp"
@@ -18,6 +19,7 @@
 #include "Rect.hpp"
 #include "Renderer.hpp"
 #include "Texture.hpp"
+#include "TileMap.hpp"
 #include "Time.hpp"
 #include "Transform.hpp"
 #include "Window.hpp"
@@ -36,6 +38,7 @@ Shut down the Kraken Engine and clean up resources.
 Call this once you're done using the engine to avoid memory leaks.
     )doc");
 
+    // These are ordered based on dependencies
     kn::color::_bind(m);
     kn::constants::_bind(m);
     kn::math::_bind(m);
@@ -59,4 +62,6 @@ Call this once you're done using the engine to avoid memory leaks.
     kn::transform::_bind(m);
     kn::window::_bind(m);
     kn::draw::_bind(m);
+    kn::animation_controller::_bind(m);
+    kn::tile_map::_bind(m);
 }

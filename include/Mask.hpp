@@ -68,7 +68,7 @@ public:
                                                                                   255}) const;
 
 private:
-    int m_width, m_height;
+    int m_width = 0, m_height = 0;
     std::vector<bool> m_maskData;
 };
 

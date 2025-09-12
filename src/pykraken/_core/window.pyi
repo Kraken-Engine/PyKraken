@@ -18,7 +18,7 @@ def create(title: str, resolution: pykraken._core.Vec2, scaled: bool = False) ->
     Args:
         title (str): The window title. Must be non-empty and <= 255 characters.
         resolution (Vec2): The renderer resolution as (width, height).
-        scaled (bool, optional): If True, creates a scaled up window using the 
+        scaled (bool, optional): If True, creates a scaled up window using the
                                 display's usable bounds, retaining the resolution's ratio.
                                 Defaults to False.
     

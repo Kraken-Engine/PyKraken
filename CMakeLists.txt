@@ -60,6 +60,8 @@ set(_CORE_SOURCES
         src/_core.cpp
         src/gfx/SDL3_gfxPrimitives.cpp
         src/gfx/SDL3_rotozoom.cpp
+        src/pugixml/pugixml.cpp
+        src/animation_controller.cpp
         src/camera.cpp
         src/circle.cpp
         src/color.cpp
@@ -80,6 +82,7 @@ set(_CORE_SOURCES
         src/rect.cpp
         src/renderer.cpp
         src/texture.cpp
+        src/tile_map.cpp
         src/time.cpp
         src/transform.cpp
         src/window.cpp
