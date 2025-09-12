@@ -265,7 +265,7 @@ Rect TileMap::getFittedRect(SDL_Surface* surface, const Rect& srcRect, const Vec
 
 namespace tile_map
 {
-void _bind(py::module_& module)
+void _bind(const py::module_& module)
 {
     // Initial Layer binding
     auto layerPy = py::classh<Layer>(module, "Layer", R"doc(
@@ -286,7 +286,7 @@ and a reference to its owning Layer.
             [](const Tile& self) -> std::shared_ptr<const Layer>
             {
                 if (auto sp = self.layer.lock())
-                    return std::shared_ptr<const Layer>(sp);
+                    return sp;
                 return {};
             },
             R"doc(

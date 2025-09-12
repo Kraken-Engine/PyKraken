@@ -17,7 +17,7 @@ class Layer;
 
 namespace tile_map
 {
-void _bind(py::module_& module);
+void _bind(const py::module_& module);
 }
 
 struct Tile
@@ -63,9 +63,9 @@ class TileMap
     explicit TileMap(const std::string& tmxPath, int borderSize = 0);
     ~TileMap() = default;
 
-    std::shared_ptr<const Layer> getLayer(const std::string& name,
-                                          Layer::Type type = Layer::TILE) const;
-    const std::vector<std::shared_ptr<const Layer>>& getLayers() const;
+    [[nodiscard]] std::shared_ptr<const Layer> getLayer(const std::string& name,
+                                                        Layer::Type type = Layer::TILE) const;
+    [[nodiscard]] const std::vector<std::shared_ptr<const Layer>>& getLayers() const;
 
     void render() const;
 
@@ -76,7 +76,7 @@ class TileMap
     std::string m_dirPath;
     std::vector<std::shared_ptr<const Layer>> m_layerVec;
 
-    std::string getTexturePath(const pugi::xml_node& mapNode) const;
+    [[nodiscard]] std::string getTexturePath(const pugi::xml_node& mapNode) const;
     static Rect getFittedRect(SDL_Surface* surface, const Rect& srcRect, const Vec2& position);
 };
 } // namespace kn
