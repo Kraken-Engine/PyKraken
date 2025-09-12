@@ -4,7 +4,6 @@
 #include <pugixml/pugixml.hpp>
 #include <pybind11/pybind11.h>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include "Rect.hpp"
@@ -14,6 +13,7 @@ namespace py = pybind11;
 namespace kn
 {
 class Texture;
+class Layer;
 
 namespace tile_map
 {
@@ -22,7 +22,7 @@ void _bind(py::module_& module);
 
 struct Tile
 {
-    std::shared_ptr<Layer> layer;
+    std::weak_ptr<const Layer> layer;
 
     Rect src;
     Rect dst;
@@ -54,7 +54,7 @@ class Layer
     void render() const;
 
   private:
-    const std::shared_ptr<Texture>& m_tileSetTexture;
+    std::shared_ptr<Texture> m_tileSetTexture;
 };
 
 class TileMap
@@ -63,16 +63,20 @@ class TileMap
     explicit TileMap(const std::string& tmxPath, int borderSize = 0);
     ~TileMap() = default;
 
-    const Layer* getLayer(const std::string& name, Layer::Type type = Layer::TILE) const;
-    const std::vector<std::shared_ptr<Layer>>& getLayers() const;
+    std::shared_ptr<const Layer> getLayer(const std::string& name,
+                                          Layer::Type type = Layer::TILE) const;
+    const std::vector<std::shared_ptr<const Layer>>& getLayers() const;
 
-    void drawMap() const;
+    void render() const;
 
-    static std::vector<Tile> getTileCollection(const std::vector<const Layer*>& layers);
+    static std::vector<Tile>
+    getTileCollection(const std::vector<std::shared_ptr<const Layer>>& layers);
 
   private:
     std::string m_dirPath;
-    std::vector<std::shared_ptr<Layer>> m_layerVec;
-    std::string getTexturePath(const pugi::xml_node& mapNode);
+    std::vector<std::shared_ptr<const Layer>> m_layerVec;
+
+    std::string getTexturePath(const pugi::xml_node& mapNode) const;
+    static Rect getFittedRect(SDL_Surface* surface, const Rect& srcRect, const Vec2& position);
 };
 } // namespace kn

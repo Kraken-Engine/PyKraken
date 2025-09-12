@@ -82,6 +82,7 @@ set(_CORE_SOURCES
         src/rect.cpp
         src/renderer.cpp
         src/texture.cpp
+        src/tile_map.cpp
         src/time.cpp
         src/transform.cpp
         src/window.cpp

@@ -19,6 +19,7 @@
 #include "Rect.hpp"
 #include "Renderer.hpp"
 #include "Texture.hpp"
+#include "TileMap.hpp"
 #include "Time.hpp"
 #include "Transform.hpp"
 #include "Window.hpp"
@@ -62,4 +63,5 @@ Call this once you're done using the engine to avoid memory leaks.
     kn::window::_bind(m);
     kn::draw::_bind(m);
     kn::animation_controller::_bind(m);
+    kn::tile_map::_bind(m);
 }

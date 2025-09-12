@@ -186,17 +186,19 @@ Rect Mask::getBoundingRect() const
 
     for (int y = 0; y < m_height; ++y)
         for (int x = 0; x < m_width; ++x)
-            if (m_maskData[y * m_width + x])
-            {
-                if (x < minX)
-                    minX = x;
-                if (x > maxX)
-                    maxX = x;
-                if (y < minY)
-                    minY = y;
-                if (y > maxY)
-                    maxY = y;
-            }
+        {
+            if (!m_maskData[y * m_width + x])  // if pixel is opaque
+                continue;
+
+            if (x < minX)
+                minX = x;
+            if (x > maxX)
+                maxX = x;
+            if (y < minY)
+                minY = y;
+            if (y > maxY)
+                maxY = y;
+        }
 
     if (maxX == -1 || maxY == -1)
         return {}; // Empty mask
