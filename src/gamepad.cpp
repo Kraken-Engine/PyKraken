@@ -253,12 +253,41 @@ void _clearStates()
     }
 }
 
-void _handleEvents(const SDL_Event& sdlEvent, kn::Event& e)
+void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
 {
     switch (sdlEvent.type)
     {
-    case SDL_EVENT_GAMEPAD_ADDED:
+    case SDL_EVENT_GAMEPAD_AXIS_MOTION:
     {
+        const SDL_JoystickID id = sdlEvent.gaxis.which;
+        if (!_connectedPads.contains(id))
+            return;
+
+        e.data["which"] = id;
+        e.data["axis"] = sdlEvent.gaxis.axis;
+        e.data["value"] = sdlEvent.gaxis.value;
+        break;
+    }
+    case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+    case SDL_EVENT_GAMEPAD_BUTTON_UP:
+    {
+        const SDL_JoystickID id = sdlEvent.gbutton.which;
+        if (!_connectedPads.contains(id))
+            return;
+
+        GamepadState& state = _connectedPads.at(id);
+        const auto button = static_cast<SDL_GamepadButton>(sdlEvent.gbutton.button);
+
+        if (sdlEvent.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
+            state.justPressed[button] = true;
+        else
+            state.justReleased[button] = true;
+
+        e.data["which"] = id;
+        e.data["button"] = button;
+        break;
+    }
+    case SDL_EVENT_GAMEPAD_ADDED:
         if (SDL_Gamepad* pad = SDL_OpenGamepad(sdlEvent.gdevice.which))
         {
             SDL_JoystickID id = SDL_GetGamepadID(pad);
@@ -272,9 +301,9 @@ void _handleEvents(const SDL_Event& sdlEvent, kn::Event& e)
                     break;
                 }
             }
+            e.data["which"] = id;
         }
         break;
-    }
     case SDL_EVENT_GAMEPAD_REMOVED:
     {
         const SDL_JoystickID id = sdlEvent.gdevice.which;
@@ -289,25 +318,19 @@ void _handleEvents(const SDL_Event& sdlEvent, kn::Event& e)
                 break;
             }
         }
+        e.data["which"] = id;
         break;
     }
-    case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
-    case SDL_EVENT_GAMEPAD_BUTTON_UP:
-    {
-        const SDL_JoystickID id = sdlEvent.gbutton.which;
-        if (!_connectedPads.contains(id))
-            return;
-
-        GamepadState& state = _connectedPads.at(id);
-        const auto button = static_cast<SDL_GamepadButton>(sdlEvent.gbutton.button);
-
-        // bool cond = (sdlEvent.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN);
-        if (sdlEvent.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
-            state.justPressed[button] = true;
-        else
-            state.justReleased[button] = true;
+    case SDL_EVENT_GAMEPAD_TOUCHPAD_DOWN:
+    case SDL_EVENT_GAMEPAD_TOUCHPAD_MOTION:
+    case SDL_EVENT_GAMEPAD_TOUCHPAD_UP:
+        e.data["which"] = sdlEvent.gtouchpad.which;
+        e.data["touchpad"] = sdlEvent.gtouchpad.touchpad;
+        e.data["finger"] = sdlEvent.gtouchpad.finger;
+        e.data["x"] = sdlEvent.gtouchpad.x;
+        e.data["y"] = sdlEvent.gtouchpad.y;
+        e.data["pressure"] = sdlEvent.gtouchpad.pressure;
         break;
-    }
     default:
         break;
     }

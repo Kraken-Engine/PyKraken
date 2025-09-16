@@ -60,8 +60,21 @@ void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
             _scancodeReleased[sdlEvent.key.scancode] = true;
             _keycodeReleased[sdlEvent.key.key] = true;
         }
-        e.data["key"] = py::cast(static_cast<Keycode>(sdlEvent.key.key));
-        e.data["scan"] = py::cast(sdlEvent.key.scancode);
+        e.data["which"] = sdlEvent.key.which;
+        e.data["key"] = static_cast<Keycode>(sdlEvent.key.key);
+        e.data["scan"] = sdlEvent.key.scancode;
+        break;
+    case SDL_EVENT_TEXT_EDITING:
+        e.data["text"] = sdlEvent.edit.text;
+        e.data["start"] = sdlEvent.edit.start;
+        e.data["length"] = sdlEvent.edit.length;
+        break;
+    case SDL_EVENT_TEXT_INPUT:
+        e.data["text"] = sdlEvent.text.text;
+        break;
+    case SDL_EVENT_KEYBOARD_ADDED:
+    case SDL_EVENT_KEYBOARD_REMOVED:
+        e.data["which"] = sdlEvent.kdevice.which;
         break;
     default:
         break;
