@@ -133,13 +133,34 @@ void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
 {
     switch (sdlEvent.type)
     {
+    case SDL_EVENT_MOUSE_MOTION:
+        e.data["which"] = sdlEvent.motion.which;
+        e.data["x"] = sdlEvent.motion.x;
+        e.data["y"] = sdlEvent.motion.y;
+        e.data["xrel"] = sdlEvent.motion.xrel;
+        e.data["yrel"] = sdlEvent.motion.yrel;
+        break;
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
     case SDL_EVENT_MOUSE_BUTTON_UP:
         if (sdlEvent.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
             _mousePressed[sdlEvent.button.button - 1] = true;
         else if (sdlEvent.type == SDL_EVENT_MOUSE_BUTTON_UP)
             _mouseReleased[sdlEvent.button.button - 1] = true;
-        e.data["button"] = py::cast(static_cast<MouseButton>(sdlEvent.button.button));
+        e.data["button"] = static_cast<MouseButton>(sdlEvent.button.button);
+        break;
+    case SDL_EVENT_MOUSE_WHEEL:
+    {
+        const int dir = sdlEvent.wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -1 : 1;
+        e.data["which"] = sdlEvent.wheel.which;
+        e.data["x"] = static_cast<float>(dir) * sdlEvent.wheel.x;
+        e.data["y"] = static_cast<float>(dir) * sdlEvent.wheel.y;
+        e.data["intx"] = dir * sdlEvent.wheel.integer_x;
+        e.data["inty"] = dir * sdlEvent.wheel.integer_y;
+        break;
+    }
+    case SDL_EVENT_MOUSE_ADDED:
+    case SDL_EVENT_MOUSE_REMOVED:
+        e.data["which"] = sdlEvent.mdevice.which;
         break;
     default:
         break;
