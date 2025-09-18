@@ -34,5 +34,7 @@ bool isFullscreen();
 void setTitle(const std::string& title);
 
 std::string getTitle();
+
+void setIcon(const std::string& path);
 } // namespace window
 } // namespace kn
