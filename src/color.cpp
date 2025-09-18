@@ -223,6 +223,14 @@ Example:
     color.hsv = (120, 1.0, 1.0)        # Pure green
     color.hsv = (240, 0.5, 0.8, 0.9)   # Light blue with transparency
     h, s, v, a = color.hsv              # Get HSV values
+        )doc")
+        .def(
+            "copy", [](const Color& self) -> Color { return {self.r, self.g, self.b, self.a}; },
+            R"doc(
+Create a copy of the color.
+
+Returns:
+    Color: A new Color object with the same RGBA values.
         )doc");
 
     py::implicitly_convertible<py::sequence, Color>();

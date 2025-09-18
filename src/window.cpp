@@ -5,6 +5,7 @@
 #include "Time.hpp"
 
 #include <SDL3/SDL.h>
+#include <SDL3_image/SDL_image.h>
 #include <stdexcept>
 
 #include "Window.hpp"
@@ -140,6 +141,19 @@ std::string getTitle()
     return {title};
 }
 
+void setIcon(const std::string& path)
+{
+    if (!_window)
+        throw std::runtime_error("Window not initialized");
+
+    SDL_Surface* iconSurface = IMG_Load(path.c_str());
+    if (!iconSurface)
+        throw std::runtime_error("Failed to load icon: " + path);
+
+    SDL_SetWindowIcon(_window, iconSurface);
+    SDL_DestroySurface(iconSurface);
+}
+
 void _bind(py::module_& module)
 {
     auto subWindow = module.def_submodule("window", "Window related functions");
@@ -226,6 +240,15 @@ Args:
 Raises:
     RuntimeError: If the window is not initialized or title setting fails.
     ValueError: If title is empty or exceeds 255 characters.
+    )doc");
+    subWindow.def("set_icon", &setIcon, py::arg("path"), R"doc(
+Set the window icon from an image file.
+
+Args:
+    path (str): The file path to the image to use as the icon.
+
+Raises:
+    RuntimeError: If the window is not initialized or icon setting fails.
     )doc");
 }
 } // namespace window
