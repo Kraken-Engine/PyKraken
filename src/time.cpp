@@ -2,6 +2,7 @@
 
 #include <SDL3/SDL.h>
 #include <algorithm>
+#include <limits>
 
 namespace kn
 {
@@ -9,6 +10,8 @@ static uint64_t _lastTick = 0;
 static double _fps = 0.0;
 static uint16_t _frameTarget = 0;
 static double _delta = 0.0;
+static double _maxDelta = std::numeric_limits<double>::infinity();
+static double _scale = 1.0;
 
 Timer::Timer(const double duration) : m_duration(duration)
 {
@@ -137,6 +140,13 @@ namespace time
 {
 double getDelta() { return _delta; }
 
+void setMaxDelta(const double maxDelta)
+{
+    if (maxDelta <= 0.0)
+        throw std::invalid_argument("Max delta must be greater than 0.0");
+    _maxDelta = maxDelta;
+}
+
 double getFPS() { return _fps; }
 
 void setTarget(const uint16_t frameRate) { _frameTarget = frameRate; }
@@ -144,6 +154,15 @@ void setTarget(const uint16_t frameRate) { _frameTarget = frameRate; }
 double getElapsed() { return static_cast<double>(SDL_GetTicksNS()) / SDL_NS_PER_SECOND; }
 
 void delay(const uint64_t ms) { SDL_Delay(ms); }
+
+void setScale(double scale)
+{
+    if (scale < 0.0)
+        scale = 0.0;
+    _scale = scale;
+}
+
+double getScale() { return _scale; }
 
 void _tick()
 {
@@ -177,9 +196,11 @@ void _tick()
     // Prevent division by zero and handle very small delta times
     _fps = _delta > 0.0 ? 1.0 / _delta : 0.0;
 
-    // Cap delta at 12fps
-    if (_fps < 12.0)
-        _delta = 1.0 / 12.0;
+    // Cap delta
+    if (_delta > _maxDelta)
+        _delta = _maxDelta;
+
+    _delta *= _scale;
 }
 
 void _bind(py::module_& module)
@@ -265,6 +286,15 @@ Returns:
     float: The time elapsed since the last frame, in seconds.
         )doc");
 
+    subTime.def("set_max_delta", &setMaxDelta, py::arg("max_delta"), R"doc(
+Set the maximum allowed delta time between frames.
+
+Parameters:
+    max_delta (float): The maximum delta time in seconds, greater than 0.0.
+                       This is useful to prevent large delta values during
+                       frame drops or pauses that could destabilize physics or animations.
+        )doc");
+
     subTime.def("get_fps", &getFPS, R"doc(
 Get the current frames per second of the program.
 
@@ -285,6 +315,7 @@ Get the elapsed time since the program started.
 Returns:
     float: The total elapsed time since program start, in seconds.
         )doc");
+
     subTime.def("delay", &delay, py::arg("milliseconds"), R"doc(
 Delay the program execution for the specified duration.
 
@@ -294,6 +325,22 @@ preferred for precise frame rate control with nanosecond accuracy.
 
 Args:
     milliseconds (int): The number of milliseconds to delay.
+        )doc");
+
+    subTime.def("set_scale", &setScale, py::arg("scale"), R"doc(
+Set the global time scale factor.
+
+Args:
+    scale (float): The time scale factor. Values < 0.0 are clamped to 0.0.
+                   A scale of 1.0 represents normal time, 0.5 is half speed,
+                   and 2.0 is double speed.
+        )doc");
+
+    subTime.def("get_scale", &getScale, R"doc(
+Get the current global time scale factor.
+
+Returns:
+    float: The current time scale factor.
         )doc");
 }
 } // namespace time

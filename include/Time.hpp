@@ -45,6 +45,8 @@ void _bind(py::module_& module);
 
 double getDelta();
 
+void setMaxDelta(double maxDelta);
+
 void setTarget(uint16_t frameRate);
 
 double getFPS();
@@ -52,6 +54,10 @@ double getFPS();
 double getElapsed();
 
 void delay(uint64_t ms);
+
+void setScale(double scale);
+
+double getScale();
 
 void _tick();
 } // namespace time

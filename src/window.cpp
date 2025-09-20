@@ -9,6 +9,7 @@
 #include <stdexcept>
 
 #include "Window.hpp"
+#include "misc/kraken_icon.h"
 
 namespace kn
 {
@@ -63,6 +64,11 @@ void create(const std::string& title, const Vec2& res, const bool scaled)
     _window = SDL_CreateWindow(title.c_str(), winW, winH, 0);
     if (!_window)
         throw std::runtime_error(SDL_GetError());
+
+    SDL_IOStream* iconStream = SDL_IOFromMem(kraken_icon_png, kraken_icon_png_len);
+    SDL_Surface* iconSurf = IMG_Load_IO(iconStream, true);
+    SDL_SetWindowIcon(_window, iconSurf);
+    SDL_DestroySurface(iconSurf);
 
     _isOpen = true;
 

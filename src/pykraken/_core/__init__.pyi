@@ -2985,7 +2985,7 @@ class Vec2:
         Returns:
             str: String in format "Vec2(x, y)".
         """
-    def __rmul__(self: typing.SupportsFloat, scalar: Vec2) -> Vec2:
+    def __rmul__(self, scalar: typing.SupportsFloat) -> Vec2:
         """
         Right-hand multiplication (scalar * self).
         

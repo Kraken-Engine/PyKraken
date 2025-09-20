@@ -600,7 +600,9 @@ Args:
 Returns:
     Vec2: A new Vec2 with multiplied components.
         )doc")
-        .def("__rmul__", &operator*, py::arg("scalar"), R"doc(
+        .def(
+            "__rmul__", [](const Vec2& self, const double s) { return self * s; },
+            py::arg("scalar"), R"doc(
 Right-hand multiplication (scalar * self).
 
 Args:
