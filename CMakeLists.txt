@@ -44,7 +44,7 @@ endif ()
 # Examples (Windows):
 #   SDL3_DIR=C:/SDL3/lib/cmake/SDL3
 #   SDL3_image_DIR=C:/SDL3_image/lib/cmake/SDL3_image
-foreach (VAR IN ITEMS SDL3_DIR SDL3_ROOT SDL3_image_DIR SDL3_IMAGE_DIR SDL3_IMAGE_ROOT)
+foreach (VAR IN ITEMS SDL3_DIR SDL3_ROOT SDL3_image_DIR SDL3_IMAGE_DIR SDL3_IMAGE_ROOT SDL3_ttf_DIR SDL3_TTF_DIR SDL3_TTF_ROOT)
     if (DEFINED ENV{${VAR}} AND NOT DEFINED ${VAR})
         set(${VAR} "$ENV{${VAR}}")
         # Also help CMake search paths when a root was given
@@ -54,6 +54,7 @@ endforeach ()
 
 find_package(SDL3 CONFIG REQUIRED)
 find_package(SDL3_image CONFIG REQUIRED)
+find_package(SDL3_ttf CONFIG REQUIRED)
 
 # -------------------- Sources --------------------
 set(_CORE_SOURCES
@@ -100,6 +101,7 @@ target_link_libraries(_core PRIVATE
         pybind11::headers
         SDL3::SDL3
         SDL3_image::SDL3_image
+        SDL3_ttf::SDL3_ttf
 )
 
 if (MSVC)
