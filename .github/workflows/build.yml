@@ -31,7 +31,7 @@ jobs:
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
-          brew install sdl3 sdl3_image
+          brew install sdl3 sdl3_image sdl3_ttf
 
       # ------------------ Windows ------------------
       - name: Install dependencies (Windows)
@@ -40,6 +40,7 @@ jobs:
         run: |
           $SDL_VERSION = "3.2.18"
           $SDL_IMAGE_VERSION = "3.2.4"
+          $SDL_TTF_VERSION = "3.2.2"
 
           # Download and extract SDL3
           Invoke-WebRequest -Uri "https://github.com/libsdl-org/SDL/releases/download/release-$SDL_VERSION/SDL3-devel-$SDL_VERSION-VC.zip" -OutFile "sdl3.zip"
@@ -54,6 +55,13 @@ jobs:
           $SDL_IMAGE_PATH = (Get-ChildItem -Path "sdl3_image_temp/SDL3_image-*" | Select-Object -First 1).FullName
           echo "SDL3_image_DIR=$SDL_IMAGE_PATH/cmake" | Out-File -FilePath $env:GITHUB_ENV -Append
           Copy-Item "$SDL_IMAGE_PATH/lib/x64/SDL3_image.dll" -Destination "src/pykraken/"
+
+          # Download and extract SDL3_ttf
+          Invoke-WebRequest -Uri "https://github.com/libsdl-org/SDL_ttf/releases/download/release-$SDL_TTF_VERSION/SDL3_ttf-devel-$SDL_TTF_VERSION-VC.zip" -OutFile "sdl3_ttf.zip"
+          Expand-Archive -Path "sdl3_ttf.zip" -DestinationPath "sdl3_ttf_temp"
+          $SDL_TTF_PATH = (Get-ChildItem -Path "sdl3_ttf_temp/SDL3_ttf-*" | Select-Object -First 1).FullName
+          echo "SDL3_ttf_DIR=$SDL_TTF_PATH/cmake" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Copy-Item "$SDL_TTF_PATH/lib/x64/SDL3_ttf.dll" -Destination "src/pykraken/"
 
           # Add SDL3 bin to PATH for CMake find_package to work correctly
           echo "$SDL3_PATH/lib/x64" | Out-File -FilePath $env:GITHUB_PATH -Append
@@ -91,6 +99,10 @@ jobs:
             export SDL_IMAGE_DIRECTORY=SDL3_image-${SDL_IMAGE_VERSION}
             export SDL_IMAGE_PATH=${VENDORED_DIRECTORY}/${SDL_IMAGE_DIRECTORY}
 
+            export SDL_TTF_VERSION="3.2.2"
+            export SDL_TTF_DIRECTORY=SDL3_ttf-${SDL_TTF_VERSION}
+            export SDL_TTF_PATH=${VENDORED_DIRECTORY}/${SDL_TTF_DIRECTORY}
+
             # see https://github.com/libsdl-org/SDL/blob/main/docs/README-linux.md#build-dependencies
             yum install -y gcc git-core make cmake \
                 alsa-lib-devel pulseaudio-libs-devel nas-devel pipewire-devel \
@@ -119,6 +131,21 @@ jobs:
                 && cmake -S ${SDL_IMAGE_PATH} -B ${SDL_IMAGE_PATH}/build -DCMAKE_BUILD_TYPE=Release \
                 && cmake --build ${SDL_IMAGE_PATH}/build -j$(nproc) \
                 && cmake --install ${SDL_IMAGE_PATH}/build
+
+            # gotta install harfbuzz for SDL_ttf (also freetype)
+            yum install -y meson freetype-devel glib2-devel cairo-devel
+            export HARFBUZZ_VERSION="11.5.0"
+            wget https://github.com/harfbuzz/harfbuzz/releases/download/${HARFBUZZ_VERSION}/harfbuzz-${HARFBUZZ_VERSION}.tar.xz -O /tmp/harfbuzz.tar.xz \
+                && tar -xvJf /tmp/harfbuzz.tar.xz --directory=${VENDORED_DIRECTORY} \
+                && meson setup --prefix=/usr/local ${VENDORED_DIRECTORY}/harfbuzz-${HARFBUZZ_VERSION}/build ${VENDORED_DIRECTORY}/harfbuzz-${HARFBUZZ_VERSION} \
+                && meson compile -C ${VENDORED_DIRECTORY}/harfbuzz--${HARFBUZZ_VERSION}/build --verbose \
+                && meson install -C ${VENDORED_DIRECTORY}/harfbuzz--${HARFBUZZ_VERSION}/build
+
+            wget https://github.com/libsdl-org/SDL_ttf/releases/download/release-${SDL_TTF_VERSION}/${SDL_TTF_DIRECTORY}.tar.gz -O /tmp/SDL_ttf.tar.gz \
+                && tar -xvzf /tmp/SDL_ttf.tar.gz --directory=${VENDORED_DIRECTORY} \
+                && cmake -S ${SDL_TTF_PATH} -B ${SDL_TTF_PATH}/build -DCMAKE_BUILD_TYPE=Release \
+                && cmake --build ${SDL_TTF_PATH}/build -j$(nproc) \
+                && cmake --install ${SDL_TTF_PATH}/build
 
             rm -rf ${VENDORED_DIRECTORY}
 
