@@ -132,6 +132,15 @@ jobs:
                 && cmake --build ${SDL_IMAGE_PATH}/build -j$(nproc) \
                 && cmake --install ${SDL_IMAGE_PATH}/build
 
+            # gotta install harfbuzz for SDL_ttf (also freetype)
+            yum install meson freetype-devel glib2-devel cairo-devel
+            export HARFBUZZ_VERSION="11.5.0"
+            wget https://github.com/harfbuzz/harfbuzz/releases/download/${HARFBUZZ_VERSION}/harfbuzz-${HARFBUZZ_VERSION}.tar.xz -O /tmp/harfbuzz.tar.xz \
+                && tar -xvJf /tmp/harfbuzz.tar.xz --directory=${VENDORED_DIRECTORY} \
+                && meson setup --prefix=/usr/local ${VENDORED_DIRECTORY}/harfbuzz-${HARFBUZZ_VERSION}/build ${VENDORED_DIRECTORY}/harfbuzz-${HARFBUZZ_VERSION} \
+                && meson compile -C ${VENDORED_DIRECTORY}/harfbuzz--${HARFBUZZ_VERSION}/build --verbose \
+                && meson install -C ${VENDORED_DIRECTORY}/harfbuzz--${HARFBUZZ_VERSION}/build
+
             wget https://github.com/libsdl-org/SDL_ttf/releases/download/release-${SDL_TTF_VERSION}/${SDL_TTF_DIRECTORY}.tar.gz -O /tmp/SDL_ttf.tar.gz \
                 && tar -xvzf /tmp/SDL_ttf.tar.gz --directory=${VENDORED_DIRECTORY} \
                 && cmake -S ${SDL_TTF_PATH} -B ${SDL_TTF_PATH}/build -DCMAKE_BUILD_TYPE=Release \
