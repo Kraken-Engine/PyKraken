@@ -6,7 +6,6 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
-  workflow_call:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -22,49 +21,19 @@ jobs:
         os: [windows-latest, macos-15, ubuntu-latest]
 
     env:
+      # Tell CMake to vendor SDL and avoid heavy codecs
+      CMAKE_ARGS: >
+        -DKRAKEN_VENDOR_SDL=ON
+        -DBUILD_SHARED_LIBS=OFF
+        -DSDLIMAGE_AVIF=OFF
+        -DSDLIMAGE_JXL=OFF
+        -DSDLIMAGE_TIF=OFF
+        -DSDLIMAGE_VENDORED=ON
+        -DSDLTTF_VENDORED=ON
       MACOSX_DEPLOYMENT_TARGET: "15.0"
 
     steps:
       - uses: actions/checkout@v4
-
-      # ------------------ MacOS ------------------
-      - name: Install dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew install sdl3 sdl3_image sdl3_ttf
-
-      # ------------------ Windows ------------------
-      - name: Install dependencies (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $SDL_VERSION = "3.2.18"
-          $SDL_IMAGE_VERSION = "3.2.4"
-          $SDL_TTF_VERSION = "3.2.2"
-
-          # Download and extract SDL3
-          Invoke-WebRequest -Uri "https://github.com/libsdl-org/SDL/releases/download/release-$SDL_VERSION/SDL3-devel-$SDL_VERSION-VC.zip" -OutFile "sdl3.zip"
-          Expand-Archive -Path "sdl3.zip" -DestinationPath "sdl3_temp"
-          $SDL3_PATH = (Get-ChildItem -Path "sdl3_temp/SDL3-*" | Select-Object -First 1).FullName
-          echo "SDL3_DIR=$SDL3_PATH/cmake" | Out-File -FilePath $env:GITHUB_ENV -Append
-          Copy-Item "$SDL3_PATH/lib/x64/SDL3.dll" -Destination "src/pykraken/"
-
-          # Download and extract SDL3_image
-          Invoke-WebRequest -Uri "https://github.com/libsdl-org/SDL_image/releases/download/release-$SDL_IMAGE_VERSION/SDL3_image-devel-$SDL_IMAGE_VERSION-VC.zip" -OutFile "sdl3_image.zip"
-          Expand-Archive -Path "sdl3_image.zip" -DestinationPath "sdl3_image_temp"
-          $SDL_IMAGE_PATH = (Get-ChildItem -Path "sdl3_image_temp/SDL3_image-*" | Select-Object -First 1).FullName
-          echo "SDL3_image_DIR=$SDL_IMAGE_PATH/cmake" | Out-File -FilePath $env:GITHUB_ENV -Append
-          Copy-Item "$SDL_IMAGE_PATH/lib/x64/SDL3_image.dll" -Destination "src/pykraken/"
-
-          # Download and extract SDL3_ttf
-          Invoke-WebRequest -Uri "https://github.com/libsdl-org/SDL_ttf/releases/download/release-$SDL_TTF_VERSION/SDL3_ttf-devel-$SDL_TTF_VERSION-VC.zip" -OutFile "sdl3_ttf.zip"
-          Expand-Archive -Path "sdl3_ttf.zip" -DestinationPath "sdl3_ttf_temp"
-          $SDL_TTF_PATH = (Get-ChildItem -Path "sdl3_ttf_temp/SDL3_ttf-*" | Select-Object -First 1).FullName
-          echo "SDL3_ttf_DIR=$SDL_TTF_PATH/cmake" | Out-File -FilePath $env:GITHUB_ENV -Append
-          Copy-Item "$SDL_TTF_PATH/lib/x64/SDL3_ttf.dll" -Destination "src/pykraken/"
-
-          # Add SDL3 bin to PATH for CMake find_package to work correctly
-          echo "$SDL3_PATH/lib/x64" | Out-File -FilePath $env:GITHUB_PATH -Append
 
       # ------------------ Build Wheels ------------------
       - name: Install uv for speed
@@ -84,70 +53,23 @@ jobs:
           # since cibuildwheel runs in docker, it has no (direct) access to the files built on the host, so
           # we need to mount /usr/local explicitly (though it should be also somehow accessible through the
           # /host mount that cibuildwheel creates, but that doesn't want to work)
-          CIBW_ENVIRONMENT_LINUX: >
-            LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64:${LD_LIBRARY_PATH}"
-          CIBW_BEFORE_BUILD_LINUX: |
-            export DIRECTORY=${PWD}
-            export VENDORED_DIRECTORY=${DIRECTORY}/vendored
-            mkdir ${VENDORED_DIRECTORY}
-
-            export SDL_VERSION="3.2.18"
-            export SDL_DIRECTORY=SDL3-${SDL_VERSION}
-            export SDL_PATH=${VENDORED_DIRECTORY}/${SDL_DIRECTORY}
-
-            export SDL_IMAGE_VERSION="3.2.4"
-            export SDL_IMAGE_DIRECTORY=SDL3_image-${SDL_IMAGE_VERSION}
-            export SDL_IMAGE_PATH=${VENDORED_DIRECTORY}/${SDL_IMAGE_DIRECTORY}
-
-            export SDL_TTF_VERSION="3.2.2"
-            export SDL_TTF_DIRECTORY=SDL3_ttf-${SDL_TTF_VERSION}
-            export SDL_TTF_PATH=${VENDORED_DIRECTORY}/${SDL_TTF_DIRECTORY}
-
-            # see https://github.com/libsdl-org/SDL/blob/main/docs/README-linux.md#build-dependencies
-            yum install -y gcc git-core make cmake \
-                alsa-lib-devel pulseaudio-libs-devel nas-devel pipewire-devel \
-                libX11-devel libXext-devel libXrandr-devel libXcursor-devel libXfixes-devel \
-                libXi-devel libXScrnSaver-devel dbus-devel ibus-devel \
-                systemd-devel mesa-libGL-devel libxkbcommon-devel mesa-libGLES-devel \
-                mesa-libEGL-devel vulkan-devel wayland-devel wayland-protocols-devel \
-                libdrm-devel mesa-libgbm-devel libusb-devel libdecor-devel \
-                pipewire-jack-audio-connection-kit-devel
-
-            yum install -y gcc g++ wget ca-certificates cmake
-
-            yum search wget
-            yum list wget
-            yum info wget
-            yum install -y wget
-
-            wget https://github.com/libsdl-org/SDL/releases/download/release-${SDL_VERSION}/${SDL_DIRECTORY}.tar.gz -O /tmp/SDL.tar.gz \
-                && tar -xvzf /tmp/SDL.tar.gz --directory=${VENDORED_DIRECTORY} \
-                && cmake -S ${SDL_PATH} -B ${SDL_PATH}/build -DCMAKE_BUILD_TYPE=Release \
-                && cmake --build ${SDL_PATH}/build -j$(nproc) \
-                && cmake --install ${SDL_PATH}/build
-
-            wget https://github.com/libsdl-org/SDL_image/releases/download/release-${SDL_IMAGE_VERSION}/${SDL_IMAGE_DIRECTORY}.tar.gz -O /tmp/SDL_image.tar.gz \
-                && tar -xvzf /tmp/SDL_image.tar.gz --directory=${VENDORED_DIRECTORY} \
-                && cmake -S ${SDL_IMAGE_PATH} -B ${SDL_IMAGE_PATH}/build -DCMAKE_BUILD_TYPE=Release \
-                && cmake --build ${SDL_IMAGE_PATH}/build -j$(nproc) \
-                && cmake --install ${SDL_IMAGE_PATH}/build
-
-            # gotta install harfbuzz for SDL_ttf (also freetype)
-            yum install -y meson freetype-devel glib2-devel cairo-devel
-            export HARFBUZZ_VERSION="11.5.0"
-            wget https://github.com/harfbuzz/harfbuzz/releases/download/${HARFBUZZ_VERSION}/harfbuzz-${HARFBUZZ_VERSION}.tar.xz -O /tmp/harfbuzz.tar.xz \
-                && tar -xvJf /tmp/harfbuzz.tar.xz --directory=${VENDORED_DIRECTORY} \
-                && meson setup --prefix=/usr/local ${VENDORED_DIRECTORY}/harfbuzz-${HARFBUZZ_VERSION}/build ${VENDORED_DIRECTORY}/harfbuzz-${HARFBUZZ_VERSION} \
-                && meson compile -C ${VENDORED_DIRECTORY}/harfbuzz--${HARFBUZZ_VERSION}/build --verbose \
-                && meson install -C ${VENDORED_DIRECTORY}/harfbuzz--${HARFBUZZ_VERSION}/build
-
-            wget https://github.com/libsdl-org/SDL_ttf/releases/download/release-${SDL_TTF_VERSION}/${SDL_TTF_DIRECTORY}.tar.gz -O /tmp/SDL_ttf.tar.gz \
-                && tar -xvzf /tmp/SDL_ttf.tar.gz --directory=${VENDORED_DIRECTORY} \
-                && cmake -S ${SDL_TTF_PATH} -B ${SDL_TTF_PATH}/build -DCMAKE_BUILD_TYPE=Release \
-                && cmake --build ${SDL_TTF_PATH}/build -j$(nproc) \
-                && cmake --install ${SDL_TTF_PATH}/build
-
-            rm -rf ${VENDORED_DIRECTORY}
+          # Build vendored SDL; turn off heavy codecs to avoid NASM/libjxl
+          CMAKE_ARGS: >
+            -DKRAKEN_VENDOR_SDL=ON
+            -DBUILD_SHARED_LIBS=OFF
+            -DSDLIMAGE_AVIF=OFF
+            -DSDLIMAGE_JXL=OFF
+            -DSDLIMAGE_TIF=OFF
+            -DSDLIMAGE_VENDORED=ON
+            -DSDLTTF_VENDORED=ON
+          # Minimal system headers inside manylinux (no SDL itself)
+          CIBW_BEFORE_ALL_LINUX: >
+            yum -y install
+            alsa-lib-devel pulseaudio-libs-devel nas-devel pipewire-devel
+            libX11-devel libXext-devel libXrandr-devel libXcursor-devel libXfixes-devel
+            libXi-devel libXScrnSaver-devel
+            libxkbcommon-devel wayland-devel mesa-libGL-devel mesa-libEGL-devel
+            || true
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
