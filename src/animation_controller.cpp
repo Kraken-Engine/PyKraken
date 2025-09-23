@@ -71,24 +71,15 @@ void AnimationController::loadFolder(const std::string& name, const std::string&
 
         // Convert extension to lowercase for comparison
         std::string lowerExt = extension;
-        std::transform(lowerExt.begin(), lowerExt.end(), lowerExt.begin(), ::tolower);
+        std::ranges::transform(lowerExt, lowerExt.begin(), ::tolower);
 
         // Check if file has a valid image extension
-        if (std::find(validExtensions.begin(), validExtensions.end(), lowerExt) ==
-            validExtensions.end())
+        if (std::ranges::find(validExtensions, lowerExt) == validExtensions.end())
             continue;
 
-        try
-        {
-            const auto texPtr = std::make_shared<Texture>(filePath);
-            const Frame frame{texPtr, texPtr->getRect()};
-            newAnim.frames.emplace_back(frame);
-        }
-        catch (const std::exception&)
-        {
-            // Skip files that can't be loaded as textures
-            continue;
-        }
+        const auto texPtr = std::make_shared<Texture>(filePath);
+        const Frame frame{texPtr, texPtr->getRect()};
+        newAnim.frames.emplace_back(frame);
     }
 
     if (newAnim.frames.empty())
@@ -191,7 +182,7 @@ defining which portion of the texture to display.
         .def_readonly("tex", &Frame::tex, R"doc(
 The texture containing the frame image.
         )doc")
-        .def_readonly("rect", &Frame::rect, R"doc(
+        .def_readonly("src", &Frame::src, R"doc(
 The rectangle defining the frame bounds within the texture.
         )doc");
 

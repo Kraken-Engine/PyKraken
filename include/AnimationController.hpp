@@ -21,7 +21,7 @@ void _tick();
 struct Frame
 {
     std::shared_ptr<Texture> tex;
-    Rect rect;
+    Rect src;
 };
 
 struct Animation

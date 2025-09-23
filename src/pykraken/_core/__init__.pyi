@@ -809,7 +809,7 @@ class Frame:
             
     """
     @property
-    def rect(self) -> Rect:
+    def src(self) -> Rect:
         """
         The rectangle defining the frame bounds within the texture.
         """
@@ -2513,24 +2513,6 @@ class Texture:
         Set the texture to use normal (alpha) blending mode.
         
         This is the default blending mode for standard transparency effects.
-        """
-    @typing.overload
-    def render(self, dst: Rect, src: typing.Any = None) -> None:
-        """
-        Render this texture with specified destination and source rectangles.
-        
-        Args:
-            dst (Rect): The destination rectangle on the renderer.
-            src (Rect, optional): The source rectangle from the texture. Defaults to entire texture if not specified.
-        """
-    @typing.overload
-    def render(self, pos: typing.Any = None, anchor: Anchor = Anchor.CENTER) -> None:
-        """
-        Render this texture at the specified position with anchor alignment.
-        
-        Args:
-            pos (Vec2, optional): The position to draw at. Defaults to (0, 0).
-            anchor (Anchor, optional): The anchor point for positioning. Defaults to CENTER.
         """
     def set_alpha(self, alpha: typing.SupportsFloat) -> None:
         """

@@ -4,7 +4,6 @@
 #include <pybind11/pybind11.h>
 #include <string>
 
-#include "_globals.hpp"
 #include "Rect.hpp"
 #include "Math.hpp"
 
@@ -49,10 +48,6 @@ public:
     void makeMultiply() const;
 
     void makeNormal() const;
-
-    void render(Rect dstRect, const Rect& srcRect = {}) const;
-
-    void render(Vec2 pos = {}, Anchor anchor = Anchor::Center) const;
 
     [[nodiscard]] SDL_Texture* getSDL() const;
 

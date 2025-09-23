@@ -1,17 +1,20 @@
 #include "Texture.hpp"
+#include "Renderer.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 #include <pybind11/native_enum.h>
 #include <pybind11/stl.h>
 
+#include <utility>
+
 #include "TileMap.hpp"
 
 namespace kn
 {
-Layer::Layer(const Type type, const bool isVisible, const std::string& name,
+Layer::Layer(const Type type, const bool isVisible, std::string name,
              const std::shared_ptr<Texture>& tileSetTexture)
-    : type(type), isVisible(isVisible), name(name), m_tileSetTexture(tileSetTexture)
+    : type(type), isVisible(isVisible), name(std::move(name)), m_tileSetTexture(tileSetTexture)
 {
 }
 
@@ -32,7 +35,7 @@ void Layer::render() const
             m_tileSetTexture->flip.v = tile.vFlip;
         }
 
-        m_tileSetTexture->render(tile.dst, tile.src);
+        renderer::draw(*m_tileSetTexture, tile.dst, tile.src);
     }
 }
 
