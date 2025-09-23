@@ -5,8 +5,8 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch: null
-  
+  workflow_dispatch:
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -21,66 +21,38 @@ jobs:
         os: [ windows-latest, macos-15, ubuntu-latest ]
 
     env:
-      MACOSX_DEPLOYMENT_TARGET: '15.0'
+      MACOSX_DEPLOYMENT_TARGET: "15.0"
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache CMake FetchContent downloads
-        uses: actions/cache@v4
-        with:
-          path: .fc
-          key: ${{ runner.os }}-fc-${{ hashFiles('CMakeLists.txt') }}
-
-      - name: Cache sccache objects
-        uses: actions/cache@v4
-        with:
-          path: .sccache
-          key: ${{ runner.os }}-sccache-${{ hashFiles('CMakeLists.txt') }}
-          restore-keys: ${{ runner.os }}-sccache-
-      - uses: seanmiddleditch/gha-setup-ninja@v4
-      - uses: ilammy/msvc-dev-cmd@v1
-        if: runner.os == 'Windows'
-
-      - name: Install Ninja
-        run: pip install ninja
-
-      - name: Install UV
+      # ------------------ Build Wheels ------------------
+      - name: Install uv for speed
         uses: astral-sh/setup-uv@v6
         with:
-          version: latest
+          version: "latest"
 
-      - name: Build Wheels
+      - name: Build and test wheels
         uses: pypa/cibuildwheel@v3.0.1
         env:
-          CIBW_BUILD_FRONTEND: build[uv]
-          CIBW_SKIP: '*-musllinux_*'
+          CIBW_BUILD_FRONTEND: "build[uv]"
           CIBW_BUILD_VERBOSITY: 1
-          CMAKE_ARGS: '-GNinja -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_C_FLAGS=-fPIC -DCMAKE_CXX_FLAGS=-fPIC'
-          CMAKE_BUILD_PARALLEL_LEVEL: 4
-          CIBW_BEFORE_ALL_LINUX: yum -y install ninja-build alsa-lib-devel pulseaudio-libs-devel
-            nas-devel pipewire-devel libX11-devel libXext-devel libXrandr-devel libXcursor-devel
-            libXfixes-devel libXi-devel libXScrnSaver-devel libxkbcommon-devel wayland-devel
-            mesa-libGL-devel mesa-libEGL-devel || true && curl -L https://github.com/mozilla/sccache/releases/download/v0.7.4/sccache-v0.7.4-x86_64-unknown-linux-musl.tar.gz
-            | tar -xz -C /usr/local/bin --strip-components=1 sccache-v0.7.4-x86_64-unknown-linux-musl/sccache
-            && chmod +x /usr/local/bin/sccache
-          CIBW_ENVIRONMENT: CMAKE_GENERATOR=Ninja CMAKE_C_COMPILER_LAUNCHER=sccache
-            CMAKE_CXX_COMPILER_LAUNCHER=sccache CMAKE_BUILD_PARALLEL_LEVEL=0
-          CIBW_MOUNT_LINUX: ${{ github.workspace }}/.sccache:/sccache
-          CIBW_ENVIRONMENT_LINUX: SCCACHE_DIR=/sccache CMAKE_ARGS="-DFETCHCONTENT_BASE_DIR=${{
-            github.workspace }}/.fc -DKRAKEN_VENDOR_SDL=ON -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON
-            -DCMAKE_C_FLAGS=-fPIC -DCMAKE_CXX_FLAGS=-fPIC -DSDLIMAGE_VENDORED=ON -DSDLIMAGE_AVIF=OFF
-            -DSDLIMAGE_JXL=OFF -DSDLIMAGE_TIF=OFF -DSDLTTF_VENDORED=ON"
-          CIBW_ARCHS_WINDOWS: AMD64
-          CIBW_ENVIRONMENT_WINDOWS: SCCACHE_DIR=${{ github.workspace }}\.sccache CC=cl
-            CXX=cl CMAKE_ARGS="-DFETCHCONTENT_BASE_DIR=${{ github.workspace }}\.fc -DKRAKEN_VENDOR_SDL=ON
-            -DBUILD_SHARED_LIBS=OFF -DSDLIMAGE_VENDORED=ON -DSDLIMAGE_AVIF=OFF -DSDLIMAGE_JXL=OFF
-            -DSDLIMAGE_TIF=OFF -DSDLTTF_VENDORED=ON"
-          CIBW_ENVIRONMENT_MACOS: SCCACHE_DIR=${{ github.workspace }}/.sccache CMAKE_ARGS="-DFETCHCONTENT_BASE_DIR=${{
-            github.workspace }}/.fc -DKRAKEN_VENDOR_SDL=ON -DBUILD_SHARED_LIBS=OFF -DSDLIMAGE_VENDORED=ON
-            -DSDLIMAGE_AVIF=OFF -DSDLIMAGE_JXL=OFF -DSDLIMAGE_TIF=OFF -DSDLTTF_VENDORED=ON"
+          CIBW_SKIP: "*-musllinux_* *-win32"
+          CIBW_ARCHS_WINDOWS: "AMD64"
+          CIBW_ENVIRONMENT: CMAKE_GENERATOR=Ninja
 
-      - name: Upload Wheels
+          CIBW_ENVIRONMENT_WINDOWS: "CC=cl CXX=cl"
+
+          # Minimal system headers inside manylinux (no SDL itself)
+          CIBW_BEFORE_ALL_LINUX: >
+            yum -y install
+            alsa-lib-devel pulseaudio-libs-devel nas-devel pipewire-devel
+            libX11-devel libXext-devel libXrandr-devel libXcursor-devel libXfixes-devel
+            libXi-devel libXScrnSaver-devel
+            libxkbcommon-devel wayland-devel mesa-libGL-devel mesa-libEGL-devel
+            || true
+
+      - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
           name: wheels-${{ matrix.os }}

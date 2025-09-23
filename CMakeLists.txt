@@ -156,6 +156,8 @@ if (MSVC)
     target_compile_options(_core PRIVATE /bigobj)
 endif ()
 
+set_target_properties(_core PROPERTIES UNITY_BUILD ON)
+
 # Install path works for both pip and standalone 'cmake --install'
 install(TARGETS _core
         LIBRARY DESTINATION pykraken
