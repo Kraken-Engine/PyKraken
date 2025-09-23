@@ -2,9 +2,9 @@ name: Build Wheels
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
   workflow_dispatch:
 
 concurrency:
@@ -18,61 +18,45 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-15, ubuntu-latest]
+        os: [ windows-latest, macos-15, ubuntu-latest ]
 
     env:
-      # Tell CMake to vendor SDL and avoid heavy codecs
-      CMAKE_ARGS: >
-        -DKRAKEN_VENDOR_SDL=ON
-        -DBUILD_SHARED_LIBS=OFF
-        -DSDLIMAGE_AVIF=OFF
-        -DSDLIMAGE_JXL=OFF
-        -DSDLIMAGE_TIF=OFF
-        -DSDLIMAGE_VENDORED=ON
-        -DSDLTTF_VENDORED=ON
-      MACOSX_DEPLOYMENT_TARGET: "15.0"
+      MACOSX_DEPLOYMENT_TARGET: '15.0'
 
     steps:
       - uses: actions/checkout@v4
+      - uses: mozilla-actions/sccache-action@v0.0.4
+      - uses: seanmiddleditch/gha-setup-ninja@v4
+      - name: Cache CMake FetchContent
+        uses: actions/cache@v4
+        with:
+          path: .fc
+          key: ${{ runner.os }}-fc-${{ hashFiles('CMakeLists.txt') }}
 
-      # ------------------ Build Wheels ------------------
       - name: Install uv for speed
         uses: astral-sh/setup-uv@v6
         with:
-          version: "latest"
+          version: 'latest'
 
       - name: Build and test wheels
         uses: pypa/cibuildwheel@v3.0.1
         env:
-          # Use uv and build
-          CIBW_BUILD_FRONTEND: "build[uv]"
-          CIBW_SKIP: "*-musllinux_*"
+          CIBW_BUILD_FRONTEND: 'build[uv]'
+          CIBW_SKIP: '*-musllinux_*'
           CIBW_BUILD_VERBOSITY: 1
-          # absolutely crucial, otherwise the build step doesn't know to include the SDL*.so files from here
-          # cmake puts them in /usr/local/lib by default (on Linux) during the install step
-          # since cibuildwheel runs in docker, it has no (direct) access to the files built on the host, so
-          # we need to mount /usr/local explicitly (though it should be also somehow accessible through the
-          # /host mount that cibuildwheel creates, but that doesn't want to work)
-          # Build vendored SDL; turn off heavy codecs to avoid NASM/libjxl
-          CMAKE_ARGS: >
-            -DKRAKEN_VENDOR_SDL=ON
-            -DBUILD_SHARED_LIBS=OFF
-            -DCMAKE_POSITION_INDEPENDENT_CODE=ON
-            -DCMAKE_C_FLAGS=-fPIC
-            -DCMAKE_CXX_FLAGS=-fPIC
-            -DSDLIMAGE_AVIF=OFF
-            -DSDLIMAGE_JXL=OFF
-            -DSDLIMAGE_TIF=OFF
-            -DSDLIMAGE_VENDORED=ON
-            -DSDLTTF_VENDORED=ON
-          # Minimal system headers inside manylinux (no SDL itself)
-          CIBW_BEFORE_ALL_LINUX: >
-            yum -y install
-            alsa-lib-devel pulseaudio-libs-devel nas-devel pipewire-devel
-            libX11-devel libXext-devel libXrandr-devel libXcursor-devel libXfixes-devel
-            libXi-devel libXScrnSaver-devel
-            libxkbcommon-devel wayland-devel mesa-libGL-devel mesa-libEGL-devel
-            || true
+          CIBW_ENVIRONMENT: SCCACHE_GHA_ENABLED=1 CMAKE_GENERATOR=Ninja CMAKE_C_COMPILER_LAUNCHER=sccache
+            CMAKE_CXX_COMPILER_LAUNCHER=sccache CMAKE_BUILD_PARALLEL_LEVEL=0
+          CIBW_ENVIRONMENT_PASS_LINUX: ACTIONS_CACHE_URL ACTIONS_RUNTIME_TOKEN
+          CIBW_BEFORE_ALL_LINUX: yum -y install ninja-build alsa-lib-devel pulseaudio-libs-devel
+            nas-devel pipewire-devel libX11-devel libXext-devel libXrandr-devel libXcursor-devel
+            libXfixes-devel libXi-devel libXScrnSaver-devel libxkbcommon-devel wayland-devel
+            mesa-libGL-devel mesa-libEGL-devel || true && curl -L https://github.com/mozilla/sccache/releases/download/v0.7.4/sccache-v0.7.4-x86_64-unknown-linux-musl.tar.gz
+            | tar -xz -C /usr/local/bin --strip-components=1 sccache-v0.7.4-x86_64-unknown-linux-musl/sccache
+            && chmod +x /usr/local/bin/sccache
+          CMAKE_ARGS: -DFETCHCONTENT_BASE_DIR=${{ github.workspace }}/.fc -DKRAKEN_VENDOR_SDL=ON
+            -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_C_FLAGS=-fPIC
+            -DCMAKE_CXX_FLAGS=-fPIC -DSDLIMAGE_VENDORED=ON -DSDLIMAGE_AVIF=OFF -DSDLIMAGE_JXL=OFF
+            -DSDLIMAGE_TIF=OFF -DSDLTTF_VENDORED=ON
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
