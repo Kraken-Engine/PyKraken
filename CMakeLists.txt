@@ -23,6 +23,12 @@ set(PYBIND11_FINDPYTHON ON)
 
 # -------------------- Dependencies --------------------
 
+if (UNIX AND NOT APPLE)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+endif ()
+
 if (_PK_SKBUILD)
     # pip/scikit-build: expect packages available in build env
     find_package(pybind11 CONFIG REQUIRED)
