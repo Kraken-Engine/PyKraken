@@ -60,6 +60,13 @@ struct Color
     [[nodiscard]] color::HSV toHSV() const;
 
     void fromHSV(const color::HSV& hsv);
+
+    // Equality operators compare all RGBA components
+    bool operator==(const Color& other) const
+    {
+        return r == other.r && g == other.g && b == other.b && a == other.a;
+    }
+    bool operator!=(const Color& other) const { return !(*this == other); }
 };
 
 constexpr Color BLACK = {0, 0, 0};
