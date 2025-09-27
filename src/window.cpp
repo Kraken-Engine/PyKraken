@@ -1,4 +1,5 @@
 #include "AnimationController.hpp"
+#include "Font.hpp"
 #include "Math.hpp"
 #include "Mixer.hpp"
 #include "Renderer.hpp"
@@ -73,6 +74,7 @@ void create(const std::string& title, const Vec2& res, const bool scaled)
     _isOpen = true;
 
     renderer::_init(_window, res);
+    font::_init();
 }
 
 bool isOpen()
@@ -269,6 +271,7 @@ void init()
 
 void quit()
 {
+    font::_quit();
     mixer::_quit();
     renderer::_quit();
 

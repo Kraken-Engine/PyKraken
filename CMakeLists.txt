@@ -118,6 +118,7 @@ set(_CORE_SOURCES
         src/draw.cpp
         src/ease.cpp
         src/event.cpp
+        src/font.cpp
         src/gamepad.cpp
         src/input.cpp
         src/key.cpp

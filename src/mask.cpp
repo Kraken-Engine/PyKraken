@@ -348,7 +348,7 @@ Args:
             [](const Mask& self, const Mask& other, const py::object& offsetObj) -> int
             {
                 if (offsetObj.is_none())
-                    return self.getOverlapArea(other, {});
+                    return self.getOverlapArea(other);
 
                 try
                 {
