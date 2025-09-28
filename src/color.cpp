@@ -151,6 +151,25 @@ Returns:
     int: Always returns 4 (for r, g, b, a channels).
         )doc")
 
+        .def("__eq__", &Color::operator==, py::arg("other"), R"doc(
+Check if two Color objects are equal (all RGBA components match).
+
+Args:
+    other (Color): The color to compare with.
+
+Returns:
+    bool: True if colors are identical, False otherwise.
+        )doc")
+        .def("__ne__", &Color::operator!=, py::arg("other"), R"doc(
+Check if two Color objects are not equal.
+
+Args:
+    other (Color): The color to compare with.
+
+Returns:
+    bool: True if any component differs, False otherwise.
+        )doc")
+
         .def_readwrite("r", &Color::r, R"doc(
 Red channel value.
 
