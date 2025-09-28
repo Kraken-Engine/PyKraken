@@ -145,3 +145,5 @@ _skbuild/
 
 .vscode/
 .idea/
+
+src/pykraken/*.dll

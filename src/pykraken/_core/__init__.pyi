@@ -801,21 +801,100 @@ class EventType(enum.IntEnum):
         """
 class Font:
     """
+    
+    A font object for rendering text to the active renderer.
+    
+    This class wraps an SDL_ttf font and an internal text object for efficient
+    rendering. You can load fonts from a file path or use one of the built-in
+    typefaces:
+    
+    - "kraken-clean": A clean sans-serif font bundled with the engine.
+    - "kraken-retro": A pixel/retro font bundled with the engine. Point size is
+                      rounded to the nearest multiple of 8 for crisp rendering.
+    
+    Note:
+        A window/renderer must be created before using fonts. Typically you should
+        call kn.window.create(...) first, which initializes the font engine.
+        
     """
     def __init__(self, arg0: str, arg1: typing.SupportsInt) -> None:
-        ...
-    def render(self, text: str, pos: typing.Any = None, color: typing.Any = None, wrap_width: typing.SupportsInt = 0) -> None:
-        ...
+        """
+        Create a Font.
+        
+        Args:
+            file_dir (str): Path to a .ttf font file, or one of the built-in names
+                            "kraken-clean" or "kraken-retro".
+            pt_size (int): The point size. Values below 8 are clamped to 8. For
+                           "kraken-retro", the size is rounded to the nearest multiple
+                           of 8 to preserve pixel alignment.
+        
+        Raises:
+            RuntimeError: If the font fails to load.
+        """
+    def draw(self, text: str, pos: typing.Any = None, color: typing.Any = None, wrap_width: typing.SupportsInt = 0) -> None:
+        """
+        Draw text to the renderer.
+        
+        Args:
+            text (str): The text to render.
+            pos (Vec2 | None, optional): The position in pixels. Defaults to (0, 0).
+            color (Color | None, optional): Text color. Defaults to white.
+            wrap_width (int, optional): Wrap the text at this pixel width. Set to 0 for
+                                        no wrapping. Defaults to 0.
+        
+        Returns:
+            None
+        """
     def set_bold(self, on: bool) -> None:
-        ...
+        """
+        Enable or disable bold text style.
+        
+        Args:
+            on (bool): True to enable bold, False to disable.
+        
+        Returns:
+            None
+        """
     def set_italic(self, on: bool) -> None:
-        ...
-    def set_pt_size(self, on: typing.SupportsInt) -> None:
-        ...
+        """
+        Enable or disable italic text style.
+        
+        Args:
+            on (bool): True to enable italic, False to disable.
+        
+        Returns:
+            None
+        """
+    def set_pt_size(self, pt: typing.SupportsInt) -> None:
+        """
+        Set the font point size.
+        
+        Args:
+            pt (int): The new point size. Values below 8 are clamped to 8.
+        
+        Returns:
+            None
+        """
     def set_strikethrough(self, on: bool) -> None:
-        ...
+        """
+        Enable or disable strikethrough text style.
+        
+        Args:
+            on (bool): True to enable strikethrough, False to disable.
+        
+        Returns:
+            None
+        """
     def set_underline(self, on: bool) -> None:
-        ...
+        """
+        Enable or disable underline text style.
+        
+        Args:
+            on (bool): True to enable underline, False to disable.
+        
+        Returns:
+            None
+        """
 class Frame:
     """
     

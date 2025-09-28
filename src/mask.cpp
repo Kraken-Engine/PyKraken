@@ -187,7 +187,7 @@ Rect Mask::getBoundingRect() const
     for (int y = 0; y < m_height; ++y)
         for (int x = 0; x < m_width; ++x)
         {
-            if (!m_maskData[y * m_width + x])  // if pixel is opaque
+            if (!m_maskData[y * m_width + x]) // if pixel is opaque
                 continue;
 
             if (x < minX)
@@ -356,7 +356,7 @@ Args:
                 }
                 catch (const py::cast_error&)
                 {
-                    throw std::invalid_argument("Invalid offset type");
+                    throw py::type_error("Invalid type for 'offset', expected Vec2");
                 }
             },
             py::arg("other"), py::arg("offset") = py::none(),
@@ -383,7 +383,7 @@ Returns:
                 }
                 catch (const py::cast_error&)
                 {
-                    throw std::invalid_argument("Invalid offset type");
+                    throw py::type_error("Invalid type for 'offset', expected Vec2");
                 }
             },
             py::arg("other"), py::arg("offset") = py::none(),
@@ -424,7 +424,7 @@ Solid pixels become transparent and transparent pixels become solid.
                 }
                 catch (const py::cast_error&)
                 {
-                    throw std::invalid_argument("Invalid offset type");
+                    throw py::type_error("Invalid type for 'offset', expected Vec2");
                 }
             },
             py::arg("other"), py::arg("offset") = py::none(),
@@ -453,7 +453,7 @@ Args:
                 }
                 catch (const py::cast_error&)
                 {
-                    throw std::invalid_argument("Invalid offset type");
+                    throw py::type_error("Invalid type for 'offset', expected Vec2");
                 }
             },
             py::arg("other"), py::arg("offset") = py::none(),
@@ -506,7 +506,7 @@ Returns:
                 }
                 catch (const py::cast_error&)
                 {
-                    throw std::invalid_argument("Invalid offset type");
+                    throw py::type_error("Invalid type for 'offset', expected Vec2");
                 }
             },
             py::arg("other"), py::arg("offset") = py::none(),
@@ -534,7 +534,7 @@ Returns:
                 }
                 catch (const py::cast_error&)
                 {
-                    throw std::invalid_argument("Invalid offset type");
+                    throw py::type_error("Invalid type for 'offset', expected Vec2");
                 }
             },
             py::arg("other"), py::arg("offset") = py::none(),
@@ -567,7 +567,7 @@ Returns:
                 }
                 catch (const py::cast_error&)
                 {
-                    throw std::invalid_argument("Invalid color type");
+                    throw py::type_error("Invalid type for 'color', expected Color");
                 }
             },
             py::arg("color") = py::none(),

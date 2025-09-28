@@ -21,7 +21,7 @@ void _bind(py::module_& module)
             }
             catch (const py::cast_error&)
             {
-                throw std::invalid_argument("Expected Color object, convertible sequence, or None");
+                throw py::type_error("Invalid type for 'color', expected Color, sequence, or None");
             }
         },
         py::arg("color") = py::none(), R"doc(
@@ -70,7 +70,7 @@ Returns:
             }
             catch (const py::cast_error&)
             {
-                throw std::invalid_argument("'src' must be a Rect");
+                throw py::type_error("Invalid type for 'src', expected Rect");
             }
         },
         py::arg("texture"), py::arg("dst"), py::arg("src") = py::none(), R"doc(
@@ -93,7 +93,7 @@ Returns:
             }
             catch (const py::cast_error&)
             {
-                throw std::invalid_argument("'pos' must be a Vec2 and 'src' must be a Rect");
+                throw py::type_error("Invalid type for 'pos', expected Vec2");
             }
         },
         py::arg("texture"), py::arg("pos") = py::none(), py::arg("anchor") = Anchor::Center, R"doc(

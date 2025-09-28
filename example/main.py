@@ -23,12 +23,12 @@ while kn.window.is_open():
     kn.event.poll()
 
     kn.renderer.clear()
-    reg.render("This is Kraken Engine", color=(255, 255, 255))
-    ital.render("This is Kraken Engine", color=(255, 255, 255), pos=(0, 48))
-    bold.render("This is Kraken Engine", color=(255, 255, 255), pos=(0, 48 * 2))
-    under.render("This is Kraken Engine", color=(255, 255, 255), pos=(0, 48 * 3))
-    strike.render("This is Kraken Engine", color=(255, 255, 255), pos=(0, 48 * 4))
-    all_of.render("This is Kraken Engine", color=(255, 255, 255), pos=(0, 48 * 5))
+    reg.draw("This is Kraken Engine", color=(255, 255, 255))
+    ital.draw("This is Kraken Engine", color=(255, 255, 255), pos=(0, 48))
+    bold.draw("This is Kraken Engine", color=(255, 255, 255), pos=(0, 48 * 2))
+    under.draw("This is Kraken Engine", color=(255, 255, 255), pos=(0, 48 * 3))
+    strike.draw("This is Kraken Engine", color=(255, 255, 255), pos=(0, 48 * 4))
+    all_of.draw("This is Kraken Engine", color=(255, 255, 255), pos=(0, 48 * 5))
     kn.renderer.present()
 
 kn.quit()

@@ -47,7 +47,7 @@ Font::~Font()
     m_font = nullptr;
 }
 
-void Font::render(const std::string& text, const Vec2& pos, const Color& color, int wrapWidth) const
+void Font::draw(const std::string& text, const Vec2& pos, const Color& color, int wrapWidth) const
 {
     if (wrapWidth < 0)
         wrapWidth = 0;
@@ -119,25 +119,126 @@ void _quit()
 
 void _bind(const py::module_& module)
 {
-    py::classh<Font>(module, "Font", R"doc()doc")
-        .def(py::init<const std::string&, int>(), R"doc()doc")
+    py::classh<Font>(module, "Font", R"doc(
+A font object for rendering text to the active renderer.
+
+This class wraps an SDL_ttf font and an internal text object for efficient
+rendering. You can load fonts from a file path or use one of the built-in
+typefaces:
+
+- "kraken-clean": A clean sans-serif font bundled with the engine.
+- "kraken-retro": A pixel/retro font bundled with the engine. Point size is
+                  rounded to the nearest multiple of 8 for crisp rendering.
+
+Note:
+    A window/renderer must be created before using fonts. Typically you should
+    call kn.window.create(...) first, which initializes the font engine.
+    )doc")
+        .def(py::init<const std::string&, int>(), R"doc(
+Create a Font.
+
+Args:
+    file_dir (str): Path to a .ttf font file, or one of the built-in names
+                    "kraken-clean" or "kraken-retro".
+    pt_size (int): The point size. Values below 8 are clamped to 8. For
+                   "kraken-retro", the size is rounded to the nearest multiple
+                   of 8 to preserve pixel alignment.
+
+Raises:
+    RuntimeError: If the font fails to load.
+    )doc")
         .def(
-            "render",
+            "draw",
             [](const Font& self, const std::string& text, const py::object& posObj,
                const py::object& colorObj, const int wrapWidth) -> void
             {
-                const auto pos = posObj.is_none() ? Vec2() : posObj.cast<Vec2>();
-                const auto color =
-                    colorObj.is_none() ? Color(255, 255, 255) : colorObj.cast<Color>();
-                self.render(text, pos, color, wrapWidth);
+                Vec2 pos{};
+                if (!posObj.is_none())
+                {
+                    try
+                    {
+                        pos = posObj.cast<Vec2>();
+                    }
+                    catch (const py::cast_error&)
+                    {
+                        throw py::type_error("Invalid type for 'pos', expected Vec2");
+                    }
+                }
+
+                Color color{255, 255, 255};
+                if (!colorObj.is_none())
+                {
+                    try
+                    {
+                        color = colorObj.cast<Color>();
+                    }
+                    catch (const py::cast_error&)
+                    {
+                        throw py::type_error("Invalid type for 'color', expected Color");
+                    }
+                }
+
+                self.draw(text, pos, color, wrapWidth);
             },
             py::arg("text"), py::arg("pos") = py::none(), py::arg("color") = py::none(),
-            py::arg("wrap_width") = 0, R"doc()doc")
-        .def("set_bold", &Font::setBold, py::arg("on"), R"doc()doc")
-        .def("set_italic", &Font::setItalic, py::arg("on"), R"doc()doc")
-        .def("set_underline", &Font::setUnderline, py::arg("on"), R"doc()doc")
-        .def("set_strikethrough", &Font::setStrikethrough, py::arg("on"), R"doc()doc")
-        .def("set_pt_size", &Font::setPtSize, py::arg("on"), R"doc()doc");
+            py::arg("wrap_width") = 0, R"doc(
+Draw text to the renderer.
+
+Args:
+    text (str): The text to render.
+    pos (Vec2 | None, optional): The position in pixels. Defaults to (0, 0).
+    color (Color | None, optional): Text color. Defaults to white.
+    wrap_width (int, optional): Wrap the text at this pixel width. Set to 0 for
+                                no wrapping. Defaults to 0.
+
+Returns:
+    None
+    )doc")
+        .def("set_bold", &Font::setBold, py::arg("on"), R"doc(
+Enable or disable bold text style.
+
+Args:
+    on (bool): True to enable bold, False to disable.
+
+Returns:
+    None
+    )doc")
+        .def("set_italic", &Font::setItalic, py::arg("on"), R"doc(
+Enable or disable italic text style.
+
+Args:
+    on (bool): True to enable italic, False to disable.
+
+Returns:
+    None
+    )doc")
+        .def("set_underline", &Font::setUnderline, py::arg("on"), R"doc(
+Enable or disable underline text style.
+
+Args:
+    on (bool): True to enable underline, False to disable.
+
+Returns:
+    None
+    )doc")
+        .def("set_strikethrough", &Font::setStrikethrough, py::arg("on"), R"doc(
+Enable or disable strikethrough text style.
+
+Args:
+    on (bool): True to enable strikethrough, False to disable.
+
+Returns:
+    None
+    )doc")
+        .def("set_pt_size", &Font::setPtSize, py::arg("pt"), R"doc(
+Set the font point size.
+
+Args:
+    pt (int): The new point size. Values below 8 are clamped to 8.
+
+Returns:
+    None
+    )doc");
 }
 } // namespace font
 } // namespace kn

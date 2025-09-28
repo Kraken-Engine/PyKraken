@@ -17,8 +17,8 @@ class Font
     Font(const std::string& fileDir, int ptSize);
     ~Font();
 
-    void render(const std::string& text, const Vec2& pos = {}, const Color& color = {255, 255, 255},
-                int wrapWidth = 0) const;
+    void draw(const std::string& text, const Vec2& pos = {}, const Color& color = {255, 255, 255},
+              int wrapWidth = 0) const;
 
     void setBold(bool on) const;
     void setItalic(bool on) const;
