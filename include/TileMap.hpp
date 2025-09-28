@@ -47,7 +47,7 @@ class Layer
     const std::string name;
     std::vector<Tile> tiles;
 
-    Layer(Type type, bool isVisible, const std::string& name,
+    Layer(Type type, bool isVisible, std::string name,
           const std::shared_ptr<Texture>& tileSetTexture);
     ~Layer() = default;
 

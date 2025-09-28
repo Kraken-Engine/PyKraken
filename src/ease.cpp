@@ -232,14 +232,14 @@ This class supports pausing, resuming, reversing, and checking progress.
     )doc")
 
         .def(py::init<const Vec2&, const Vec2&, double, EasingFunction>(), py::arg("start"),
-             py::arg("end"), py::arg("duration"), py::arg("easeFunc"), R"doc(
+             py::arg("end"), py::arg("duration"), py::arg("ease_func"), R"doc(
 Create an EasingAnimation.
 
 Args:
     start (Vec2): Starting position.
     end (Vec2): Ending position.
     duration (float): Time in seconds for full animation.
-    easeFunc (Callable): Easing function that maps [0, 1] → [0, 1].
+    ease_func (Callable): Easing function that maps [0, 1] → [0, 1].
         )doc")
 
         .def("step", &EasingAnimation::step, R"doc(

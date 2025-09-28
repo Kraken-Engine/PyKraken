@@ -98,83 +98,6 @@ void Texture::makeNormal() const { SDL_SetTextureBlendMode(m_texPtr, SDL_BLENDMO
 
 SDL_Texture* Texture::getSDL() const { return m_texPtr; }
 
-void Texture::render(Rect dstRect, const Rect& srcRect) const
-{
-    const auto srcSDLRect =
-        static_cast<SDL_FRect>(srcRect.w == 0.0 && srcRect.h == 0.0 ? this->getRect() : srcRect);
-
-    const Vec2 cameraPos = camera::getActivePos();
-
-    SDL_FlipMode flipAxis = SDL_FLIP_NONE;
-    if (this->flip.h)
-        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_HORIZONTAL);
-    if (this->flip.v)
-        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_VERTICAL);
-
-    dstRect.x -= cameraPos.x;
-    dstRect.y -= cameraPos.y;
-    const SDL_FRect dstSDLRect = {
-        std::floorf(static_cast<float>(dstRect.x)),
-        std::floorf(static_cast<float>(dstRect.y)),
-        std::floorf(static_cast<float>(dstRect.w)),
-        std::floorf(static_cast<float>(dstRect.h)),
-    };
-
-    SDL_RenderTextureRotated(renderer::_get(), m_texPtr, &srcSDLRect, &dstSDLRect, this->angle,
-                             nullptr, flipAxis);
-}
-
-void Texture::render(Vec2 pos, const Anchor anchor) const
-{
-    SDL_FlipMode flipAxis = SDL_FLIP_NONE;
-    if (this->flip.h)
-        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_HORIZONTAL);
-    if (this->flip.v)
-        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_VERTICAL);
-
-    pos -= camera::getActivePos();
-    Rect rect = this->getRect();
-    switch (anchor)
-    {
-    case Anchor::TopLeft:
-        rect.setTopLeft(pos);
-        break;
-    case Anchor::TopMid:
-        rect.setTopMid(pos);
-        break;
-    case Anchor::TopRight:
-        rect.setTopRight(pos);
-        break;
-    case Anchor::MidLeft:
-        rect.setMidLeft(pos);
-        break;
-    case Anchor::Center:
-        rect.setCenter(pos);
-        break;
-    case Anchor::MidRight:
-        rect.setMidRight(pos);
-        break;
-    case Anchor::BottomLeft:
-        rect.setBottomLeft(pos);
-        break;
-    case Anchor::BottomMid:
-        rect.setBottomMid(pos);
-        break;
-    case Anchor::BottomRight:
-        rect.setBottomRight(pos);
-        break;
-    }
-
-    const SDL_FRect dstSDLRect = {
-        std::floorf(static_cast<float>(rect.x)),
-        std::floorf(static_cast<float>(rect.y)),
-        std::floorf(static_cast<float>(rect.w)),
-        std::floorf(static_cast<float>(rect.h)),
-    };
-    SDL_RenderTextureRotated(renderer::_get(), m_texPtr, nullptr, &dstSDLRect, this->angle, nullptr,
-                             flipAxis);
-}
-
 namespace texture
 {
 void _bind(const py::module_& module)
@@ -292,49 +215,7 @@ creating darkening and shadow effects.
 Set the texture to use normal (alpha) blending mode.
 
 This is the default blending mode for standard transparency effects.
-        )doc")
-        .def(
-            "render",
-            [](const Texture& self, const Rect& dstRect, const py::object& srcObj)
-            {
-                try
-                {
-                    srcObj.is_none() ? self.render(dstRect)
-                                     : self.render(dstRect, srcObj.cast<Rect>());
-                }
-                catch (const py::cast_error&)
-                {
-                    throw std::invalid_argument("'src' must be a Rect");
-                }
-            },
-            py::arg("dst"), py::arg("src") = py::none(), R"doc(
-Render this texture with specified destination and source rectangles.
-
-Args:
-    dst (Rect): The destination rectangle on the renderer.
-    src (Rect, optional): The source rectangle from the texture. Defaults to entire texture if not specified.
-    )doc")
-        .def(
-            "render",
-            [](const Texture& self, const py::object& pos, const Anchor anchor)
-            {
-                try
-                {
-                    pos.is_none() ? self.render({}, anchor) : self.render(pos.cast<Vec2>(), anchor);
-                }
-                catch (const py::cast_error&)
-                {
-                    throw std::invalid_argument("'pos' must be a Vec2");
-                }
-            },
-            py::arg("pos") = py::none(), py::arg("anchor") = Anchor::Center,
-            R"doc(
-Render this texture at the specified position with anchor alignment.
-
-Args:
-    pos (Vec2, optional): The position to draw at. Defaults to (0, 0).
-    anchor (Anchor, optional): The anchor point for positioning. Defaults to CENTER.
-    )doc");
+        )doc");
 }
 } // namespace texture
 } // namespace kn

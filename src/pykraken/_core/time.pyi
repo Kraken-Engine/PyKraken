@@ -3,7 +3,7 @@ Time related functions
 """
 from __future__ import annotations
 import typing
-__all__: list[str] = ['delay', 'get_delta', 'get_elapsed', 'get_fps', 'set_target']
+__all__: list[str] = ['delay', 'get_delta', 'get_elapsed', 'get_fps', 'get_scale', 'set_max_delta', 'set_scale', 'set_target']
 def delay(milliseconds: typing.SupportsInt) -> None:
     """
     Delay the program execution for the specified duration.
@@ -40,6 +40,31 @@ def get_fps() -> float:
     
     Returns:
         float: The current FPS based on the last frame time.
+    """
+def get_scale() -> float:
+    """
+    Get the current global time scale factor.
+    
+    Returns:
+        float: The current time scale factor.
+    """
+def set_max_delta(max_delta: typing.SupportsFloat) -> None:
+    """
+    Set the maximum allowed delta time between frames.
+    
+    Parameters:
+        max_delta (float): The maximum delta time in seconds, greater than 0.0.
+                           This is useful to prevent large delta values during
+                           frame drops or pauses that could destabilize physics or animations.
+    """
+def set_scale(scale: typing.SupportsFloat) -> None:
+    """
+    Set the global time scale factor.
+    
+    Args:
+        scale (float): The time scale factor. Values < 0.0 are clamped to 0.0.
+                       A scale of 1.0 represents normal time, 0.5 is half speed,
+                       and 2.0 is double speed.
     """
 def set_target(frame_rate: typing.SupportsInt) -> None:
     """

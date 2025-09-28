@@ -238,7 +238,7 @@ Args:
                 }
                 catch (const py::cast_error&)
                 {
-                    throw std::invalid_argument("'src' must be a Rect");
+                    throw py::type_error("Invalid type for 'src', expected Rect");
                 }
             },
             py::arg("pixel_array"), py::arg("pos"), py::arg("anchor") = Anchor::Center,
@@ -265,7 +265,7 @@ Raises:
                 }
                 catch (const py::cast_error&)
                 {
-                    throw std::invalid_argument("'src' must be a Rect");
+                    throw py::type_error("Invalid type for 'src', expected Rect");
                 }
             },
             py::arg("pixel_array"), py::arg("dst"), py::arg("src") = py::none(), R"doc(

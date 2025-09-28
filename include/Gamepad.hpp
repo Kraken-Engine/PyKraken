@@ -45,6 +45,6 @@ std::vector<int> getConnectedSlots();
 
 void _clearStates();
 
-void _handleEvents(const SDL_Event& sdlEvent, Event& e);
+void _handleEvents(const SDL_Event& sdlEvent, const Event& e);
 } // namespace gamepad
 } // namespace kn

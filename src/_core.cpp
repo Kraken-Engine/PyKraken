@@ -6,6 +6,7 @@
 #include "Draw.hpp"
 #include "Ease.hpp"
 #include "Event.hpp"
+#include "Font.hpp"
 #include "Gamepad.hpp"
 #include "Input.hpp"
 #include "Key.hpp"
@@ -51,6 +52,7 @@ Call this once you're done using the engine to avoid memory leaks.
     kn::circle::_bind(m);
     kn::ease::_bind(m);
     kn::event::_bind(m);
+    kn::font::_bind(m);
     kn::gamepad::_bind(m);
     kn::input::_bind(m);
     kn::key::_bind(m);

@@ -17,7 +17,7 @@ from . import renderer
 from . import time
 from . import transform
 from . import window
-__all__: list[str] = ['AUDIO_DEVICE_ADDED', 'AUDIO_DEVICE_REMOVED', 'Anchor', 'Animation', 'AnimationController', 'Audio', 'AudioStream', 'BOTTOM_LEFT', 'BOTTOM_MID', 'BOTTOM_RIGHT', 'CAMERA_ADDED', 'CAMERA_APPROVED', 'CAMERA_DENIED', 'CAMERA_REMOVED', 'CENTER', 'C_BACK', 'C_DPAD_DOWN', 'C_DPAD_LEFT', 'C_DPAD_RIGHT', 'C_DPAD_UP', 'C_EAST', 'C_GUIDE', 'C_LSHOULDER', 'C_LSTICK', 'C_LTRIGGER', 'C_LX', 'C_LY', 'C_NORTH', 'C_PS3', 'C_PS4', 'C_PS5', 'C_RSHOULDER', 'C_RSTICK', 'C_RTRIGGER', 'C_RX', 'C_RY', 'C_SOUTH', 'C_STANDARD', 'C_START', 'C_SWITCH_JOYCON_LEFT', 'C_SWITCH_JOYCON_PAIR', 'C_SWITCH_JOYCON_RIGHT', 'C_SWITCH_PRO', 'C_WEST', 'C_XBOX_360', 'C_XBOX_ONE', 'Camera', 'Circle', 'Color', 'DROP_BEGIN', 'DROP_COMPLETE', 'DROP_FILE', 'DROP_POSITION', 'DROP_TEXT', 'EasingAnimation', 'Event', 'EventType', 'Frame', 'GAMEPAD_ADDED', 'GAMEPAD_AXIS_MOTION', 'GAMEPAD_BUTTON_DOWN', 'GAMEPAD_BUTTON_UP', 'GAMEPAD_REMOVED', 'GAMEPAD_TOUCHPAD_DOWN', 'GAMEPAD_TOUCHPAD_MOTION', 'GAMEPAD_TOUCHPAD_UP', 'GamepadAxis', 'GamepadButton', 'GamepadType', 'InputAction', 'KEYBOARD_ADDED', 'KEYBOARD_REMOVED', 'KEY_DOWN', 'KEY_UP', 'K_0', 'K_1', 'K_2', 'K_3', 'K_4', 'K_5', 'K_6', 'K_7', 'K_8', 'K_9', 'K_AGAIN', 'K_AMPERSAND', 'K_ASTERISK', 'K_AT', 'K_BACKSLASH', 'K_BACKSPACE', 'K_CAPS', 'K_CARET', 'K_COLON', 'K_COMMA', 'K_COPY', 'K_CUT', 'K_DBLQUOTE', 'K_DEL', 'K_DOLLAR', 'K_DOWN', 'K_END', 'K_EQ', 'K_ESC', 'K_EXCLAIM', 'K_F1', 'K_F10', 'K_F11', 'K_F12', 'K_F2', 'K_F3', 'K_F4', 'K_F5', 'K_F6', 'K_F7', 'K_F8', 'K_F9', 'K_FIND', 'K_GRAVE', 'K_GT', 'K_HASH', 'K_HOME', 'K_INS', 'K_KP_0', 'K_KP_1', 'K_KP_2', 'K_KP_3', 'K_KP_4', 'K_KP_5', 'K_KP_6', 'K_KP_7', 'K_KP_8', 'K_KP_9', 'K_KP_DIV', 'K_KP_ENTER', 'K_KP_MINUS', 'K_KP_MULT', 'K_KP_PERIOD', 'K_KP_PLUS', 'K_LALT', 'K_LBRACE', 'K_LBRACKET', 'K_LCTRL', 'K_LEFT', 'K_LGUI', 'K_LPAREN', 'K_LSHIFT', 'K_LT', 'K_MINUS', 'K_MUTE', 'K_NUMLOCK', 'K_PASTE', 'K_PAUSE', 'K_PERCENT', 'K_PERIOD', 'K_PGDOWN', 'K_PGUP', 'K_PIPE', 'K_PLUS', 'K_PRTSCR', 'K_QUESTION', 'K_RALT', 'K_RBRACE', 'K_RBRACKET', 'K_RCTRL', 'K_RETURN', 'K_RGUI', 'K_RIGHT', 'K_RPAREN', 'K_RSHIFT', 'K_SCRLK', 'K_SEMICOLON', 'K_SGLQUOTE', 'K_SLASH', 'K_SPACE', 'K_TAB', 'K_TILDE', 'K_UNDERSCORE', 'K_UNDO', 'K_UP', 'K_VOLDOWN', 'K_VOLUP', 'K_a', 'K_b', 'K_c', 'K_d', 'K_e', 'K_f', 'K_g', 'K_h', 'K_i', 'K_j', 'K_k', 'K_l', 'K_m', 'K_n', 'K_o', 'K_p', 'K_q', 'K_r', 'K_s', 'K_t', 'K_u', 'K_v', 'K_w', 'K_x', 'K_y', 'K_z', 'Keycode', 'Layer', 'Line', 'MID_LEFT', 'MID_RIGHT', 'MOUSE_ADDED', 'MOUSE_BUTTON_DOWN', 'MOUSE_BUTTON_UP', 'MOUSE_MOTION', 'MOUSE_REMOVED', 'MOUSE_WHEEL', 'M_LEFT', 'M_MIDDLE', 'M_RIGHT', 'M_SIDE1', 'M_SIDE2', 'Mask', 'MouseButton', 'PEN_AXIS', 'PEN_BUTTON_DOWN', 'PEN_BUTTON_UP', 'PEN_DOWN', 'PEN_MOTION', 'PEN_PROXIMITY_IN', 'PEN_PROXIMITY_OUT', 'PEN_UP', 'PixelArray', 'PolarCoordinate', 'Polygon', 'QUIT', 'Rect', 'S_0', 'S_1', 'S_2', 'S_3', 'S_4', 'S_5', 'S_6', 'S_7', 'S_8', 'S_9', 'S_AGAIN', 'S_APOSTROPHE', 'S_BACKSLASH', 'S_BACKSPACE', 'S_CAPS', 'S_COMMA', 'S_COPY', 'S_CUT', 'S_DEL', 'S_DOWN', 'S_END', 'S_EQ', 'S_ESC', 'S_F1', 'S_F10', 'S_F11', 'S_F12', 'S_F2', 'S_F3', 'S_F4', 'S_F5', 'S_F6', 'S_F7', 'S_F8', 'S_F9', 'S_FIND', 'S_GRAVE', 'S_HOME', 'S_INS', 'S_KP_0', 'S_KP_1', 'S_KP_2', 'S_KP_3', 'S_KP_4', 'S_KP_5', 'S_KP_6', 'S_KP_7', 'S_KP_8', 'S_KP_9', 'S_KP_DIV', 'S_KP_ENTER', 'S_KP_MINUS', 'S_KP_MULT', 'S_KP_PERIOD', 'S_KP_PLUS', 'S_LALT', 'S_LBRACKET', 'S_LCTRL', 'S_LEFT', 'S_LGUI', 'S_LSHIFT', 'S_MINUS', 'S_MUTE', 'S_NUMLOCK', 'S_PASTE', 'S_PAUSE', 'S_PERIOD', 'S_PGDOWN', 'S_PGUP', 'S_PRTSCR', 'S_RALT', 'S_RBRACKET', 'S_RCTRL', 'S_RETURN', 'S_RGUI', 'S_RIGHT', 'S_RSHIFT', 'S_SCRLK', 'S_SEMICOLON', 'S_SLASH', 'S_SPACE', 'S_TAB', 'S_UNDO', 'S_UP', 'S_VOLDOWN', 'S_VOLUP', 'S_a', 'S_b', 'S_c', 'S_d', 'S_e', 'S_f', 'S_g', 'S_h', 'S_i', 'S_j', 'S_k', 'S_l', 'S_m', 'S_n', 'S_o', 'S_p', 'S_q', 'S_r', 'S_s', 'S_t', 'S_u', 'S_v', 'S_w', 'S_x', 'S_y', 'S_z', 'Scancode', 'TEXT_EDITING', 'TEXT_INPUT', 'TOP_LEFT', 'TOP_MID', 'TOP_RIGHT', 'Texture', 'Tile', 'TileMap', 'Timer', 'Vec2', 'WINDOW_ENTER_FULLSCREEN', 'WINDOW_EXPOSED', 'WINDOW_FOCUS_GAINED', 'WINDOW_FOCUS_LOST', 'WINDOW_HIDDEN', 'WINDOW_LEAVE_FULLSCREEN', 'WINDOW_MAXIMIZED', 'WINDOW_MINIMIZED', 'WINDOW_MOUSE_ENTER', 'WINDOW_MOUSE_LEAVE', 'WINDOW_MOVED', 'WINDOW_OCCLUDED', 'WINDOW_RESIZED', 'WINDOW_RESTORED', 'WINDOW_SHOWN', 'color', 'draw', 'ease', 'event', 'gamepad', 'init', 'input', 'key', 'line', 'math', 'mouse', 'quit', 'rect', 'renderer', 'time', 'transform', 'window']
+__all__: list[str] = ['AUDIO_DEVICE_ADDED', 'AUDIO_DEVICE_FORMAT_CHANGED', 'AUDIO_DEVICE_REMOVED', 'Anchor', 'Animation', 'AnimationController', 'Audio', 'AudioStream', 'BOTTOM_LEFT', 'BOTTOM_MID', 'BOTTOM_RIGHT', 'CAMERA_ADDED', 'CAMERA_APPROVED', 'CAMERA_DENIED', 'CAMERA_REMOVED', 'CENTER', 'C_BACK', 'C_DPAD_DOWN', 'C_DPAD_LEFT', 'C_DPAD_RIGHT', 'C_DPAD_UP', 'C_EAST', 'C_GUIDE', 'C_LSHOULDER', 'C_LSTICK', 'C_LTRIGGER', 'C_LX', 'C_LY', 'C_NORTH', 'C_PS3', 'C_PS4', 'C_PS5', 'C_RSHOULDER', 'C_RSTICK', 'C_RTRIGGER', 'C_RX', 'C_RY', 'C_SOUTH', 'C_STANDARD', 'C_START', 'C_SWITCH_JOYCON_LEFT', 'C_SWITCH_JOYCON_PAIR', 'C_SWITCH_JOYCON_RIGHT', 'C_SWITCH_PRO', 'C_WEST', 'C_XBOX_360', 'C_XBOX_ONE', 'Camera', 'Circle', 'Color', 'DROP_BEGIN', 'DROP_COMPLETE', 'DROP_FILE', 'DROP_POSITION', 'DROP_TEXT', 'EasingAnimation', 'Event', 'EventType', 'Font', 'Frame', 'GAMEPAD_ADDED', 'GAMEPAD_AXIS_MOTION', 'GAMEPAD_BUTTON_DOWN', 'GAMEPAD_BUTTON_UP', 'GAMEPAD_REMOVED', 'GAMEPAD_TOUCHPAD_DOWN', 'GAMEPAD_TOUCHPAD_MOTION', 'GAMEPAD_TOUCHPAD_UP', 'GamepadAxis', 'GamepadButton', 'GamepadType', 'InputAction', 'KEYBOARD_ADDED', 'KEYBOARD_REMOVED', 'KEY_DOWN', 'KEY_UP', 'K_0', 'K_1', 'K_2', 'K_3', 'K_4', 'K_5', 'K_6', 'K_7', 'K_8', 'K_9', 'K_AGAIN', 'K_AMPERSAND', 'K_ASTERISK', 'K_AT', 'K_BACKSLASH', 'K_BACKSPACE', 'K_CAPS', 'K_CARET', 'K_COLON', 'K_COMMA', 'K_COPY', 'K_CUT', 'K_DBLQUOTE', 'K_DEL', 'K_DOLLAR', 'K_DOWN', 'K_END', 'K_EQ', 'K_ESC', 'K_EXCLAIM', 'K_F1', 'K_F10', 'K_F11', 'K_F12', 'K_F2', 'K_F3', 'K_F4', 'K_F5', 'K_F6', 'K_F7', 'K_F8', 'K_F9', 'K_FIND', 'K_GRAVE', 'K_GT', 'K_HASH', 'K_HOME', 'K_INS', 'K_KP_0', 'K_KP_1', 'K_KP_2', 'K_KP_3', 'K_KP_4', 'K_KP_5', 'K_KP_6', 'K_KP_7', 'K_KP_8', 'K_KP_9', 'K_KP_DIV', 'K_KP_ENTER', 'K_KP_MINUS', 'K_KP_MULT', 'K_KP_PERIOD', 'K_KP_PLUS', 'K_LALT', 'K_LBRACE', 'K_LBRACKET', 'K_LCTRL', 'K_LEFT', 'K_LGUI', 'K_LPAREN', 'K_LSHIFT', 'K_LT', 'K_MINUS', 'K_MUTE', 'K_NUMLOCK', 'K_PASTE', 'K_PAUSE', 'K_PERCENT', 'K_PERIOD', 'K_PGDOWN', 'K_PGUP', 'K_PIPE', 'K_PLUS', 'K_PRTSCR', 'K_QUESTION', 'K_RALT', 'K_RBRACE', 'K_RBRACKET', 'K_RCTRL', 'K_RETURN', 'K_RGUI', 'K_RIGHT', 'K_RPAREN', 'K_RSHIFT', 'K_SCRLK', 'K_SEMICOLON', 'K_SGLQUOTE', 'K_SLASH', 'K_SPACE', 'K_TAB', 'K_TILDE', 'K_UNDERSCORE', 'K_UNDO', 'K_UP', 'K_VOLDOWN', 'K_VOLUP', 'K_a', 'K_b', 'K_c', 'K_d', 'K_e', 'K_f', 'K_g', 'K_h', 'K_i', 'K_j', 'K_k', 'K_l', 'K_m', 'K_n', 'K_o', 'K_p', 'K_q', 'K_r', 'K_s', 'K_t', 'K_u', 'K_v', 'K_w', 'K_x', 'K_y', 'K_z', 'Keycode', 'Layer', 'Line', 'MID_LEFT', 'MID_RIGHT', 'MOUSE_ADDED', 'MOUSE_BUTTON_DOWN', 'MOUSE_BUTTON_UP', 'MOUSE_MOTION', 'MOUSE_REMOVED', 'MOUSE_WHEEL', 'M_LEFT', 'M_MIDDLE', 'M_RIGHT', 'M_SIDE1', 'M_SIDE2', 'Mask', 'MouseButton', 'PEN_AXIS', 'PEN_BUTTON_DOWN', 'PEN_BUTTON_UP', 'PEN_DOWN', 'PEN_MOTION', 'PEN_PROXIMITY_IN', 'PEN_PROXIMITY_OUT', 'PEN_UP', 'P_DISTANCE', 'P_PRESSURE', 'P_ROTATION', 'P_SLIDER', 'P_TANGENTIAL_PRESSURE', 'P_TILT_X', 'P_TILT_Y', 'PenAxis', 'PixelArray', 'PolarCoordinate', 'Polygon', 'QUIT', 'Rect', 'S_0', 'S_1', 'S_2', 'S_3', 'S_4', 'S_5', 'S_6', 'S_7', 'S_8', 'S_9', 'S_AGAIN', 'S_APOSTROPHE', 'S_BACKSLASH', 'S_BACKSPACE', 'S_CAPS', 'S_COMMA', 'S_COPY', 'S_CUT', 'S_DEL', 'S_DOWN', 'S_END', 'S_EQ', 'S_ESC', 'S_F1', 'S_F10', 'S_F11', 'S_F12', 'S_F2', 'S_F3', 'S_F4', 'S_F5', 'S_F6', 'S_F7', 'S_F8', 'S_F9', 'S_FIND', 'S_GRAVE', 'S_HOME', 'S_INS', 'S_KP_0', 'S_KP_1', 'S_KP_2', 'S_KP_3', 'S_KP_4', 'S_KP_5', 'S_KP_6', 'S_KP_7', 'S_KP_8', 'S_KP_9', 'S_KP_DIV', 'S_KP_ENTER', 'S_KP_MINUS', 'S_KP_MULT', 'S_KP_PERIOD', 'S_KP_PLUS', 'S_LALT', 'S_LBRACKET', 'S_LCTRL', 'S_LEFT', 'S_LGUI', 'S_LSHIFT', 'S_MINUS', 'S_MUTE', 'S_NUMLOCK', 'S_PASTE', 'S_PAUSE', 'S_PERIOD', 'S_PGDOWN', 'S_PGUP', 'S_PRTSCR', 'S_RALT', 'S_RBRACKET', 'S_RCTRL', 'S_RETURN', 'S_RGUI', 'S_RIGHT', 'S_RSHIFT', 'S_SCRLK', 'S_SEMICOLON', 'S_SLASH', 'S_SPACE', 'S_TAB', 'S_UNDO', 'S_UP', 'S_VOLDOWN', 'S_VOLUP', 'S_a', 'S_b', 'S_c', 'S_d', 'S_e', 'S_f', 'S_g', 'S_h', 'S_i', 'S_j', 'S_k', 'S_l', 'S_m', 'S_n', 'S_o', 'S_p', 'S_q', 'S_r', 'S_s', 'S_t', 'S_u', 'S_v', 'S_w', 'S_x', 'S_y', 'S_z', 'Scancode', 'TEXT_EDITING', 'TEXT_INPUT', 'TOP_LEFT', 'TOP_MID', 'TOP_RIGHT', 'Texture', 'Tile', 'TileMap', 'Timer', 'Vec2', 'WINDOW_ENTER_FULLSCREEN', 'WINDOW_EXPOSED', 'WINDOW_FOCUS_GAINED', 'WINDOW_FOCUS_LOST', 'WINDOW_HIDDEN', 'WINDOW_LEAVE_FULLSCREEN', 'WINDOW_MAXIMIZED', 'WINDOW_MINIMIZED', 'WINDOW_MOUSE_ENTER', 'WINDOW_MOUSE_LEAVE', 'WINDOW_MOVED', 'WINDOW_OCCLUDED', 'WINDOW_RESIZED', 'WINDOW_RESTORED', 'WINDOW_SHOWN', 'color', 'draw', 'ease', 'event', 'gamepad', 'init', 'input', 'key', 'line', 'math', 'mouse', 'quit', 'rect', 'renderer', 'time', 'transform', 'window']
 class Anchor(enum.IntEnum):
     BOTTOM_LEFT: typing.ClassVar[Anchor]  # value = <Anchor.BOTTOM_LEFT: 6>
     BOTTOM_MID: typing.ClassVar[Anchor]  # value = <Anchor.BOTTOM_MID: 7>
@@ -574,6 +574,13 @@ class Color:
         Returns:
             str: String in format "(r, g, b, a)" with integer values.
         """
+    def copy(self) -> Color:
+        """
+        Create a copy of the color.
+        
+        Returns:
+            Color: A new Color object with the same RGBA values.
+        """
     @property
     def a(self) -> int:
         """
@@ -664,7 +671,7 @@ class EasingAnimation:
     This class supports pausing, resuming, reversing, and checking progress.
         
     """
-    def __init__(self, start: Vec2, end: Vec2, duration: typing.SupportsFloat, easeFunc: collections.abc.Callable[[typing.SupportsFloat], float]) -> None:
+    def __init__(self, start: Vec2, end: Vec2, duration: typing.SupportsFloat, ease_func: collections.abc.Callable[[typing.SupportsFloat], float]) -> None:
         """
         Create an EasingAnimation.
         
@@ -672,7 +679,7 @@ class EasingAnimation:
             start (Vec2): Starting position.
             end (Vec2): Ending position.
             duration (float): Time in seconds for full animation.
-            easeFunc (Callable): Easing function that maps [0, 1] → [0, 1].
+            ease_func (Callable): Easing function that maps [0, 1] → [0, 1].
         """
     def pause(self) -> None:
         """
@@ -730,6 +737,7 @@ class Event:
         """
 class EventType(enum.IntEnum):
     AUDIO_DEVICE_ADDED: typing.ClassVar[EventType]  # value = <EventType.AUDIO_DEVICE_ADDED: 4352>
+    AUDIO_DEVICE_FORMAT_CHANGED: typing.ClassVar[EventType]  # value = <EventType.AUDIO_DEVICE_FORMAT_CHANGED: 4354>
     AUDIO_DEVICE_REMOVED: typing.ClassVar[EventType]  # value = <EventType.AUDIO_DEVICE_REMOVED: 4353>
     CAMERA_ADDED: typing.ClassVar[EventType]  # value = <EventType.CAMERA_ADDED: 5120>
     CAMERA_APPROVED: typing.ClassVar[EventType]  # value = <EventType.CAMERA_APPROVED: 5122>
@@ -791,6 +799,102 @@ class EventType(enum.IntEnum):
         """
         Convert to a string according to format_spec.
         """
+class Font:
+    """
+    
+    A font object for rendering text to the active renderer.
+    
+    This class wraps an SDL_ttf font and an internal text object for efficient
+    rendering. You can load fonts from a file path or use one of the built-in
+    typefaces:
+    
+    - "kraken-clean": A clean sans-serif font bundled with the engine.
+    - "kraken-retro": A pixel/retro font bundled with the engine. Point size is
+                      rounded to the nearest multiple of 8 for crisp rendering.
+    
+    Note:
+        A window/renderer must be created before using fonts. Typically you should
+        call kn.window.create(...) first, which initializes the font engine.
+        
+    """
+    def __init__(self, arg0: str, arg1: typing.SupportsInt) -> None:
+        """
+        Create a Font.
+        
+        Args:
+            file_dir (str): Path to a .ttf font file, or one of the built-in names
+                            "kraken-clean" or "kraken-retro".
+            pt_size (int): The point size. Values below 8 are clamped to 8. For
+                           "kraken-retro", the size is rounded to the nearest multiple
+                           of 8 to preserve pixel alignment.
+        
+        Raises:
+            RuntimeError: If the font fails to load.
+        """
+    def draw(self, text: str, pos: typing.Any = None, color: typing.Any = None, wrap_width: typing.SupportsInt = 0) -> None:
+        """
+        Draw text to the renderer.
+        
+        Args:
+            text (str): The text to render.
+            pos (Vec2 | None, optional): The position in pixels. Defaults to (0, 0).
+            color (Color | None, optional): Text color. Defaults to white.
+            wrap_width (int, optional): Wrap the text at this pixel width. Set to 0 for
+                                        no wrapping. Defaults to 0.
+        
+        Returns:
+            None
+        """
+    def set_bold(self, on: bool) -> None:
+        """
+        Enable or disable bold text style.
+        
+        Args:
+            on (bool): True to enable bold, False to disable.
+        
+        Returns:
+            None
+        """
+    def set_italic(self, on: bool) -> None:
+        """
+        Enable or disable italic text style.
+        
+        Args:
+            on (bool): True to enable italic, False to disable.
+        
+        Returns:
+            None
+        """
+    def set_pt_size(self, pt: typing.SupportsInt) -> None:
+        """
+        Set the font point size.
+        
+        Args:
+            pt (int): The new point size. Values below 8 are clamped to 8.
+        
+        Returns:
+            None
+        """
+    def set_strikethrough(self, on: bool) -> None:
+        """
+        Enable or disable strikethrough text style.
+        
+        Args:
+            on (bool): True to enable strikethrough, False to disable.
+        
+        Returns:
+            None
+        """
+    def set_underline(self, on: bool) -> None:
+        """
+        Enable or disable underline text style.
+        
+        Args:
+            on (bool): True to enable underline, False to disable.
+        
+        Returns:
+            None
+        """
 class Frame:
     """
     
@@ -801,7 +905,7 @@ class Frame:
             
     """
     @property
-    def rect(self) -> Rect:
+    def src(self) -> Rect:
         """
         The rectangle defining the frame bounds within the texture.
         """
@@ -1483,6 +1587,21 @@ class MouseButton(enum.IntEnum):
     M_RIGHT: typing.ClassVar[MouseButton]  # value = <MouseButton.M_RIGHT: 3>
     M_SIDE1: typing.ClassVar[MouseButton]  # value = <MouseButton.M_SIDE1: 4>
     M_SIDE2: typing.ClassVar[MouseButton]  # value = <MouseButton.M_SIDE2: 5>
+    @classmethod
+    def __new__(cls, value):
+        ...
+    def __format__(self, format_spec):
+        """
+        Convert to a string according to format_spec.
+        """
+class PenAxis(enum.IntEnum):
+    P_DISTANCE: typing.ClassVar[PenAxis]  # value = <PenAxis.P_DISTANCE: 3>
+    P_PRESSURE: typing.ClassVar[PenAxis]  # value = <PenAxis.P_PRESSURE: 0>
+    P_ROTATION: typing.ClassVar[PenAxis]  # value = <PenAxis.P_ROTATION: 4>
+    P_SLIDER: typing.ClassVar[PenAxis]  # value = <PenAxis.P_SLIDER: 5>
+    P_TANGENTIAL_PRESSURE: typing.ClassVar[PenAxis]  # value = <PenAxis.P_TANGENTIAL_PRESSURE: 6>
+    P_TILT_X: typing.ClassVar[PenAxis]  # value = <PenAxis.P_TILT_X: 1>
+    P_TILT_Y: typing.ClassVar[PenAxis]  # value = <PenAxis.P_TILT_Y: 2>
     @classmethod
     def __new__(cls, value):
         ...
@@ -2491,24 +2610,6 @@ class Texture:
         
         This is the default blending mode for standard transparency effects.
         """
-    @typing.overload
-    def render(self, dst: Rect, src: typing.Any = None) -> None:
-        """
-        Render this texture with specified destination and source rectangles.
-        
-        Args:
-            dst (Rect): The destination rectangle on the renderer.
-            src (Rect, optional): The source rectangle from the texture. Defaults to entire texture if not specified.
-        """
-    @typing.overload
-    def render(self, pos: typing.Any = None, anchor: Anchor = Anchor.CENTER) -> None:
-        """
-        Render this texture at the specified position with anchor alignment.
-        
-        Args:
-            pos (Vec2, optional): The position to draw at. Defaults to (0, 0).
-            anchor (Anchor, optional): The anchor point for positioning. Defaults to CENTER.
-        """
     def set_alpha(self, alpha: typing.SupportsFloat) -> None:
         """
         Set the alpha (transparency) modulation for the texture.
@@ -2962,7 +3063,7 @@ class Vec2:
         Returns:
             str: String in format "Vec2(x, y)".
         """
-    def __rmul__(self: typing.SupportsFloat, scalar: Vec2) -> Vec2:
+    def __rmul__(self, scalar: typing.SupportsFloat) -> Vec2:
         """
         Right-hand multiplication (scalar * self).
         
@@ -3082,6 +3183,19 @@ class Vec2:
     def x(self, arg0: typing.SupportsFloat) -> None:
         ...
     @property
+    def xx(self) -> Vec2:
+        """
+        Get a new Vec2 with both components set to x.
+        """
+    @property
+    def xy(self) -> Vec2:
+        """
+        Get or set the (x, y) components as a new Vec2.
+        """
+    @xy.setter
+    def xy(self, arg1: typing.SupportsFloat, arg2: typing.SupportsFloat) -> None:
+        ...
+    @property
     def y(self) -> float:
         """
         The y component of the vector.
@@ -3089,6 +3203,19 @@ class Vec2:
     @y.setter
     def y(self, arg0: typing.SupportsFloat) -> None:
         ...
+    @property
+    def yx(self) -> Vec2:
+        """
+        Get or set the (y, x) components as a new Vec2.
+        """
+    @yx.setter
+    def yx(self, arg1: typing.SupportsFloat, arg2: typing.SupportsFloat) -> None:
+        ...
+    @property
+    def yy(self) -> Vec2:
+        """
+        Get a new Vec2 with both components set to y.
+        """
 def init() -> None:
     """
     Initialize the Kraken Engine.
@@ -3102,6 +3229,7 @@ def quit() -> None:
     Call this once you're done using the engine to avoid memory leaks.
     """
 AUDIO_DEVICE_ADDED: EventType  # value = <EventType.AUDIO_DEVICE_ADDED: 4352>
+AUDIO_DEVICE_FORMAT_CHANGED: EventType  # value = <EventType.AUDIO_DEVICE_FORMAT_CHANGED: 4354>
 AUDIO_DEVICE_REMOVED: EventType  # value = <EventType.AUDIO_DEVICE_REMOVED: 4353>
 BOTTOM_LEFT: Anchor  # value = <Anchor.BOTTOM_LEFT: 6>
 BOTTOM_MID: Anchor  # value = <Anchor.BOTTOM_MID: 7>
@@ -3313,6 +3441,13 @@ PEN_MOTION: EventType  # value = <EventType.PEN_MOTION: 4870>
 PEN_PROXIMITY_IN: EventType  # value = <EventType.PEN_PROXIMITY_IN: 4864>
 PEN_PROXIMITY_OUT: EventType  # value = <EventType.PEN_PROXIMITY_OUT: 4865>
 PEN_UP: EventType  # value = <EventType.PEN_UP: 4867>
+P_DISTANCE: PenAxis  # value = <PenAxis.P_DISTANCE: 3>
+P_PRESSURE: PenAxis  # value = <PenAxis.P_PRESSURE: 0>
+P_ROTATION: PenAxis  # value = <PenAxis.P_ROTATION: 4>
+P_SLIDER: PenAxis  # value = <PenAxis.P_SLIDER: 5>
+P_TANGENTIAL_PRESSURE: PenAxis  # value = <PenAxis.P_TANGENTIAL_PRESSURE: 6>
+P_TILT_X: PenAxis  # value = <PenAxis.P_TILT_X: 1>
+P_TILT_Y: PenAxis  # value = <PenAxis.P_TILT_Y: 2>
 QUIT: EventType  # value = <EventType.QUIT: 256>
 S_0: Scancode  # value = <Scancode.S_0: 39>
 S_1: Scancode  # value = <Scancode.S_1: 30>

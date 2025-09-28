@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18.2...3.30)
+cmake_minimum_required(VERSION 3.24...3.31)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Detect scikit-build (pip) vs standalone CMake
@@ -22,6 +22,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(PYBIND11_FINDPYTHON ON)
 
 # -------------------- Dependencies --------------------
+
+if (UNIX AND NOT APPLE)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+endif ()
 
 if (_PK_SKBUILD)
     # pip/scikit-build: expect packages available in build env
@@ -52,9 +58,51 @@ foreach (VAR IN ITEMS SDL3_DIR SDL3_ROOT SDL3_image_DIR SDL3_IMAGE_DIR SDL3_IMAG
     endif ()
 endforeach ()
 
-find_package(SDL3 CONFIG REQUIRED)
-find_package(SDL3_image CONFIG REQUIRED)
-find_package(SDL3_ttf CONFIG REQUIRED)
+option(KRAKEN_VENDOR_SDL "Vendor SDL3(+image,+ttf) if not all found" ON)
+
+find_package(SDL3 CONFIG QUIET)
+find_package(SDL3_image CONFIG QUIET)
+find_package(SDL3_ttf CONFIG QUIET)
+
+if (KRAKEN_VENDOR_SDL AND (NOT SDL3_FOUND OR NOT SDL3_image_FOUND OR NOT SDL3_ttf_FOUND))
+    include(FetchContent)
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+
+    if (NOT SDL3_FOUND)
+        FetchContent_Declare(SDL3
+                GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+                GIT_TAG release-3.2.22
+                GIT_SHALLOW TRUE
+                OVERRIDE_FIND_PACKAGE
+        )
+        FetchContent_MakeAvailable(SDL3)
+    endif ()
+
+    if (NOT SDL3_image_FOUND)
+        set(SDLIMAGE_AVIF OFF CACHE BOOL "" FORCE)
+        set(SDLIMAGE_JXL OFF CACHE BOOL "" FORCE)
+        set(SDLIMAGE_TIF OFF CACHE BOOL "" FORCE)
+        set(SDLIMAGE_VENDORED ON CACHE BOOL "" FORCE)
+        FetchContent_Declare(SDL3_image
+                GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
+                GIT_TAG release-3.2.4
+                GIT_SHALLOW TRUE
+                OVERRIDE_FIND_PACKAGE
+        )
+        FetchContent_MakeAvailable(SDL3_image)
+    endif ()
+
+    if (NOT SDL3_ttf_FOUND)
+        set(SDLTTF_VENDORED ON CACHE BOOL "" FORCE)
+        FetchContent_Declare(SDL3_ttf
+                GIT_REPOSITORY https://github.com/libsdl-org/SDL_ttf.git
+                GIT_TAG release-3.2.2
+                GIT_SHALLOW TRUE
+                OVERRIDE_FIND_PACKAGE
+        )
+        FetchContent_MakeAvailable(SDL3_ttf)
+    endif ()
+endif ()
 
 # -------------------- Sources --------------------
 set(_CORE_SOURCES
@@ -70,6 +118,7 @@ set(_CORE_SOURCES
         src/draw.cpp
         src/ease.cpp
         src/event.cpp
+        src/font.cpp
         src/gamepad.cpp
         src/input.cpp
         src/key.cpp
@@ -107,6 +156,8 @@ target_link_libraries(_core PRIVATE
 if (MSVC)
     target_compile_options(_core PRIVATE /bigobj)
 endif ()
+
+set_target_properties(_core PROPERTIES UNITY_BUILD ON)
 
 # Install path works for both pip and standalone 'cmake --install'
 install(TARGETS _core

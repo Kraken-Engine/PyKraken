@@ -67,6 +67,7 @@ void _bind(const py::module_& module)
         .value("DROP_POSITION", SDL_EVENT_DROP_POSITION)
         .value("AUDIO_DEVICE_ADDED", SDL_EVENT_AUDIO_DEVICE_ADDED)
         .value("AUDIO_DEVICE_REMOVED", SDL_EVENT_AUDIO_DEVICE_REMOVED)
+        .value("AUDIO_DEVICE_FORMAT_CHANGED", SDL_EVENT_AUDIO_DEVICE_FORMAT_CHANGED)
         .value("PEN_PROXIMITY_IN", SDL_EVENT_PEN_PROXIMITY_IN)
         .value("PEN_PROXIMITY_OUT", SDL_EVENT_PEN_PROXIMITY_OUT)
         .value("PEN_DOWN", SDL_EVENT_PEN_DOWN)
@@ -89,6 +90,18 @@ void _bind(const py::module_& module)
         .value("M_RIGHT", MouseButton::Right)
         .value("M_SIDE1", MouseButton::Side1)
         .value("M_SIDE2", MouseButton::Side2)
+        .export_values()
+        .finalize();
+
+    // Pen Axis
+    py::native_enum<SDL_PenAxis>(module, "PenAxis", "enum.IntEnum")
+        .value("P_PRESSURE", SDL_PEN_AXIS_PRESSURE)
+        .value("P_TILT_X", SDL_PEN_AXIS_XTILT)
+        .value("P_TILT_Y", SDL_PEN_AXIS_YTILT)
+        .value("P_DISTANCE", SDL_PEN_AXIS_DISTANCE)
+        .value("P_ROTATION", SDL_PEN_AXIS_ROTATION)
+        .value("P_SLIDER", SDL_PEN_AXIS_SLIDER)
+        .value("P_TANGENTIAL_PRESSURE", SDL_PEN_AXIS_TANGENTIAL_PRESSURE)
         .export_values()
         .finalize();
 

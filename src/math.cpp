@@ -600,7 +600,9 @@ Args:
 Returns:
     Vec2: A new Vec2 with multiplied components.
         )doc")
-        .def("__rmul__", &operator*, py::arg("scalar"), R"doc(
+        .def(
+            "__rmul__", [](const Vec2& self, const double s) { return self * s; },
+            py::arg("scalar"), R"doc(
 Right-hand multiplication (scalar * self).
 
 Args:
@@ -703,6 +705,37 @@ Get the angle of the vector in radians.
 Returns:
     float: The angle from the positive x-axis to this vector.
         )doc")
+        .def_property_readonly(
+            "xx", [](const Vec2& self) -> Vec2 { return {self.x, self.x}; },
+            R"doc(
+Get a new Vec2 with both components set to x.
+        )doc")
+        .def_property(
+            "xy", [](const Vec2& self) -> Vec2 { return {self.x, self.y}; },
+            [](Vec2& self, const double lhs, const double rhs)
+            {
+                self.x = lhs;
+                self.y = rhs;
+            },
+            R"doc(
+Get or set the (x, y) components as a new Vec2.
+        )doc")
+        .def_property(
+            "yx", [](const Vec2& self) -> Vec2 { return {self.y, self.x}; },
+            [](Vec2& self, const double lhs, const double rhs)
+            {
+                self.x = lhs;
+                self.y = rhs;
+            },
+            R"doc(
+Get or set the (y, x) components as a new Vec2.
+        )doc")
+        .def_property_readonly(
+            "yy", [](const Vec2& self) -> Vec2 { return {self.y, self.y}; },
+            R"doc(
+Get a new Vec2 with both components set to y.
+        )doc")
+
         .def("rotate", &Vec2::rotate, py::arg("radians"), R"doc(
 Rotate the vector by the given angle in radians.
 

@@ -3,7 +3,7 @@ Window related functions
 """
 from __future__ import annotations
 import pykraken._core
-__all__: list[str] = ['close', 'create', 'get_scale', 'get_size', 'get_title', 'is_fullscreen', 'is_open', 'set_fullscreen', 'set_title']
+__all__: list[str] = ['close', 'create', 'get_scale', 'get_size', 'get_title', 'is_fullscreen', 'is_open', 'set_fullscreen', 'set_icon', 'set_title']
 def close() -> None:
     """
     Close the window.
@@ -82,6 +82,16 @@ def set_fullscreen(fullscreen: bool) -> None:
     
     Raises:
         RuntimeError: If the window is not initialized.
+    """
+def set_icon(path: str) -> None:
+    """
+    Set the window icon from an image file.
+    
+    Args:
+        path (str): The file path to the image to use as the icon.
+    
+    Raises:
+        RuntimeError: If the window is not initialized or icon setting fails.
     """
 def set_title(title: str) -> None:
     """
