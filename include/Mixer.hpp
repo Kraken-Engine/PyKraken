@@ -24,9 +24,9 @@ void _quit();
 void _tick(); // Internal cleanup function, not exposed to Python
 } // namespace mixer
 
-class Audio
+class Audio : public std::enable_shared_from_this<Audio>
 {
-public:
+  public:
     explicit Audio(const std::string& path, float volume = 1.f);
     ~Audio();
 
@@ -38,7 +38,7 @@ public:
 
     [[nodiscard]] float getVolume() const;
 
-private:
+  private:
     static constexpr ma_uint32 m_flags =
         MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_NO_SPATIALIZATION | MA_SOUND_FLAG_NO_PITCH;
 
@@ -52,8 +52,7 @@ private:
     ma_sound m_proto{};
     std::mutex m_mutex;
     std::vector<std::unique_ptr<Voice>> m_voices;
-    int m_nextId = 0;
-    float m_volume;
+    std::atomic<float> m_volume{1.0f};
 
     static ma_uint64 msToFrames(int ms);
 
@@ -66,7 +65,7 @@ private:
 
 class AudioStream
 {
-public:
+  public:
     explicit AudioStream(const std::string& filePath, float volume = 1.f);
     ~AudioStream();
 
@@ -86,7 +85,7 @@ public:
 
     void setLooping(bool loop);
 
-private:
+  private:
     static constexpr ma_uint32 m_flags =
         MA_SOUND_FLAG_STREAM | MA_SOUND_FLAG_NO_SPATIALIZATION | MA_SOUND_FLAG_NO_PITCH;
 
