@@ -13,12 +13,20 @@ concurrency:
 
 jobs:
   build_wheels:
-    name: Build wheels on ${{ matrix.os }}
+    name: Build ${{ matrix.os }} wheels
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ windows-latest, macos-15, ubuntu-latest ]
+        include:
+         - os: windows-latest
+           triplet: x64-windows-static
+           arch: AMD64
+         - os: windows-11-arm
+           triplet: arm64-windows-static
+           arch: ARM64
+         - os: macos-15
+         - os: ubuntu-latest
 
     env:
       MACOSX_DEPLOYMENT_TARGET: "15.0"
@@ -26,30 +34,53 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # ------------------ Install Deps ------------------
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install sdl3 sdl3_image sdl3_ttf
+        env:
+          HOMEBREW_NO_INSTALL_CLEANUP: 1
+
+      - name: Install dependencies (Windows)
+        if: runner.os == 'Windows'
+        id: vcpkg
+        uses: johnwason/vcpkg-action@v7
+        with:
+          pkgs: sdl3 sdl3-image sdl3-ttf
+          triplet: ${{ matrix.triplet }}
+          cache-key: ${{ matrix.os }}
+          token: ${{ github.token }}
+
       # ------------------ Build Wheels ------------------
       - name: Install uv for speed
         uses: astral-sh/setup-uv@v6
-        with:
-          version: "latest"
+        with: { version: "latest" }
 
       - name: Build and test wheels
-        uses: pypa/cibuildwheel@v3.0.1
+        uses: pypa/cibuildwheel@v3.2.0
         env:
           CIBW_BUILD_FRONTEND: "build[uv]"
           CIBW_BUILD_VERBOSITY: 1
+          CIBW_BUILD: "cp311-* cp312-* cp313-* cp314-*"
           CIBW_SKIP: "*-musllinux_* *-win32"
-          CIBW_ARCHS_WINDOWS: "AMD64"
+          CIBW_ARCHS_WINDOWS: ${{ matrix.arch || 'auto' }}
           CIBW_ENVIRONMENT: CMAKE_GENERATOR=Ninja
+          CIBW_ENVIRONMENT_WINDOWS: >
+            CC=cl CXX=cl
+            CMAKE_TOOLCHAIN_FILE=${{ steps.vcpkg.outputs.toolchainFile }}
 
-          CIBW_ENVIRONMENT_WINDOWS: "CC=cl CXX=cl"
-
-          # Minimal system headers inside manylinux (no SDL itself)
           CIBW_BEFORE_ALL_LINUX: >
-            yum -y install
-            alsa-lib-devel pulseaudio-libs-devel nas-devel pipewire-devel
-            libX11-devel libXext-devel libXrandr-devel libXcursor-devel libXfixes-devel
-            libXi-devel libXScrnSaver-devel
-            libxkbcommon-devel wayland-devel mesa-libGL-devel mesa-libEGL-devel
+            yum -y install ninja-build curl tar
+            && curl -L https://github.com/libsdl-org/SDL/releases/download/release-3.2.24/SDL3-3.2.24.tar.gz
+              -o /tmp/SDL3.tgz
+            && mkdir -p /tmp/sdl3 && tar -xf /tmp/SDL3.tgz -C /tmp/sdl3 --strip-components=1
+            && cmake -S /tmp/sdl3 -B /tmp/sdl3/build
+                -DSDL_SHARED=OFF -DSDL_STATIC=ON
+                -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+                -DCMAKE_BUILD_TYPE=Release
+            && cmake --build /tmp/sdl3/build --config Release -j
+            && cmake --install /tmp/sdl3/build --prefix /usr/local
             || true
 
       - name: Upload wheels
