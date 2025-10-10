@@ -13,55 +13,39 @@ concurrency:
 
 jobs:
   build_wheels:
-    name: Build ${{ matrix.os }} wheels
-    runs-on: ${{ matrix.os }}
+    name: Build ${{ matrix.config.os }} wheels
+    runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: false
       matrix:
-        include:
-         - os: windows-latest
-           triplet: x64-windows-static
-           arch: AMD64
-         - os: windows-11-arm
-           triplet: arm64-windows-static
-           arch: ARM64
-         - os: macos-15
-         - os: ubuntu-latest
-
-    env:
-      MACOSX_DEPLOYMENT_TARGET: "15.0"
+        config:
+          - os: ubuntu-latest
+            vcpkg_triplet: x64-linux-release
+          - os: macos-latest
+            vcpkg_triplet: arm64-osx-release
+          - os: windows-latest
+            vcpkg_triplet: x64-windows-release
 
     steps:
       - uses: actions/checkout@v4
 
       # ------------------ Install Deps ------------------
-      - name: Install dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew install sdl3 sdl3_image sdl3_ttf
-        env:
-          HOMEBREW_NO_INSTALL_CLEANUP: 1
-
-      - name: Set vcpkg environment (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          echo "VCPKG_DEFAULT_TRIPLET=${{ matrix.triplet }}" >> $env:GITHUB_ENV
-          echo "VCPKG_FEATURE_FLAGS=manifests,binarycaching" >> $env:GITHUB_ENV
-
-      - name: Install dependencies (Windows)
-        if: runner.os == 'Windows'
-        id: vcpkg
+      - name: Install dependencies
         uses: johnwason/vcpkg-action@v7
+        id: vcpkg
         with:
-          pkgs: sdl3 sdl3-image[core] sdl3-ttf[core]
-          triplet: ${{ matrix.triplet }}
-          cache-key: ${{ matrix.os }}-${{ matrix.triplet }}-v2
-          revision: master
+          pkgs: sdl3 sdl3-image sdl3-ttf
+          triplet: ${{ matrix.config.vcpkg_triplet }}
+          cache-key: ${{ matrix.config.os }}
           token: ${{ github.token }}
 
+      - name: Set vcpkg environment variables
+        run: |
+          echo "CMAKE_TOOLCHAIN_FILE=${{ steps.vcpkg.outputs.vcpkgRoot }}/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=${{ steps.vcpkg.outputs.vcpkgRoot }}/installed/${{ matrix.config.vcpkg_triplet }}" >> $GITHUB_ENV
+
       # ------------------ Build Wheels ------------------
-      - name: Install uv for speed
+      - name: Install UV
         uses: astral-sh/setup-uv@v6
         with: { version: "latest" }
 
@@ -70,50 +54,28 @@ jobs:
         env:
           CIBW_BUILD_FRONTEND: "build[uv]"
           CIBW_BUILD_VERBOSITY: 1
-          CIBW_BUILD: "cp311-* cp312-* cp313-* cp314-*"
           CIBW_SKIP: "*-musllinux_* *-win32"
-          CIBW_ARCHS_WINDOWS: ${{ matrix.arch || 'auto' }}
-          CIBW_ENVIRONMENT: CMAKE_GENERATOR=Ninja
-          CIBW_ENVIRONMENT_WINDOWS: >
-            CC=cl CXX=cl
-            CMAKE_TOOLCHAIN_FILE=${{ steps.vcpkg.outputs.toolchainFile }}
+          CIBW_BUILD: "cp311-* cp312-* cp313-* cp314-*"
+          CIBW_ARCHS_WINDOWS: "AMD64"
+          CIBW_ENVIRONMENT: >
+            CMAKE_GENERATOR=Ninja
+            CMAKE_TOOLCHAIN_FILE=${{ env.CMAKE_TOOLCHAIN_FILE }}
+            CMAKE_PREFIX_PATH=${{ env.CMAKE_PREFIX_PATH }}
+
+          CIBW_ENVIRONMENT_WINDOWS: "CC=cl CXX=cl"
 
           CIBW_BEFORE_ALL_LINUX: >
-            yum -y install ninja-build curl tar cmake3 gcc gcc-c++ make
-            alsa-lib-devel pulseaudio-libs-devel
+            yum -y install
+            alsa-lib-devel pulseaudio-libs-devel nas-devel pipewire-devel
             libX11-devel libXext-devel libXrandr-devel libXcursor-devel libXfixes-devel
-            libXi-devel libXScrnSaver-devel libxkbcommon-devel wayland-devel
-            mesa-libGL-devel mesa-libEGL-devel &&
-            SDL3_VER=3.2.24 &&
-            curl -L https://github.com/libsdl-org/SDL/releases/download/release-${SDL3_VER}/SDL3-${SDL3_VER}.tar.gz -o /tmp/SDL3.tgz &&
-            mkdir -p /tmp/sdl3 && tar -xf /tmp/SDL3.tgz -C /tmp/sdl3 --strip-components=1 &&
-            cmake -S /tmp/sdl3 -B /tmp/sdl3/build -GNinja
-              -DSDL_SHARED=OFF -DSDL_STATIC=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON
-              -DCMAKE_BUILD_TYPE=Release &&
-            cmake --build /tmp/sdl3/build -j &&
-            cmake --install /tmp/sdl3/build --prefix /usr/local &&
-            SDL3_IMAGE_VER=3.2.4 &&
-            curl -L https://github.com/libsdl-org/SDL_image/releases/download/release-${SDL3_IMAGE_VER}/SDL3_image-${SDL3_IMAGE_VER}.tar.gz -o /tmp/SDL3_image.tgz &&
-            mkdir -p /tmp/sdl3_image && tar -xf /tmp/SDL3_image.tgz -C /tmp/sdl3_image --strip-components=1 &&
-            cmake -S /tmp/sdl3_image -B /tmp/sdl3_image/build -GNinja
-              -DSDL3IMAGE_BACKEND_STB=ON -DSDL3IMAGE_BACKEND_WIC=OFF
-              -DSDL3IMAGE_AVIF=OFF -DSDL3IMAGE_JXL=OFF -DSDL3IMAGE_TIF=OFF
-              -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON
-              -DCMAKE_BUILD_TYPE=Release &&
-            cmake --build /tmp/sdl3_image/build -j &&
-            cmake --install /tmp/sdl3_image/build --prefix /usr/local &&
-            SDL3_TTF_VER=3.2.2 &&
-            curl -L https://github.com/libsdl-org/SDL_ttf/releases/download/release-${SDL3_TTF_VER}/SDL3_ttf-${SDL3_TTF_VER}.tar.gz -o /tmp/SDL3_ttf.tgz &&
-            mkdir -p /tmp/sdl3_ttf && tar -xf /tmp/SDL3_ttf.tgz -C /tmp/sdl3_ttf --strip-components=1 &&
-            cmake -S /tmp/sdl3_ttf -B /tmp/sdl3_ttf/build -GNinja
-              -DSDL3TTF_VENDORED=ON -DBUILD_SHARED_LIBS=OFF
-              -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=Release &&
-            cmake --build /tmp/sdl3_ttf/build -j &&
-            cmake --install /tmp/sdl3_ttf/build --prefix /usr/local
+            libXi-devel libXScrnSaver-devel
+            libxkbcommon-devel wayland-devel mesa-libGL-devel mesa-libEGL-devel
+            || true
 
+      # ------------------ Upload Artifacts ------------------
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-${{ matrix.os }}
+          name: wheels-${{ matrix.config.os }}
           path: ./wheelhouse/*.whl
           compression-level: 0
