@@ -492,6 +492,17 @@ class Color:
     Each channel (r, g, b, a) is an 8-bit unsigned integer.
         
     """
+    __hash__: typing.ClassVar[None] = None
+    def __eq__(self, other: Color) -> bool:
+        """
+        Check if two Color objects are equal (all RGBA components match).
+        
+        Args:
+            other (Color): The color to compare with.
+        
+        Returns:
+            bool: True if colors are identical, False otherwise.
+        """
     def __getitem__(self, index: typing.SupportsInt) -> int:
         """
         Access color channels by index.
@@ -548,6 +559,16 @@ class Color:
         
         Returns:
             int: Always returns 4 (for r, g, b, a channels).
+        """
+    def __ne__(self, other: Color) -> bool:
+        """
+        Check if two Color objects are not equal.
+        
+        Args:
+            other (Color): The color to compare with.
+        
+        Returns:
+            bool: True if any component differs, False otherwise.
         """
     def __repr__(self) -> str:
         """
@@ -1945,17 +1966,6 @@ class Polygon:
         
         Args:
             points (list[Vec2]): List of Vec2 points defining the polygon vertices.
-        """
-    @typing.overload
-    def __init__(self, points: collections.abc.Sequence) -> None:
-        """
-        Create a polygon from a sequence of points.
-        
-        Args:
-            points: A sequence of Vec2 objects or 2-element sequences [[x, y], ...].
-        
-        Raises:
-            ValueError: If points are not properly formatted.
         """
     def __iter__(self) -> collections.abc.Iterator:
         """

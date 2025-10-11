@@ -19,51 +19,15 @@ Represents a polygon shape defined by a sequence of points.
 A polygon is a closed shape made up of connected line segments. The points define
 the vertices of the polygon in order. Supports various geometric operations.
     )doc")
+
         .def(py::init(), R"doc(
 Create an empty polygon with no points.
         )doc")
-
         .def(py::init<const std::vector<Vec2>&>(), py::arg("points"), R"doc(
 Create a polygon from a vector of Vec2 points.
 
 Args:
     points (list[Vec2]): List of Vec2 points defining the polygon vertices.
-        )doc")
-
-        .def(py::init(
-                 [](const py::sequence& pointsSeq) -> Polygon
-                 {
-                     std::vector<Vec2> points;
-                     for (auto item : pointsSeq)
-                     {
-                         if (py::isinstance<Vec2>(item))
-                         {
-                             points.push_back(item.cast<Vec2>());
-                         }
-                         else if (py::isinstance<py::sequence>(item))
-                         {
-                             auto point = item.cast<py::sequence>();
-                             if (point.size() != 2)
-                                 throw std::invalid_argument(
-                                     "Each point must be a 2-element sequence");
-                             points.emplace_back(point[0].cast<double>(), point[1].cast<double>());
-                         }
-                         else
-                         {
-                             throw std::invalid_argument(
-                                 "Points must be Vec2 objects or 2-element sequences");
-                         }
-                     }
-                     return Polygon{points};
-                 }),
-             py::arg("points"), R"doc(
-Create a polygon from a sequence of points.
-
-Args:
-    points: A sequence of Vec2 objects or 2-element sequences [[x, y], ...].
-
-Raises:
-    ValueError: If points are not properly formatted.
         )doc")
 
         .def(

@@ -22,6 +22,9 @@ all_of.set_strikethrough(True)
 while kn.window.is_open():
     kn.event.poll()
 
+    if kn.key.is_just_pressed(kn.K_p):
+        kn.window.save_screenshot("example/screenshot.png")
+
     kn.renderer.clear()
     reg.draw("This is Kraken Engine", color=(255, 255, 255))
     ital.draw("This is Kraken Engine", color=(255, 255, 255), pos=(0, 48))

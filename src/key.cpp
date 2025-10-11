@@ -63,6 +63,7 @@ void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
         e.data["which"] = sdlEvent.key.which;
         e.data["key"] = static_cast<Keycode>(sdlEvent.key.key);
         e.data["scan"] = sdlEvent.key.scancode;
+        e.data["repeat"] = sdlEvent.key.repeat;
         break;
     case SDL_EVENT_TEXT_EDITING:
         e.data["text"] = sdlEvent.edit.text;

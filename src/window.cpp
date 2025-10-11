@@ -36,22 +36,40 @@ void create(const std::string& title, const Vec2& res, const bool scaled)
     int winH;
     if (scaled)
     {
-        SDL_Rect usableBounds;
-        if (!SDL_GetDisplayUsableBounds(SDL_GetPrimaryDisplay(), &usableBounds))
-            throw std::runtime_error(SDL_GetError());
+        const SDL_DisplayID primaryDisplay = SDL_GetPrimaryDisplay();
+        if (primaryDisplay == 0)
+        {
+            // Fallback: if we can't get primary display, use non-scaled mode
+            winW = static_cast<int>(res.x);
+            winH = static_cast<int>(res.y);
+            _scale = 1;
+        }
+        else
+        {
+            SDL_Rect usableBounds;
+            if (!SDL_GetDisplayUsableBounds(primaryDisplay, &usableBounds))
+            {
+                // Fallback: if we can't get bounds, use non-scaled mode
+                winW = static_cast<int>(res.x);
+                winH = static_cast<int>(res.y);
+                _scale = 1;
+            }
+            else
+            {
+                // Calculate scale factors for both dimensions
+                const double scaleX = usableBounds.w / res.x;
+                const double scaleY = usableBounds.h / res.y;
 
-        // Calculate scale factors for both dimensions
-        const double scaleX = usableBounds.w / res.x;
-        const double scaleY = usableBounds.h / res.y;
+                // Use the smaller scale to maintain an aspect ratio
+                const double minScale = scaleX < scaleY ? scaleX : scaleY;
+                _scale = static_cast<int>(minScale);
+                if (fmod(minScale, 1.0) == 0.0)
+                    _scale = static_cast<int>(minScale) - 1;
 
-        // Use the smaller scale to maintain an aspect ratio
-        const double minScale = scaleX < scaleY ? scaleX : scaleY;
-        _scale = static_cast<int>(minScale);
-        if (fmod(minScale, 1.0) == 0.0)
-            _scale = static_cast<int>(minScale) - 1;
-
-        winW = static_cast<int>(res.x * _scale);
-        winH = static_cast<int>(res.y * _scale);
+                winW = static_cast<int>(res.x * _scale);
+                winH = static_cast<int>(res.y * _scale);
+            }
+        }
     }
     else
     {
@@ -162,6 +180,25 @@ void setIcon(const std::string& path)
     SDL_DestroySurface(iconSurface);
 }
 
+void saveScreenshot(const std::string& filePath)
+{
+    if (!_window)
+        throw std::runtime_error("Window not initialized");
+
+    SDL_Surface* shotSurface = SDL_RenderReadPixels(renderer::_get(), nullptr);
+    if (!shotSurface)
+        throw std::runtime_error("Failed to read pixels: " + std::string(SDL_GetError()));
+
+    if (!IMG_SavePNG(shotSurface, filePath.c_str()))
+    {
+        SDL_DestroySurface(shotSurface);
+        throw std::runtime_error("Failed to save screenshot: " + std::string(SDL_GetError()));
+    }
+
+    SDL_DestroySurface(shotSurface);
+}
+
+
 void _bind(py::module_& module)
 {
     auto subWindow = module.def_submodule("window", "Window related functions");
@@ -181,18 +218,21 @@ Raises:
     RuntimeError: If a window already exists or window creation fails.
     ValueError: If title is empty, exceeds 255 characters, or size values are <= 0.
     )doc");
+
     subWindow.def("is_open", &isOpen, R"doc(
 Check if the window is open.
 
 Returns:
     bool: True if the window is open and active.
     )doc");
+
     subWindow.def("close", &close, R"doc(
 Close the window.
 
 Marks the window as closed, typically used to signal the main loop to exit.
 This doesn't destroy the window immediately but sets the close flag.
     )doc");
+
     subWindow.def("set_fullscreen", &setFullscreen, py::arg("fullscreen"), R"doc(
 Set the fullscreen mode of the window.
 
@@ -202,6 +242,7 @@ Args:
 Raises:
     RuntimeError: If the window is not initialized.
     )doc");
+
     subWindow.def("is_fullscreen", &isFullscreen, R"doc(
 Check if the window is in fullscreen mode.
 
@@ -211,6 +252,7 @@ Returns:
 Raises:
     RuntimeError: If the window is not initialized.
     )doc");
+
     subWindow.def("get_size", &getSize,
                   R"doc(
 Get the current size of the window.
@@ -221,6 +263,7 @@ Returns:
 Raises:
     RuntimeError: If the window is not initialized.
     )doc");
+
     subWindow.def("get_scale", &getScale, R"doc(
 Get the scale of the window relative to the renderer resolution.
 
@@ -230,6 +273,7 @@ Returns:
 Raises:
     RuntimeError: If the window is not initialized.
     )doc");
+
     subWindow.def("get_title", &getTitle, R"doc(
 Get the current title of the window.
 
@@ -239,6 +283,7 @@ Returns:
 Raises:
     RuntimeError: If the window is not initialized.
     )doc");
+
     subWindow.def("set_title", &setTitle, py::arg("title"), R"doc(
 Set the title of the window.
 
@@ -249,6 +294,7 @@ Raises:
     RuntimeError: If the window is not initialized or title setting fails.
     ValueError: If title is empty or exceeds 255 characters.
     )doc");
+
     subWindow.def("set_icon", &setIcon, py::arg("path"), R"doc(
 Set the window icon from an image file.
 
@@ -258,6 +304,13 @@ Args:
 Raises:
     RuntimeError: If the window is not initialized or icon setting fails.
     )doc");
+
+    subWindow.def("save_screenshot", &saveScreenshot, py::arg("path"), R"doc(
+Save a screenshot of the current frame to a file.
+
+Args:
+    path (str): The path to save the screenshot to.
+)doc");
 }
 } // namespace window
 

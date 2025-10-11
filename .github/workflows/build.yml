@@ -13,36 +13,15 @@ concurrency:
 
 jobs:
   build_wheels:
-    name: Build ${{ matrix.config.os }} wheels
-    runs-on: ${{ matrix.config.os }}
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        config:
-          - os: ubuntu-latest
-            vcpkg_triplet: x64-linux-release
-          - os: macos-latest
-            vcpkg_triplet: arm64-osx-release
-          - os: windows-latest
-            vcpkg_triplet: x64-windows-release
+        os: [ windows-latest, macos-latest, ubuntu-latest ]
 
     steps:
       - uses: actions/checkout@v4
-
-      # ------------------ Install Deps ------------------
-      - name: Install dependencies
-        uses: johnwason/vcpkg-action@v7
-        id: vcpkg
-        with:
-          pkgs: sdl3 sdl3-image sdl3-ttf
-          triplet: ${{ matrix.config.vcpkg_triplet }}
-          cache-key: ${{ matrix.config.os }}
-          token: ${{ github.token }}
-
-      - name: Set vcpkg environment variables
-        run: |
-          echo "CMAKE_TOOLCHAIN_FILE=${{ steps.vcpkg.outputs.vcpkgRoot }}/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
-          echo "CMAKE_PREFIX_PATH=${{ steps.vcpkg.outputs.vcpkgRoot }}/installed/${{ matrix.config.vcpkg_triplet }}" >> $GITHUB_ENV
 
       # ------------------ Build Wheels ------------------
       - name: Install UV
@@ -57,13 +36,11 @@ jobs:
           CIBW_SKIP: "*-musllinux_* *-win32"
           CIBW_BUILD: "cp311-* cp312-* cp313-* cp314-*"
           CIBW_ARCHS_WINDOWS: "AMD64"
-          CIBW_ENVIRONMENT: >
-            CMAKE_GENERATOR=Ninja
-            CMAKE_TOOLCHAIN_FILE=${{ env.CMAKE_TOOLCHAIN_FILE }}
-            CMAKE_PREFIX_PATH=${{ env.CMAKE_PREFIX_PATH }}
+          CIBW_ENVIRONMENT: CMAKE_GENERATOR=Ninja
 
           CIBW_ENVIRONMENT_WINDOWS: "CC=cl CXX=cl"
 
+          # Minimal system headers inside manylinux (no SDL itself)
           CIBW_BEFORE_ALL_LINUX: >
             yum -y install
             alsa-lib-devel pulseaudio-libs-devel nas-devel pipewire-devel
@@ -71,11 +48,9 @@ jobs:
             libXi-devel libXScrnSaver-devel
             libxkbcommon-devel wayland-devel mesa-libGL-devel mesa-libEGL-devel
             || true
-
-      # ------------------ Upload Artifacts ------------------
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-${{ matrix.config.os }}
+          name: wheels-${{ matrix.os }}
           path: ./wheelhouse/*.whl
           compression-level: 0
