@@ -1551,6 +1551,10 @@ class Mask:
         Raises:
             RuntimeError: If pixel array creation fails.
         """
+    def get_rect(self) -> Rect:
+        """
+        Get the bounding rectangle of the mask starting at (0, 0).
+        """
     def invert(self) -> None:
         """
         Invert all pixels in the mask.
@@ -1586,11 +1590,6 @@ class Mask:
     def height(self) -> int:
         """
         The height of the mask in pixels.
-        """
-    @property
-    def rect(self) -> Rect:
-        """
-        The bounding rectangle of the mask starting at (0, 0).
         """
     @property
     def size(self) -> Vec2:
@@ -1719,6 +1718,13 @@ class PixelArray:
         Raises:
             IndexError: If coordinates are outside the pixel array bounds.
         """
+    def get_rect(self) -> Rect:
+        """
+        Get a rectangle representing the pixel array bounds.
+        
+        Returns:
+            Rect: A rectangle with position (0, 0) and the pixel array's dimensions.
+        """
     def set_at(self, coord: Vec2, color: Color) -> None:
         """
         Set the color of a pixel at the specified coordinates.
@@ -1771,14 +1777,6 @@ class PixelArray:
         
         Returns:
             int: The pixel array height.
-        """
-    @property
-    def rect(self) -> Rect:
-        """
-        A rectangle representing the pixel array bounds.
-        
-        Returns:
-            Rect: A rectangle with position (0, 0) and the pixel array's dimensions.
         """
     @property
     def size(self) -> Vec2:
@@ -2572,33 +2570,12 @@ class Texture:
         Raises:
             RuntimeError: If texture creation from pixel array fails.
         """
-    def get_alpha(self) -> float:
-        """
-        Get the current alpha modulation value.
-        
-        Returns:
-            float: The current alpha value.
-        """
     def get_rect(self) -> Rect:
         """
         Get a rectangle representing the texture bounds.
         
         Returns:
             Rect: A rectangle with position (0, 0) and the texture's dimensions.
-        """
-    def get_size(self) -> Vec2:
-        """
-        Get the size of the texture.
-        
-        Returns:
-            Vec2: The texture size as (width, height).
-        """
-    def get_tint(self) -> Color:
-        """
-        Get the current color tint applied to the texture.
-        
-        Returns:
-            Color: The current tint color.
         """
     def make_additive(self) -> None:
         """
@@ -2620,30 +2597,20 @@ class Texture:
         
         This is the default blending mode for standard transparency effects.
         """
-    def set_alpha(self, alpha: typing.SupportsFloat) -> None:
+    @property
+    def alpha(self) -> float:
         """
-        Set the alpha (transparency) modulation for the texture.
-        
-        Args:
-            alpha (float): The alpha value, typically in range [0.0, 1.0] where
-                          0.0 is fully transparent and 1.0 is fully opaque.
+        Get or set the alpha modulation of the texture as a float between `0.0` and `1.0`.
         """
-    def set_tint(self, color: Color) -> None:
-        """
-        Set the color tint applied to the texture during rendering.
-        
-        The tint color is multiplied with the texture's pixels, allowing for
-        color effects and lighting.
-        
-        Args:
-            color (Color): The tint color to apply.
-        """
+    @alpha.setter
+    def alpha(self, arg1: typing.SupportsFloat) -> None:
+        ...
     @property
     def angle(self) -> float:
         """
-        The rotation angle in degrees for rendering.
+        The rotation angle in radians for rendering.
         
-        When the texture is drawn, it will be rotated by this angle around its center.
+        When the texture is drawn, it will be rotated by this angle about its center.
         """
     @angle.setter
     def angle(self, arg0: typing.SupportsFloat) -> None:
@@ -2657,6 +2624,22 @@ class Texture:
         """
     @flip.setter
     def flip(self, arg0: Texture.Flip) -> None:
+        ...
+    @property
+    def size(self) -> Vec2:
+        """
+        Get the size of the texture.
+        
+        Returns:
+            Vec2: The texture size as (width, height).
+        """
+    @property
+    def tint(self) -> Color:
+        """
+        Get or set the color tint applied to the texture during rendering.
+        """
+    @tint.setter
+    def tint(self, arg1: Color) -> None:
         ...
 class Tile:
     """
