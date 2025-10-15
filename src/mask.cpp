@@ -585,6 +585,9 @@ Returns:
 Raises:
     RuntimeError: If pixel array creation fails.
         )doc")
+        .def("get_rect", &Mask::getRect, R"doc(
+Get the bounding rectangle of the mask starting at (0, 0).
+        )doc")
 
         .def_property_readonly("width", &Mask::getWidth, R"doc(
 The width of the mask in pixels.
@@ -594,9 +597,6 @@ The height of the mask in pixels.
         )doc")
         .def_property_readonly("size", &Mask::getSize, R"doc(
 The size of the mask as a Vec2.
-        )doc")
-        .def_property_readonly("rect", &Mask::getRect, R"doc(
-The bounding rectangle of the mask starting at (0, 0).
         )doc");
 }
 } // namespace mask

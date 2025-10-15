@@ -310,6 +310,12 @@ Returns:
 Raises:
     RuntimeError: If pixel array copying fails.
         )doc")
+        .def("get_rect", &PixelArray::getRect, R"doc(
+Get a rectangle representing the pixel array bounds.
+
+Returns:
+    Rect: A rectangle with position (0, 0) and the pixel array's dimensions.
+        )doc")
 
         .def_property("color_key", &PixelArray::getColorKey, &PixelArray::setColorKey, R"doc(
 The color key for transparency.
@@ -353,12 +359,6 @@ The size of the pixel array as a Vec2.
 
 Returns:
     Vec2: The pixel array size as (width, height).
-        )doc")
-        .def_property_readonly("rect", &PixelArray::getRect, R"doc(
-A rectangle representing the pixel array bounds.
-
-Returns:
-    Rect: A rectangle with position (0, 0) and the pixel array's dimensions.
         )doc");
 }
 } // namespace pixel_array

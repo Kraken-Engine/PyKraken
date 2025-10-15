@@ -149,9 +149,9 @@ Raises:
         )doc")
 
         .def_readwrite("angle", &Texture::angle, R"doc(
-The rotation angle in degrees for rendering.
+The rotation angle in radians for rendering.
 
-When the texture is drawn, it will be rotated by this angle around its center.
+When the texture is drawn, it will be rotated by this angle about its center.
         )doc")
         .def_readwrite("flip", &Texture::flip, R"doc(
 The flip settings for horizontal and vertical mirroring.
@@ -159,45 +159,24 @@ The flip settings for horizontal and vertical mirroring.
 Controls whether the texture is flipped horizontally and/or vertically during rendering.
         )doc")
 
-        .def("get_size", &Texture::getSize, R"doc(
+        .def_property("alpha", &Texture::getAlpha, &Texture::setAlpha, R"doc(
+Get or set the alpha modulation of the texture as a float between `0.0` and `1.0`.
+        )doc")
+        .def_property("tint", &Texture::getTint, &Texture::setTint, R"doc(
+Get or set the color tint applied to the texture during rendering.
+        )doc")
+        .def_property_readonly("size", &Texture::getSize, R"doc(
 Get the size of the texture.
 
 Returns:
     Vec2: The texture size as (width, height).
         )doc")
+
         .def("get_rect", &Texture::getRect, R"doc(
 Get a rectangle representing the texture bounds.
 
 Returns:
     Rect: A rectangle with position (0, 0) and the texture's dimensions.
-        )doc")
-        .def("set_tint", &Texture::setTint, py::arg("color"), R"doc(
-Set the color tint applied to the texture during rendering.
-
-The tint color is multiplied with the texture's pixels, allowing for
-color effects and lighting.
-
-Args:
-    color (Color): The tint color to apply.
-        )doc")
-        .def("get_tint", &Texture::getTint, R"doc(
-Get the current color tint applied to the texture.
-
-Returns:
-    Color: The current tint color.
-        )doc")
-        .def("set_alpha", &Texture::setAlpha, py::arg("alpha"), R"doc(
-Set the alpha (transparency) modulation for the texture.
-
-Args:
-    alpha (float): The alpha value, typically in range [0.0, 1.0] where
-                  0.0 is fully transparent and 1.0 is fully opaque.
-        )doc")
-        .def("get_alpha", &Texture::getAlpha, R"doc(
-Get the current alpha modulation value.
-
-Returns:
-    float: The current alpha value.
         )doc")
         .def("make_additive", &Texture::makeAdditive, R"doc(
 Set the texture to use additive blending mode.
