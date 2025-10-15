@@ -1,6 +1,14 @@
 #include "Renderer.hpp"
 #include "Camera.hpp"
+#include "PixelArray.hpp"
 #include "Texture.hpp"
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+constexpr double CONVERSION = 180.0 / M_PI;
+#define TO_DEGREES(x) (x * CONVERSION)
 
 namespace kn::renderer
 {
@@ -74,12 +82,12 @@ Returns:
             }
         },
         py::arg("texture"), py::arg("dst"), py::arg("src") = py::none(), R"doc(
-    Render a texture with specified destination and source rectangles.
+Render a texture with specified destination and source rectangles.
 
-    Args:
-        texture (Texture): The texture to render.
-        dst (Rect): The destination rectangle on the renderer.
-        src (Rect, optional): The source rectangle from the texture. Defaults to entire texture if not specified.
+Args:
+    texture (Texture): The texture to render.
+    dst (Rect): The destination rectangle on the renderer.
+    src (Rect, optional): The source rectangle from the texture. Defaults to entire texture if not specified.
         )doc");
 
     subRenderer.def(
@@ -97,12 +105,36 @@ Returns:
             }
         },
         py::arg("texture"), py::arg("pos") = py::none(), py::arg("anchor") = Anchor::Center, R"doc(
-    Render a texture at the specified position with anchor alignment.
+Render a texture at the specified position with anchor alignment.
 
-    Args:
-        texture (Texture): The texture to render.
-        pos (Vec2, optional): The position to draw at. Defaults to (0, 0).
-        anchor (Anchor, optional): The anchor point for positioning. Defaults to CENTER.
+Args:
+    texture (Texture): The texture to render.
+    pos (Vec2, optional): The position to draw at. Defaults to (0, 0).
+    anchor (Anchor, optional): The anchor point for positioning. Defaults to CENTER.
+        )doc");
+
+    subRenderer.def(
+        "read_pixels",
+        [](const py::object& rectObj) -> std::unique_ptr<PixelArray>
+        {
+            try
+            {
+                return readPixels(rectObj.is_none() ? Rect() : rectObj.cast<Rect>());
+            }
+            catch (const py::cast_error&)
+            {
+                throw py::type_error("Invalid type for 'src', expected Rect or None");
+            }
+        },
+        py::arg("src") = py::none(), R"doc(
+Read pixel data from the renderer within the specified rectangle.
+
+Args:
+    src (Rect, optional): The rectangle area to read pixels from. Defaults to entire renderer if None.
+Returns:
+    PixelArray: An array containing the pixel data.
+Raises:
+    RuntimeError: If reading pixels fails.
         )doc");
 }
 
@@ -154,6 +186,16 @@ void present()
     SDL_SetRenderTarget(_renderer, _target);
 }
 
+std::unique_ptr<PixelArray> readPixels(const Rect& src)
+{
+    const auto sdlRect = static_cast<SDL_Rect>(src);
+    SDL_Surface* surface = SDL_RenderReadPixels(_renderer, &sdlRect);
+    if (!surface)
+        throw std::runtime_error("Failed to read pixels: " + std::string(SDL_GetError()));
+
+    return std::make_unique<PixelArray>(surface);
+}
+
 void draw(const Texture& texture, Rect dstRect, const Rect& srcRect)
 {
     const Vec2 cameraPos = camera::getActivePos();
@@ -174,8 +216,8 @@ void draw(const Texture& texture, Rect dstRect, const Rect& srcRect)
     };
     const auto srcSDLRect =
         static_cast<SDL_FRect>(srcRect.w == 0.0 && srcRect.h == 0.0 ? texture.getRect() : srcRect);
-    SDL_RenderTextureRotated(_renderer, texture.getSDL(), &srcSDLRect, &dstSDLRect, texture.angle,
-                             nullptr, flipAxis);
+    SDL_RenderTextureRotated(_renderer, texture.getSDL(), &srcSDLRect, &dstSDLRect,
+                             TO_DEGREES(texture.angle), nullptr, flipAxis);
 }
 
 void draw(const Texture& texture, Vec2 pos, const Anchor anchor)
@@ -225,8 +267,8 @@ void draw(const Texture& texture, Vec2 pos, const Anchor anchor)
         std::roundf(static_cast<float>(rect.w)),
         std::roundf(static_cast<float>(rect.h)),
     };
-    SDL_RenderTextureRotated(_renderer, texture.getSDL(), nullptr, &dstSDLRect, texture.angle,
-                             nullptr, flipAxis);
+    SDL_RenderTextureRotated(_renderer, texture.getSDL(), nullptr, &dstSDLRect,
+                             TO_DEGREES(texture.angle), nullptr, flipAxis);
 }
 
 SDL_Renderer* _get() { return _renderer; }

@@ -7,7 +7,7 @@
 namespace kn
 {
 static ma_engine _engine;
-static std::vector<Audio*> _audioInstances;
+static std::vector<std::weak_ptr<Audio>> _audioInstances;
 static std::mutex _instancesMutex;
 
 Audio::Audio(const std::string& path, const float volume) : m_path(path), m_volume(volume)
@@ -15,10 +15,6 @@ Audio::Audio(const std::string& path, const float volume) : m_path(path), m_volu
     if (ma_sound_init_from_file(&_engine, m_path.c_str(), m_flags, nullptr, nullptr, &m_proto) !=
         MA_SUCCESS)
         throw std::runtime_error("ma_sound_init_from_file(DECODE) failed: " + path);
-
-    // Register this instance for automatic cleanup
-    std::lock_guard g(_instancesMutex);
-    _audioInstances.push_back(this);
 }
 
 Audio::~Audio()
@@ -28,6 +24,7 @@ Audio::~Audio()
         std::lock_guard g(m_mutex);
         for (const auto& v : m_voices)
         {
+            ma_sound_set_end_callback(&v->snd, nullptr, nullptr);
             ma_sound_uninit(&v->snd);
         }
         m_voices.clear();
@@ -36,7 +33,7 @@ Audio::~Audio()
 
     // Unregister this instance
     std::lock_guard g(_instancesMutex);
-    std::erase(_audioInstances, this);
+    std::erase_if(_audioInstances, [&](auto& w) { return w.expired() || w.lock().get() == this; });
 }
 
 void Audio::play(const int fadeInMs, const bool loop)
@@ -75,13 +72,13 @@ void Audio::stop(const int fadeOutMs)
 
 void Audio::setVolume(const float volume)
 {
-    m_volume = volume;
+    m_volume.store(volume, std::memory_order_relaxed);
     std::lock_guard g(m_mutex);
     for (const auto& v : m_voices)
         ma_sound_set_volume(&v->snd, volume);
 }
 
-float Audio::getVolume() const { return m_volume; }
+float Audio::getVolume() const { return m_volume.load(std::memory_order_relaxed); }
 
 void Audio::cleanup()
 {
@@ -91,6 +88,7 @@ void Audio::cleanup()
                   {
                       if (v->done.load(std::memory_order_relaxed) && !ma_sound_is_playing(&v->snd))
                       {
+                          ma_sound_set_end_callback(&v->snd, nullptr, nullptr);
                           ma_sound_uninit(&v->snd);
                           return true;
                       }
@@ -193,12 +191,30 @@ void _quit() { ma_engine_uninit(&_engine); }
 
 void _tick()
 {
-    // Clean up all audio instances automatically
-    std::lock_guard g(_instancesMutex);
-    for (Audio* audio : _audioInstances)
+    std::vector<std::shared_ptr<Audio>> work;
     {
-        audio->cleanup();
+        std::lock_guard lk(_instancesMutex);
+        // collect live instances and compact away expired ones
+        work.reserve(_audioInstances.size());
+        auto it = _audioInstances.begin();
+        while (it != _audioInstances.end())
+        {
+            if (auto sp = it->lock())
+            {
+                work.push_back(std::move(sp));
+                ++it;
+            }
+            else
+            {
+                it = _audioInstances.erase(it); // drop expired
+            }
+        }
+
+        if (_audioInstances.capacity() > _audioInstances.size() * 2)
+            _audioInstances.shrink_to_fit();
     }
+    for (const auto& a : work)
+        a->cleanup(); // no global lock held; lifetime pinned
 }
 
 void _bind(const py::module_& module)
@@ -210,7 +226,17 @@ A decoded audio object that supports multiple simultaneous playbacks.
 Audio objects decode the entire file into memory for low-latency playback. They support
 multiple concurrent playbacks of the same sound. Use this for short sound effects that may need to overlap.
     )doc")
-        .def(py::init<const std::string&, float>(), py::arg("file_path"), py::arg("volume") = 1.0f,
+        .def(py::init(
+                 [](const std::string& path, float volume) -> std::shared_ptr<Audio>
+                 {
+                     auto sp = std::make_shared<Audio>(path, volume);
+                     {
+                         std::lock_guard g(_instancesMutex);
+                         _audioInstances.push_back(sp);
+                     }
+                     return sp;
+                 }),
+             py::arg("file_path"), py::arg("volume") = 1.0f,
              R"doc(
 Create an Audio object from a file path with optional volume.
 

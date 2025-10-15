@@ -36,5 +36,7 @@ void setTitle(const std::string& title);
 std::string getTitle();
 
 void setIcon(const std::string& path);
+
+void saveScreenshot(const std::string& filePath);
 } // namespace window
 } // namespace kn

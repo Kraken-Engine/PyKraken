@@ -3,7 +3,7 @@ Window related functions
 """
 from __future__ import annotations
 import pykraken._core
-__all__: list[str] = ['close', 'create', 'get_scale', 'get_size', 'get_title', 'is_fullscreen', 'is_open', 'set_fullscreen', 'set_icon', 'set_title']
+__all__: list[str] = ['close', 'create', 'get_scale', 'get_size', 'get_title', 'is_fullscreen', 'is_open', 'save_screenshot', 'set_fullscreen', 'set_icon', 'set_title']
 def close() -> None:
     """
     Close the window.
@@ -72,6 +72,13 @@ def is_open() -> bool:
     
     Returns:
         bool: True if the window is open and active.
+    """
+def save_screenshot(path: str) -> None:
+    """
+    Save a screenshot of the current frame to a file.
+    
+    Args:
+        path (str): The path to save the screenshot to.
     """
 def set_fullscreen(fullscreen: bool) -> None:
     """

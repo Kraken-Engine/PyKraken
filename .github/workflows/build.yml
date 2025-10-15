@@ -18,26 +18,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ windows-latest, macos-15, ubuntu-latest ]
-
-    env:
-      MACOSX_DEPLOYMENT_TARGET: "15.0"
+        os: [ windows-latest, macos-latest, ubuntu-latest ]
 
     steps:
       - uses: actions/checkout@v4
 
       # ------------------ Build Wheels ------------------
-      - name: Install uv for speed
+      - name: Install UV
         uses: astral-sh/setup-uv@v6
-        with:
-          version: "latest"
+        with: { version: "latest" }
 
       - name: Build and test wheels
-        uses: pypa/cibuildwheel@v3.0.1
+        uses: pypa/cibuildwheel@v3.2.0
         env:
           CIBW_BUILD_FRONTEND: "build[uv]"
           CIBW_BUILD_VERBOSITY: 1
           CIBW_SKIP: "*-musllinux_* *-win32"
+          CIBW_BUILD: "cp311-* cp312-* cp313-* cp314-*"
           CIBW_ARCHS_WINDOWS: "AMD64"
           CIBW_ENVIRONMENT: CMAKE_GENERATOR=Ninja
 
@@ -51,7 +48,6 @@ jobs:
             libXi-devel libXScrnSaver-devel
             libxkbcommon-devel wayland-devel mesa-libGL-devel mesa-libEGL-devel
             || true
-
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:

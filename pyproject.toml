@@ -4,21 +4,20 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "kraken-engine"
-version = "0.4.0"
+version = "1.0.0"
 authors = [
   { name = "Derrick Martinez" },
 ]
 description = "Python bindings for Kraken Engine"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Games/Entertainment",
   "Topic :: Multimedia :: Graphics",
   "Operating System :: Microsoft :: Windows",
