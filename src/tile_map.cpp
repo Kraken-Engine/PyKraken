@@ -1,14 +1,16 @@
-#include "Texture.hpp"
 #include "Renderer.hpp"
+#include "Texture.hpp"
+#include "TileMap.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 #include <pybind11/native_enum.h>
 #include <pybind11/stl.h>
 
+#include <algorithm>
+#include <cmath>
+#include <optional>
 #include <utility>
-
-#include "TileMap.hpp"
 
 namespace kn
 {
@@ -39,6 +41,80 @@ void Layer::render() const
     }
 }
 
+void Layer::buildTileGrid(const int mapWidth, const int mapHeight, const int tileWidth,
+                          const int tileHeight)
+{
+    if (type != TILE)
+        return;
+
+    if (mapWidth <= 0 || mapHeight <= 0 || tileWidth <= 0 || tileHeight <= 0)
+    {
+        m_gridWidth = 0;
+        m_gridHeight = 0;
+        m_tileWidth = 0;
+        m_tileHeight = 0;
+        m_tileIndices.clear();
+        return;
+    }
+
+    m_gridWidth = mapWidth;
+    m_gridHeight = mapHeight;
+    m_tileWidth = tileWidth;
+    m_tileHeight = tileHeight;
+
+    const size_t cellCount = static_cast<size_t>(mapWidth) * static_cast<size_t>(mapHeight);
+    m_tileIndices.assign(cellCount, -1);
+
+    for (size_t i = 0; i < tiles.size(); ++i)
+    {
+        const auto& tile = tiles[i];
+
+        const int column =
+            static_cast<int>(std::floor(tile.dst.x / static_cast<double>(m_tileWidth)));
+        const int row =
+            static_cast<int>(std::floor(tile.dst.y / static_cast<double>(m_tileHeight)));
+
+        if (column < 0 || column >= m_gridWidth || row < 0 || row >= m_gridHeight)
+            continue;
+
+        const size_t gridIndex = static_cast<size_t>(row) * static_cast<size_t>(m_gridWidth) +
+                                 static_cast<size_t>(column);
+        m_tileIndices[gridIndex] = static_cast<int>(i);
+    }
+}
+
+std::vector<Tile> Layer::getFromArea(const Rect& area) const
+{
+    std::vector<Tile> result;
+    result.reserve(4);
+    forEachTileInArea(area,
+                      [&result, &area](const Tile& tile)
+                      {
+                          if (!tile.dst.collideRect(area))
+                              return true;
+                          result.push_back(tile);
+                          return true;
+                      });
+    return result;
+}
+
+std::optional<Tile> Layer::getTileAt(const int column, const int row) const
+{
+    if (type != TILE || m_tileIndices.empty() || m_gridWidth <= 0 || m_gridHeight <= 0)
+        return std::nullopt;
+
+    if (column < 0 || column >= m_gridWidth || row < 0 || row >= m_gridHeight)
+        return std::nullopt;
+
+    const size_t index =
+        static_cast<size_t>(row) * static_cast<size_t>(m_gridWidth) + static_cast<size_t>(column);
+    const int tileIndex = m_tileIndices[index];
+    if (tileIndex < 0)
+        return std::nullopt;
+
+    return tiles[static_cast<size_t>(tileIndex)];
+}
+
 TileMap::TileMap(const std::string& tmxPath, int borderSize)
 {
     pugi::xml_document doc;
@@ -59,6 +135,7 @@ TileMap::TileMap(const std::string& tmxPath, int borderSize)
     SDL_Surface* surface = IMG_Load(texturePath.c_str());
 
     const int mapWidth = std::stoi(map.attribute("width").value());
+    const int mapHeight = std::stoi(map.attribute("height").value());
     const int tileWidth = std::stoi(map.attribute("tilewidth").value());
     const int tileHeight = std::stoi(map.attribute("tileheight").value());
     const int tileSetWidth =
@@ -123,10 +200,10 @@ TileMap::TileMap(const std::string& tmxPath, int borderSize)
                 tiles.push_back({layerPtr, tileSrcRect, tileDstRect,
                                  getFittedRect(surface, tileSrcRect, tileDstRect.getTopLeft()),
                                  horizontalFlip, verticalFlip, antiDiagonalFlip, 0.0});
-
                 tileCounter++;
             }
             layerPtr->tiles = std::move(tiles);
+            layerPtr->buildTileGrid(mapWidth, mapHeight, tileWidth, tileHeight);
         }
         else if (childName == "objectgroup")
         {
@@ -252,7 +329,7 @@ Rect TileMap::getFittedRect(SDL_Surface* surface, const Rect& srcRect, const Vec
     for (int dy = y; dy < y + h; dy++)
         for (int dx = x; dx < x + w; dx++)
         {
-            SDL_ReadSurfacePixel(surface, x, y, nullptr, nullptr, nullptr, &alpha);
+            SDL_ReadSurfacePixel(surface, dx, dy, nullptr, nullptr, nullptr, &alpha);
             if (alpha == 0)
                 continue;
 
@@ -344,6 +421,25 @@ The list of Tile instances contained in this layer.
         )doc")
         .def("render", &Layer::render, R"doc(
 Render the layer.
+        )doc")
+        .def("get_from_area", &Layer::getFromArea, py::arg("area"), R"doc(
+Get all tiles whose destination rectangles fall within a query rect.
+
+Args:
+    area (Rect): The world-space rectangle to test.
+
+Returns:
+    list[Tile]: Tiles intersecting the given area.
+        )doc")
+        .def("get_tile_at", &Layer::getTileAt, py::arg("column"), py::arg("row"), R"doc(
+Get the tile located at the specified grid coordinates.
+
+Args:
+    column (int): The tile column index.
+    row (int): The tile row index.
+
+Returns:
+    Tile | None: The tile at the grid coordinate, or None if empty/out of range.
         )doc");
 
     // TileMap binding
