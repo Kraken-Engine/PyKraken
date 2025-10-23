@@ -15,70 +15,6 @@ double Circle::getArea() const { return M_PI * radius * radius; }
 
 double Circle::getCircumference() const { return 2 * M_PI * radius; }
 
-bool Circle::collidePoint(const Vec2& point) const
-{
-    const double diff = (point - pos).getLength();
-    return diff <= radius;
-}
-
-bool Circle::collideCircle(const Circle& circle) const
-{
-    const double diff = (pos - circle.pos).getLength();
-    return diff <= radius + circle.radius;
-}
-
-bool Circle::collideRect(const Rect& rect) const
-{
-    const auto closestPos = math::clampVec(pos, rect.getTopLeft(), rect.getBottomRight());
-    return (pos - closestPos).getLength() <= radius;
-}
-
-bool Circle::collideLine(const Line& line) const
-{
-    const Vec2 a = line.getA();
-    const Vec2 ab = line.getB() - a;
-    const Vec2 ac = pos - a;
-
-    const double abLengthSquared = ab.getLengthSquared();
-    if (abLengthSquared == 0.0)
-        return ac.getLength() <= radius;
-
-    const double t = std::clamp(math::dot(ac, ab) / abLengthSquared, 0.0, 1.0);
-    const Vec2 closestPoint = a + ab * t;
-    const double distSquared = (closestPoint - pos).getLengthSquared();
-
-    return distSquared <= radius * radius;
-}
-
-bool Circle::contains(const Circle& circle) const
-{
-    const double centerDist = (pos - circle.pos).getLength();
-    return centerDist + circle.radius <= radius;
-}
-
-bool Circle::contains(const Rect& rect) const
-{
-    const Vec2 corners[] = {
-        rect.getTopLeft(),
-        rect.getTopRight(),
-        rect.getBottomLeft(),
-        rect.getBottomRight(),
-    };
-
-    return std::ranges::all_of(corners, [&](const Vec2& corner)
-                               { return (corner - pos).getLengthSquared() <= radius * radius; });
-}
-
-bool Circle::contains(const Line& line) const
-{
-    const double radiusSquared = radius * radius;
-
-    const double distA = (line.getA() - pos).getLengthSquared();
-    const double distB = (line.getB() - pos).getLengthSquared();
-
-    return distA <= radiusSquared && distB <= radiusSquared;
-}
-
 Rect Circle::asRect() const
 {
     Rect rect;
@@ -198,54 +134,6 @@ Return the area of the circle.
 
         .def_property_readonly("circumference", &Circle::getCircumference, R"doc(
 Return the circumference of the circle.
-        )doc")
-
-        .def("collide_point", &Circle::collidePoint, py::arg("point"), R"doc(
-Check if a point lies inside the circle.
-
-Args:
-    point (Vec2): The point to test.
-        )doc")
-
-        .def("collide_circle", &Circle::collideCircle, py::arg("circle"), R"doc(
-Check collision with another circle.
-
-Args:
-    circle (Circle): The circle to test.
-        )doc")
-
-        .def("collide_rect", &Circle::collideRect, py::arg("rect"), R"doc(
-Check collision with a rectangle.
-
-Args:
-    rect (Rect): The rectangle to test.
-        )doc")
-
-        .def("collide_line", &Circle::collideLine, py::arg("line"), R"doc(
-Check collision with a line.
-
-Args:
-    line (Line): The line to test.
-        )doc")
-
-        .def(
-            "contains",
-            [](const Circle& self, const py::object& shapeObject) -> bool
-            {
-                if (py::isinstance<Vec2>(shapeObject))
-                    return self.collidePoint(shapeObject.cast<Vec2>());
-                if (py::isinstance<Circle>(shapeObject))
-                    return self.contains(shapeObject.cast<Circle>());
-                if (py::isinstance<Rect>(shapeObject))
-                    return self.contains(shapeObject.cast<Rect>());
-
-                throw std::invalid_argument("Shape must be a Vec2, Circle, or Rect");
-            },
-            py::arg("shape"), R"doc(
-Check if the circle fully contains the given shape.
-
-Args:
-    shape (Vec2, Circle, or Rect): The shape to test.
         )doc")
 
         .def("as_rect", &Circle::asRect, R"doc(

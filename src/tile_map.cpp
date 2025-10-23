@@ -1,3 +1,4 @@
+#include "Collision.hpp"
 #include "Renderer.hpp"
 #include "Texture.hpp"
 #include "TileMap.hpp"
@@ -90,7 +91,7 @@ std::vector<Tile> Layer::getFromArea(const Rect& area) const
     forEachTileInArea(area,
                       [&result, &area](const Tile& tile)
                       {
-                          if (!tile.dst.collideRect(area))
+                          if (!collision::overlap(tile.dst, area))
                               return true;
                           result.push_back(tile);
                           return true;

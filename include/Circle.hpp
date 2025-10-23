@@ -24,18 +24,6 @@ class Circle
 
     [[nodiscard]] double getCircumference() const;
 
-    [[nodiscard]] bool collidePoint(const Vec2& point) const;
-
-    [[nodiscard]] bool collideCircle(const Circle& circle) const;
-
-    [[nodiscard]] bool collideRect(const Rect& rect) const;
-
-    [[nodiscard]] bool collideLine(const Line& line) const;
-
-    [[nodiscard]] bool contains(const Circle& circle) const;
-    [[nodiscard]] bool contains(const Rect& rect) const;
-    [[nodiscard]] bool contains(const Line& line) const;
-
     [[nodiscard]] Rect asRect() const;
 
     [[nodiscard]] Circle copy() const;

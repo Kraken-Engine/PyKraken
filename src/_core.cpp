@@ -1,6 +1,7 @@
 #include "AnimationController.hpp"
 #include "Camera.hpp"
 #include "Circle.hpp"
+#include "Collision.hpp"
 #include "Color.hpp"
 #include "Constants.hpp"
 #include "Draw.hpp"
@@ -50,6 +51,7 @@ Call this once you're done using the engine to avoid memory leaks.
     kn::camera::_bind(m);
     kn::line::_bind(m);
     kn::circle::_bind(m);
+    kn::collision::_bind(m);
     kn::ease::_bind(m);
     kn::event::_bind(m);
     kn::font::_bind(m);

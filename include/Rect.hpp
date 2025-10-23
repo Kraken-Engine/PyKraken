@@ -43,12 +43,6 @@ class Rect
 
     void fit(const Rect& other);
 
-    [[nodiscard]] bool contains(const Rect& other) const;
-
-    [[nodiscard]] bool collidePoint(const Vec2& point) const;
-
-    [[nodiscard]] bool collideRect(const Rect& other) const;
-
     void clamp(const Vec2& min, const Vec2& max);
 
     void clamp(const Rect& other);
