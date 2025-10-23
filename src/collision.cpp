@@ -76,6 +76,8 @@ bool overlap(const Circle& a, const Circle& b)
     return distSquared <= (radiusSum * radiusSum);
 }
 
+bool overlap(const Circle& circle, const Rect& rect) { return overlap(rect, circle); }
+
 bool overlap(const Circle& circle, const Line& line)
 {
     // Calculate vectors once
@@ -130,6 +132,10 @@ bool overlap(const Line& a, const Line& b)
 
     return ub >= 0.0 && ub <= 1.0;
 }
+
+bool overlap(const Line& line, const Rect& rect) { return overlap(rect, line); }
+
+bool overlap(const Line& line, const Circle& circle) { return overlap(circle, line); }
 
 bool contains(const Rect& outer, const Rect& inner)
 {
@@ -262,6 +268,17 @@ Parameters:
 Returns:
     bool: Whether the circles overlap.
                      )doc");
+    subCollision.def("overlap", py::overload_cast<const Circle&, const Rect&>(&overlap),
+                     py::arg("circle"), py::arg("rect"), R"doc(
+Checks if a circle and a rectangle overlap.
+
+Parameters:
+    circle (Circle): The circle.
+    rect (Rect): The rectangle.
+
+Returns:
+    bool: Whether the circle and rectangle overlap.
+                     )doc");
     subCollision.def("overlap", py::overload_cast<const Circle&, const Line&>(&overlap),
                      py::arg("circle"), py::arg("line"), R"doc(
 Checks if a circle and a line overlap.
@@ -294,6 +311,28 @@ Parameters:
 
 Returns:
     bool: Whether the lines intersect.
+                     )doc");
+    subCollision.def("overlap", py::overload_cast<const Line&, const Rect&>(&overlap),
+                     py::arg("line"), py::arg("rect"), R"doc(
+Checks if a line and a rectangle overlap.
+
+Parameters:
+    line (Line): The line.
+    rect (Rect): The rectangle.
+
+Returns:
+    bool: Whether the line and rectangle overlap.
+                    )doc");
+    subCollision.def("overlap", py::overload_cast<const Line&, const Circle&>(&overlap),
+                     py::arg("line"), py::arg("circle"), R"doc(
+Checks if a line and a circle overlap.
+
+Parameters:
+    line (Line): The line.
+    circle (Circle): The circle.
+
+Returns:
+    bool: Whether the line and circle overlap.
                      )doc");
 
     // contains functions

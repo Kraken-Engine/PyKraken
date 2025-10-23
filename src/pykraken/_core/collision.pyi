@@ -138,6 +138,18 @@ def overlap(a: pykraken._core.Circle, b: pykraken._core.Circle) -> bool:
         bool: Whether the circles overlap.
     """
 @typing.overload
+def overlap(circle: pykraken._core.Circle, rect: pykraken._core.Rect) -> bool:
+    """
+    Checks if a circle and a rectangle overlap.
+    
+    Parameters:
+        circle (Circle): The circle.
+        rect (Rect): The rectangle.
+    
+    Returns:
+        bool: Whether the circle and rectangle overlap.
+    """
+@typing.overload
 def overlap(circle: pykraken._core.Circle, line: pykraken._core.Line) -> bool:
     """
     Checks if a circle and a line overlap.
@@ -172,4 +184,28 @@ def overlap(a: pykraken._core.Line, b: pykraken._core.Line) -> bool:
     
     Returns:
         bool: Whether the lines intersect.
+    """
+@typing.overload
+def overlap(line: pykraken._core.Line, rect: pykraken._core.Rect) -> bool:
+    """
+    Checks if a line and a rectangle overlap.
+    
+    Parameters:
+        line (Line): The line.
+        rect (Rect): The rectangle.
+    
+    Returns:
+        bool: Whether the line and rectangle overlap.
+    """
+@typing.overload
+def overlap(line: pykraken._core.Line, circle: pykraken._core.Circle) -> bool:
+    """
+    Checks if a line and a circle overlap.
+    
+    Parameters:
+        line (Line): The line.
+        circle (Circle): The circle.
+    
+    Returns:
+        bool: Whether the line and circle overlap.
     """

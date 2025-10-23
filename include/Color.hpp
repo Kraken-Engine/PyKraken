@@ -13,9 +13,9 @@ namespace color
 {
 struct HSV
 {
-    double h = 0;
-    double s = 0;
-    double v = 0;
+    double h = 0.0;
+    double s = 0.0;
+    double v = 0.0;
     double a = 1.0;
 };
 
@@ -39,34 +39,27 @@ struct Color
     uint8_t b = 0;
     uint8_t a = 255;
 
-    explicit operator SDL_Color() const { return {r, g, b, a}; }
-
-    explicit operator SDL_FColor() const
-    {
-        return {static_cast<float>(r) / 255, static_cast<float>(g) / 255,
-                static_cast<float>(b) / 255, static_cast<float>(a) / 255};
-    }
-
-    explicit operator uint32_t() const
-    {
-        return static_cast<uint32_t>(a) << 24 | static_cast<uint32_t>(b) << 16 |
-               static_cast<uint32_t>(g) << 8 | static_cast<uint32_t>(r);
-    }
-
     [[nodiscard]] std::string toHex() const;
-
     void fromHex(std::string_view hex);
 
     [[nodiscard]] color::HSV toHSV() const;
-
     void fromHSV(const color::HSV& hsv);
 
+    // Conversions to other color formats
+    explicit operator SDL_Color() const;
+    explicit operator SDL_FColor() const;
+    explicit operator uint32_t() const;
+
     // Equality operators compare all RGBA components
-    bool operator==(const Color& other) const
-    {
-        return r == other.r && g == other.g && b == other.b && a == other.a;
-    }
-    bool operator!=(const Color& other) const { return !(*this == other); }
+    bool operator==(const Color& other) const;
+    bool operator!=(const Color& other) const;
+
+    // Unary negation inverts the color (preserves alpha)
+    Color operator-() const;
+
+    // Division and multiplication by scalar between 0.0 and 1.0
+    Color operator*(double scalar) const;
+    Color operator/(double scalar) const;
 };
 
 constexpr Color BLACK = {0, 0, 0};

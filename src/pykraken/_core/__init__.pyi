@@ -526,6 +526,20 @@ class Color:
         Returns:
             int: Always returns 4 (for r, g, b, a channels).
         """
+    def __mul__(self, scalar: typing.SupportsFloat) -> Color:
+        """
+        Multiply RGB color channels by a scalar value.
+        
+        Multiplies each RGB component by the scalar. Results are clamped to [0, 255].
+        The alpha channel is preserved unchanged.
+        Negative scalars invert the color before applying the absolute value.
+        
+        Args:
+            scalar (float): Scalar multiplier (any positive or negative value).
+        
+        Returns:
+            Color: New Color with scaled RGB values and original alpha.
+        """
     def __ne__(self, other: Color) -> bool:
         """
         Check if two Color objects are not equal.
@@ -536,12 +550,36 @@ class Color:
         Returns:
             bool: True if any component differs, False otherwise.
         """
+    def __neg__(self) -> Color:
+        """
+        Unary negation operator to invert the color.
+        
+        Returns the inverted color by flipping RGB channels (255 - value).
+        The alpha channel is preserved unchanged.
+        
+        Returns:
+            Color: New Color with inverted RGB values and original alpha.
+        """
     def __repr__(self) -> str:
         """
         Return a string suitable for debugging and recreation.
         
         Returns:
             str: String in format "Color(r, g, b, a)" that can recreate the object.
+        """
+    def __rmul__(self, scalar: typing.SupportsFloat) -> Color:
+        """
+        Multiply RGB color channels by a scalar value (reverse multiplication).
+        
+        Allows scalar * color syntax in addition to color * scalar.
+        Results are clamped to [0, 255]. The alpha channel is preserved unchanged.
+        Negative scalars invert the color before applying the absolute value.
+        
+        Args:
+            scalar (float): Scalar multiplier (any positive or negative value).
+        
+        Returns:
+            Color: New Color with scaled RGB values and original alpha.
         """
     def __setitem__(self, index: typing.SupportsInt, value: typing.SupportsInt) -> None:
         """
@@ -560,6 +598,23 @@ class Color:
         
         Returns:
             str: String in format "(r, g, b, a)" with integer values.
+        """
+    def __truediv__(self, scalar: typing.SupportsFloat) -> Color:
+        """
+        Divide RGB color channels by a scalar value.
+        
+        Divides each RGB component by the scalar. Results are clamped to [0, 255].
+        The alpha channel is preserved unchanged.
+        Negative scalars invert the color before applying the absolute value.
+        
+        Args:
+            scalar (float): Scalar divisor (any positive or negative value except 0).
+        
+        Returns:
+            Color: New Color with divided RGB values and original alpha.
+        
+        Raises:
+            ValueError: If scalar is zero.
         """
     def copy(self) -> Color:
         """
