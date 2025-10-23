@@ -11,12 +11,12 @@ endif()
 set(PYK_MODULE_NAME    "_core"    CACHE STRING "Python extension module name")
 set(PYK_PACKAGE_DIR    "pykraken" CACHE STRING "Where to install the module inside the wheel")
 set(PYK_SOURCES_GLOB   "src/*.cpp;src/**/*.cpp" CACHE STRING "Glob(s) for C++ sources")
-option(PYK_VENDOR_SDL  "Vendor SDL3, SDL_image, SDL_ttf (static) via FetchContent" ON)
+option(PYK_VENDOR_SDL  "Vendor SDL3, SDL_image, SDL_ttf (static) via FetchContent" OFF)
 
 # -------------------------
 # Tooling
 # -------------------------
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -39,7 +39,12 @@ if (PYK_SOURCES STREQUAL "")
 endif()
 pybind11_add_module(${PYK_MODULE_NAME} MODULE ${PYK_SOURCES})
 
-# On Windows, Python extensions are DLLs; on *nix they’re .so
+# Include project headers
+target_include_directories(${PYK_MODULE_NAME} PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+# On Windows, Python extensions are DLLs; on *nix they're .so
 # Make sure CMake installs them to the package dir
 set_target_properties(${PYK_MODULE_NAME} PROPERTIES
   OUTPUT_NAME        ${PYK_MODULE_NAME}
@@ -81,25 +86,24 @@ if (PYK_VENDOR_SDL)
   # SDL3
   FetchContent_Declare(SDL3
     GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-    GIT_TAG        release-3.2.0 # or a tag you trust
+    GIT_TAG        release-3.2.24 # or a tag you trust
     GIT_SHALLOW    TRUE
   )
   # SDL_image
   FetchContent_Declare(SDL_image
     GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
-    GIT_TAG        release-3.2.0
+    GIT_TAG        release-3.2.4
     GIT_SHALLOW    TRUE
   )
   # SDL_ttf
   FetchContent_Declare(SDL_ttf
     GIT_REPOSITORY https://github.com/libsdl-org/SDL_ttf.git
-    GIT_TAG        release-3.2.0
+    GIT_TAG        release-3.2.2
     GIT_SHALLOW    TRUE
   )
 
   FetchContent_MakeAvailable(SDL3 SDL_image SDL_ttf)
 else()
-  # Use system packages (can be shared or static)
   find_package(SDL3      CONFIG REQUIRED)
   find_package(SDL3_image CONFIG REQUIRED)
   find_package(SDL3_ttf   CONFIG REQUIRED)
