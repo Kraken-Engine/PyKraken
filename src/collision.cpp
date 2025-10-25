@@ -4,9 +4,7 @@
 #include "Math.hpp"
 #include "Rect.hpp"
 
-namespace kn
-{
-namespace collision
+namespace kn::collision
 {
 bool overlap(const Rect& a, const Rect& b)
 {
@@ -38,7 +36,8 @@ bool overlap(const Rect& rect, const Line& line)
     const double rh = rect.h;
 
     // Helper lambda to check line-segment intersection
-    auto intersects = [&](double x1, double y1, double x2, double y2) -> bool
+    auto intersects = [&](const double x1, const double y1, const double x2,
+                          const double y2) -> bool
     {
         const double denom = (y2 - y1) * (line.bx - line.ax) - (x2 - x1) * (line.by - line.ay);
         if (denom == 0.0)
@@ -99,11 +98,11 @@ bool overlap(const Circle& circle, const Line& line)
     // Project circle center onto line and clamp to segment
     const double t = std::clamp((acx * abx + acy * aby) / abLengthSquared, 0.0, 1.0);
 
-    // Find closest point on segment
+    // Find the closest point on segment
     const double closestX = line.ax + abx * t;
     const double closestY = line.ay + aby * t;
 
-    // Check distance from circle center to closest point
+    // Check distance from circle center to the closest point
     const double dx = circle.pos.x - closestX;
     const double dy = circle.pos.y - closestY;
 
@@ -136,6 +135,10 @@ bool overlap(const Line& a, const Line& b)
 bool overlap(const Line& line, const Rect& rect) { return overlap(rect, line); }
 
 bool overlap(const Line& line, const Circle& circle) { return overlap(circle, line); }
+
+bool overlap(const Vec2& point, const Rect& rect) { return overlap(rect, point); }
+
+bool overlap(const Vec2& point, const Circle& circle) { return overlap(circle, point); }
 
 bool contains(const Rect& outer, const Rect& inner)
 {
@@ -334,6 +337,28 @@ Parameters:
 Returns:
     bool: Whether the line and circle overlap.
                      )doc");
+    subCollision.def("overlap", py::overload_cast<const Vec2&, const Rect&>(&overlap),
+                     py::arg("point"), py::arg("rect"), R"doc(
+Checks if a point is inside a rectangle.
+
+Parameters:
+    point (Vec2): The point.
+    rect (Rect): The rectangle.
+
+Returns:
+    bool: Whether the point is inside the rectangle.
+                     )doc");
+    subCollision.def("overlap", py::overload_cast<const Vec2&, const Circle&>(&overlap),
+                     py::arg("point"), py::arg("circle"), R"doc(
+Checks if a point is inside a circle.
+
+Parameters:
+    point (Vec2): The point.
+    circle (Circle): The circle.
+
+Returns:
+    bool: Whether the point is inside the circle.
+                     )doc");
 
     // contains functions
     subCollision.def("contains", py::overload_cast<const Rect&, const Rect&>(&contains),
@@ -403,5 +428,4 @@ Returns:
     bool: Whether the circle completely contains the line.
                      )doc");
 }
-} // namespace collision
-} // namespace kn
+} // namespace kn::collision

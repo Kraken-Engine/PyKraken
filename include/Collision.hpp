@@ -25,6 +25,8 @@ bool overlap(const Circle& circle, const Vec2& point);
 bool overlap(const Line& a, const Line& b);
 bool overlap(const Line& line, const Rect& rect);
 bool overlap(const Line& line, const Circle& circle);
+bool overlap(const Vec2& point, const Rect& rect);
+bool overlap(const Vec2& point, const Circle& circle);
 
 // Complete containment checks
 bool contains(const Rect& outer, const Rect& inner);
