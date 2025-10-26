@@ -321,6 +321,11 @@ void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
         e.data["which"] = id;
         break;
     }
+    case SDL_EVENT_GAMEPAD_REMAPPED:
+    case SDL_EVENT_GAMEPAD_UPDATE_COMPLETE:
+    case SDL_EVENT_GAMEPAD_STEAM_HANDLE_UPDATED:
+        e.data["which"] = sdlEvent.gdevice.which;
+        break;
     case SDL_EVENT_GAMEPAD_TOUCHPAD_DOWN:
     case SDL_EVENT_GAMEPAD_TOUCHPAD_MOTION:
     case SDL_EVENT_GAMEPAD_TOUCHPAD_UP:
@@ -331,6 +336,10 @@ void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
         e.data["y"] = sdlEvent.gtouchpad.y;
         e.data["pressure"] = sdlEvent.gtouchpad.pressure;
         break;
+    case SDL_EVENT_GAMEPAD_SENSOR_UPDATE:
+        e.data["which"] = sdlEvent.gsensor.which;
+        e.data["sensor"] = sdlEvent.gsensor.sensor;
+        e.data["data"] = std::vector<float>{sdlEvent.gsensor.data, sdlEvent.gsensor.data + 3};
     default:
         break;
     }

@@ -14,133 +14,15 @@ namespace kn::renderer
 {
 static SDL_Renderer* _renderer = nullptr;
 static SDL_Texture* _target = nullptr;
-
-void _bind(py::module_& module)
-{
-    auto subRenderer = module.def_submodule("renderer", "Functions for rendering graphics");
-
-    subRenderer.def(
-        "clear",
-        [](const py::object& colorObj)
-        {
-            try
-            {
-                clear(colorObj.is_none() ? Color() : colorObj.cast<Color>());
-            }
-            catch (const py::cast_error&)
-            {
-                throw py::type_error("Invalid type for 'color', expected Color, sequence, or None");
-            }
-        },
-        py::arg("color") = py::none(), R"doc(
-Clear the renderer with the specified color.
-
-Args:
-    color (Color, optional): The color to clear with. Defaults to black (0, 0, 0, 255).
-
-Raises:
-    ValueError: If color values are not between 0 and 255.
-    )doc");
-
-    subRenderer.def("clear", py::overload_cast<uint8_t, uint8_t, uint8_t, uint8_t>(&clear),
-                    py::arg("r"), py::arg("g"), py::arg("b"), py::arg("a") = 255, R"doc(
-Clear the renderer with the specified color.
-
-Args:
-    r (int): Red component (0-255).
-    g (int): Green component (0-255).
-    b (int): Blue component (0-255).
-    a (int, optional): Alpha component (0-255). Defaults to 255.
-    )doc");
-
-    subRenderer.def("present", &present, R"doc(
-Present the rendered content to the screen.
-
-This finalizes the current frame and displays it. Should be called after
-all drawing operations for the frame are complete.
-    )doc");
-
-    subRenderer.def("get_res", &getResolution, R"doc(
-Get the resolution of the renderer.
-
-Returns:
-    Vec2: The current rendering resolution as (width, height).
-    )doc");
-
-    subRenderer.def(
-        "draw",
-        [](const Texture& texture, const Rect& dstRect, const py::object& srcObj)
-        {
-            try
-            {
-                srcObj.is_none() ? draw(texture, dstRect)
-                                 : draw(texture, dstRect, srcObj.cast<Rect>());
-            }
-            catch (const py::cast_error&)
-            {
-                throw py::type_error("Invalid type for 'src', expected Rect");
-            }
-        },
-        py::arg("texture"), py::arg("dst"), py::arg("src") = py::none(), R"doc(
-Render a texture with specified destination and source rectangles.
-
-Args:
-    texture (Texture): The texture to render.
-    dst (Rect): The destination rectangle on the renderer.
-    src (Rect, optional): The source rectangle from the texture. Defaults to entire texture if not specified.
-        )doc");
-
-    subRenderer.def(
-        "draw",
-        [](const Texture& texture, const py::object& pos, const Anchor anchor)
-        {
-            try
-            {
-                const auto posVec = pos.is_none() ? Vec2() : pos.cast<Vec2>();
-                draw(texture, posVec, anchor);
-            }
-            catch (const py::cast_error&)
-            {
-                throw py::type_error("Invalid type for 'pos', expected Vec2");
-            }
-        },
-        py::arg("texture"), py::arg("pos") = py::none(), py::arg("anchor") = Anchor::Center, R"doc(
-Render a texture at the specified position with anchor alignment.
-
-Args:
-    texture (Texture): The texture to render.
-    pos (Vec2, optional): The position to draw at. Defaults to (0, 0).
-    anchor (Anchor, optional): The anchor point for positioning. Defaults to CENTER.
-        )doc");
-
-    subRenderer.def(
-        "read_pixels",
-        [](const py::object& rectObj) -> std::unique_ptr<PixelArray>
-        {
-            try
-            {
-                return readPixels(rectObj.is_none() ? Rect() : rectObj.cast<Rect>());
-            }
-            catch (const py::cast_error&)
-            {
-                throw py::type_error("Invalid type for 'src', expected Rect or None");
-            }
-        },
-        py::arg("src") = py::none(), R"doc(
-Read pixel data from the renderer within the specified rectangle.
-
-Args:
-    src (Rect, optional): The rectangle area to read pixels from. Defaults to entire renderer if None.
-Returns:
-    PixelArray: An array containing the pixel data.
-Raises:
-    RuntimeError: If reading pixels fails.
-        )doc");
-}
+static SDL_GPUDevice* _gpuDevice = nullptr;
 
 void _init(SDL_Window* window, const Vec2& resolution)
 {
-    _renderer = SDL_CreateRenderer(window, nullptr);
+    _gpuDevice = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_DXIL |
+                                         SDL_GPU_SHADERFORMAT_MSL,
+                                     true, nullptr);
+
+    _renderer = SDL_CreateGPURenderer(_gpuDevice, window);
     if (_renderer == nullptr)
         throw std::runtime_error("Renderer failed to create: " + std::string(SDL_GetError()));
 
@@ -272,4 +154,129 @@ void draw(const Texture& texture, Vec2 pos, const Anchor anchor)
 }
 
 SDL_Renderer* _get() { return _renderer; }
+
+SDL_GPUDevice* _getGPUDevice() { return _gpuDevice; }
+
+void _bind(py::module_& module)
+{
+    auto subRenderer = module.def_submodule("renderer", "Functions for rendering graphics");
+
+    subRenderer.def(
+        "clear",
+        [](const py::object& colorObj)
+        {
+            try
+            {
+                clear(colorObj.is_none() ? Color() : colorObj.cast<Color>());
+            }
+            catch (const py::cast_error&)
+            {
+                throw py::type_error("Invalid type for 'color', expected Color, sequence, or None");
+            }
+        },
+        py::arg("color") = py::none(), R"doc(
+Clear the renderer with the specified color.
+
+Args:
+    color (Color, optional): The color to clear with. Defaults to black (0, 0, 0, 255).
+
+Raises:
+    ValueError: If color values are not between 0 and 255.
+    )doc");
+
+    subRenderer.def("clear", py::overload_cast<uint8_t, uint8_t, uint8_t, uint8_t>(&clear),
+                    py::arg("r"), py::arg("g"), py::arg("b"), py::arg("a") = 255, R"doc(
+Clear the renderer with the specified color.
+
+Args:
+    r (int): Red component (0-255).
+    g (int): Green component (0-255).
+    b (int): Blue component (0-255).
+    a (int, optional): Alpha component (0-255). Defaults to 255.
+    )doc");
+
+    subRenderer.def("present", &present, R"doc(
+Present the rendered content to the screen.
+
+This finalizes the current frame and displays it. Should be called after
+all drawing operations for the frame are complete.
+    )doc");
+
+    subRenderer.def("get_res", &getResolution, R"doc(
+Get the resolution of the renderer.
+
+Returns:
+    Vec2: The current rendering resolution as (width, height).
+    )doc");
+
+    subRenderer.def(
+        "draw",
+        [](const Texture& texture, const Rect& dstRect, const py::object& srcObj)
+        {
+            try
+            {
+                srcObj.is_none() ? draw(texture, dstRect)
+                                 : draw(texture, dstRect, srcObj.cast<Rect>());
+            }
+            catch (const py::cast_error&)
+            {
+                throw py::type_error("Invalid type for 'src', expected Rect");
+            }
+        },
+        py::arg("texture"), py::arg("dst"), py::arg("src") = py::none(), R"doc(
+Render a texture with specified destination and source rectangles.
+
+Args:
+    texture (Texture): The texture to render.
+    dst (Rect): The destination rectangle on the renderer.
+    src (Rect, optional): The source rectangle from the texture. Defaults to entire texture if not specified.
+        )doc");
+
+    subRenderer.def(
+        "draw",
+        [](const Texture& texture, const py::object& pos, const Anchor anchor)
+        {
+            try
+            {
+                const auto posVec = pos.is_none() ? Vec2() : pos.cast<Vec2>();
+                draw(texture, posVec, anchor);
+            }
+            catch (const py::cast_error&)
+            {
+                throw py::type_error("Invalid type for 'pos', expected Vec2");
+            }
+        },
+        py::arg("texture"), py::arg("pos") = py::none(), py::arg("anchor") = Anchor::Center, R"doc(
+Render a texture at the specified position with anchor alignment.
+
+Args:
+    texture (Texture): The texture to render.
+    pos (Vec2, optional): The position to draw at. Defaults to (0, 0).
+    anchor (Anchor, optional): The anchor point for positioning. Defaults to CENTER.
+        )doc");
+
+    subRenderer.def(
+        "read_pixels",
+        [](const py::object& rectObj) -> std::unique_ptr<PixelArray>
+        {
+            try
+            {
+                return readPixels(rectObj.is_none() ? Rect() : rectObj.cast<Rect>());
+            }
+            catch (const py::cast_error&)
+            {
+                throw py::type_error("Invalid type for 'src', expected Rect or None");
+            }
+        },
+        py::arg("src") = py::none(), R"doc(
+Read pixel data from the renderer within the specified rectangle.
+
+Args:
+    src (Rect, optional): The rectangle area to read pixels from. Defaults to entire renderer if None.
+Returns:
+    PixelArray: An array containing the pixel data.
+Raises:
+    RuntimeError: If reading pixels fails.
+        )doc");
+}
 } // namespace kn::renderer

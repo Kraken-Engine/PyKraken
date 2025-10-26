@@ -66,6 +66,7 @@ void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
         e.data["repeat"] = sdlEvent.key.repeat;
         break;
     case SDL_EVENT_TEXT_EDITING:
+        e.data["window_id"] = sdlEvent.edit.windowID;
         e.data["text"] = sdlEvent.edit.text;
         e.data["start"] = sdlEvent.edit.start;
         e.data["length"] = sdlEvent.edit.length;
@@ -76,6 +77,18 @@ void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
     case SDL_EVENT_KEYBOARD_ADDED:
     case SDL_EVENT_KEYBOARD_REMOVED:
         e.data["which"] = sdlEvent.kdevice.which;
+        break;
+    case SDL_EVENT_TEXT_EDITING_CANDIDATES:
+        e.data["window_id"] = sdlEvent.edit_candidates.windowID;
+        e.data["candidates"] = std::vector<std::string>(
+            sdlEvent.edit_candidates.candidates,
+            sdlEvent.edit_candidates.candidates + sdlEvent.edit_candidates.num_candidates);
+        e.data["num_candidates"] = sdlEvent.edit_candidates.num_candidates;
+        e.data["selected_candidate"] = sdlEvent.edit_candidates.selected_candidate;
+        e.data["horizontal"] = sdlEvent.edit_candidates.horizontal;
+        e.data["padding1"] = sdlEvent.edit_candidates.padding1;
+        e.data["padding2"] = sdlEvent.edit_candidates.padding2;
+        e.data["padding3"] = sdlEvent.edit_candidates.padding3;
         break;
     default:
         break;

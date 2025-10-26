@@ -4,7 +4,7 @@ Functions for rendering graphics
 from __future__ import annotations
 import pykraken._core
 import typing
-__all__: list[str] = ['clear', 'draw', 'get_res', 'present']
+__all__: list[str] = ['clear', 'draw', 'get_res', 'present', 'read_pixels']
 @typing.overload
 def clear(color: typing.Any = None) -> None:
     """
@@ -30,22 +30,22 @@ def clear(r: typing.SupportsInt, g: typing.SupportsInt, b: typing.SupportsInt, a
 @typing.overload
 def draw(texture: pykraken._core.Texture, dst: pykraken._core.Rect, src: typing.Any = None) -> None:
     """
-        Render a texture with specified destination and source rectangles.
+    Render a texture with specified destination and source rectangles.
     
-        Args:
-            texture (Texture): The texture to render.
-            dst (Rect): The destination rectangle on the renderer.
-            src (Rect, optional): The source rectangle from the texture. Defaults to entire texture if not specified.
+    Args:
+        texture (Texture): The texture to render.
+        dst (Rect): The destination rectangle on the renderer.
+        src (Rect, optional): The source rectangle from the texture. Defaults to entire texture if not specified.
     """
 @typing.overload
 def draw(texture: pykraken._core.Texture, pos: typing.Any = None, anchor: pykraken._core.Anchor = pykraken._core.Anchor.CENTER) -> None:
     """
-        Render a texture at the specified position with anchor alignment.
+    Render a texture at the specified position with anchor alignment.
     
-        Args:
-            texture (Texture): The texture to render.
-            pos (Vec2, optional): The position to draw at. Defaults to (0, 0).
-            anchor (Anchor, optional): The anchor point for positioning. Defaults to CENTER.
+    Args:
+        texture (Texture): The texture to render.
+        pos (Vec2, optional): The position to draw at. Defaults to (0, 0).
+        anchor (Anchor, optional): The anchor point for positioning. Defaults to CENTER.
     """
 def get_res() -> pykraken._core.Vec2:
     """
@@ -60,4 +60,15 @@ def present() -> None:
     
     This finalizes the current frame and displays it. Should be called after
     all drawing operations for the frame are complete.
+    """
+def read_pixels(src: typing.Any = None) -> pykraken._core.PixelArray:
+    """
+    Read pixel data from the renderer within the specified rectangle.
+    
+    Args:
+        src (Rect, optional): The rectangle area to read pixels from. Defaults to entire renderer if None.
+    Returns:
+        PixelArray: An array containing the pixel data.
+    Raises:
+        RuntimeError: If reading pixels fails.
     """

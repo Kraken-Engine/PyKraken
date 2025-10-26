@@ -1,2 +1,3 @@
-pybind11==3.0.0
+pybind11==3.0.1
 scikit_build_core==0.11.5
+pydantic==2.12.3

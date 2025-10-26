@@ -35,24 +35,6 @@ void Rect::fit(const Rect& other)
     y = other.y + (other.h - h) / 2.0;
 }
 
-bool Rect::contains(const Rect& other) const
-{
-    return x <= other.x && y <= other.y && x + w >= other.x + other.w && y + h >= other.y + other.h;
-}
-
-bool Rect::collidePoint(const Vec2& point) const
-{
-    const auto px = point.x;
-    const auto py = point.y;
-
-    return px >= x && px <= x + w && py >= y && py <= y + h;
-}
-
-bool Rect::collideRect(const Rect& other) const
-{
-    return x < other.x + other.w && x + w > other.x && y < other.y + other.h && y + h > other.y;
-}
-
 void Rect::clamp(const Vec2& min, const Vec2& max)
 {
     const auto minX = min.x;
@@ -394,33 +376,6 @@ Args:
 
 Raises:
     ValueError: If other rectangle has non-positive dimensions.
-        )doc")
-        .def("contains", &Rect::contains, py::arg("other"), R"doc(
-Check if this rectangle completely contains another rectangle.
-
-Args:
-    other (Rect): The rectangle to check.
-
-Returns:
-    bool: True if this rectangle completely contains the other.
-        )doc")
-        .def("collide_point", &Rect::collidePoint, py::arg("point"), R"doc(
-Check if a point is inside this rectangle.
-
-Args:
-    point (Vec2): The point to check.
-
-Returns:
-    bool: True if the point is inside this rectangle.
-        )doc")
-        .def("collide_rect", &Rect::collideRect, py::arg("other"), R"doc(
-Check if this rectangle collides with another rectangle.
-
-Args:
-    other (Rect): The rectangle to check collision with.
-
-Returns:
-    bool: True if the rectangles overlap.
         )doc")
         .def("clamp", py::overload_cast<const Rect&>(&Rect::clamp), py::arg("other"), R"doc(
 Clamp this rectangle to be within another rectangle.

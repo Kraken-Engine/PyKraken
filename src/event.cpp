@@ -44,6 +44,66 @@ std::vector<Event> poll()
         case SDL_EVENT_QUIT:
             window::close();
             break;
+        case SDL_EVENT_DISPLAY_ORIENTATION:
+        case SDL_EVENT_DISPLAY_ADDED:
+        case SDL_EVENT_DISPLAY_REMOVED:
+        case SDL_EVENT_DISPLAY_MOVED:
+        case SDL_EVENT_DISPLAY_DESKTOP_MODE_CHANGED:
+        case SDL_EVENT_DISPLAY_CURRENT_MODE_CHANGED:
+        case SDL_EVENT_DISPLAY_CONTENT_SCALE_CHANGED:
+            e.data["display_id"] = event.display.displayID;
+            e.data["data1"] = event.display.data1;
+            e.data["data2"] = event.display.data2;
+            break;
+        case SDL_EVENT_WINDOW_SHOWN:
+        case SDL_EVENT_WINDOW_HIDDEN:
+        case SDL_EVENT_WINDOW_EXPOSED:
+        case SDL_EVENT_WINDOW_MOVED:
+        case SDL_EVENT_WINDOW_RESIZED:
+        case SDL_EVENT_WINDOW_MINIMIZED:
+        case SDL_EVENT_WINDOW_MAXIMIZED:
+        case SDL_EVENT_WINDOW_RESTORED:
+        case SDL_EVENT_WINDOW_MOUSE_ENTER:
+        case SDL_EVENT_WINDOW_MOUSE_LEAVE:
+        case SDL_EVENT_WINDOW_FOCUS_GAINED:
+        case SDL_EVENT_WINDOW_FOCUS_LOST:
+        case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+        case SDL_EVENT_WINDOW_HIT_TEST:
+        case SDL_EVENT_WINDOW_ICCPROF_CHANGED:
+        case SDL_EVENT_WINDOW_DISPLAY_CHANGED:
+        case SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED:
+        case SDL_EVENT_WINDOW_SAFE_AREA_CHANGED:
+        case SDL_EVENT_WINDOW_OCCLUDED:
+        case SDL_EVENT_WINDOW_ENTER_FULLSCREEN:
+        case SDL_EVENT_WINDOW_LEAVE_FULLSCREEN:
+        case SDL_EVENT_WINDOW_DESTROYED:
+        case SDL_EVENT_WINDOW_HDR_STATE_CHANGED:
+            e.data["window_id"] = event.window.windowID;
+            e.data["data1"] = event.window.data1;
+            e.data["data2"] = event.window.data2;
+            break;
+        case SDL_EVENT_FINGER_DOWN:
+        case SDL_EVENT_FINGER_UP:
+        case SDL_EVENT_FINGER_MOTION:
+        case SDL_EVENT_FINGER_CANCELED:
+            e.data["touch_id"] = event.tfinger.touchID;
+            e.data["finger_id"] = event.tfinger.fingerID;
+            e.data["x"] = event.tfinger.x;
+            e.data["y"] = event.tfinger.y;
+            e.data["dx"] = event.tfinger.dx;
+            e.data["dy"] = event.tfinger.dy;
+            e.data["pressure"] = event.tfinger.pressure;
+            e.data["window_id"] = event.tfinger.windowID;
+            break;
+        case SDL_EVENT_CLIPBOARD_UPDATE:
+            e.data["num_mime_types"] = event.clipboard.num_mime_types;
+            {
+                py::list mime_types;
+                for (int i = 0; i < event.clipboard.num_mime_types; ++i)
+                    mime_types.append(py::str(event.clipboard.mime_types[i]));
+                e.data["mime_types"] = mime_types;
+            }
+            break;
         case SDL_EVENT_DROP_FILE:
         case SDL_EVENT_DROP_TEXT:
             e.data["data"] = event.drop.data;
@@ -58,6 +118,15 @@ std::vector<Event> poll()
         case SDL_EVENT_AUDIO_DEVICE_FORMAT_CHANGED:
             e.data["which"] = event.adevice.which;
             e.data["recording"] = event.adevice.recording;
+            break;
+        case SDL_EVENT_SENSOR_UPDATE:
+            e.data["which"] = event.sensor.which;
+            {
+                py::list sensor_data;
+                for (int i = 0; i < 6; ++i)
+                    sensor_data.append(py::float_(event.sensor.data[i]));
+                e.data["data"] = sensor_data;
+            }
             break;
         case SDL_EVENT_PEN_PROXIMITY_IN:
         case SDL_EVENT_PEN_PROXIMITY_OUT:

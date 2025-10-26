@@ -22,6 +22,7 @@ void _bind(py::module_& module);
 void _init(SDL_Window* window, const Vec2& resolution);
 void _quit();
 SDL_Renderer* _get();
+SDL_GPUDevice* _getGPUDevice();
 
 void clear(const Color& color = {});
 void clear(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255);
