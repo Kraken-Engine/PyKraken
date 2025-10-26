@@ -10,7 +10,7 @@ ShaderState::ShaderState(const std::string& fragmentFilePath, Uint32 samplerCoun
     const char* ext = SDL_strrchr(fragmentFilePath.c_str(), '.');
     if (ext == nullptr)
     {
-        SDL_Log("Warning: Shader file has no extension: %s", fragmentFilePath);
+        SDL_Log("Warning: Shader file has no extension: %s", fragmentFilePath.c_str());
         throw std::runtime_error("Shader file has no extension");
     }
 
@@ -48,7 +48,7 @@ ShaderState::ShaderState(const std::string& fragmentFilePath, Uint32 samplerCoun
     void* code = SDL_LoadFile(fragmentFilePath.c_str(), &codeSize);
     if (code == nullptr)
     {
-        SDL_Log("Failed to load shader from disk! %s", fragmentFilePath);
+        SDL_Log("Failed to load shader from disk! %s", fragmentFilePath.c_str());
         throw std::runtime_error("Failed to load shader from disk");
     }
 
