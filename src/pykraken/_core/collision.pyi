@@ -209,3 +209,27 @@ def overlap(line: pykraken._core.Line, circle: pykraken._core.Circle) -> bool:
     Returns:
         bool: Whether the line and circle overlap.
     """
+@typing.overload
+def overlap(point: pykraken._core.Vec2, rect: pykraken._core.Rect) -> bool:
+    """
+    Checks if a point is inside a rectangle.
+    
+    Parameters:
+        point (Vec2): The point.
+        rect (Rect): The rectangle.
+    
+    Returns:
+        bool: Whether the point is inside the rectangle.
+    """
+@typing.overload
+def overlap(point: pykraken._core.Vec2, circle: pykraken._core.Circle) -> bool:
+    """
+    Checks if a point is inside a circle.
+    
+    Parameters:
+        point (Vec2): The point.
+        circle (Circle): The circle.
+    
+    Returns:
+        bool: Whether the point is inside the circle.
+    """

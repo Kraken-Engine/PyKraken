@@ -20,6 +20,7 @@
 #include "Polygon.hpp"
 #include "Rect.hpp"
 #include "Renderer.hpp"
+#include "ShaderState.hpp"
 #include "Texture.hpp"
 #include "TileMap.hpp"
 #include "Time.hpp"
@@ -68,4 +69,5 @@ Call this once you're done using the engine to avoid memory leaks.
     kn::draw::_bind(m);
     kn::animation_controller::_bind(m);
     kn::tile_map::_bind(m);
+    kn::shader_state::_bind(m);
 }

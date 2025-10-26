@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.23) # 3.21+ for TARGET_RUNTIME_DLLS; 3.23 is a comfy floor
+cmake_minimum_required(VERSION 3.23)
 project(pykraken LANGUAGES CXX)
 
 if(CMAKE_VERSION VERSION_GREATER_EQUAL "4.0")
@@ -6,7 +6,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "4.0")
 endif()
 
 # -------------------------
-# Configuration (edit me)
+# Configuration
 # -------------------------
 set(PYK_MODULE_NAME    "_core"    CACHE STRING "Python extension module name")
 set(PYK_PACKAGE_DIR    "pykraken" CACHE STRING "Where to install the module inside the wheel")
@@ -20,7 +20,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# Helpful MSVC flags
 if (MSVC)
   add_compile_definitions(NOMINMAX WIN32_LEAN_AND_MEAN)
   add_compile_options(/bigobj)
@@ -31,8 +30,6 @@ endif()
 # -------------------------
 # Expect pybind11 to be provided by your build system (e.g., scikit-build-core)
 find_package(pybind11 CONFIG REQUIRED)
-# We’ll use pybind11's helper to create a proper Python extension
-# (respects SOABI and naming automatically in modern pybind11)
 file(GLOB_RECURSE PYK_SOURCES CONFIGURE_DEPENDS ${PYK_SOURCES_GLOB})
 if (PYK_SOURCES STREQUAL "")
   message(FATAL_ERROR "No sources found. Adjust PYK_SOURCES_GLOB (currently: ${PYK_SOURCES_GLOB}).")
@@ -57,8 +54,6 @@ set_target_properties(${PYK_MODULE_NAME} PROPERTIES
 # -------------------------
 include(FetchContent)
 
-# Common toggle: we prefer static libs in vendor mode to avoid DLL drama.
-# Also, if system-config packages are present, we’ll prefer *-static imported targets if available.
 if (PYK_VENDOR_SDL)
   # Global: prefer static
   set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
@@ -83,19 +78,16 @@ if (PYK_VENDOR_SDL)
   set(SDLTTF_SHARED   OFF CACHE BOOL "" FORCE)
   set(SDLTTF_VENDORED ON  CACHE BOOL "" FORCE)
 
-  # SDL3
   FetchContent_Declare(SDL3
     GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-    GIT_TAG        release-3.2.24 # or a tag you trust
+    GIT_TAG        preview-3.3.2
     GIT_SHALLOW    TRUE
   )
-  # SDL_image
   FetchContent_Declare(SDL_image
     GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
     GIT_TAG        release-3.2.4
     GIT_SHALLOW    TRUE
   )
-  # SDL_ttf
   FetchContent_Declare(SDL_ttf
     GIT_REPOSITORY https://github.com/libsdl-org/SDL_ttf.git
     GIT_TAG        release-3.2.2
@@ -104,7 +96,7 @@ if (PYK_VENDOR_SDL)
 
   FetchContent_MakeAvailable(SDL3 SDL_image SDL_ttf)
 else()
-  find_package(SDL3      CONFIG REQUIRED)
+  find_package(SDL3       CONFIG REQUIRED)
   find_package(SDL3_image CONFIG REQUIRED)
   find_package(SDL3_ttf   CONFIG REQUIRED)
 endif()
