@@ -258,36 +258,37 @@ Args:
     a (int, optional): Alpha value [0-255]. Defaults to 255.
         )doc")
 
-        .def(py::init(
-                 [](const py::object& objParam) -> Color
-                 {
-                     if (py::isinstance<py::str>(objParam))
-                         return fromHex(objParam.cast<std::string>());
-
-                     if (py::isinstance<py::sequence>(objParam))
-                     {
-                         const auto seq = objParam.cast<py::sequence>();
-                         if (seq.size() == 3 || seq.size() == 4)
-                         {
-                             Color c;
-                             c.r = seq[0].cast<uint8_t>();
-                             c.g = seq[1].cast<uint8_t>();
-                             c.b = seq[2].cast<uint8_t>();
-                             c.a = seq.size() == 4 ? seq[3].cast<uint8_t>() : 255;
-                             return c;
-                         }
-                     }
-
-                     throw std::invalid_argument(
-                         "Argument must be a hex string or a sequence of 3-4 integers.");
-                 }),
+        .def(py::init([](const std::string& hex) -> Color { return fromHex(hex); }), py::arg("hex"),
              R"doc(
-Create a Color from a hex string or a sequence of RGB(A) integers.
+Create a Color from a hex string.
 
-Examples:
-    Color("#ff00ff")
-    Color([255, 0, 255])
-    Color((255, 0, 255, 128))
+Args:
+    hex (str): Hex color string (with or without '#' prefix).
+        )doc")
+
+        .def(py::init(
+                 [](const py::sequence& seq) -> Color
+                 {
+                     if (seq.size() == 3)
+                     {
+                         return {seq[0].cast<uint8_t>(), seq[1].cast<uint8_t>(),
+                                 seq[2].cast<uint8_t>(), 255};
+                     }
+                     if (seq.size() == 4)
+                     {
+                         return {seq[0].cast<uint8_t>(), seq[1].cast<uint8_t>(),
+                                 seq[2].cast<uint8_t>(), seq[3].cast<uint8_t>()};
+                     }
+                     throw std::invalid_argument(
+                         "Sequence must contain 3 (RGB) or 4 (RGBA) integer values.");
+                 }),
+             py::arg("sequence"), R"doc(
+Create a Color from a sequence of RGB(A) integers.
+
+Args:
+    sequence (list or tuple): A sequence of 3 or 4 integers [0-255].
+        - 3 values: RGB (alpha defaults to 255)
+        - 4 values: RGBA
         )doc")
 
         .def(

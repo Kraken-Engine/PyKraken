@@ -15,13 +15,13 @@
 
 namespace kn
 {
-Layer::Layer(const Type type, const bool isVisible, std::string name,
+TileLayer::TileLayer(const Type type, const bool isVisible, std::string name,
              const std::shared_ptr<Texture>& tileSetTexture)
     : type(type), isVisible(isVisible), name(std::move(name)), m_tileSetTexture(tileSetTexture)
 {
 }
 
-void Layer::render() const
+void TileLayer::render() const
 {
     for (const auto& tile : tiles)
     {
@@ -42,7 +42,7 @@ void Layer::render() const
     }
 }
 
-void Layer::buildTileGrid(const int mapWidth, const int mapHeight, const int tileWidth,
+void TileLayer::buildTileGrid(const int mapWidth, const int mapHeight, const int tileWidth,
                           const int tileHeight)
 {
     if (type != TILE)
@@ -84,7 +84,7 @@ void Layer::buildTileGrid(const int mapWidth, const int mapHeight, const int til
     }
 }
 
-std::vector<Tile> Layer::getFromArea(const Rect& area) const
+std::vector<Tile> TileLayer::getFromArea(const Rect& area) const
 {
     std::vector<Tile> result;
     result.reserve(4);
@@ -99,7 +99,7 @@ std::vector<Tile> Layer::getFromArea(const Rect& area) const
     return result;
 }
 
-std::optional<Tile> Layer::getTileAt(const int column, const int row) const
+std::optional<Tile> TileLayer::getTileAt(const int column, const int row) const
 {
     if (type != TILE || m_tileIndices.empty() || m_gridWidth <= 0 || m_gridHeight <= 0)
         return std::nullopt;
@@ -152,7 +152,7 @@ TileMap::TileMap(const std::string& tmxPath, int borderSize)
         const auto layerVisibility = std::string(child.attribute("visible").value());
         const bool isVisible = layerVisibility.empty() || layerVisibility != "0";
         std::vector<Tile> tiles;
-        std::shared_ptr<Layer> layerPtr = nullptr;
+        std::shared_ptr<TileLayer> layerPtr = nullptr;
 
         if (childName == "layer")
         {
@@ -163,7 +163,7 @@ TileMap::TileMap(const std::string& tmxPath, int borderSize)
             std::stringstream ss(dataContent);
             std::string value;
             layerPtr =
-                std::make_shared<Layer>(Layer(Layer::TILE, isVisible, layerName, tileSetTexture));
+                std::make_shared<TileLayer>(TileLayer(TileLayer::TILE, isVisible, layerName, tileSetTexture));
 
             int tileCounter = 0;
             while (std::getline(ss, value, ','))
@@ -209,7 +209,7 @@ TileMap::TileMap(const std::string& tmxPath, int borderSize)
         else if (childName == "objectgroup")
         {
             layerPtr =
-                std::make_shared<Layer>(Layer(Layer::OBJECT, isVisible, layerName, tileSetTexture));
+                std::make_shared<TileLayer>(TileLayer(TileLayer::OBJECT, isVisible, layerName, tileSetTexture));
 
             for (const auto& object : child.children())
             {
@@ -263,8 +263,8 @@ TileMap::TileMap(const std::string& tmxPath, int borderSize)
     SDL_DestroySurface(surface);
 }
 
-std::shared_ptr<const Layer> TileMap::getLayer(const std::string& name,
-                                               const Layer::Type type) const
+std::shared_ptr<const TileLayer> TileMap::getLayer(const std::string& name,
+                                               const TileLayer::Type type) const
 {
     for (const auto& layer : m_layerVec)
     {
@@ -275,7 +275,7 @@ std::shared_ptr<const Layer> TileMap::getLayer(const std::string& name,
     throw std::invalid_argument("Layer not found or type mismatch: " + name);
 }
 
-const std::vector<std::shared_ptr<const Layer>>& TileMap::getLayers() const { return m_layerVec; }
+const std::vector<std::shared_ptr<const TileLayer>>& TileMap::getLayers() const { return m_layerVec; }
 
 void TileMap::render() const
 {
@@ -292,7 +292,7 @@ void TileMap::render() const
 }
 
 std::vector<Tile>
-TileMap::getTileCollection(const std::vector<std::shared_ptr<const Layer>>& layers)
+TileMap::getTileCollection(const std::vector<std::shared_ptr<const TileLayer>>& layers)
 {
     std::vector<Tile> tiles;
     if (layers.empty())
@@ -349,8 +349,8 @@ namespace tile_map
 void _bind(const py::module_& module)
 {
     // Initial Layer binding
-    auto layerPy = py::classh<Layer>(module, "Layer", R"doc(
-A layer within a tile map.
+    auto layerPy = py::classh<TileLayer>(module, "TileLayer", R"doc(
+A layer of a tile map.
 
 Layers can be either tile layers or object layers and contain a list of tiles.
     )doc");
@@ -358,13 +358,10 @@ Layers can be either tile layers or object layers and contain a list of tiles.
     // Tile binding
     py::classh<Tile>(module, "Tile", R"doc(
 Represents a single tile instance in a layer.
-
-Contains source and destination rectangles, a collider, flip flags, rotation angle,
-and a reference to its owning Layer.
     )doc")
         .def_property_readonly(
             "layer",
-            [](const Tile& self) -> std::shared_ptr<const Layer>
+            [](const Tile& self) -> std::shared_ptr<const TileLayer>
             {
                 if (auto sp = self.layer.lock())
                     return sp;
@@ -399,31 +396,31 @@ The rotation angle in degrees.
         )doc");
 
     // Layer bindings cont.
-    py::native_enum<Layer::Type>(layerPy, "Type", "enum.IntEnum", R"doc(
+    py::native_enum<TileLayer::Type>(layerPy, "Type", "enum.IntEnum", R"doc(
 The type of a Layer.
     )doc")
-        .value("OBJECT", Layer::Type::OBJECT)
-        .value("TILE", Layer::Type::TILE)
+        .value("OBJECT", TileLayer::Type::OBJECT)
+        .value("TILE", TileLayer::Type::TILE)
         .export_values()
         .finalize();
 
     layerPy
-        .def_readonly("type", &Layer::type, R"doc(
+        .def_readonly("type", &TileLayer::type, R"doc(
 The layer type (OBJECT or TILE).
         )doc")
-        .def_readonly("is_visible", &Layer::isVisible, R"doc(
+        .def_readonly("is_visible", &TileLayer::isVisible, R"doc(
 Whether the layer is visible.
         )doc")
-        .def_readonly("name", &Layer::name, R"doc(
+        .def_readonly("name", &TileLayer::name, R"doc(
 The name of the layer.
         )doc")
-        .def_readonly("tiles", &Layer::tiles, R"doc(
+        .def_readonly("tiles", &TileLayer::tiles, R"doc(
 The list of Tile instances contained in this layer.
         )doc")
-        .def("render", &Layer::render, R"doc(
+        .def("render", &TileLayer::render, R"doc(
 Render the layer.
         )doc")
-        .def("get_from_area", &Layer::getFromArea, py::arg("area"), R"doc(
+        .def("get_from_area", &TileLayer::getFromArea, py::arg("area"), R"doc(
 Get all tiles whose destination rectangles fall within a query rect.
 
 Args:
@@ -432,7 +429,7 @@ Args:
 Returns:
     list[Tile]: Tiles intersecting the given area.
         )doc")
-        .def("get_tile_at", &Layer::getTileAt, py::arg("column"), py::arg("row"), R"doc(
+        .def("get_tile_at", &TileLayer::getTileAt, py::arg("column"), py::arg("row"), R"doc(
 Get the tile located at the specified grid coordinates.
 
 Args:
@@ -460,7 +457,7 @@ Args:
 Raises:
     RuntimeError: If the TMX or TSX files cannot be loaded or parsed.
              )doc")
-        .def("get_layer", &TileMap::getLayer, py::arg("name"), py::arg("type") = Layer::TILE,
+        .def("get_layer", &TileMap::getLayer, py::arg("name"), py::arg("type") = TileLayer::TILE,
              R"doc(
 Get a layer by name and type.
 

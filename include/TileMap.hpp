@@ -16,7 +16,7 @@ namespace py = pybind11;
 namespace kn
 {
 class Texture;
-class Layer;
+class TileLayer;
 
 namespace tile_map
 {
@@ -25,7 +25,7 @@ void _bind(const py::module_& module);
 
 struct Tile
 {
-    std::weak_ptr<const Layer> layer;
+    std::weak_ptr<const TileLayer> layer;
 
     Rect src;
     Rect dst;
@@ -37,7 +37,7 @@ struct Tile
     double angle;
 };
 
-class Layer
+class TileLayer
 {
   public:
     enum Type
@@ -50,9 +50,9 @@ class Layer
     const std::string name;
     std::vector<Tile> tiles;
 
-    Layer(Type type, bool isVisible, std::string name,
+    TileLayer(Type type, bool isVisible, std::string name,
           const std::shared_ptr<Texture>& tileSetTexture);
-    ~Layer() = default;
+    ~TileLayer() = default;
 
     void render() const;
     [[nodiscard]] std::vector<Tile> getFromArea(const Rect& area) const;
@@ -77,24 +77,24 @@ class TileMap
     explicit TileMap(const std::string& tmxPath, int borderSize = 0);
     ~TileMap() = default;
 
-    [[nodiscard]] std::shared_ptr<const Layer> getLayer(const std::string& name,
-                                                        Layer::Type type = Layer::TILE) const;
-    [[nodiscard]] const std::vector<std::shared_ptr<const Layer>>& getLayers() const;
+    [[nodiscard]] std::shared_ptr<const TileLayer> getLayer(const std::string& name,
+                                                        TileLayer::Type type = TileLayer::TILE) const;
+    [[nodiscard]] const std::vector<std::shared_ptr<const TileLayer>>& getLayers() const;
 
     void render() const;
 
     static std::vector<Tile>
-    getTileCollection(const std::vector<std::shared_ptr<const Layer>>& layers);
+    getTileCollection(const std::vector<std::shared_ptr<const TileLayer>>& layers);
 
   private:
     std::string m_dirPath;
-    std::vector<std::shared_ptr<const Layer>> m_layerVec;
+    std::vector<std::shared_ptr<const TileLayer>> m_layerVec;
 
     [[nodiscard]] std::string getTexturePath(const pugi::xml_node& mapNode) const;
     static Rect getFittedRect(SDL_Surface* surface, const Rect& srcRect, const Vec2& position);
 };
 
-template <typename Fn> bool Layer::forEachTileInArea(const Rect& area, Fn&& fn) const
+template <typename Fn> bool TileLayer::forEachTileInArea(const Rect& area, Fn&& fn) const
 {
     if (type != TILE || m_tileIndices.empty() || m_gridWidth <= 0 || m_gridHeight <= 0 ||
         m_tileWidth <= 0 || m_tileHeight <= 0)
