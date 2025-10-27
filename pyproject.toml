@@ -4,7 +4,10 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "kraken-engine"
-version = "1.1.0"
+version = "1.1.1"
+dependencies = [
+  "pydantic==2.12.3",
+]
 authors = [
   { name = "Derrick Martinez" },
 ]
