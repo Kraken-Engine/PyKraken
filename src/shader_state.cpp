@@ -3,9 +3,8 @@
 
 namespace kn
 {
-ShaderState::ShaderState(const std::string& fragmentFilePath, Uint32 samplerCount,
-                         Uint32 storageTextureCount, Uint32 storageBufferCount,
-                         Uint32 uniformBufferCount)
+ShaderState::ShaderState(const std::string& fragmentFilePath, const Uint32 uniformBufferCount,
+                         const Uint32 samplerCount)
 {
     const char* ext = SDL_strrchr(fragmentFilePath.c_str(), '.');
     if (ext == nullptr)
@@ -59,8 +58,8 @@ ShaderState::ShaderState(const std::string& fragmentFilePath, Uint32 samplerCoun
     shaderInfo.format = shaderFormat;
     shaderInfo.stage = SDL_GPU_SHADERSTAGE_FRAGMENT;
     shaderInfo.num_samplers = samplerCount;
-    shaderInfo.num_storage_textures = storageTextureCount;
-    shaderInfo.num_storage_buffers = storageBufferCount;
+    shaderInfo.num_storage_textures = 0; // Not usable yet
+    shaderInfo.num_storage_buffers = 0;  // Not usable yet
     shaderInfo.num_uniform_buffers = uniformBufferCount;
 
     m_fragShader = SDL_CreateGPUShader(renderer::_getGPUDevice(), &shaderInfo);
@@ -117,10 +116,15 @@ void _bind(py::module_& module)
 {
     py::class_<ShaderState>(module, "ShaderState",
                             "Encapsulates a GPU shader and its associated render state.")
-        .def(py::init<const std::string&, Uint32, Uint32, Uint32, Uint32>(),
-             py::arg("fragment_file_path"), py::arg("sampler_count"),
-             py::arg("storage_texture_count"), py::arg("storage_buffer_count"),
-             py::arg("uniform_buffer_count"))
+        .def(py::init<const std::string&, Uint32, Uint32>(), py::arg("fragment_file_path"),
+             py::arg("uniform_buffer_count") = 0, py::arg("sampler_count") = 1, R"doc(
+Creates a ShaderState from the specified fragment shader file.
+
+Parameters:
+    fragment_file_path (str): Path to the fragment shader file.
+    uniform_buffer_count (int, optional): Number of uniform buffers used by the shader. Default is 0.
+    sampler_count (int, optional): Number of samplers used by the shader. Default is 1.
+            )doc")
 
         .def("bind", &ShaderState::bind, R"doc(
 Binds this shader state to the current render pass, making it active for subsequent draw calls.

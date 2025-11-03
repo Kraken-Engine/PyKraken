@@ -11,12 +11,11 @@ namespace kn
 class ShaderState
 {
   public:
-    ShaderState(const std::string& fragmentFilePath, Uint32 samplerCount,
-                Uint32 storageTextureCount, Uint32 storageBufferCount, Uint32 uniformBufferCount);
+    ShaderState(const std::string& fragmentFilePath, Uint32 uniformBufferCount = 0,
+                Uint32 samplerCount = 1);
     ~ShaderState();
 
     void bind() const;
-
     void unbind() const;
 
     void setUniform(const Uint32 binding, const void* data, const size_t size) const;

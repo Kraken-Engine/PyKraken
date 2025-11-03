@@ -6,25 +6,48 @@
 
 #include "Color.hpp"
 #include "Math.hpp"
+#include "_globals.hpp"
 
 namespace py = pybind11;
 
 namespace kn
 {
+class Rect;
+
 class Font
 {
   public:
     Font(const std::string& fileDir, int ptSize);
     ~Font();
 
-    void draw(const std::string& text, const Vec2& pos = {}, const Color& color = {255, 255, 255},
-              int wrapWidth = 0) const;
+    void draw(const Vec2& pos = {}, Anchor anchor = Anchor::TopLeft) const;
+
+    void setWrapWidth(int wrapWidth) const;
+    int getWrapWidth() const;
+
+    void setText(const std::string& text) const;
+    std::string getText() const;
+
+    void setColor(const Color& color) const;
+    Color getColor() const;
+
+    void setPtSize(int pt) const;
+    int getPtSize() const;
 
     void setBold(bool on) const;
     void setItalic(bool on) const;
     void setUnderline(bool on) const;
     void setStrikethrough(bool on) const;
-    void setPtSize(int pt) const;
+
+    bool isBold() const;
+    bool isItalic() const;
+    bool isUnderline() const;
+    bool isStrikethrough() const;
+
+    Rect getRect() const;
+    Vec2 getSize() const;
+    int getWidth() const;
+    int getHeight() const;
 
   private:
     TTF_Font* m_font = nullptr;

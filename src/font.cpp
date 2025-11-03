@@ -1,8 +1,10 @@
 #include "Font.hpp"
+#include "Rect.hpp"
 #include "Renderer.hpp"
 #include "misc/SpaceGrotesk.h"
 #include "misc/minecraftia.h"
 
+#include <cmath>
 #include <stdexcept>
 
 namespace kn
@@ -34,6 +36,7 @@ Font::Font(const std::string& fileDir, int ptSize)
         throw std::runtime_error("Failed to load font: " + std::string(SDL_GetError()));
 
     m_text = TTF_CreateText(_textEngine, m_font, "", 0);
+    TTF_SetTextColor(m_text, 255, 255, 255, 255);
 }
 
 Font::~Font()
@@ -47,23 +50,92 @@ Font::~Font()
     m_font = nullptr;
 }
 
-void Font::draw(const std::string& text, const Vec2& pos, const Color& color, int wrapWidth) const
+void Font::draw(const Vec2& pos, const Anchor anchor) const
+{
+    // Round incoming position to the nearest pixel
+    int x = static_cast<int>(std::lround(pos.x));
+    int y = static_cast<int>(std::lround(pos.y));
+
+    // Get text size so we can offset based on the anchor
+    int textW = 0, textH = 0;
+    TTF_GetTextSize(m_text, &textW, &textH);
+
+    switch (anchor)
+    {
+    case Anchor::TopLeft:
+        // no offset
+        break;
+    case Anchor::TopMid:
+        x -= textW / 2;
+        break;
+    case Anchor::TopRight:
+        x -= textW;
+        break;
+    case Anchor::MidLeft:
+        y -= textH / 2;
+        break;
+    case Anchor::Center:
+        x -= textW / 2;
+        y -= textH / 2;
+        break;
+    case Anchor::MidRight:
+        x -= textW;
+        y -= textH / 2;
+        break;
+    case Anchor::BottomLeft:
+        y -= textH;
+        break;
+    case Anchor::BottomMid:
+        x -= textW / 2;
+        y -= textH;
+        break;
+    case Anchor::BottomRight:
+        x -= textW;
+        y -= textH;
+        break;
+    }
+
+    TTF_DrawRendererText(m_text, x, y);
+}
+
+void Font::setWrapWidth(int wrapWidth) const
 {
     if (wrapWidth < 0)
         wrapWidth = 0;
-
-    TTF_SetTextString(m_text, text.c_str(), 0);
-    if (color != WHITE)
-        TTF_SetTextColor(m_text, color.r, color.g, color.b, color.a);
-    if (wrapWidth > 0)
-        TTF_SetTextWrapWidth(m_text, wrapWidth);
-
-    const auto x = static_cast<int>(std::round(pos.x));
-    const auto y = static_cast<int>(std::round(pos.y));
-    TTF_SetTextPosition(m_text, x, y);
-
-    TTF_DrawRendererText(m_text, 0, 0);
+    TTF_SetTextWrapWidth(m_text, wrapWidth);
 }
+
+int Font::getWrapWidth() const
+{
+    int wrapWidth;
+    TTF_GetTextWrapWidth(m_text, &wrapWidth);
+    return wrapWidth;
+}
+
+void Font::setText(const std::string& text) const { TTF_SetTextString(m_text, text.c_str(), 0); }
+
+std::string Font::getText() const { return std::string(m_text->text); }
+
+void Font::setColor(const Color& color) const
+{
+    TTF_SetTextColor(m_text, color.r, color.g, color.b, color.a);
+}
+
+Color Font::getColor() const
+{
+    Color color;
+    TTF_GetTextColor(m_text, &color.r, &color.g, &color.b, &color.a);
+    return color;
+}
+
+void Font::setPtSize(int pt) const
+{
+    if (pt < 8)
+        pt = 8;
+    TTF_SetFontSize(m_font, static_cast<float>(pt));
+}
+
+int Font::getPtSize() const { return static_cast<int>(TTF_GetFontSize(m_font)); }
 
 void Font::setBold(const bool on) const
 {
@@ -89,11 +161,56 @@ void Font::setStrikethrough(const bool on) const
     TTF_SetFontStyle(m_font, on ? (s | TTF_STYLE_STRIKETHROUGH) : (s & ~TTF_STYLE_STRIKETHROUGH));
 }
 
-void Font::setPtSize(int pt) const
+bool Font::isBold() const
 {
-    if (pt < 8)
-        pt = 8;
-    TTF_SetFontSize(m_font, static_cast<float>(pt));
+    const unsigned int s = TTF_GetFontStyle(m_font);
+    return (s & TTF_STYLE_BOLD) != 0;
+}
+
+bool Font::isItalic() const
+{
+    const unsigned int s = TTF_GetFontStyle(m_font);
+    return (s & TTF_STYLE_ITALIC) != 0;
+}
+
+bool Font::isUnderline() const
+{
+    const unsigned int s = TTF_GetFontStyle(m_font);
+    return (s & TTF_STYLE_UNDERLINE) != 0;
+}
+
+bool Font::isStrikethrough() const
+{
+    const unsigned int s = TTF_GetFontStyle(m_font);
+    return (s & TTF_STYLE_STRIKETHROUGH) != 0;
+}
+
+Rect Font::getRect() const
+{
+    int w, h;
+    TTF_GetTextSize(m_text, &w, &h);
+    return {0, 0, w, h};
+}
+
+Vec2 Font::getSize() const
+{
+    int w, h;
+    TTF_GetTextSize(m_text, &w, &h);
+    return {w, h};
+}
+
+int Font::getWidth() const
+{
+    int w;
+    TTF_GetTextSize(m_text, &w, nullptr);
+    return w;
+}
+
+int Font::getHeight() const
+{
+    int h;
+    TTF_GetTextSize(m_text, nullptr, &h);
+    return h;
 }
 
 namespace font
@@ -134,7 +251,8 @@ Note:
     A window/renderer must be created before using fonts. Typically you should
     call kn.window.create(...) first, which initializes the font engine.
     )doc")
-        .def(py::init<const std::string&, int>(), R"doc(
+        .def(py::init<const std::string&, int>(), py::arg("file_dir"), py::arg("pt_size"),
+             R"doc(
 Create a Font.
 
 Args:
@@ -149,8 +267,7 @@ Raises:
     )doc")
         .def(
             "draw",
-            [](const Font& self, const std::string& text, const py::object& posObj,
-               const py::object& colorObj, const int wrapWidth) -> void
+            [](const Font& self, const py::object& posObj, const Anchor anchor) -> void
             {
                 Vec2 pos{};
                 if (!posObj.is_none())
@@ -164,81 +281,66 @@ Raises:
                         throw py::type_error("Invalid type for 'pos', expected Vec2");
                     }
                 }
-
-                Color color{255, 255, 255};
-                if (!colorObj.is_none())
-                {
-                    try
-                    {
-                        color = colorObj.cast<Color>();
-                    }
-                    catch (const py::cast_error&)
-                    {
-                        throw py::type_error("Invalid type for 'color', expected Color");
-                    }
-                }
-
-                self.draw(text, pos, color, wrapWidth);
+                self.draw(pos, anchor);
             },
-            py::arg("text"), py::arg("pos") = py::none(), py::arg("color") = py::none(),
-            py::arg("wrap_width") = 0, R"doc(
-Draw text to the renderer.
+            py::arg("pos") = py::none(), py::arg("anchor") = Anchor::TopLeft, R"doc(
+Draw the text to the renderer at the specified position with alignment.
 
 Args:
-    text (str): The text to render.
-    pos (Vec2 | None, optional): The position in pixels. Defaults to (0, 0).
-    color (Color | None, optional): Text color. Defaults to white.
-    wrap_width (int, optional): Wrap the text at this pixel width. Set to 0 for
-                                no wrapping. Defaults to 0.
+    pos (Vec2 | None): The position in pixels. Defaults to (0, 0).
+    anchor (Anchor): The anchor point for alignment. Defaults to TopLeft.
+        )doc")
+        .def("get_rect", &Font::getRect, R"doc(
+Get the bounding rectangle of the current text.
 
 Returns:
-    None
-    )doc")
-        .def("set_bold", &Font::setBold, py::arg("on"), R"doc(
-Enable or disable bold text style.
+    Rect: A rectangle with x=0, y=0, and width/height of the text.
+        )doc")
+        .def_property("wrap_width", &Font::getWrapWidth, &Font::setWrapWidth, R"doc(
+Get or set the wrap width in pixels for text wrapping.
 
-Args:
-    on (bool): True to enable bold, False to disable.
-
-Returns:
-    None
-    )doc")
-        .def("set_italic", &Font::setItalic, py::arg("on"), R"doc(
-Enable or disable italic text style.
-
-Args:
-    on (bool): True to enable italic, False to disable.
-
-Returns:
-    None
-    )doc")
-        .def("set_underline", &Font::setUnderline, py::arg("on"), R"doc(
-Enable or disable underline text style.
-
-Args:
-    on (bool): True to enable underline, False to disable.
-
-Returns:
-    None
-    )doc")
-        .def("set_strikethrough", &Font::setStrikethrough, py::arg("on"), R"doc(
-Enable or disable strikethrough text style.
-
-Args:
-    on (bool): True to enable strikethrough, False to disable.
+Set to 0 to disable wrapping. Negative values are clamped to 0.
+        )doc")
+        .def_property("text", &Font::getText, &Font::setText, R"doc(
+Get or set the text string to be rendered.
+        )doc")
+        .def_property("color", &Font::getColor, &Font::setColor, R"doc(
+Get or set the color of the rendered text.
+        )doc")
+        .def_property("pt_size", &Font::getPtSize, &Font::setPtSize, R"doc(
+Get or set the point size of the font. Values below 8 are clamped to 8.
+        )doc")
+        .def_property("bold", &Font::isBold, &Font::setBold, R"doc(
+Get or set whether bold text style is enabled.
+        )doc")
+        .def_property("italic", &Font::isItalic, &Font::setItalic, R"doc(
+Get or set whether italic text style is enabled.
+        )doc")
+        .def_property("underline", &Font::isUnderline, &Font::setUnderline, R"doc(
+Get or set whether underline text style is enabled.
+        )doc")
+        .def_property("strikethrough", &Font::isStrikethrough, &Font::setStrikethrough,
+                      R"doc(
+Get or set whether strikethrough text style is enabled.
+        )doc")
+        .def_property_readonly("size", &Font::getSize, R"doc(
+Get the size (width, height) of the current text as a Vec2.
 
 Returns:
-    None
-    )doc")
-        .def("set_pt_size", &Font::setPtSize, py::arg("pt"), R"doc(
-Set the font point size.
-
-Args:
-    pt (int): The new point size. Values below 8 are clamped to 8.
+    Vec2: The text dimensions.
+        )doc")
+        .def_property_readonly("width", &Font::getWidth, R"doc(
+Get the width in pixels of the current text.
 
 Returns:
-    None
-    )doc");
+    int: The text width.
+        )doc")
+        .def_property_readonly("height", &Font::getHeight, R"doc(
+Get the height in pixels of the current text.
+
+Returns:
+    int: The text height.
+        )doc");
 }
 } // namespace font
 } // namespace kn
