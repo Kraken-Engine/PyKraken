@@ -905,7 +905,7 @@ class Font:
         call kn.window.create(...) first, which initializes the font engine.
         
     """
-    def __init__(self, arg0: str, arg1: typing.SupportsInt) -> None:
+    def __init__(self, file_dir: str, pt_size: typing.SupportsInt) -> None:
         """
         Create a Font.
         
@@ -919,70 +919,111 @@ class Font:
         Raises:
             RuntimeError: If the font fails to load.
         """
-    def draw(self, text: str, pos: typing.Any = None, color: typing.Any = None, wrap_width: typing.SupportsInt = 0) -> None:
+    def draw(self, pos: typing.Any = None, anchor: Anchor = Anchor.TOP_LEFT) -> None:
         """
-        Draw text to the renderer.
+        Draw the text to the renderer at the specified position with alignment.
         
         Args:
-            text (str): The text to render.
-            pos (Vec2 | None, optional): The position in pixels. Defaults to (0, 0).
-            color (Color | None, optional): Text color. Defaults to white.
-            wrap_width (int, optional): Wrap the text at this pixel width. Set to 0 for
-                                        no wrapping. Defaults to 0.
+            pos (Vec2 | None): The position in pixels. Defaults to (0, 0).
+            anchor (Anchor): The anchor point for alignment. Defaults to TopLeft.
+        """
+    def get_rect(self) -> Rect:
+        """
+        Get the bounding rectangle of the current text.
         
         Returns:
-            None
+            Rect: A rectangle with x=0, y=0, and width/height of the text.
         """
-    def set_bold(self, on: bool) -> None:
+    @property
+    def bold(self) -> bool:
         """
-        Enable or disable bold text style.
-        
-        Args:
-            on (bool): True to enable bold, False to disable.
-        
-        Returns:
-            None
+        Get or set whether bold text style is enabled.
         """
-    def set_italic(self, on: bool) -> None:
+    @bold.setter
+    def bold(self, arg1: bool) -> None:
+        ...
+    @property
+    def color(self) -> Color:
         """
-        Enable or disable italic text style.
-        
-        Args:
-            on (bool): True to enable italic, False to disable.
-        
-        Returns:
-            None
+        Get or set the color of the rendered text.
         """
-    def set_pt_size(self, pt: typing.SupportsInt) -> None:
+    @color.setter
+    def color(self, arg1: Color) -> None:
+        ...
+    @property
+    def height(self) -> int:
         """
-        Set the font point size.
-        
-        Args:
-            pt (int): The new point size. Values below 8 are clamped to 8.
+        Get the height in pixels of the current text.
         
         Returns:
-            None
+            int: The text height.
         """
-    def set_strikethrough(self, on: bool) -> None:
+    @property
+    def italic(self) -> bool:
         """
-        Enable or disable strikethrough text style.
-        
-        Args:
-            on (bool): True to enable strikethrough, False to disable.
+        Get or set whether italic text style is enabled.
+        """
+    @italic.setter
+    def italic(self, arg1: bool) -> None:
+        ...
+    @property
+    def pt_size(self) -> int:
+        """
+        Get or set the point size of the font. Values below 8 are clamped to 8.
+        """
+    @pt_size.setter
+    def pt_size(self, arg1: typing.SupportsInt) -> None:
+        ...
+    @property
+    def size(self) -> Vec2:
+        """
+        Get the size (width, height) of the current text as a Vec2.
         
         Returns:
-            None
+            Vec2: The text dimensions.
         """
-    def set_underline(self, on: bool) -> None:
+    @property
+    def strikethrough(self) -> bool:
         """
-        Enable or disable underline text style.
-        
-        Args:
-            on (bool): True to enable underline, False to disable.
+        Get or set whether strikethrough text style is enabled.
+        """
+    @strikethrough.setter
+    def strikethrough(self, arg1: bool) -> None:
+        ...
+    @property
+    def text(self) -> str:
+        """
+        Get or set the text string to be rendered.
+        """
+    @text.setter
+    def text(self, arg1: str) -> None:
+        ...
+    @property
+    def underline(self) -> bool:
+        """
+        Get or set whether underline text style is enabled.
+        """
+    @underline.setter
+    def underline(self, arg1: bool) -> None:
+        ...
+    @property
+    def width(self) -> int:
+        """
+        Get the width in pixels of the current text.
         
         Returns:
-            None
+            int: The text width.
         """
+    @property
+    def wrap_width(self) -> int:
+        """
+        Get or set the wrap width in pixels for text wrapping.
+        
+        Set to 0 to disable wrapping. Negative values are clamped to 0.
+        """
+    @wrap_width.setter
+    def wrap_width(self, arg1: typing.SupportsInt) -> None:
+        ...
 class Frame:
     """
     
@@ -2561,8 +2602,15 @@ class ShaderState:
     """
     Encapsulates a GPU shader and its associated render state.
     """
-    def __init__(self, fragment_file_path: str, sampler_count: typing.SupportsInt, storage_texture_count: typing.SupportsInt, storage_buffer_count: typing.SupportsInt, uniform_buffer_count: typing.SupportsInt) -> None:
-        ...
+    def __init__(self, fragment_file_path: str, uniform_buffer_count: typing.SupportsInt = 0, sampler_count: typing.SupportsInt = 1) -> None:
+        """
+        Creates a ShaderState from the specified fragment shader file.
+        
+        Parameters:
+            fragment_file_path (str): Path to the fragment shader file.
+            uniform_buffer_count (int, optional): Number of uniform buffers used by the shader. Default is 0.
+            sampler_count (int, optional): Number of samplers used by the shader. Default is 1.
+        """
     def bind(self) -> None:
         """
         Binds this shader state to the current render pass, making it active for subsequent draw calls.
@@ -2716,9 +2764,6 @@ class Tile:
     """
     
     Represents a single tile instance in a layer.
-    
-    Contains source and destination rectangles, a collider, flip flags, rotation angle,
-    and a reference to its owning Layer.
         
     """
     @property
