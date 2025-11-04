@@ -14,22 +14,31 @@ namespace kn
 {
 class Rect;
 
+namespace font
+{
+enum class Hinting
+{
+    Normal,
+    Mono,
+    Light,
+    LightSubpixel,
+    None,
+};
+
+void _bind(const py::module_& module);
+} // namespace font
+
 class Font
 {
   public:
     Font(const std::string& fileDir, int ptSize);
     ~Font();
 
-    void draw(const Vec2& pos = {}, Anchor anchor = Anchor::TopLeft) const;
+    void setAlignment(Align alignment) const;
+    Align getAlignment() const;
 
-    void setWrapWidth(int wrapWidth) const;
-    int getWrapWidth() const;
-
-    void setText(const std::string& text) const;
-    std::string getText() const;
-
-    void setColor(const Color& color) const;
-    Color getColor() const;
+    void setHinting(font::Hinting hinting) const;
+    font::Hinting getHinting() const;
 
     void setPtSize(int pt) const;
     int getPtSize() const;
@@ -44,20 +53,9 @@ class Font
     bool isUnderline() const;
     bool isStrikethrough() const;
 
-    Rect getRect() const;
-    Vec2 getSize() const;
-    int getWidth() const;
-    int getHeight() const;
+    TTF_Font* _get() const { return m_font; }
 
   private:
     TTF_Font* m_font = nullptr;
-    TTF_Text* m_text = nullptr;
 };
-
-namespace font
-{
-void _bind(const py::module_& module);
-void _init();
-void _quit();
-} // namespace font
 } // namespace kn

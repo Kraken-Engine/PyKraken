@@ -21,6 +21,7 @@
 #include "Rect.hpp"
 #include "Renderer.hpp"
 #include "ShaderState.hpp"
+#include "Text.hpp"
 #include "Texture.hpp"
 #include "TileMap.hpp"
 #include "Time.hpp"
@@ -56,6 +57,7 @@ Call this once you're done using the engine to avoid memory leaks.
     kn::ease::_bind(m);
     kn::event::_bind(m);
     kn::font::_bind(m);
+    kn::text::_bind(m);
     kn::gamepad::_bind(m);
     kn::input::_bind(m);
     kn::key::_bind(m);

@@ -1,16 +1,13 @@
 #include "Font.hpp"
-#include "Rect.hpp"
-#include "Renderer.hpp"
 #include "misc/SpaceGrotesk.h"
 #include "misc/minecraftia.h"
 
 #include <cmath>
 #include <stdexcept>
+#include <pybind11/native_enum.h>
 
 namespace kn
 {
-static TTF_TextEngine* _textEngine = nullptr;
-
 Font::Font(const std::string& fileDir, int ptSize)
 {
     if (ptSize < 8)
@@ -34,98 +31,87 @@ Font::Font(const std::string& fileDir, int ptSize)
 
     if (!m_font)
         throw std::runtime_error("Failed to load font: " + std::string(SDL_GetError()));
-
-    m_text = TTF_CreateText(_textEngine, m_font, "", 0);
-    TTF_SetTextColor(m_text, 255, 255, 255, 255);
 }
 
 Font::~Font()
 {
-    if (m_text)
-        TTF_DestroyText(m_text);
-    m_text = nullptr;
-
     if (m_font)
         TTF_CloseFont(m_font);
     m_font = nullptr;
 }
 
-void Font::draw(const Vec2& pos, const Anchor anchor) const
+void Font::setAlignment(const Align alignment) const
 {
-    // Round incoming position to the nearest pixel
-    int x = static_cast<int>(std::lround(pos.x));
-    int y = static_cast<int>(std::lround(pos.y));
-
-    // Get text size so we can offset based on the anchor
-    int textW = 0, textH = 0;
-    TTF_GetTextSize(m_text, &textW, &textH);
-
-    switch (anchor)
+    switch (alignment)
     {
-    case Anchor::TopLeft:
-        // no offset
+    case Align::Left:
+        TTF_SetFontWrapAlignment(m_font, TTF_HORIZONTAL_ALIGN_LEFT);
         break;
-    case Anchor::TopMid:
-        x -= textW / 2;
+    case Align::Center:
+        TTF_SetFontWrapAlignment(m_font, TTF_HORIZONTAL_ALIGN_CENTER);
         break;
-    case Anchor::TopRight:
-        x -= textW;
-        break;
-    case Anchor::MidLeft:
-        y -= textH / 2;
-        break;
-    case Anchor::Center:
-        x -= textW / 2;
-        y -= textH / 2;
-        break;
-    case Anchor::MidRight:
-        x -= textW;
-        y -= textH / 2;
-        break;
-    case Anchor::BottomLeft:
-        y -= textH;
-        break;
-    case Anchor::BottomMid:
-        x -= textW / 2;
-        y -= textH;
-        break;
-    case Anchor::BottomRight:
-        x -= textW;
-        y -= textH;
+    case Align::Right:
+        TTF_SetFontWrapAlignment(m_font, TTF_HORIZONTAL_ALIGN_RIGHT);
         break;
     }
-
-    TTF_DrawRendererText(m_text, x, y);
 }
 
-void Font::setWrapWidth(int wrapWidth) const
+Align Font::getAlignment() const
 {
-    if (wrapWidth < 0)
-        wrapWidth = 0;
-    TTF_SetTextWrapWidth(m_text, wrapWidth);
+    const TTF_HorizontalAlignment align = TTF_GetFontWrapAlignment(m_font);
+    switch (align)
+    {
+    case TTF_HORIZONTAL_ALIGN_LEFT:
+        return Align::Left;
+    case TTF_HORIZONTAL_ALIGN_CENTER:
+        return Align::Center;
+    case TTF_HORIZONTAL_ALIGN_RIGHT:
+        return Align::Right;
+    default:
+        return Align::Left;
+    }
 }
 
-int Font::getWrapWidth() const
+void Font::setHinting(const font::Hinting hinting) const
 {
-    int wrapWidth;
-    TTF_GetTextWrapWidth(m_text, &wrapWidth);
-    return wrapWidth;
+    switch (hinting)
+    {
+    case font::Hinting::Normal:
+        TTF_SetFontHinting(m_font, TTF_HINTING_NORMAL);
+        break;
+    case font::Hinting::Light:
+        TTF_SetFontHinting(m_font, TTF_HINTING_LIGHT);
+        break;
+    case font::Hinting::Mono:
+        TTF_SetFontHinting(m_font, TTF_HINTING_MONO);
+        break;
+    case font::Hinting::LightSubpixel:
+        TTF_SetFontHinting(m_font, TTF_HINTING_LIGHT_SUBPIXEL);
+        break;
+    case font::Hinting::None:
+        TTF_SetFontHinting(m_font, TTF_HINTING_NONE);
+        break;
+    }
 }
 
-void Font::setText(const std::string& text) const { TTF_SetTextString(m_text, text.c_str(), 0); }
-
-std::string Font::getText() const { return std::string(m_text->text); }
-
-void Font::setColor(const Color& color) const
+font::Hinting Font::getHinting() const
 {
-    TTF_SetTextColor(m_text, color.r, color.g, color.b, color.a);
-}
-
-Color Font::getColor() const
-{
-    Color color;
-    TTF_GetTextColor(m_text, &color.r, &color.g, &color.b, &color.a);
-    return color;
+    const TTF_HintingFlags hinting = TTF_GetFontHinting(m_font);
+    switch (hinting)
+    {
+    case TTF_HINTING_NORMAL:
+        return font::Hinting::Normal;
+    case TTF_HINTING_LIGHT:
+        return font::Hinting::Light;
+    case TTF_HINTING_MONO:
+        return font::Hinting::Mono;
+    case TTF_HINTING_LIGHT_SUBPIXEL:
+        return font::Hinting::LightSubpixel;
+    case TTF_HINTING_NONE:
+        return font::Hinting::None;
+    default:
+        return font::Hinting::Normal;
+    }
 }
 
 void Font::setPtSize(int pt) const
@@ -185,63 +171,29 @@ bool Font::isStrikethrough() const
     return (s & TTF_STYLE_STRIKETHROUGH) != 0;
 }
 
-Rect Font::getRect() const
-{
-    int w, h;
-    TTF_GetTextSize(m_text, &w, &h);
-    return {0, 0, w, h};
-}
-
-Vec2 Font::getSize() const
-{
-    int w, h;
-    TTF_GetTextSize(m_text, &w, &h);
-    return {w, h};
-}
-
-int Font::getWidth() const
-{
-    int w;
-    TTF_GetTextSize(m_text, &w, nullptr);
-    return w;
-}
-
-int Font::getHeight() const
-{
-    int h;
-    TTF_GetTextSize(m_text, nullptr, &h);
-    return h;
-}
-
 namespace font
 {
-void _init()
-{
-    if (!TTF_Init())
-        throw std::runtime_error("Failed to initialize SDL_ttf");
-
-    _textEngine = TTF_CreateRendererTextEngine(renderer::_get());
-    if (!_textEngine)
-        throw std::runtime_error("Failed to create text engine: " + std::string(SDL_GetError()));
-}
-
-void _quit()
-{
-    if (_textEngine)
-        TTF_DestroyRendererTextEngine(_textEngine);
-    _textEngine = nullptr;
-
-    TTF_Quit();
-}
-
 void _bind(const py::module_& module)
 {
-    py::classh<Font>(module, "Font", R"doc(
-A font object for rendering text to the active renderer.
+    py::native_enum<font::Hinting>(module, "FontHint", "enum.IntEnum", R"doc(
+Font hinting modes for controlling how fonts are rendered.
 
-This class wraps an SDL_ttf font and an internal text object for efficient
-rendering. You can load fonts from a file path or use one of the built-in
-typefaces:
+Hinting is the process of fitting font outlines to the pixel grid to improve
+readability at small sizes.
+    )doc")
+        .value("NORMAL", Hinting::Normal, "Default hinting")
+        .value("MONO", Hinting::Mono, "Monochrome hinting")
+        .value("LIGHT", Hinting::Light, "Light hinting")
+        .value("LIGHT_SUBPIXEL", Hinting::LightSubpixel, "Light subpixel hinting")
+        .value("NONE", Hinting::None, "No hinting")
+        .finalize();
+
+    py::classh<Font>(module, "Font", R"doc(
+A font typeface for rendering text.
+
+This class wraps an SDL_ttf font and manages font properties like size,
+style, and alignment. You can load fonts from a file path or use one of
+the built-in typefaces:
 
 - "kraken-clean": A clean sans-serif font bundled with the engine.
 - "kraken-retro": A pixel/retro font bundled with the engine. Point size is
@@ -265,47 +217,16 @@ Args:
 Raises:
     RuntimeError: If the font fails to load.
     )doc")
-        .def(
-            "draw",
-            [](const Font& self, const py::object& posObj, const Anchor anchor) -> void
-            {
-                Vec2 pos{};
-                if (!posObj.is_none())
-                {
-                    try
-                    {
-                        pos = posObj.cast<Vec2>();
-                    }
-                    catch (const py::cast_error&)
-                    {
-                        throw py::type_error("Invalid type for 'pos', expected Vec2");
-                    }
-                }
-                self.draw(pos, anchor);
-            },
-            py::arg("pos") = py::none(), py::arg("anchor") = Anchor::TopLeft, R"doc(
-Draw the text to the renderer at the specified position with alignment.
+        .def_property("alignment", &Font::getAlignment, &Font::setAlignment, R"doc(
+Get or set the text alignment for wrapped text.
 
-Args:
-    pos (Vec2 | None): The position in pixels. Defaults to (0, 0).
-    anchor (Anchor): The anchor point for alignment. Defaults to TopLeft.
+Valid values: Align.LEFT, Align.CENTER, Align.RIGHT
         )doc")
-        .def("get_rect", &Font::getRect, R"doc(
-Get the bounding rectangle of the current text.
+        .def_property("hinting", &Font::getHinting, &Font::setHinting, R"doc(
+Get or set the font hinting mode.
 
-Returns:
-    Rect: A rectangle with x=0, y=0, and width/height of the text.
-        )doc")
-        .def_property("wrap_width", &Font::getWrapWidth, &Font::setWrapWidth, R"doc(
-Get or set the wrap width in pixels for text wrapping.
-
-Set to 0 to disable wrapping. Negative values are clamped to 0.
-        )doc")
-        .def_property("text", &Font::getText, &Font::setText, R"doc(
-Get or set the text string to be rendered.
-        )doc")
-        .def_property("color", &Font::getColor, &Font::setColor, R"doc(
-Get or set the color of the rendered text.
+Valid values: FontHinting.NORMAL, FontHinting.MONO, FontHinting.LIGHT,
+              FontHinting.LIGHT_SUBPIXEL, FontHinting.NONE
         )doc")
         .def_property("pt_size", &Font::getPtSize, &Font::setPtSize, R"doc(
 Get or set the point size of the font. Values below 8 are clamped to 8.
@@ -322,24 +243,6 @@ Get or set whether underline text style is enabled.
         .def_property("strikethrough", &Font::isStrikethrough, &Font::setStrikethrough,
                       R"doc(
 Get or set whether strikethrough text style is enabled.
-        )doc")
-        .def_property_readonly("size", &Font::getSize, R"doc(
-Get the size (width, height) of the current text as a Vec2.
-
-Returns:
-    Vec2: The text dimensions.
-        )doc")
-        .def_property_readonly("width", &Font::getWidth, R"doc(
-Get the width in pixels of the current text.
-
-Returns:
-    int: The text width.
-        )doc")
-        .def_property_readonly("height", &Font::getHeight, R"doc(
-Get the height in pixels of the current text.
-
-Returns:
-    int: The text height.
         )doc");
 }
 } // namespace font

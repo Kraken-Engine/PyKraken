@@ -1,8 +1,8 @@
 #include "AnimationController.hpp"
-#include "Font.hpp"
 #include "Math.hpp"
 #include "Mixer.hpp"
 #include "Renderer.hpp"
+#include "Text.hpp"
 #include "Time.hpp"
 
 #include <SDL3/SDL.h>
@@ -92,7 +92,7 @@ void create(const std::string& title, const Vec2& res, const bool scaled)
     _isOpen = true;
 
     renderer::_init(_window, res);
-    font::_init();
+    text::_init();
 }
 
 bool isOpen()
@@ -197,7 +197,6 @@ void saveScreenshot(const std::string& filePath)
 
     SDL_DestroySurface(shotSurface);
 }
-
 
 void _bind(py::module_& module)
 {
@@ -322,12 +321,19 @@ void init()
     mixer::_init();
 }
 
+// Clean up in reverse order of initialization
 void quit()
 {
-    font::_quit();
+    // Text engine must be destroyed before renderer since it depends on it
+    text::_quit();
+
+    // Mixer is independent
     mixer::_quit();
+
+    // Renderer must be destroyed before window
     renderer::_quit();
 
+    // Window cleanup
     if (window::_window)
         SDL_DestroyWindow(window::_window);
     window::_window = nullptr;

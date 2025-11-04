@@ -22,6 +22,13 @@ void _bind(const py::module_& module)
         .export_values()
         .finalize();
 
+    // Define Align enum
+    py::native_enum<Align>(module, "Align", "enum.IntEnum")
+        .value("LEFT", Align::Left)
+        .value("CENTER", Align::Center)
+        .value("RIGHT", Align::Right)
+        .finalize();
+
     // Define event types
     py::native_enum<SDL_EventType>(module, "EventType", "enum.IntEnum")
         .value("QUIT", SDL_EVENT_QUIT)
