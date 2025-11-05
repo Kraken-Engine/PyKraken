@@ -2115,6 +2115,71 @@ class Polygon:
         Returns:
             Polygon: A new polygon with the same points.
         """
+    def rotate(self, angle: typing.SupportsFloat, pivot: Vec2) -> None:
+        """
+        Rotate the polygon around a pivot point.
+        
+        Args:
+            angle (float): The rotation angle in radians.
+            pivot (Vec2): The point to rotate around.
+        """
+    @typing.overload
+    def scale(self, factor: typing.SupportsFloat, pivot: Vec2) -> None:
+        """
+        Scale the polygon uniformly from a pivot point.
+        
+        Args:
+            factor (float): The scaling factor.
+            pivot (Vec2): The point to scale from.
+        """
+    @typing.overload
+    def scale(self, factor: Vec2, pivot: Vec2) -> None:
+        """
+        Scale the polygon non-uniformly from a pivot point.
+        
+        Args:
+            factor (Vec2): The scaling factors for x and y.
+            pivot (Vec2): The point to scale from.
+        """
+    def translate(self, offset: Vec2) -> None:
+        """
+        Move the polygon by an offset.
+        
+        Args:
+            offset (Vec2): The offset to move by.
+        """
+    @property
+    def area(self) -> float:
+        """
+        Get the area of the polygon.
+        
+        Returns:
+            float: The area enclosed by the polygon.
+        """
+    @property
+    def bounds(self) -> Rect:
+        """
+        Get the bounding rectangle of the polygon.
+        
+        Returns:
+            Rect: The smallest rectangle that contains the polygon.
+        """
+    @property
+    def centroid(self) -> Vec2:
+        """
+        Get the centroid of the polygon.
+        
+        Returns:
+            Vec2: The center point of the polygon.
+        """
+    @property
+    def perimeter(self) -> float:
+        """
+        Get the perimeter of the polygon.
+        
+        Returns:
+            float: The total distance around the polygon.
+        """
     @property
     def points(self) -> list[Vec2]:
         """

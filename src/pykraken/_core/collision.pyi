@@ -233,3 +233,51 @@ def overlap(point: pykraken._core.Vec2, circle: pykraken._core.Circle) -> bool:
     Returns:
         bool: Whether the point is inside the circle.
     """
+@typing.overload
+def overlap(polygon: pykraken._core.Polygon, point: pykraken._core.Vec2) -> bool:
+    """
+    Checks if a polygon contains a point.
+    
+    Parameters:
+        polygon (Polygon): The polygon.
+        point (Vec2): The point.
+    
+    Returns:
+        bool: Whether the polygon contains the point.
+    """
+@typing.overload
+def overlap(point: pykraken._core.Vec2, polygon: pykraken._core.Polygon) -> bool:
+    """
+    Checks if a point is inside a polygon.
+    
+    Parameters:
+        point (Vec2): The point.
+        polygon (Polygon): The polygon.
+    
+    Returns:
+        bool: Whether the point is inside the polygon.
+    """
+@typing.overload
+def overlap(polygon: pykraken._core.Polygon, rect: pykraken._core.Rect) -> bool:
+    """
+    Checks if a polygon and a rectangle overlap.
+    
+    Parameters:
+        polygon (Polygon): The polygon.
+        rect (Rect): The rectangle.
+    
+    Returns:
+        bool: Whether the polygon and rectangle overlap.
+    """
+@typing.overload
+def overlap(rect: pykraken._core.Rect, polygon: pykraken._core.Polygon) -> bool:
+    """
+    Checks if a rectangle and a polygon overlap.
+    
+    Parameters:
+        rect (Rect): The rectangle.
+        polygon (Polygon): The polygon.
+    
+    Returns:
+        bool: Whether the rectangle and polygon overlap.
+    """
