@@ -27,11 +27,10 @@ bool overlap(const Line& line, const Rect& rect);
 bool overlap(const Line& line, const Circle& circle);
 bool overlap(const Vec2& point, const Rect& rect);
 bool overlap(const Vec2& point, const Circle& circle);
-
-bool umaOverlap(const Polygon& polygon, const Vec2& point);
-bool umaOverlap(const Vec2& point, const Polygon& polygon);
-bool umaOverlap(const Polygon& polygon, const Rect& rect);
-bool umaOverlap(const Rect& rect, const Polygon& polygon);
+bool overlap(const Polygon& polygon, const Vec2& point);
+bool overlap(const Vec2& point, const Polygon& polygon);
+bool overlap(const Polygon& polygon, const Rect& rect);
+bool overlap(const Rect& rect, const Polygon& polygon);
 
 bool contains(const Rect& outer, const Rect& inner);
 bool contains(const Rect& rect, const Circle& circle);

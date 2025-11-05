@@ -20,10 +20,15 @@ public:
 
     [[nodiscard]] Polygon copy() const;
 
-    [[nodiscard]] double getUmaPerimeter() const;
-    [[nodiscard]] double getUmaArea() const;
-    [[nodiscard]] Vec2 getUmaCentroid() const;
-    [[nodiscard]] class Rect getUmaBounds() const;
+    [[nodiscard]] double getPerimeter() const;
+    [[nodiscard]] double getArea() const;
+    [[nodiscard]] Vec2 getCentroid() const;
+    [[nodiscard]] class Rect getBounds() const;
+
+    void rotate(double angle, const Vec2& pivot);
+    void translate(const Vec2& offset);
+    void scale(double factor, const Vec2& pivot);
+    void scale(const Vec2& factor, const Vec2& pivot);
 };
 
 namespace polygon

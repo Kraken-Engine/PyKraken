@@ -212,56 +212,54 @@ bool contains(const Circle& circle, const Line& line)
            (distBX * distBX + distBY * distBY) <= radiusSquared;
 }
 
-bool umaOverlap(const Polygon& polygon, const Vec2& point)
+bool overlap(const Polygon& polygon, const Vec2& point)
 {
     if (polygon.points.size() < 3)
         return false;
 
-    bool umaInside = false;
-    size_t umaCount = polygon.points.size();
+    bool inside = false;
+    size_t count = polygon.points.size();
 
-    for (size_t i = 0, j = umaCount - 1; i < umaCount; j = i++)
+    for (size_t i = 0, j = count - 1; i < count; j = i++)
     {
-        const Vec2& umaVi = polygon.points[i];
-        const Vec2& umaVj = polygon.points[j];
+        const Vec2& vi = polygon.points[i];
+        const Vec2& vj = polygon.points[j];
 
-        bool umaCondition = ((umaVi.y > point.y) != (umaVj.y > point.y)) &&
-                            (point.x < (umaVj.x - umaVi.x) * (point.y - umaVi.y) /
-                                               (umaVj.y - umaVi.y) +
-                                           umaVi.x);
-        if (umaCondition)
-            umaInside = !umaInside;
+        bool condition = ((vi.y > point.y) != (vj.y > point.y)) &&
+                         (point.x < (vj.x - vi.x) * (point.y - vi.y) / (vj.y - vi.y) + vi.x);
+        if (condition)
+            inside = !inside;
     }
 
-    return umaInside;
+    return inside;
 }
 
-bool umaOverlap(const Vec2& point, const Polygon& polygon) { return umaOverlap(polygon, point); }
+bool overlap(const Vec2& point, const Polygon& polygon) { return overlap(polygon, point); }
 
-bool umaOverlap(const Polygon& polygon, const Rect& rect)
+bool overlap(const Polygon& polygon, const Rect& rect)
 {
     if (polygon.points.empty())
         return false;
 
-    for (const auto& umaPoint : polygon.points)
+    for (const auto& point : polygon.points)
     {
-        if (overlap(rect, umaPoint))
+        if (overlap(rect, point))
             return true;
     }
 
-    Vec2 umaCorners[4] = {Vec2{rect.x, rect.y}, Vec2{rect.x + rect.w, rect.y},
-                          Vec2{rect.x + rect.w, rect.y + rect.h}, Vec2{rect.x, rect.y + rect.h}};
+    Vec2 corners[4] = {Vec2{rect.x, rect.y}, Vec2{rect.x + rect.w, rect.y},
+                       Vec2{rect.x + rect.w, rect.y + rect.h}, Vec2{rect.x, rect.y + rect.h}};
 
-    for (const auto& umaCorner : umaCorners)
+    for (const auto& corner : corners)
     {
-        if (umaOverlap(polygon, umaCorner))
+        if (overlap(polygon, corner))
             return true;
     }
 
     return false;
 }
 
-bool umaOverlap(const Rect& rect, const Polygon& polygon) { return umaOverlap(polygon, rect); }
+bool overlap(const Rect& rect, const Polygon& polygon) { return overlap(polygon, rect); }
 
 void _bind(py::module_& module)
 {
@@ -480,7 +478,7 @@ Returns:
     bool: Whether the circle completely contains the line.
                      )doc");
 
-    subCollision.def("uma_overlap", py::overload_cast<const Polygon&, const Vec2&>(&umaOverlap),
+    subCollision.def("overlap", py::overload_cast<const Polygon&, const Vec2&>(&overlap),
                      py::arg("polygon"), py::arg("point"), R"doc(
 Checks if a polygon contains a point.
 
@@ -492,7 +490,7 @@ Returns:
     bool: Whether the polygon contains the point.
                      )doc");
 
-    subCollision.def("uma_overlap", py::overload_cast<const Vec2&, const Polygon&>(&umaOverlap),
+    subCollision.def("overlap", py::overload_cast<const Vec2&, const Polygon&>(&overlap),
                      py::arg("point"), py::arg("polygon"), R"doc(
 Checks if a point is inside a polygon.
 
@@ -504,7 +502,7 @@ Returns:
     bool: Whether the point is inside the polygon.
                      )doc");
 
-    subCollision.def("uma_overlap", py::overload_cast<const Polygon&, const Rect&>(&umaOverlap),
+    subCollision.def("overlap", py::overload_cast<const Polygon&, const Rect&>(&overlap),
                      py::arg("polygon"), py::arg("rect"), R"doc(
 Checks if a polygon and a rectangle overlap.
 
@@ -516,7 +514,7 @@ Returns:
     bool: Whether the polygon and rectangle overlap.
                      )doc");
 
-    subCollision.def("uma_overlap", py::overload_cast<const Rect&, const Polygon&>(&umaOverlap),
+    subCollision.def("overlap", py::overload_cast<const Rect&, const Polygon&>(&overlap),
                      py::arg("rect"), py::arg("polygon"), R"doc(
 Checks if a rectangle and a polygon overlap.
 
