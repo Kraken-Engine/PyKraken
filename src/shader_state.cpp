@@ -1,8 +1,14 @@
 #include "Renderer.hpp"
 #include "ShaderState.hpp"
 
+#include <algorithm>
+#include <vector>
+
 namespace kn
 {
+// Static registry to track all shader states for proper cleanup
+static std::vector<ShaderState*> _shaderStates;
+
 ShaderState::ShaderState(const std::string& fragmentFilePath, const Uint32 uniformBufferCount,
                          const Uint32 samplerCount)
 {
@@ -81,12 +87,33 @@ ShaderState::ShaderState(const std::string& fragmentFilePath, const Uint32 unifo
         SDL_ReleaseGPUShader(renderer::_getGPUDevice(), m_fragShader);
         throw std::runtime_error("Failed to create render state");
     }
+
+    // Register this shader state for cleanup
+    _shaderStates.push_back(this);
 }
 
 ShaderState::~ShaderState()
 {
-    SDL_DestroyGPURenderState(m_renderState);
-    SDL_ReleaseGPUShader(renderer::_getGPUDevice(), m_fragShader);
+    // Remove from registry if still present
+    auto& shaders = _shaderStates;
+    auto it = std::find(shaders.begin(), shaders.end(), this);
+    if (it != shaders.end())
+    {
+        shaders.erase(it);
+    }
+
+    // Only clean up GPU resources if the device still exists
+    // If _quit() was called, resources were already freed
+    if (m_renderState != nullptr)
+    {
+        SDL_DestroyGPURenderState(m_renderState);
+        m_renderState = nullptr;
+    }
+    if (m_fragShader != nullptr)
+    {
+        SDL_ReleaseGPUShader(renderer::_getGPUDevice(), m_fragShader);
+        m_fragShader = nullptr;
+    }
 }
 
 void ShaderState::bind() const
@@ -112,6 +139,25 @@ void ShaderState::setUniform(const Uint32 binding, const void* data, const size_
 
 namespace shader_state
 {
+void _quit()
+{
+    // Clean up all shader states before GPU device is destroyed
+    for (ShaderState* shader : _shaderStates)
+    {
+        if (shader->m_renderState != nullptr)
+        {
+            SDL_DestroyGPURenderState(shader->m_renderState);
+            shader->m_renderState = nullptr;
+        }
+        if (shader->m_fragShader != nullptr)
+        {
+            SDL_ReleaseGPUShader(renderer::_getGPUDevice(), shader->m_fragShader);
+            shader->m_fragShader = nullptr;
+        }
+    }
+    _shaderStates.clear();
+}
+
 void _bind(py::module_& module)
 {
     py::class_<ShaderState>(module, "ShaderState",

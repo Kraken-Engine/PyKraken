@@ -2,12 +2,22 @@
 #include "misc/SpaceGrotesk.h"
 #include "misc/minecraftia.h"
 
+#include <algorithm>
 #include <cmath>
-#include <stdexcept>
+#include <mutex>
 #include <pybind11/native_enum.h>
+#include <stdexcept>
+#include <vector>
 
 namespace kn
 {
+namespace font
+{
+// Static registry to track all font instances for proper cleanup
+static std::vector<Font*> _fontInstances;
+static std::mutex _fontsMutex;
+} // namespace font
+
 Font::Font(const std::string& fileDir, int ptSize)
 {
     if (ptSize < 8)
@@ -31,13 +41,30 @@ Font::Font(const std::string& fileDir, int ptSize)
 
     if (!m_font)
         throw std::runtime_error("Failed to load font: " + std::string(SDL_GetError()));
+
+    // Register this font for cleanup
+    std::lock_guard g(font::_fontsMutex);
+    font::_fontInstances.push_back(this);
 }
 
 Font::~Font()
 {
-    if (m_font)
+    // Remove from registry if still present
+    {
+        std::lock_guard g(font::_fontsMutex);
+        auto it = std::find(font::_fontInstances.begin(), font::_fontInstances.end(), this);
+        if (it != font::_fontInstances.end())
+        {
+            font::_fontInstances.erase(it);
+        }
+    }
+
+    // Only clean up if font hasn't been freed by _quit
+    if (m_font != nullptr)
+    {
         TTF_CloseFont(m_font);
-    m_font = nullptr;
+        m_font = nullptr;
+    }
 }
 
 void Font::setAlignment(const Align alignment) const
@@ -173,6 +200,33 @@ bool Font::isStrikethrough() const
 
 namespace font
 {
+void _init()
+{
+    if (!TTF_Init())
+        throw std::runtime_error("Failed to initialize SDL_ttf");
+}
+
+void _quit()
+{
+    // Clean up all fonts before TTF is shut down
+    {
+        std::lock_guard g(_fontsMutex);
+        for (Font* font : _fontInstances)
+        {
+            if (font->m_font != nullptr)
+            {
+                TTF_CloseFont(font->m_font);
+                font->m_font = nullptr;
+            }
+        }
+        _fontInstances.clear();
+    }
+
+    // Shut down TTF
+    if (TTF_WasInit())
+        TTF_Quit();
+}
+
 void _bind(const py::module_& module)
 {
     py::native_enum<font::Hinting>(module, "FontHint", "enum.IntEnum", R"doc(

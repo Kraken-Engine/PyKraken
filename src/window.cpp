@@ -1,7 +1,9 @@
 #include "AnimationController.hpp"
+#include "Font.hpp"
 #include "Math.hpp"
 #include "Mixer.hpp"
 #include "Renderer.hpp"
+#include "ShaderState.hpp"
 #include "Text.hpp"
 #include "Time.hpp"
 
@@ -92,6 +94,7 @@ void create(const std::string& title, const Vec2& res, const bool scaled)
     _isOpen = true;
 
     renderer::_init(_window, res);
+    font::_init();
     text::_init();
 }
 
@@ -196,6 +199,15 @@ void saveScreenshot(const std::string& filePath)
     }
 
     SDL_DestroySurface(shotSurface);
+}
+
+void _quit()
+{
+    if (_window)
+    {
+        SDL_DestroyWindow(_window);
+        _window = nullptr;
+    }
 }
 
 void _bind(py::module_& module)
@@ -312,32 +324,4 @@ Args:
 )doc");
 }
 } // namespace window
-
-void init()
-{
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
-        throw std::runtime_error(SDL_GetError());
-
-    mixer::_init();
-}
-
-// Clean up in reverse order of initialization
-void quit()
-{
-    // Text engine must be destroyed before renderer since it depends on it
-    text::_quit();
-
-    // Mixer is independent
-    mixer::_quit();
-
-    // Renderer must be destroyed before window
-    renderer::_quit();
-
-    // Window cleanup
-    if (window::_window)
-        SDL_DestroyWindow(window::_window);
-    window::_window = nullptr;
-
-    SDL_Quit();
-}
 } // namespace kn

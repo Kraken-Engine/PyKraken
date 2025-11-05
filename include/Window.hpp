@@ -9,12 +9,11 @@ namespace kn
 {
 class Vec2;
 
-void init();
-void quit();
-
 namespace window
 {
 void _bind(py::module_& module);
+void _quit();
+
 SDL_Window* _get();
 
 void create(const std::string& title, const Vec2& res, bool scaled);

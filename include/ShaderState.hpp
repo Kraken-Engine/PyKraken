@@ -8,6 +8,12 @@ namespace py = pybind11;
 
 namespace kn
 {
+namespace shader_state
+{
+void _bind(py::module_& module);
+void _quit();
+} // namespace shader_state
+
 class ShaderState
 {
   public:
@@ -23,9 +29,8 @@ class ShaderState
   private:
     SDL_GPUShader* m_fragShader;
     SDL_GPURenderState* m_renderState;
+
+    // Allow shader_state namespace to access private members for cleanup
+    friend void shader_state::_quit();
 };
-namespace shader_state
-{
-void _bind(py::module_& module);
-} // namespace shader_state
 } // namespace kn

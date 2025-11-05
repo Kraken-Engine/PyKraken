@@ -28,15 +28,46 @@
 #include "Transform.hpp"
 #include "Window.hpp"
 
+static void init()
+{
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
+        throw std::runtime_error(SDL_GetError());
+
+    kn::mixer::_init();
+}
+
+static void quit()
+{
+    // Text objects must be destroyed first (they reference fonts and text engine)
+    kn::text::_quit();
+
+    // Fonts must be destroyed and TTF shut down (after text is cleaned up)
+    kn::font::_quit();
+
+    // Shader states must be destroyed before renderer/GPU device
+    kn::shader_state::_quit();
+
+    // Mixer is independent
+    kn::mixer::_quit();
+
+    // Renderer must be destroyed before window
+    kn::renderer::_quit();
+
+    // Window cleanup
+    kn::window::_quit();
+
+    if (SDL_WasInit(0))
+        SDL_Quit();
+}
+
 PYBIND11_MODULE(_core, m)
 {
-    m.def("init", &kn::init, R"doc(
+    m.def("init", &init, R"doc(
 Initialize the Kraken Engine.
 
 This sets up internal systems and must be called before using any other features.
     )doc");
-
-    m.def("quit", &kn::quit, R"doc(
+    m.def("quit", &quit, R"doc(
 Shut down the Kraken Engine and clean up resources.
 
 Call this once you're done using the engine to avoid memory leaks.

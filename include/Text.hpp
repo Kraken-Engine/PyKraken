@@ -15,6 +15,14 @@ namespace kn
 class Rect;
 class Font;
 
+namespace text
+{
+void _bind(const py::module_& module);
+void _init();
+void _quit();
+void _cleanupTexts(); // Clean up all text objects before text engine is destroyed
+} // namespace text
+
 class Text
 {
   public:
@@ -41,12 +49,7 @@ class Text
 
   private:
     TTF_Text* m_text = nullptr;
-};
 
-namespace text
-{
-void _bind(const py::module_& module);
-void _init();
-void _quit();
-} // namespace text
+    friend void text::_cleanupTexts(); // Allow text::_cleanupTexts to access private members
+};
 } // namespace kn

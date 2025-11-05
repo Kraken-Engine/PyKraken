@@ -225,12 +225,46 @@ The list of frames in the animation sequence.
 The frames per second rate for animation playback.
         )doc");
 
-    py::classh<SheetStrip>(module, "SheetStrip")
+    py::classh<SheetStrip>(module, "SheetStrip", R"doc(
+A descriptor for one horizontal strip (row) in a sprite sheet.
+
+Defines a single animation within a sprite sheet by specifying the animation name,
+the number of frames to extract from the strip, and the playback speed in frames
+per second (FPS).
+    )doc")
         .def(py::init<>([](const std::string& name, int frame_count, int fps) -> SheetStrip
-                        { return {name, frame_count, fps}; }))
-        .def_readwrite("name", &SheetStrip::name)
-        .def_readwrite("frame_count", &SheetStrip::frameCount)
-        .def_readwrite("fps", &SheetStrip::fps);
+                        { return {name, frame_count, fps}; }),
+             py::arg("name"), py::arg("frame_count"), py::arg("fps"), R"doc(
+Create a sprite sheet strip definition.
+
+Args:
+    name (str): Unique identifier for this animation.
+    frame_count (int): Number of frames to extract from this strip/row.
+    fps (int): Frames per second for playback timing.
+             )doc")
+        .def_readwrite("name", &SheetStrip::name, R"doc(
+The unique name identifier for this animation strip.
+
+Type:
+    str: The animation name used to reference this strip.
+        )doc")
+        .def_readwrite("frame_count", &SheetStrip::frameCount, R"doc(
+The number of frames in this animation strip.
+
+Specifies how many frames to extract from the horizontal strip in the sprite sheet,
+reading from left to right.
+
+Type:
+    int: The number of frames (must be positive).
+        )doc")
+        .def_readwrite("fps", &SheetStrip::fps, R"doc(
+The playback speed in frames per second.
+
+Determines how fast the animation plays. Higher values result in faster playback.
+
+Type:
+    int: The frames per second for this animation.
+        )doc");
 
     py::classh<AnimationController>(module, "AnimationController", R"doc(
 Manages and controls sprite animations with multiple animation sequences.

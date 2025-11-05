@@ -2,6 +2,7 @@
 
 #include "Mixer.hpp"
 #include <algorithm>
+#include <atomic>
 #include <stdexcept>
 
 namespace kn
@@ -9,31 +10,58 @@ namespace kn
 static ma_engine _engine;
 static std::vector<std::weak_ptr<Audio>> _audioInstances;
 static std::mutex _instancesMutex;
+static std::vector<AudioStream*> _audioStreamInstances;
+static std::mutex _streamsMutex;
+static std::atomic<bool> _engineShutdown{false};
+
+static bool hasSupportedExtension(const std::string& path)
+{
+    auto extPos = path.find_last_of('.');
+    if (extPos == std::string::npos)
+        return false;
+
+    std::string ext = path.substr(extPos + 1);
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+    return ext == "wav" || ext == "mp3" || ext == "flac";
+}
 
 Audio::Audio(const std::string& path, const float volume) : m_path(path), m_volume(volume)
 {
+    if (!hasSupportedExtension(path))
+        throw std::invalid_argument("Unsupported audio format: " + path);
+
     if (ma_sound_init_from_file(&_engine, m_path.c_str(), m_flags, nullptr, nullptr, &m_proto) !=
         MA_SUCCESS)
-        throw std::runtime_error("ma_sound_init_from_file(DECODE) failed: " + path);
+        throw std::runtime_error("Failed to decode: " + path);
 }
 
 Audio::~Audio()
 {
-    stop();
+    // Only clean up if engine hasn't been shut down
+    if (!_engineShutdown.load(std::memory_order_acquire))
     {
-        std::lock_guard g(m_mutex);
-        for (const auto& v : m_voices)
+        // Only clean up if engine still exists (not already cleaned by _quit)
+        if (m_proto.engineNode.pEngine != nullptr)
         {
-            ma_sound_set_end_callback(&v->snd, nullptr, nullptr);
-            ma_sound_uninit(&v->snd);
+            stop();
+            {
+                std::lock_guard g(m_mutex);
+                for (const auto& v : m_voices)
+                {
+                    ma_sound_set_end_callback(&v->snd, nullptr, nullptr);
+                    ma_sound_uninit(&v->snd);
+                }
+                m_voices.clear();
+            }
+            ma_sound_uninit(&m_proto);
         }
-        m_voices.clear();
-    }
-    ma_sound_uninit(&m_proto);
 
-    // Unregister this instance
-    std::lock_guard g(_instancesMutex);
-    std::erase_if(_audioInstances, [&](auto& w) { return w.expired() || w.lock().get() == this; });
+        // Unregister this instance
+        std::lock_guard g(_instancesMutex);
+        std::erase_if(_audioInstances,
+                      [&](auto& w) { return w.expired() || w.lock().get() == this; });
+    }
 }
 
 void Audio::play(const int fadeInMs, const bool loop)
@@ -119,18 +147,46 @@ void Audio::doFadeStop(ma_sound& snd, const float currentVol, const int fadeOutM
 
 AudioStream::AudioStream(const std::string& filePath, const float volume)
 {
+    if (!hasSupportedExtension(filePath))
+        throw std::invalid_argument("Unsupported audio format: " + filePath);
+
     if (ma_sound_init_from_file(&_engine, filePath.c_str(), m_flags, nullptr, nullptr, &m_snd) !=
         MA_SUCCESS)
         throw std::runtime_error("ma_sound_init_from_file(STREAM) failed: " + filePath);
 
     setVolume(volume);
+
+    // Register this stream for cleanup
+    std::lock_guard g(_streamsMutex);
+    _audioStreamInstances.push_back(this);
 }
 
-AudioStream::~AudioStream() { ma_sound_uninit(&m_snd); }
-
-void AudioStream::play(const int fadeInMs, const bool loop)
+AudioStream::~AudioStream()
 {
-    rewind();
+    // Only clean up if engine hasn't been shut down
+    if (!_engineShutdown.load(std::memory_order_acquire))
+    {
+        // Unregister this stream
+        {
+            std::lock_guard g(_streamsMutex);
+            auto it = std::find(_audioStreamInstances.begin(), _audioStreamInstances.end(), this);
+            if (it != _audioStreamInstances.end())
+            {
+                _audioStreamInstances.erase(it);
+            }
+        }
+
+        // Only uninit if engine still exists (not already cleaned by _quit)
+        if (m_snd.engineNode.pEngine != nullptr)
+        {
+            ma_sound_uninit(&m_snd);
+        }
+    }
+}
+
+void AudioStream::play(const int fadeInMs, const bool loop, const float startTimeSeconds)
+{
+    startTimeSeconds > 0.0f ? seek(startTimeSeconds) : rewind();
 
     ma_sound_set_looping(&m_snd, loop ? MA_TRUE : MA_FALSE);
     const float volume = ma_sound_get_volume(&m_snd);
@@ -163,6 +219,31 @@ void AudioStream::resume() { ma_sound_start(&m_snd); }
 
 void AudioStream::rewind() { ma_sound_seek_to_pcm_frame(&m_snd, 0); }
 
+void AudioStream::seek(float timeSeconds)
+{
+    // Clamp to positive values only to prevent bugs
+    if (timeSeconds < 0.0f)
+        timeSeconds = 0.0f;
+
+    const ma_uint32 sampleRate = ma_engine_get_sample_rate(&_engine);
+    const ma_uint64 framePosition = static_cast<ma_uint64>(timeSeconds * sampleRate);
+    ma_sound_seek_to_pcm_frame(&m_snd, framePosition);
+}
+
+float AudioStream::getCurrentTime()
+{
+    ma_uint64 currentFrame = ma_sound_get_time_in_pcm_frames(&m_snd);
+    const ma_uint32 sampleRate = ma_engine_get_sample_rate(&_engine);
+
+    // Get the total length to handle looping properly
+    ma_uint64 lengthInFrames = 0;
+    ma_result result = ma_sound_get_length_in_pcm_frames(&m_snd, &lengthInFrames);
+    if (result == MA_SUCCESS && lengthInFrames > 0)
+        currentFrame %= lengthInFrames;
+
+    return static_cast<float>(currentFrame) / static_cast<float>(sampleRate);
+}
+
 void AudioStream::setVolume(const float volume) { ma_sound_set_volume(&m_snd, volume); }
 
 float AudioStream::getVolume() const { return ma_sound_get_volume(&m_snd); }
@@ -187,10 +268,79 @@ void _init()
     ma_engine_listener_set_enabled(&_engine, 0, MA_FALSE);
 }
 
-void _quit() { ma_engine_uninit(&_engine); }
+void _quit()
+{
+    // Mark as shutting down first to prevent _tick() from running
+    _engineShutdown.store(true, std::memory_order_release);
+
+    // Stop the engine to halt all audio processing threads
+    // This prevents any race conditions with audio callbacks
+    ma_engine_stop(&_engine);
+
+    // Clean up all AudioStream instances
+    {
+        std::lock_guard g(_streamsMutex);
+        for (AudioStream* stream : _audioStreamInstances)
+        {
+            if (stream->m_snd.engineNode.pEngine != nullptr)
+            {
+                ma_sound_uninit(&stream->m_snd);
+                stream->m_snd.engineNode.pEngine = nullptr;
+            }
+        }
+        _audioStreamInstances.clear();
+    }
+
+    // Clean up all Audio instances
+    // Collect the audio instances first, then release the mutex before cleanup
+    std::vector<std::shared_ptr<Audio>> audioToClean;
+    {
+        std::lock_guard g(_instancesMutex);
+        for (auto& weak : _audioInstances)
+        {
+            if (auto audio = weak.lock())
+            {
+                audioToClean.push_back(audio);
+            }
+        }
+        _audioInstances.clear();
+    }
+
+    // Now clean up audio instances without holding _instancesMutex (avoid deadlock)
+    for (auto& audio : audioToClean)
+    {
+        // Stop all sounds (this will acquire audio->m_mutex internally)
+        audio->stop(0);
+
+        // Clean up voices
+        {
+            std::lock_guard audioLock(audio->m_mutex);
+            for (const auto& v : audio->m_voices)
+            {
+                ma_sound_set_end_callback(&v->snd, nullptr, nullptr);
+                ma_sound_uninit(&v->snd);
+            }
+            audio->m_voices.clear();
+        }
+
+        // Clean up proto sound
+        if (audio->m_proto.engineNode.pEngine != nullptr)
+        {
+            ma_sound_uninit(&audio->m_proto);
+            audio->m_proto.engineNode.pEngine = nullptr;
+        }
+    }
+
+    // Finally uninit the engine
+    ma_engine_uninit(&_engine);
+}
 
 void _tick()
 {
+    // Don't tick if engine is shutting down or has shut down
+    if (_engineShutdown.load(std::memory_order_acquire))
+        return;
+
     std::vector<std::shared_ptr<Audio>> work;
     {
         std::lock_guard lk(_instancesMutex);
@@ -304,15 +454,17 @@ Raises:
         )doc")
 
         .def("play", &AudioStream::play, py::arg("fade_in_ms") = 0, py::arg("loop") = false,
+             py::arg("start_time_seconds") = 0.0f,
              R"doc(
-Play the audio stream with optional fade-in time and loop setting.
+Play the audio stream with optional fade-in time, loop setting, and start position.
 
-Rewinds the stream to the beginning and starts playback. If the stream is already
-playing, it will restart from the beginning.
+Starts playback from the specified time position. If the stream is already
+playing, it will restart from the specified position.
 
 Args:
     fade_in_ms (int, optional): Fade-in duration in milliseconds. Defaults to 0.
     loop (bool, optional): Whether to loop the audio continuously. Defaults to False.
+    start_time_seconds (float, optional): Time position in seconds to start playback from. Defaults to 0.0.
         )doc")
         .def("stop", &AudioStream::stop, py::arg("fade_out_ms") = 0, R"doc(
 Stop the audio stream playback.
@@ -337,6 +489,15 @@ Rewind the audio stream to the beginning.
 Sets the playback position back to the start of the audio file. Does not affect
 the current play state (playing/paused).
         )doc")
+        .def("seek", &AudioStream::seek, py::arg("time_seconds"), R"doc(
+Seek to a specific time position in the audio stream.
+
+Sets the playback position to the specified time in seconds. Does not affect
+the current play state (playing/paused).
+
+Args:
+    time_seconds (float): The time position in seconds to seek to.
+        )doc")
         .def("set_looping", &AudioStream::setLooping, py::arg("loop"), R"doc(
 Set whether the audio stream loops continuously.
 
@@ -351,6 +512,9 @@ Volume can exceed 1.0 for amplification.
 
 Type:
     float: Volume level (0.0 = silent, 1.0 = original volume, >1.0 = amplified).
+        )doc")
+        .def_property_readonly("current_time", &AudioStream::getCurrentTime, R"doc(
+The current playback time position in seconds.
         )doc");
 }
 } // namespace mixer

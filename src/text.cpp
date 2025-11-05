@@ -3,24 +3,46 @@
 #include "Rect.hpp"
 #include "Renderer.hpp"
 
+#include <algorithm>
 #include <cmath>
+#include <mutex>
 #include <stdexcept>
+#include <vector>
 
 namespace kn
 {
 static TTF_TextEngine* _textEngine = nullptr;
+static std::vector<Text*> _textInstances;
+static std::mutex _textsMutex;
 
 Text::Text(const Font& font)
 {
     m_text = TTF_CreateText(_textEngine, font._get(), "", 0);
     TTF_SetTextColor(m_text, 255, 255, 255, 255);
+
+    // Register this text for cleanup
+    std::lock_guard g(_textsMutex);
+    _textInstances.push_back(this);
 }
 
 Text::~Text()
 {
-    if (m_text)
+    // Remove from registry if still present
+    {
+        std::lock_guard g(_textsMutex);
+        auto it = std::find(_textInstances.begin(), _textInstances.end(), this);
+        if (it != _textInstances.end())
+        {
+            _textInstances.erase(it);
+        }
+    }
+
+    // Only clean up if text hasn't been freed by _cleanupTexts
+    if (m_text != nullptr)
+    {
         TTF_DestroyText(m_text);
-    m_text = nullptr;
+        m_text = nullptr;
+    }
 }
 
 void Text::setFont(const Font& font) const { TTF_SetTextFont(m_text, font._get()); }
@@ -135,21 +157,34 @@ namespace text
 {
 void _init()
 {
-    if (!TTF_Init())
-        throw std::runtime_error("Failed to initialize SDL_ttf");
-
     _textEngine = TTF_CreateRendererTextEngine(renderer::_get());
     if (!_textEngine)
         throw std::runtime_error("Failed to create text engine: " + std::string(SDL_GetError()));
 }
 
+void _cleanupTexts()
+{
+    // Clean up all text objects before text engine is destroyed
+    std::lock_guard g(_textsMutex);
+    for (Text* text : _textInstances)
+    {
+        if (text->m_text != nullptr)
+        {
+            TTF_DestroyText(text->m_text);
+            text->m_text = nullptr;
+        }
+    }
+    _textInstances.clear();
+}
+
 void _quit()
 {
+    // Clean up all text objects first
+    _cleanupTexts();
+
     if (_textEngine)
         TTF_DestroyRendererTextEngine(_textEngine);
     _textEngine = nullptr;
-
-    TTF_Quit();
 }
 
 void _bind(const py::module_& module)

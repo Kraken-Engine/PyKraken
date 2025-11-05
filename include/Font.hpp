@@ -26,6 +26,8 @@ enum class Hinting
 };
 
 void _bind(const py::module_& module);
+void _init(); // Initialize TTF library
+void _quit(); // Clean up all fonts and shut down TTF
 } // namespace font
 
 class Font
@@ -57,5 +59,7 @@ class Font
 
   private:
     TTF_Font* m_font = nullptr;
+
+    friend void font::_quit(); // Allow font::_quit to access private members for cleanup
 };
 } // namespace kn
