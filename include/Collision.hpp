@@ -10,10 +10,10 @@ class Rect;
 class Circle;
 class Line;
 class Vec2;
+class Polygon;
 
 namespace collision
 {
-// Any intersection checks
 bool overlap(const Rect& a, const Rect& b);
 bool overlap(const Rect& rect, const Circle& circle);
 bool overlap(const Rect& rect, const Line& line);
@@ -28,7 +28,11 @@ bool overlap(const Line& line, const Circle& circle);
 bool overlap(const Vec2& point, const Rect& rect);
 bool overlap(const Vec2& point, const Circle& circle);
 
-// Complete containment checks
+bool umaOverlap(const Polygon& polygon, const Vec2& point);
+bool umaOverlap(const Vec2& point, const Polygon& polygon);
+bool umaOverlap(const Polygon& polygon, const Rect& rect);
+bool umaOverlap(const Rect& rect, const Polygon& polygon);
+
 bool contains(const Rect& outer, const Rect& inner);
 bool contains(const Rect& rect, const Circle& circle);
 bool contains(const Rect& rect, const Line& line);

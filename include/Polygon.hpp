@@ -19,6 +19,11 @@ public:
     ~Polygon() = default;
 
     [[nodiscard]] Polygon copy() const;
+
+    [[nodiscard]] double getUmaPerimeter() const;
+    [[nodiscard]] double getUmaArea() const;
+    [[nodiscard]] Vec2 getUmaCentroid() const;
+    [[nodiscard]] class Rect getUmaBounds() const;
 };
 
 namespace polygon
