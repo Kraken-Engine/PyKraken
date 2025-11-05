@@ -30,23 +30,35 @@ struct Animation
     int fps;
 };
 
+struct SheetStrip
+{
+    std::string name;
+    int frameCount;
+    int fps;
+};
+
 class AnimationController
 {
   public:
     AnimationController();
     ~AnimationController();
 
-    void loadSpriteSheet(const std::string& name, const std::string& filePath,
-                         const Vec2& frameSize, int fps);
-    void loadFolder(const std::string& name, const std::string& dirPath, int fps);
+    void loadSpriteSheet(const std::string& filePath, const Vec2& frameSize,
+                         const std::vector<SheetStrip>& strips);
 
-    void remove(const std::string& name);
-    void set(const std::string& name, bool rewind = false);
+    void set(const std::string& name);
+    void play(const std::string& name);
+    void playFrom(int frameIndex);
 
     [[nodiscard]] const Frame& getCurrentFrame() const;
+    [[nodiscard]] int getFrameIndex() const;
+    [[nodiscard]] double getProgress() const;
 
     void setPlaybackSpeed(double speed);
     [[nodiscard]] double getPlaybackSpeed() const;
+
+    void setLooping(bool loop);
+    [[nodiscard]] bool isLooping() const;
 
     [[nodiscard]] bool isFinished() const;
 
@@ -61,6 +73,7 @@ class AnimationController
     double m_index = 0.0;
     double m_prevIndex = 0.0;
     bool m_paused = false;
+    bool m_looping = true;
     std::string m_currAnim;
     std::unordered_map<std::string, Animation> m_animMap;
 

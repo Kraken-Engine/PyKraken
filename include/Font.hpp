@@ -6,35 +6,60 @@
 
 #include "Color.hpp"
 #include "Math.hpp"
+#include "_globals.hpp"
 
 namespace py = pybind11;
 
 namespace kn
 {
+class Rect;
+
+namespace font
+{
+enum class Hinting
+{
+    Normal,
+    Mono,
+    Light,
+    LightSubpixel,
+    None,
+};
+
+void _bind(const py::module_& module);
+void _init(); // Initialize TTF library
+void _quit(); // Clean up all fonts and shut down TTF
+} // namespace font
+
 class Font
 {
   public:
     Font(const std::string& fileDir, int ptSize);
     ~Font();
 
-    void draw(const std::string& text, const Vec2& pos = {}, const Color& color = {255, 255, 255},
-              int wrapWidth = 0) const;
+    void setAlignment(Align alignment) const;
+    Align getAlignment() const;
+
+    void setHinting(font::Hinting hinting) const;
+    font::Hinting getHinting() const;
+
+    void setPtSize(int pt) const;
+    int getPtSize() const;
 
     void setBold(bool on) const;
     void setItalic(bool on) const;
     void setUnderline(bool on) const;
     void setStrikethrough(bool on) const;
-    void setPtSize(int pt) const;
+
+    bool isBold() const;
+    bool isItalic() const;
+    bool isUnderline() const;
+    bool isStrikethrough() const;
+
+    TTF_Font* _get() const { return m_font; }
 
   private:
     TTF_Font* m_font = nullptr;
-    TTF_Text* m_text = nullptr;
-};
 
-namespace font
-{
-void _bind(const py::module_& module);
-void _init();
-void _quit();
-} // namespace font
+    friend void font::_quit(); // Allow font::_quit to access private members for cleanup
+};
 } // namespace kn

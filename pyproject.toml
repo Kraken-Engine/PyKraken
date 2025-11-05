@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "kraken-engine"
-version = "1.1.1"
+version = "1.2.0"
 dependencies = [
   "pydantic==2.12.3",
 ]
@@ -25,6 +25,7 @@ classifiers = [
   "Topic :: Multimedia :: Graphics",
   "Operating System :: Microsoft :: Windows",
   "Operating System :: MacOS",
+  "Operating System :: POSIX :: Linux",
 ]
 license = "MIT"
 license-files = ["LICENSE"]

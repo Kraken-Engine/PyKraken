@@ -1,13 +1,22 @@
 #include "Font.hpp"
-#include "Renderer.hpp"
 #include "misc/SpaceGrotesk.h"
 #include "misc/minecraftia.h"
 
+#include <algorithm>
+#include <cmath>
+#include <mutex>
+#include <pybind11/native_enum.h>
 #include <stdexcept>
+#include <vector>
 
 namespace kn
 {
-static TTF_TextEngine* _textEngine = nullptr;
+namespace font
+{
+// Static registry to track all font instances for proper cleanup
+static std::vector<Font*> _fontInstances;
+static std::mutex _fontsMutex;
+} // namespace font
 
 Font::Font(const std::string& fileDir, int ptSize)
 {
@@ -33,37 +42,113 @@ Font::Font(const std::string& fileDir, int ptSize)
     if (!m_font)
         throw std::runtime_error("Failed to load font: " + std::string(SDL_GetError()));
 
-    m_text = TTF_CreateText(_textEngine, m_font, "", 0);
+    // Register this font for cleanup
+    std::lock_guard g(font::_fontsMutex);
+    font::_fontInstances.push_back(this);
 }
 
 Font::~Font()
 {
-    if (m_text)
-        TTF_DestroyText(m_text);
-    m_text = nullptr;
+    // Remove from registry if still present
+    {
+        std::lock_guard g(font::_fontsMutex);
+        auto it = std::find(font::_fontInstances.begin(), font::_fontInstances.end(), this);
+        if (it != font::_fontInstances.end())
+        {
+            font::_fontInstances.erase(it);
+        }
+    }
 
-    if (m_font)
+    // Only clean up if font hasn't been freed by _quit
+    if (m_font != nullptr)
+    {
         TTF_CloseFont(m_font);
-    m_font = nullptr;
+        m_font = nullptr;
+    }
 }
 
-void Font::draw(const std::string& text, const Vec2& pos, const Color& color, int wrapWidth) const
+void Font::setAlignment(const Align alignment) const
 {
-    if (wrapWidth < 0)
-        wrapWidth = 0;
-
-    TTF_SetTextString(m_text, text.c_str(), 0);
-    if (color != WHITE)
-        TTF_SetTextColor(m_text, color.r, color.g, color.b, color.a);
-    if (wrapWidth > 0)
-        TTF_SetTextWrapWidth(m_text, wrapWidth);
-
-    const auto x = static_cast<int>(std::round(pos.x));
-    const auto y = static_cast<int>(std::round(pos.y));
-    TTF_SetTextPosition(m_text, x, y);
-
-    TTF_DrawRendererText(m_text, 0, 0);
+    switch (alignment)
+    {
+    case Align::Left:
+        TTF_SetFontWrapAlignment(m_font, TTF_HORIZONTAL_ALIGN_LEFT);
+        break;
+    case Align::Center:
+        TTF_SetFontWrapAlignment(m_font, TTF_HORIZONTAL_ALIGN_CENTER);
+        break;
+    case Align::Right:
+        TTF_SetFontWrapAlignment(m_font, TTF_HORIZONTAL_ALIGN_RIGHT);
+        break;
+    }
 }
+
+Align Font::getAlignment() const
+{
+    const TTF_HorizontalAlignment align = TTF_GetFontWrapAlignment(m_font);
+    switch (align)
+    {
+    case TTF_HORIZONTAL_ALIGN_LEFT:
+        return Align::Left;
+    case TTF_HORIZONTAL_ALIGN_CENTER:
+        return Align::Center;
+    case TTF_HORIZONTAL_ALIGN_RIGHT:
+        return Align::Right;
+    default:
+        return Align::Left;
+    }
+}
+
+void Font::setHinting(const font::Hinting hinting) const
+{
+    switch (hinting)
+    {
+    case font::Hinting::Normal:
+        TTF_SetFontHinting(m_font, TTF_HINTING_NORMAL);
+        break;
+    case font::Hinting::Light:
+        TTF_SetFontHinting(m_font, TTF_HINTING_LIGHT);
+        break;
+    case font::Hinting::Mono:
+        TTF_SetFontHinting(m_font, TTF_HINTING_MONO);
+        break;
+    case font::Hinting::LightSubpixel:
+        TTF_SetFontHinting(m_font, TTF_HINTING_LIGHT_SUBPIXEL);
+        break;
+    case font::Hinting::None:
+        TTF_SetFontHinting(m_font, TTF_HINTING_NONE);
+        break;
+    }
+}
+
+font::Hinting Font::getHinting() const
+{
+    const TTF_HintingFlags hinting = TTF_GetFontHinting(m_font);
+    switch (hinting)
+    {
+    case TTF_HINTING_NORMAL:
+        return font::Hinting::Normal;
+    case TTF_HINTING_LIGHT:
+        return font::Hinting::Light;
+    case TTF_HINTING_MONO:
+        return font::Hinting::Mono;
+    case TTF_HINTING_LIGHT_SUBPIXEL:
+        return font::Hinting::LightSubpixel;
+    case TTF_HINTING_NONE:
+        return font::Hinting::None;
+    default:
+        return font::Hinting::Normal;
+    }
+}
+
+void Font::setPtSize(int pt) const
+{
+    if (pt < 8)
+        pt = 8;
+    TTF_SetFontSize(m_font, static_cast<float>(pt));
+}
+
+int Font::getPtSize() const { return static_cast<int>(TTF_GetFontSize(m_font)); }
 
 void Font::setBold(const bool on) const
 {
@@ -89,11 +174,28 @@ void Font::setStrikethrough(const bool on) const
     TTF_SetFontStyle(m_font, on ? (s | TTF_STYLE_STRIKETHROUGH) : (s & ~TTF_STYLE_STRIKETHROUGH));
 }
 
-void Font::setPtSize(int pt) const
+bool Font::isBold() const
 {
-    if (pt < 8)
-        pt = 8;
-    TTF_SetFontSize(m_font, static_cast<float>(pt));
+    const unsigned int s = TTF_GetFontStyle(m_font);
+    return (s & TTF_STYLE_BOLD) != 0;
+}
+
+bool Font::isItalic() const
+{
+    const unsigned int s = TTF_GetFontStyle(m_font);
+    return (s & TTF_STYLE_ITALIC) != 0;
+}
+
+bool Font::isUnderline() const
+{
+    const unsigned int s = TTF_GetFontStyle(m_font);
+    return (s & TTF_STYLE_UNDERLINE) != 0;
+}
+
+bool Font::isStrikethrough() const
+{
+    const unsigned int s = TTF_GetFontStyle(m_font);
+    return (s & TTF_STYLE_STRIKETHROUGH) != 0;
 }
 
 namespace font
@@ -102,29 +204,50 @@ void _init()
 {
     if (!TTF_Init())
         throw std::runtime_error("Failed to initialize SDL_ttf");
-
-    _textEngine = TTF_CreateRendererTextEngine(renderer::_get());
-    if (!_textEngine)
-        throw std::runtime_error("Failed to create text engine: " + std::string(SDL_GetError()));
 }
 
 void _quit()
 {
-    if (_textEngine)
-        TTF_DestroyRendererTextEngine(_textEngine);
-    _textEngine = nullptr;
+    // Clean up all fonts before TTF is shut down
+    {
+        std::lock_guard g(_fontsMutex);
+        for (Font* font : _fontInstances)
+        {
+            if (font->m_font != nullptr)
+            {
+                TTF_CloseFont(font->m_font);
+                font->m_font = nullptr;
+            }
+        }
+        _fontInstances.clear();
+    }
 
-    TTF_Quit();
+    // Shut down TTF
+    if (TTF_WasInit())
+        TTF_Quit();
 }
 
 void _bind(const py::module_& module)
 {
-    py::classh<Font>(module, "Font", R"doc(
-A font object for rendering text to the active renderer.
+    py::native_enum<font::Hinting>(module, "FontHint", "enum.IntEnum", R"doc(
+Font hinting modes for controlling how fonts are rendered.
 
-This class wraps an SDL_ttf font and an internal text object for efficient
-rendering. You can load fonts from a file path or use one of the built-in
-typefaces:
+Hinting is the process of fitting font outlines to the pixel grid to improve
+readability at small sizes.
+    )doc")
+        .value("NORMAL", Hinting::Normal, "Default hinting")
+        .value("MONO", Hinting::Mono, "Monochrome hinting")
+        .value("LIGHT", Hinting::Light, "Light hinting")
+        .value("LIGHT_SUBPIXEL", Hinting::LightSubpixel, "Light subpixel hinting")
+        .value("NONE", Hinting::None, "No hinting")
+        .finalize();
+
+    py::classh<Font>(module, "Font", R"doc(
+A font typeface for rendering text.
+
+This class wraps an SDL_ttf font and manages font properties like size,
+style, and alignment. You can load fonts from a file path or use one of
+the built-in typefaces:
 
 - "kraken-clean": A clean sans-serif font bundled with the engine.
 - "kraken-retro": A pixel/retro font bundled with the engine. Point size is
@@ -134,7 +257,8 @@ Note:
     A window/renderer must be created before using fonts. Typically you should
     call kn.window.create(...) first, which initializes the font engine.
     )doc")
-        .def(py::init<const std::string&, int>(), R"doc(
+        .def(py::init<const std::string&, int>(), py::arg("file_dir"), py::arg("pt_size"),
+             R"doc(
 Create a Font.
 
 Args:
@@ -147,98 +271,33 @@ Args:
 Raises:
     RuntimeError: If the font fails to load.
     )doc")
-        .def(
-            "draw",
-            [](const Font& self, const std::string& text, const py::object& posObj,
-               const py::object& colorObj, const int wrapWidth) -> void
-            {
-                Vec2 pos{};
-                if (!posObj.is_none())
-                {
-                    try
-                    {
-                        pos = posObj.cast<Vec2>();
-                    }
-                    catch (const py::cast_error&)
-                    {
-                        throw py::type_error("Invalid type for 'pos', expected Vec2");
-                    }
-                }
+        .def_property("alignment", &Font::getAlignment, &Font::setAlignment, R"doc(
+Get or set the text alignment for wrapped text.
 
-                Color color{255, 255, 255};
-                if (!colorObj.is_none())
-                {
-                    try
-                    {
-                        color = colorObj.cast<Color>();
-                    }
-                    catch (const py::cast_error&)
-                    {
-                        throw py::type_error("Invalid type for 'color', expected Color");
-                    }
-                }
+Valid values: Align.LEFT, Align.CENTER, Align.RIGHT
+        )doc")
+        .def_property("hinting", &Font::getHinting, &Font::setHinting, R"doc(
+Get or set the font hinting mode.
 
-                self.draw(text, pos, color, wrapWidth);
-            },
-            py::arg("text"), py::arg("pos") = py::none(), py::arg("color") = py::none(),
-            py::arg("wrap_width") = 0, R"doc(
-Draw text to the renderer.
-
-Args:
-    text (str): The text to render.
-    pos (Vec2 | None, optional): The position in pixels. Defaults to (0, 0).
-    color (Color | None, optional): Text color. Defaults to white.
-    wrap_width (int, optional): Wrap the text at this pixel width. Set to 0 for
-                                no wrapping. Defaults to 0.
-
-Returns:
-    None
-    )doc")
-        .def("set_bold", &Font::setBold, py::arg("on"), R"doc(
-Enable or disable bold text style.
-
-Args:
-    on (bool): True to enable bold, False to disable.
-
-Returns:
-    None
-    )doc")
-        .def("set_italic", &Font::setItalic, py::arg("on"), R"doc(
-Enable or disable italic text style.
-
-Args:
-    on (bool): True to enable italic, False to disable.
-
-Returns:
-    None
-    )doc")
-        .def("set_underline", &Font::setUnderline, py::arg("on"), R"doc(
-Enable or disable underline text style.
-
-Args:
-    on (bool): True to enable underline, False to disable.
-
-Returns:
-    None
-    )doc")
-        .def("set_strikethrough", &Font::setStrikethrough, py::arg("on"), R"doc(
-Enable or disable strikethrough text style.
-
-Args:
-    on (bool): True to enable strikethrough, False to disable.
-
-Returns:
-    None
-    )doc")
-        .def("set_pt_size", &Font::setPtSize, py::arg("pt"), R"doc(
-Set the font point size.
-
-Args:
-    pt (int): The new point size. Values below 8 are clamped to 8.
-
-Returns:
-    None
-    )doc");
+Valid values: FontHinting.NORMAL, FontHinting.MONO, FontHinting.LIGHT,
+              FontHinting.LIGHT_SUBPIXEL, FontHinting.NONE
+        )doc")
+        .def_property("pt_size", &Font::getPtSize, &Font::setPtSize, R"doc(
+Get or set the point size of the font. Values below 8 are clamped to 8.
+        )doc")
+        .def_property("bold", &Font::isBold, &Font::setBold, R"doc(
+Get or set whether bold text style is enabled.
+        )doc")
+        .def_property("italic", &Font::isItalic, &Font::setItalic, R"doc(
+Get or set whether italic text style is enabled.
+        )doc")
+        .def_property("underline", &Font::isUnderline, &Font::setUnderline, R"doc(
+Get or set whether underline text style is enabled.
+        )doc")
+        .def_property("strikethrough", &Font::isStrikethrough, &Font::setStrikethrough,
+                      R"doc(
+Get or set whether strikethrough text style is enabled.
+        )doc");
 }
 } // namespace font
 } // namespace kn

@@ -2,6 +2,7 @@
 #include "Circle.hpp"
 #include "Line.hpp"
 #include "Math.hpp"
+#include "Polygon.hpp"
 #include "Rect.hpp"
 
 namespace kn::collision
@@ -210,6 +211,55 @@ bool contains(const Circle& circle, const Line& line)
     return (distAX * distAX + distAY * distAY) <= radiusSquared &&
            (distBX * distBX + distBY * distBY) <= radiusSquared;
 }
+
+bool overlap(const Polygon& polygon, const Vec2& point)
+{
+    if (polygon.points.size() < 3)
+        return false;
+
+    bool inside = false;
+    size_t count = polygon.points.size();
+
+    for (size_t i = 0, j = count - 1; i < count; j = i++)
+    {
+        const Vec2& vi = polygon.points[i];
+        const Vec2& vj = polygon.points[j];
+
+        bool condition = ((vi.y > point.y) != (vj.y > point.y)) &&
+                         (point.x < (vj.x - vi.x) * (point.y - vi.y) / (vj.y - vi.y) + vi.x);
+        if (condition)
+            inside = !inside;
+    }
+
+    return inside;
+}
+
+bool overlap(const Vec2& point, const Polygon& polygon) { return overlap(polygon, point); }
+
+bool overlap(const Polygon& polygon, const Rect& rect)
+{
+    if (polygon.points.empty())
+        return false;
+
+    for (const auto& point : polygon.points)
+    {
+        if (overlap(rect, point))
+            return true;
+    }
+
+    Vec2 corners[4] = {Vec2{rect.x, rect.y}, Vec2{rect.x + rect.w, rect.y},
+                       Vec2{rect.x + rect.w, rect.y + rect.h}, Vec2{rect.x, rect.y + rect.h}};
+
+    for (const auto& corner : corners)
+    {
+        if (overlap(polygon, corner))
+            return true;
+    }
+
+    return false;
+}
+
+bool overlap(const Rect& rect, const Polygon& polygon) { return overlap(polygon, rect); }
 
 void _bind(py::module_& module)
 {
@@ -426,6 +476,54 @@ Parameters:
 
 Returns:
     bool: Whether the circle completely contains the line.
+                     )doc");
+
+    subCollision.def("overlap", py::overload_cast<const Polygon&, const Vec2&>(&overlap),
+                     py::arg("polygon"), py::arg("point"), R"doc(
+Checks if a polygon contains a point.
+
+Parameters:
+    polygon (Polygon): The polygon.
+    point (Vec2): The point.
+
+Returns:
+    bool: Whether the polygon contains the point.
+                     )doc");
+
+    subCollision.def("overlap", py::overload_cast<const Vec2&, const Polygon&>(&overlap),
+                     py::arg("point"), py::arg("polygon"), R"doc(
+Checks if a point is inside a polygon.
+
+Parameters:
+    point (Vec2): The point.
+    polygon (Polygon): The polygon.
+
+Returns:
+    bool: Whether the point is inside the polygon.
+                     )doc");
+
+    subCollision.def("overlap", py::overload_cast<const Polygon&, const Rect&>(&overlap),
+                     py::arg("polygon"), py::arg("rect"), R"doc(
+Checks if a polygon and a rectangle overlap.
+
+Parameters:
+    polygon (Polygon): The polygon.
+    rect (Rect): The rectangle.
+
+Returns:
+    bool: Whether the polygon and rectangle overlap.
+                     )doc");
+
+    subCollision.def("overlap", py::overload_cast<const Rect&, const Polygon&>(&overlap),
+                     py::arg("rect"), py::arg("polygon"), R"doc(
+Checks if a rectangle and a polygon overlap.
+
+Parameters:
+    rect (Rect): The rectangle.
+    polygon (Polygon): The polygon.
+
+Returns:
+    bool: Whether the rectangle and polygon overlap.
                      )doc");
 }
 } // namespace kn::collision

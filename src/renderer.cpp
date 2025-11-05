@@ -39,10 +39,22 @@ void _init(SDL_Window* window, const Vec2& resolution)
 
 void _quit()
 {
+    if (_target)
+    {
+        SDL_DestroyTexture(_target);
+        _target = nullptr;
+    }
+
     if (_renderer)
     {
         SDL_DestroyRenderer(_renderer);
         _renderer = nullptr;
+    }
+
+    if (_gpuDevice)
+    {
+        SDL_DestroyGPUDevice(_gpuDevice);
+        _gpuDevice = nullptr;
     }
 }
 

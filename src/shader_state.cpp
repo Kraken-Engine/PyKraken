@@ -1,11 +1,16 @@
 #include "Renderer.hpp"
 #include "ShaderState.hpp"
 
+#include <algorithm>
+#include <vector>
+
 namespace kn
 {
-ShaderState::ShaderState(const std::string& fragmentFilePath, Uint32 samplerCount,
-                         Uint32 storageTextureCount, Uint32 storageBufferCount,
-                         Uint32 uniformBufferCount)
+// Static registry to track all shader states for proper cleanup
+static std::vector<ShaderState*> _shaderStates;
+
+ShaderState::ShaderState(const std::string& fragmentFilePath, const Uint32 uniformBufferCount,
+                         const Uint32 samplerCount)
 {
     const char* ext = SDL_strrchr(fragmentFilePath.c_str(), '.');
     if (ext == nullptr)
@@ -59,8 +64,8 @@ ShaderState::ShaderState(const std::string& fragmentFilePath, Uint32 samplerCoun
     shaderInfo.format = shaderFormat;
     shaderInfo.stage = SDL_GPU_SHADERSTAGE_FRAGMENT;
     shaderInfo.num_samplers = samplerCount;
-    shaderInfo.num_storage_textures = storageTextureCount;
-    shaderInfo.num_storage_buffers = storageBufferCount;
+    shaderInfo.num_storage_textures = 0; // Not usable yet
+    shaderInfo.num_storage_buffers = 0;  // Not usable yet
     shaderInfo.num_uniform_buffers = uniformBufferCount;
 
     m_fragShader = SDL_CreateGPUShader(renderer::_getGPUDevice(), &shaderInfo);
@@ -82,12 +87,33 @@ ShaderState::ShaderState(const std::string& fragmentFilePath, Uint32 samplerCoun
         SDL_ReleaseGPUShader(renderer::_getGPUDevice(), m_fragShader);
         throw std::runtime_error("Failed to create render state");
     }
+
+    // Register this shader state for cleanup
+    _shaderStates.push_back(this);
 }
 
 ShaderState::~ShaderState()
 {
-    SDL_DestroyGPURenderState(m_renderState);
-    SDL_ReleaseGPUShader(renderer::_getGPUDevice(), m_fragShader);
+    // Remove from registry if still present
+    auto& shaders = _shaderStates;
+    auto it = std::find(shaders.begin(), shaders.end(), this);
+    if (it != shaders.end())
+    {
+        shaders.erase(it);
+    }
+
+    // Only clean up GPU resources if the device still exists
+    // If _quit() was called, resources were already freed
+    if (m_renderState != nullptr)
+    {
+        SDL_DestroyGPURenderState(m_renderState);
+        m_renderState = nullptr;
+    }
+    if (m_fragShader != nullptr)
+    {
+        SDL_ReleaseGPUShader(renderer::_getGPUDevice(), m_fragShader);
+        m_fragShader = nullptr;
+    }
 }
 
 void ShaderState::bind() const
@@ -113,14 +139,38 @@ void ShaderState::setUniform(const Uint32 binding, const void* data, const size_
 
 namespace shader_state
 {
+void _quit()
+{
+    // Clean up all shader states before GPU device is destroyed
+    for (ShaderState* shader : _shaderStates)
+    {
+        if (shader->m_renderState != nullptr)
+        {
+            SDL_DestroyGPURenderState(shader->m_renderState);
+            shader->m_renderState = nullptr;
+        }
+        if (shader->m_fragShader != nullptr)
+        {
+            SDL_ReleaseGPUShader(renderer::_getGPUDevice(), shader->m_fragShader);
+            shader->m_fragShader = nullptr;
+        }
+    }
+    _shaderStates.clear();
+}
+
 void _bind(py::module_& module)
 {
-    py::class_<ShaderState>(module, "ShaderState",
+    py::classh<ShaderState>(module, "ShaderState",
                             "Encapsulates a GPU shader and its associated render state.")
-        .def(py::init<const std::string&, Uint32, Uint32, Uint32, Uint32>(),
-             py::arg("fragment_file_path"), py::arg("sampler_count"),
-             py::arg("storage_texture_count"), py::arg("storage_buffer_count"),
-             py::arg("uniform_buffer_count"))
+        .def(py::init<const std::string&, Uint32, Uint32>(), py::arg("fragment_file_path"),
+             py::arg("uniform_buffer_count") = 0, py::arg("sampler_count") = 1, R"doc(
+Creates a ShaderState from the specified fragment shader file.
+
+Parameters:
+    fragment_file_path (str): Path to the fragment shader file.
+    uniform_buffer_count (int, optional): Number of uniform buffers used by the shader. Default is 0.
+    sampler_count (int, optional): Number of samplers used by the shader. Default is 1.
+            )doc")
 
         .def("bind", &ShaderState::bind, R"doc(
 Binds this shader state to the current render pass, making it active for subsequent draw calls.

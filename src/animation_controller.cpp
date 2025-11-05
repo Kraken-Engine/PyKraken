@@ -17,9 +17,17 @@ static std::vector<AnimationController*> _controllers;
 AnimationController::AnimationController() { _controllers.push_back(this); }
 AnimationController::~AnimationController() { std::erase(_controllers, this); }
 
-void AnimationController::loadSpriteSheet(const std::string& name, const std::string& filePath,
-                                          const Vec2& frameSize, const int fps)
+void AnimationController::loadSpriteSheet(const std::string& filePath, const Vec2& frameSize,
+                                          const std::vector<SheetStrip>& strips)
 {
+    if (frameSize.x <= 0 || frameSize.y <= 0)
+        throw std::invalid_argument("Frame size must be positive non-zero values");
+    if (strips.empty())
+        throw std::invalid_argument("No strips provided for sprite sheet");
+
+    if (!m_animMap.empty())
+        throw std::runtime_error("AnimationController can only load one sprite sheet at a time");
+
     const auto texPtr = std::make_shared<Texture>(filePath);
     const Vec2 size = texPtr->getSize();
 
@@ -29,84 +37,68 @@ void AnimationController::loadSpriteSheet(const std::string& name, const std::st
     if (static_cast<int>(size.x) % frameWidth || static_cast<int>(size.y) % frameHeight)
         throw std::runtime_error(filePath + " dimensions are not divisible by frame dimensions");
 
-    if (m_animMap.contains(name))
-        m_animMap.erase(name);
+    const int maxFramesPerRow = static_cast<int>(size.x) / frameWidth;
 
-    Animation newAnim;
-    newAnim.fps = fps;
-    for (int y = 0; y < size.y; y += frameHeight)
-        for (int x = 0; x < size.x; x += frameWidth)
+    for (size_t stripIndex = 0; stripIndex < strips.size(); ++stripIndex)
+    {
+        const auto& strip = strips[stripIndex];
+
+        const std::string& name = strip.name;
+        if (m_animMap.contains(name))
+            throw std::runtime_error("Animation duplicate: " + name);
+
+        if (strip.frameCount <= 0)
+            throw std::invalid_argument("Frame count must be positive for strip: " + name);
+
+        if (strip.frameCount > maxFramesPerRow)
+            throw std::runtime_error("Frame count (" + std::to_string(strip.frameCount) +
+                                     ") exceeds sprite sheet width for strip: " + name);
+
+        const int y = static_cast<int>(stripIndex) * frameHeight;
+        if (y + frameHeight > static_cast<int>(size.y))
+            throw std::runtime_error("Strip index " + std::to_string(stripIndex) +
+                                     " exceeds sprite sheet height");
+
+        // Extract only the specified number of frames from this strip/row
+        Animation newAnim;
+        newAnim.fps = strip.fps;
+        for (int i = 0; i < strip.frameCount; ++i)
         {
+            const int x = i * frameWidth;
             const Frame frame{texPtr, {x, y, frameWidth, frameHeight}};
             newAnim.frames.emplace_back(frame);
         }
 
-    if (newAnim.frames.empty())
-        throw std::runtime_error("No frames found in " + filePath);
-
-    m_animMap[name] = std::move(newAnim);
-    m_currAnim = name;
-}
-
-void AnimationController::loadFolder(const std::string& name, const std::string& dirPath,
-                                     const int fps)
-{
-    if (m_animMap.contains(name))
-        m_animMap.erase(name);
-
-    Animation newAnim;
-    newAnim.fps = fps;
-
-    // Common image extensions supported by SDL
-    const std::vector<std::string> validExtensions = {".png", ".jpg", ".jpeg",
-                                                      ".bmp", ".tga", ".gif"};
-
-    for (const auto& entry : fs::directory_iterator(dirPath))
-    {
-        if (!entry.is_regular_file())
-            continue;
-
-        const std::string filePath = entry.path().string();
-        const std::string extension = entry.path().extension().string();
-
-        // Convert extension to lowercase for comparison
-        std::string lowerExt = extension;
-        std::ranges::transform(lowerExt, lowerExt.begin(), ::tolower);
-
-        // Check if file has a valid image extension
-        if (std::ranges::find(validExtensions, lowerExt) == validExtensions.end())
-            continue;
-
-        const auto texPtr = std::make_shared<Texture>(filePath);
-        const Frame frame{texPtr, texPtr->getRect()};
-        newAnim.frames.emplace_back(frame);
+        m_animMap[name] = std::move(newAnim);
+        m_currAnim = name;
     }
-
-    if (newAnim.frames.empty())
-        throw std::runtime_error("No valid image frames found in " + dirPath);
-
-    m_animMap[name] = std::move(newAnim);
-    m_currAnim = name;
 }
 
-void AnimationController::remove(const std::string& name)
-{
-    if (m_animMap.contains(name))
-        m_animMap.erase(name);
-}
-
-void AnimationController::set(const std::string& name, const bool rewind)
+void AnimationController::set(const std::string& name)
 {
     if (!m_animMap.contains(name))
         throw std::invalid_argument("Animation not found: " + name);
 
     m_currAnim = name;
+}
 
-    if (rewind)
-    {
-        m_index = 0.0;
-        m_prevIndex = 0.0;
-    }
+void AnimationController::play(const std::string& name)
+{
+    set(name);
+    rewind();
+    resume();
+}
+
+void AnimationController::playFrom(const int frameIndex)
+{
+    const auto& [frames, _] = m_animMap.at(m_currAnim);
+
+    if (frameIndex < 0 || frameIndex >= static_cast<int>(frames.size()))
+        throw std::out_of_range("Frame index out of range: " + std::to_string(frameIndex));
+
+    m_index = static_cast<double>(frameIndex);
+    m_prevIndex = m_index;
+    resume();
 }
 
 const Frame& AnimationController::getCurrentFrame() const
@@ -129,9 +121,26 @@ void AnimationController::setPlaybackSpeed(const double speed)
 
 double AnimationController::getPlaybackSpeed() const { return m_playbackSpeed; }
 
+bool AnimationController::isLooping() const { return m_looping; }
+
+void AnimationController::setLooping(const bool loop) { m_looping = loop; }
+
 bool AnimationController::isFinished() const { return m_prevIndex > m_index; }
 
 std::string AnimationController::getCurrentAnimationName() const { return m_currAnim; }
+
+int AnimationController::getFrameIndex() const { return static_cast<int>(std::floor(m_index)); }
+
+double AnimationController::getProgress() const
+{
+    const auto& [frames, _] = m_animMap.at(m_currAnim);
+    const auto frameCount = static_cast<double>(frames.size());
+
+    if (frameCount == 0.0)
+        return 0.0;
+
+    return m_index / frameCount;
+}
 
 void AnimationController::rewind()
 {
@@ -159,7 +168,25 @@ void AnimationController::update(const double delta)
 
     m_index += delta * fps * m_playbackSpeed;
     const auto frameCount = static_cast<double>(frames.size());
-    m_index = fmod(m_index + frameCount, frameCount);
+
+    if (m_looping)
+    {
+        // Loop back to the beginning
+        m_index = fmod(m_index + frameCount, frameCount);
+        return;
+    }
+
+    // Clamp to the last frame and pause
+    if (m_index >= frameCount)
+    {
+        m_index = frameCount - 1.0;
+        pause();
+    }
+    else if (m_index < 0.0)
+    {
+        m_index = 0.0;
+        pause();
+    }
 }
 
 namespace animation_controller
@@ -198,6 +225,47 @@ The list of frames in the animation sequence.
 The frames per second rate for animation playback.
         )doc");
 
+    py::classh<SheetStrip>(module, "SheetStrip", R"doc(
+A descriptor for one horizontal strip (row) in a sprite sheet.
+
+Defines a single animation within a sprite sheet by specifying the animation name,
+the number of frames to extract from the strip, and the playback speed in frames
+per second (FPS).
+    )doc")
+        .def(py::init<>([](const std::string& name, int frame_count, int fps) -> SheetStrip
+                        { return {name, frame_count, fps}; }),
+             py::arg("name"), py::arg("frame_count"), py::arg("fps"), R"doc(
+Create a sprite sheet strip definition.
+
+Args:
+    name (str): Unique identifier for this animation.
+    frame_count (int): Number of frames to extract from this strip/row.
+    fps (int): Frames per second for playback timing.
+             )doc")
+        .def_readwrite("name", &SheetStrip::name, R"doc(
+The unique name identifier for this animation strip.
+
+Type:
+    str: The animation name used to reference this strip.
+        )doc")
+        .def_readwrite("frame_count", &SheetStrip::frameCount, R"doc(
+The number of frames in this animation strip.
+
+Specifies how many frames to extract from the horizontal strip in the sprite sheet,
+reading from left to right.
+
+Type:
+    int: The number of frames (must be positive).
+        )doc")
+        .def_readwrite("fps", &SheetStrip::fps, R"doc(
+The playback speed in frames per second.
+
+Determines how fast the animation plays. Higher values result in faster playback.
+
+Type:
+    int: The frames per second for this animation.
+        )doc");
+
     py::classh<AnimationController>(module, "AnimationController", R"doc(
 Manages and controls sprite animations with multiple animation sequences.
 
@@ -206,59 +274,63 @@ managing playback state, and providing frame-by-frame animation control.
     )doc")
         .def(py::init<>())
 
-        .def("load_sprite_sheet", &AnimationController::loadSpriteSheet, py::arg("name"),
-             py::arg("file_path"), py::arg("frame_size"), py::arg("fps"), R"doc(
-Load animation frames from a sprite sheet texture.
+        .def("load_sprite_sheet", &AnimationController::loadSpriteSheet, py::arg("file_path"),
+             py::arg("frame_size"), py::arg("strips"), R"doc(
+Load one or more animations from a sprite sheet texture.
 
-Divides the sprite sheet into equal-sized frames based on the specified frame size.
-The frames are read left-to-right, top-to-bottom.
+Divides the sprite sheet into horizontal strips, where each strip represents a different
+animation. Each strip is divided into equal-sized frames based on the specified frame size.
+Frames are read left-to-right within each strip, and strips are read top-to-bottom.
 
 Args:
-    name (str): Unique identifier for the animation.
     file_path (str): Path to the sprite sheet image file.
     frame_size (Vec2): Size of each frame as (width, height).
-    fps (int): Frames per second for playback timing.
+    strips (list[SheetStrip]): List of strip definitions, each containing:
+        - name (str): Unique identifier for the animation
+        - frame_count (int): Number of frames in this strip/animation
+        - fps (int): Frames per second for playback timing
 
 Raises:
-    RuntimeError: If sprite sheet dimensions are not divisible by frame dimensions,
-                 or no frames are found.
+    ValueError: If frame size is not positive, no strips provided, frame count is not
+               positive, or frame count exceeds sprite sheet width.
+    RuntimeError: If controller already has animations loaded, sprite sheet dimensions
+                 are not divisible by frame dimensions, duplicate animation names exist,
+                 or strip index exceeds sprite sheet height.
              )doc")
-        .def("load_folder", &AnimationController::loadFolder, py::arg("name"), py::arg("dir_path"),
-             py::arg("fps"), R"doc(
-Load animation frames from a directory of image files.
+        .def("set", &AnimationController::set, py::arg("name"), R"doc(
+Set the current active animation by name without affecting playback state.
 
-Loads all valid image files from the specified directory as animation frames.
-Supported formats include PNG, JPG, JPEG, BMP, TGA, and GIF.
-
-Args:
-    name (str): Unique identifier for the animation.
-    dir_path (str): Path to the directory containing image files.
-    fps (int): Frames per second for playback timing.
-
-Raises:
-    RuntimeError: If no valid image files are found in the directory.
-             )doc")
-        .def("remove", &AnimationController::remove, py::arg("name"), R"doc(
-Remove an animation from the controller.
-
-Args:
-    name (str): The name of the animation to remove.
-
-Note:
-    If the removed animation is currently active, the controller will be left
-    without a current animation.
-             )doc")
-        .def("set", &AnimationController::set, py::arg("name"), py::arg("rewind") = false, R"doc(
-Set the current active animation by name.
-
-Switches to the specified animation and resets playback to the beginning.
+Switches to the specified animation while preserving the current frame index and 
+playback state (paused/playing). Useful for seamless animation transitions.
 
 Args:
     name (str): The name of the animation to activate.
-    rewind (bool): Whether to rewind the animation to the start.
 
 Raises:
     ValueError: If the specified animation name is not found.
+             )doc")
+        .def("play", &AnimationController::play, py::arg("name"), R"doc(
+Play an animation from the beginning.
+
+Switches to the specified animation, rewinds it to frame 0, and starts playback.
+
+Args:
+    name (str): The name of the animation to play.
+
+Raises:
+    ValueError: If the specified animation name is not found.
+             )doc")
+        .def("play_from", &AnimationController::playFrom, py::arg("frame_index"), R"doc(
+Start playing the current animation from a specific frame.
+
+Sets the animation to the specified frame index and resumes playback. Useful for
+starting animations mid-sequence or implementing custom animation logic.
+
+Args:
+    frame_index (int): The frame index to start from (0-based).
+
+Raises:
+    IndexError: If the frame index is out of range for the current animation.
              )doc")
         .def("is_finished", &AnimationController::isFinished, R"doc(
 Check if the animation completed a full loop during the last update.
@@ -304,6 +376,24 @@ Returns:
 Raises:
     RuntimeError: If no animation is currently set or the animation has no frames.
                                )doc")
+        .def_property_readonly("frame_index", &AnimationController::getFrameIndex, R"doc(
+The current frame index in the animation sequence.
+
+Returns the integer frame index (0-based) of the currently displayed frame.
+
+Returns:
+    int: The current frame index.
+                               )doc")
+        .def_property_readonly("progress", &AnimationController::getProgress, R"doc(
+The normalized progress through the current animation.
+
+Returns a value between 0.0 (start) and 1.0 (end) representing how far through
+the animation sequence the playback has progressed. Useful for UI progress bars
+or triggering events at specific points in the animation.
+
+Returns:
+    float: The animation progress as a value between 0.0 and 1.0.
+                               )doc")
         .def_property("playback_speed", &AnimationController::getPlaybackSpeed,
                       &AnimationController::setPlaybackSpeed, R"doc(
 The playback speed multiplier for animation timing.
@@ -313,6 +403,13 @@ Setting to 0 will pause the animation.
 
 Returns:
     float: The current playback speed multiplier.
+                      )doc")
+        .def_property("looping", &AnimationController::isLooping, &AnimationController::setLooping,
+                      R"doc(
+Whether the animation should loop when it reaches the end.
+
+Returns:
+    bool: True if the animation is set to loop, False otherwise.
                       )doc");
 }
 } // namespace animation_controller

@@ -28,7 +28,7 @@ class ShaderUniform(pydantic.main.BaseModel):
     __private_attributes__: typing.ClassVar[dict] = {}
     __pydantic_complete__: typing.ClassVar[bool] = True
     __pydantic_computed_fields__: typing.ClassVar[dict] = {}
-    __pydantic_core_schema__: typing.ClassVar[dict] = {'type': 'model', 'cls': ShaderUniform, 'schema': {'type': 'model-fields', 'fields': {}, 'model_name': 'ShaderUniform', 'computed_fields': list()}, 'custom_init': False, 'root_model': False, 'config': {'title': 'ShaderUniform'}, 'ref': 'pykraken.shader_uniform.ShaderUniform:2062985552560', 'metadata': {'pydantic_js_functions': [pydantic.main.BaseModel.__get_pydantic_json_schema__]}}
+    __pydantic_core_schema__: typing.ClassVar[dict] = {'type': 'model', 'cls': ShaderUniform, 'schema': {'type': 'model-fields', 'fields': {}, 'model_name': 'ShaderUniform', 'computed_fields': list()}, 'custom_init': False, 'root_model': False, 'config': {'title': 'ShaderUniform'}, 'ref': 'pykraken.shader_uniform.ShaderUniform:1715207515728', 'metadata': {'pydantic_js_functions': [pydantic.main.BaseModel.__get_pydantic_json_schema__]}}
     __pydantic_custom_init__: typing.ClassVar[bool] = False
     __pydantic_decorators__: typing.ClassVar[pydantic._internal._decorators.DecoratorInfos]  # value = DecoratorInfos(validators={}, field_validators={}, root_validators={}, field_serializers={}, model_serializers={}, model_validators={}, computed_fields={})
     __pydantic_fields__: typing.ClassVar[dict] = {}

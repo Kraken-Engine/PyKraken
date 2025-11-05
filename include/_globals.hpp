@@ -26,6 +26,13 @@ enum class Anchor
     BottomRight,
 };
 
+enum class Align
+{
+    Left,
+    Center,
+    Right,
+};
+
 enum class Keycode : SDL_Keycode
 {
     K_UNKNOWN = SDLK_UNKNOWN,

@@ -61,6 +61,7 @@ class Audio : public std::enable_shared_from_this<Audio>
     void cleanup(); // Internal cleanup method
 
     friend void mixer::_tick(); // Allow mixer::_tick to access private cleanup
+    friend void mixer::_quit(); // Allow mixer::_quit to access private members for cleanup
 };
 
 class AudioStream
@@ -69,18 +70,17 @@ class AudioStream
     explicit AudioStream(const std::string& filePath, float volume = 1.f);
     ~AudioStream();
 
-    void play(int fadeInMs = 0, bool loop = false);
-
+    void play(int fadeInMs = 0, bool loop = false, float startTimeSeconds = 0.0f);
     void stop(int fadeOutMs = 0);
-
     void pause();
-
     void resume();
-
     void rewind();
 
-    void setVolume(float volume);
+    void seek(float timeSeconds);
 
+    float getCurrentTime();
+
+    void setVolume(float volume);
     [[nodiscard]] float getVolume() const;
 
     void setLooping(bool loop);
@@ -92,5 +92,7 @@ class AudioStream
     ma_sound m_snd{};
 
     [[nodiscard]] static ma_uint64 msToFrames(int ms);
+
+    friend void mixer::_quit(); // Allow mixer::_quit to access private members for cleanup
 };
 } // namespace kn

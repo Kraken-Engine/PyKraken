@@ -3,6 +3,8 @@
 #include "Math.hpp"
 #include "Mixer.hpp"
 #include "Renderer.hpp"
+#include "ShaderState.hpp"
+#include "Text.hpp"
 #include "Time.hpp"
 
 #include <SDL3/SDL.h>
@@ -93,6 +95,7 @@ void create(const std::string& title, const Vec2& res, const bool scaled)
 
     renderer::_init(_window, res);
     font::_init();
+    text::_init();
 }
 
 bool isOpen()
@@ -198,6 +201,14 @@ void saveScreenshot(const std::string& filePath)
     SDL_DestroySurface(shotSurface);
 }
 
+void _quit()
+{
+    if (_window)
+    {
+        SDL_DestroyWindow(_window);
+        _window = nullptr;
+    }
+}
 
 void _bind(py::module_& module)
 {
@@ -313,25 +324,4 @@ Args:
 )doc");
 }
 } // namespace window
-
-void init()
-{
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
-        throw std::runtime_error(SDL_GetError());
-
-    mixer::_init();
-}
-
-void quit()
-{
-    font::_quit();
-    mixer::_quit();
-    renderer::_quit();
-
-    if (window::_window)
-        SDL_DestroyWindow(window::_window);
-    window::_window = nullptr;
-
-    SDL_Quit();
-}
 } // namespace kn
