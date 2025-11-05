@@ -160,7 +160,7 @@ void _quit()
 
 void _bind(py::module_& module)
 {
-    py::class_<ShaderState>(module, "ShaderState",
+    py::classh<ShaderState>(module, "ShaderState",
                             "Encapsulates a GPU shader and its associated render state.")
         .def(py::init<const std::string&, Uint32, Uint32>(), py::arg("fragment_file_path"),
              py::arg("uniform_buffer_count") = 0, py::arg("sampler_count") = 1, R"doc(

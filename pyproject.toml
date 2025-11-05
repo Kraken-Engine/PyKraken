@@ -25,6 +25,7 @@ classifiers = [
   "Topic :: Multimedia :: Graphics",
   "Operating System :: Microsoft :: Windows",
   "Operating System :: MacOS",
+  "Operating System :: POSIX :: Linux",
 ]
 license = "MIT"
 license-files = ["LICENSE"]
