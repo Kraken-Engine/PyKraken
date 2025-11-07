@@ -43,7 +43,7 @@ jobs:
           # Minimal system headers inside manylinux (no SDL itself)
           CIBW_BEFORE_ALL_LINUX: >
             yum -y install \
-              alsa-lib-devel pulseaudio-libs-devel nas-devel pipewire-devel \
+              alsa-lib-devel pulseaudio-libs-devel nasm-devel pipewire-devel \
               libX11-devel libXext-devel libXrandr-devel libXcursor-devel libXfixes-devel \
               libXi-devel libXScrnSaver-devel \
               libxkbcommon-devel wayland-devel libwayland-egl-devel pkgconfig \
