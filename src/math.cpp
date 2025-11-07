@@ -91,6 +91,11 @@ void Vec2::normalize()
 
 double Vec2::distanceTo(const Vec2& other) const { return (other - *this).getLength(); }
 
+double Vec2::distanceSquaredTo(const Vec2& other) const
+{
+    return (other - *this).getLengthSquared();
+}
+
 Vec2 Vec2::operator-() const { return {-x, -y}; }
 
 Vec2 Vec2::operator+(const Vec2& other) const { return {x + other.x, y + other.y}; }
@@ -163,6 +168,13 @@ Vec2 normalize(Vec2 vec)
 {
     vec.normalize();
     return vec;
+}
+
+Vec2 rotate(const Vec2& vec, const double rad)
+{
+    Vec2 r = vec;
+    r.rotate(rad);
+    return r;
 }
 
 Vec2 clampVec(const Vec2& vec, const Vec2& min, const Vec2& max)
@@ -762,6 +774,15 @@ Args:
 Returns:
     float: The Euclidean distance between the vectors.
         )doc")
+        .def("distance_squared_to", &Vec2::distanceSquaredTo, py::arg("other"), R"doc(
+Calculate the squared distance to another vector.
+
+Args:
+    other (Vec2): The other vector.
+
+Returns:
+    float: The squared distance between the vectors.
+        )doc")
         .def("to_polar", &Vec2::toPolar, R"doc(
 Convert to polar coordinates.
 
@@ -927,6 +948,16 @@ Args:
 Returns:
     float: The angle between the vectors in radians [0, π].
         )doc");
+    subMath.def("rotate", &rotate, py::arg("vec"), py::arg("radians"), R"doc(
+    Rotate a vector by the given angle (non-mutating).
+
+    Args:
+        vec (Vec2): The vector to rotate.
+        radians (float): Angle in radians.
+
+    Returns:
+        Vec2: A new rotated vector.
+            )doc");
 }
 } // namespace math
 } // namespace kn
