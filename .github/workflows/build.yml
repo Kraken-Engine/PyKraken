@@ -40,14 +40,16 @@ jobs:
 
           CIBW_ENVIRONMENT_WINDOWS: "CC=cl CXX=cl"
 
-          # Minimal system headers inside manylinux (no SDL itself)
+          # Minimal system headers inside manylinux
           CIBW_BEFORE_ALL_LINUX: >
             yum -y install \
-              alsa-lib-devel pulseaudio-libs-devel nasm-devel pipewire-devel \
-              libX11-devel libXext-devel libXrandr-devel libXcursor-devel libXfixes-devel \
-              libXi-devel libXScrnSaver-devel \
-              libxkbcommon-devel wayland-devel libwayland-egl-devel pkgconfig \
-              mesa-libGL-devel mesa-libEGL-devel
+              cmake ninja-build pkgconfig \
+              alsa-lib-devel pipewire-devel pulseaudio-libs-devel \
+              libX11-devel libXext-devel libXrandr-devel libXcursor-devel libXi-devel libXinerama-devel libXfixes-devel libXScrnSaver-devel libXtst-devel \
+              mesa-libGL-devel mesa-libEGL-devel libdrm-devel mesa-libgbm-devel \
+              wayland-devel wayland-protocols-devel libxkbcommon-devel libdecor-devel \
+              dbus-devel ibus-devel systemd-devel
+
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
