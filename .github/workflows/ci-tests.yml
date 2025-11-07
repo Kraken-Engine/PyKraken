@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          if (Test-Path -Path "dev-requirements.txt") { pip install -r dev-requirements.txt } else { pip install pytest }
+          if (test -f "dev-requirements.txt") { pip install -r dev-requirements.txt } else { pip install pytest }
         shell: powershell
 
       - name: Run tests
