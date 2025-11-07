@@ -48,7 +48,8 @@ jobs:
               libXrandr-devel libXcursor-devel libXi-devel libXinerama-devel libXfixes-devel libXScrnSaver-devel libXtst-devel \
               mesa-libEGL-devel mesa-libgbm-devel \
               wayland-devel wayland-protocols-devel libxkbcommon-devel \
-              dbus-devel ibus-devel systemd-devel
+              dbus-devel ibus-devel systemd-devel \
+              libpng-devel libjpeg-turbo-devel freetype-devel flac-devel
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
