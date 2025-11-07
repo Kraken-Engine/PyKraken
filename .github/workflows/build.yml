@@ -43,11 +43,11 @@ jobs:
           # Minimal system headers inside manylinux
           CIBW_BEFORE_ALL_LINUX: >
             yum -y install \
-              cmake ninja-build pkgconfig \
+              cmake ninja-build \
               alsa-lib-devel pipewire-devel pulseaudio-libs-devel \
-              libX11-devel libXext-devel libXrandr-devel libXcursor-devel libXi-devel libXinerama-devel libXfixes-devel libXScrnSaver-devel libXtst-devel \
-              mesa-libGL-devel mesa-libEGL-devel libdrm-devel mesa-libgbm-devel \
-              wayland-devel wayland-protocols-devel libxkbcommon-devel libdecor-devel \
+              libXrandr-devel libXcursor-devel libXi-devel libXinerama-devel libXfixes-devel libXScrnSaver-devel libXtst-devel \
+              mesa-libEGL-devel mesa-libgbm-devel \
+              wayland-devel wayland-protocols-devel libxkbcommon-devel \
               dbus-devel ibus-devel systemd-devel
 
       - name: Upload wheels
