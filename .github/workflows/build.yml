@@ -2,9 +2,9 @@ name: Build Wheels
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ windows-latest, macos-latest, ubuntu-latest ]
+        os: [windows-latest, macos-latest, ubuntu-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -42,12 +42,12 @@ jobs:
 
           # Minimal system headers inside manylinux (no SDL itself)
           CIBW_BEFORE_ALL_LINUX: >
-            yum -y install
-            alsa-lib-devel pulseaudio-libs-devel nas-devel pipewire-devel
-            libX11-devel libXext-devel libXrandr-devel libXcursor-devel libXfixes-devel
-            libXi-devel libXScrnSaver-devel
-            libxkbcommon-devel wayland-devel mesa-libGL-devel mesa-libEGL-devel
-            || true
+            yum -y install \
+              alsa-lib-devel pulseaudio-libs-devel nas-devel pipewire-devel \
+              libX11-devel libXext-devel libXrandr-devel libXcursor-devel libXfixes-devel \
+              libXi-devel libXScrnSaver-devel \
+              libxkbcommon-devel wayland-devel libwayland-egl-devel pkgconfig \
+              mesa-libGL-devel mesa-libEGL-devel
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
