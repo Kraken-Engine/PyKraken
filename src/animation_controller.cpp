@@ -25,9 +25,6 @@ void AnimationController::loadSpriteSheet(const std::string& filePath, const Vec
     if (strips.empty())
         throw std::invalid_argument("No strips provided for sprite sheet");
 
-    if (!m_animMap.empty())
-        throw std::runtime_error("AnimationController can only load one sprite sheet at a time");
-
     const auto texPtr = std::make_shared<Texture>(filePath);
     const Vec2 size = texPtr->getSize();
 
@@ -293,9 +290,8 @@ Args:
 Raises:
     ValueError: If frame size is not positive, no strips provided, frame count is not
                positive, or frame count exceeds sprite sheet width.
-    RuntimeError: If controller already has animations loaded, sprite sheet dimensions
-                 are not divisible by frame dimensions, duplicate animation names exist,
-                 or strip index exceeds sprite sheet height.
+    RuntimeError: If sprite sheet dimensions are not divisible by frame dimensions,
+                 duplicate animation names exist, or strip index exceeds sprite sheet height.
              )doc")
         .def("set", &AnimationController::set, py::arg("name"), R"doc(
 Set the current active animation by name without affecting playback state.

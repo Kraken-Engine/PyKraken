@@ -73,6 +73,8 @@ class Vec2
 
     [[nodiscard]] double distanceTo(const Vec2& other) const;
 
+    [[nodiscard]] double distanceSquaredTo(const Vec2& other) const;
+
     Vec2 operator-() const; // Unary negation
 
     Vec2 operator+(const Vec2& other) const;
@@ -121,6 +123,8 @@ Vec2 fromPolar(double rad, double radius);
 Vec2 fromPolar(const PolarCoordinate& polar);
 
 Vec2 normalize(Vec2 vec);
+
+Vec2 rotate(const Vec2& vec, double rad);
 
 Vec2 clampVec(const Vec2& vec, const Vec2& min, const Vec2& max);
 
