@@ -106,9 +106,8 @@ class AnimationController:
         Raises:
             ValueError: If frame size is not positive, no strips provided, frame count is not
                        positive, or frame count exceeds sprite sheet width.
-            RuntimeError: If controller already has animations loaded, sprite sheet dimensions
-                         are not divisible by frame dimensions, duplicate animation names exist,
-                         or strip index exceeds sprite sheet height.
+            RuntimeError: If sprite sheet dimensions are not divisible by frame dimensions,
+                         duplicate animation names exist, or strip index exceeds sprite sheet height.
         """
     def pause(self) -> None:
         """
@@ -3559,6 +3558,16 @@ class Vec2:
         Returns:
             Vec2: A new Vec2 with divided components.
         """
+    def distance_squared_to(self, other: Vec2) -> float:
+        """
+        Calculate the squared distance to another vector.
+        
+        Args:
+            other (Vec2): The other vector.
+        
+        Returns:
+            float: The squared distance between the vectors.
+        """
     def distance_to(self, other: Vec2) -> float:
         """
         Calculate the distance to another vector.
@@ -3611,6 +3620,14 @@ class Vec2:
         
         Returns:
             float: The Euclidean length of the vector.
+        """
+    @property
+    def length_squared(self) -> float:
+        """
+        Get the squared length of the vector.
+        
+        Returns:
+            float: The squared length of the vector.
         """
     @property
     def x(self) -> float:

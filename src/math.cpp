@@ -711,6 +711,12 @@ Get the length (magnitude) of the vector.
 Returns:
     float: The Euclidean length of the vector.
         )doc")
+        .def_property_readonly("length_squared", &Vec2::getLengthSquared, R"doc(
+Get the squared length of the vector.
+
+Returns:
+    float: The squared length of the vector.
+        )doc")
         .def_property_readonly("angle", &Vec2::getAngle, R"doc(
 Get the angle of the vector in radians.
 
