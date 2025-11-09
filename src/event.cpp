@@ -187,17 +187,7 @@ Attributes:
 The event type (e.g., KEY_DOWN, MOUSE_BUTTON_UP).
         )doc")
 
-        .def("__getattr__", &Event::getAttr, R"doc(
-Dynamically access event attributes.
-
-Examples:
-    event.key
-    event.button
-    event.pos
-
-Raises:
-    AttributeError: If the requested attribute doesn't exist.
-        )doc");
+        .def("__getattr__", &Event::getAttr);
 
     auto subEvent = module.def_submodule("event", "Input event handling");
 

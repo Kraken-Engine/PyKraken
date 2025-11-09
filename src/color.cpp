@@ -291,167 +291,6 @@ Args:
         - 4 values: RGBA
         )doc")
 
-        .def(
-            "__str__",
-            [](const Color& c) -> std::string
-            {
-                return "(" + std::to_string(c.r) + ", " + std::to_string(c.g) + ", " +
-                       std::to_string(c.b) + ", " + std::to_string(c.a) + ")";
-            },
-            R"doc(
-Return a human-readable string representation.
-
-Returns:
-    str: String in format "(r, g, b, a)" with integer values.
-        )doc")
-
-        .def(
-            "__repr__",
-            [](const Color& c) -> std::string
-            {
-                return "Color(" + std::to_string(c.r) + ", " + std::to_string(c.g) + ", " +
-                       std::to_string(c.b) + ", " + std::to_string(c.a) + ")";
-            },
-            R"doc(
-Return a string suitable for debugging and recreation.
-
-Returns:
-    str: String in format "Color(r, g, b, a)" that can recreate the object.
-        )doc")
-
-        .def(
-            "__iter__", [](const Color& c) -> py::iterator
-            { return py::make_iterator(&c.r, &c.r + 4); }, py::keep_alive<0, 1>(), R"doc(
-Return an iterator over color channels.
-
-Yields:
-    int: The r, g, b, a values in that order (0-255 each).
-
-Example:
-    for channel in color:
-        print(channel)  # Prints r, g, b, a values
-        )doc")
-
-        .def(
-            "__getitem__",
-            [](const Color& c, const size_t i) -> int
-            {
-                if (i >= 4)
-                    throw py::index_error();
-                return *(&c.r + i);
-            },
-            py::arg("index"), R"doc(
-Access color channels by index.
-
-Args:
-    index (int): Channel index (0=r, 1=g, 2=b, 3=a).
-
-Returns:
-    int: Channel value (0-255).
-
-Raises:
-    IndexError: If index is not in range [0, 3].
-        )doc")
-
-        .def(
-            "__setitem__",
-            [](Color& c, const size_t i, const uint8_t value) -> void
-            {
-                if (i >= 4)
-                    throw py::index_error();
-                *(&c.r + i) = value;
-            },
-            py::arg("index"), py::arg("value"), R"doc(
-Set a color channel by index.
-
-Args:
-    index (int): Channel index (0=r, 1=g, 2=b, 3=a).
-    value (int): New channel value (0-255).
-
-Raises:
-    IndexError: If index is not in range [0, 3].
-        )doc")
-
-        .def(
-            "__len__", [](const Color&) -> int { return 4; }, R"doc(
-Return the number of color channels.
-
-Returns:
-    int: Always returns 4 (for r, g, b, a channels).
-        )doc")
-
-        .def("__eq__", &Color::operator==, py::arg("other"), R"doc(
-Check if two Color objects are equal (all RGBA components match).
-
-Args:
-    other (Color): The color to compare with.
-
-Returns:
-    bool: True if colors are identical, False otherwise.
-        )doc")
-        .def("__ne__", &Color::operator!=, py::arg("other"), R"doc(
-Check if two Color objects are not equal.
-
-Args:
-    other (Color): The color to compare with.
-
-Returns:
-    bool: True if any component differs, False otherwise.
-        )doc")
-
-        .def("__neg__", &Color::operator-, R"doc(
-Unary negation operator to invert the color.
-
-Returns the inverted color by flipping RGB channels (255 - value).
-The alpha channel is preserved unchanged.
-
-Returns:
-    Color: New Color with inverted RGB values and original alpha.
-        )doc")
-
-        .def("__mul__", &Color::operator*, py::arg("scalar"), R"doc(
-Multiply RGB color channels by a scalar value.
-
-Multiplies each RGB component by the scalar. Results are clamped to [0, 255].
-The alpha channel is preserved unchanged.
-Negative scalars invert the color before applying the absolute value.
-
-Args:
-    scalar (float): Scalar multiplier (any positive or negative value).
-
-Returns:
-    Color: New Color with scaled RGB values and original alpha.
-        )doc")
-        .def("__rmul__", &Color::operator*, py::arg("scalar"), R"doc(
-Multiply RGB color channels by a scalar value (reverse multiplication).
-
-Allows scalar * color syntax in addition to color * scalar.
-Results are clamped to [0, 255]. The alpha channel is preserved unchanged.
-Negative scalars invert the color before applying the absolute value.
-
-Args:
-    scalar (float): Scalar multiplier (any positive or negative value).
-
-Returns:
-    Color: New Color with scaled RGB values and original alpha.
-        )doc")
-        .def("__truediv__", &Color::operator/, py::arg("scalar"), R"doc(
-Divide RGB color channels by a scalar value.
-
-Divides each RGB component by the scalar. Results are clamped to [0, 255].
-The alpha channel is preserved unchanged.
-Negative scalars invert the color before applying the absolute value.
-
-Args:
-    scalar (float): Scalar divisor (any positive or negative value except 0).
-
-Returns:
-    Color: New Color with divided RGB values and original alpha.
-
-Raises:
-    ValueError: If scalar is zero.
-        )doc")
-
         .def_readwrite("r", &Color::r, R"doc(
 Red channel value.
 
@@ -532,7 +371,56 @@ Create a copy of the color.
 
 Returns:
     Color: A new Color object with the same RGBA values.
-        )doc");
+        )doc")
+
+        .def("__str__",
+             [](const Color& c) -> std::string
+             {
+                 return "(" + std::to_string(c.r) + ", " + std::to_string(c.g) + ", " +
+                        std::to_string(c.b) + ", " + std::to_string(c.a) + ")";
+             })
+
+        .def("__repr__",
+             [](const Color& c) -> std::string
+             {
+                 return "Color(" + std::to_string(c.r) + ", " + std::to_string(c.g) + ", " +
+                        std::to_string(c.b) + ", " + std::to_string(c.a) + ")";
+             })
+
+        .def(
+            "__iter__", [](const Color& c) -> py::iterator
+            { return py::make_iterator(&c.r, &c.r + 4); }, py::keep_alive<0, 1>())
+
+        .def(
+            "__getitem__",
+            [](const Color& c, const size_t i) -> int
+            {
+                if (i >= 4)
+                    throw py::index_error();
+                return *(&c.r + i);
+            },
+            py::arg("index"))
+
+        .def(
+            "__setitem__",
+            [](Color& c, const size_t i, const uint8_t value) -> void
+            {
+                if (i >= 4)
+                    throw py::index_error();
+                *(&c.r + i) = value;
+            },
+            py::arg("index"), py::arg("value"))
+
+        .def("__len__", [](const Color&) -> int { return 4; })
+
+        .def("__eq__", &Color::operator==, py::arg("other"))
+        .def("__ne__", &Color::operator!=, py::arg("other"))
+
+        .def("__neg__", &Color::operator-)
+
+        .def("__mul__", &Color::operator*, py::arg("scalar"))
+        .def("__rmul__", &Color::operator*, py::arg("scalar"))
+        .def("__truediv__", &Color::operator/, py::arg("scalar"));
 
     py::implicitly_convertible<py::sequence, Color>();
     py::implicitly_convertible<py::str, Color>();

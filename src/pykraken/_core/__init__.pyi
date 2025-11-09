@@ -447,13 +447,9 @@ class Circle:
     """
     __hash__: typing.ClassVar[None] = None
     def __eq__(self, other: Circle) -> bool:
-        """
-        Check if two circles are equal.
-        """
+        ...
     def __getitem__(self, index: typing.SupportsInt) -> float:
-        """
-        Get component by index: 0 = x, 1 = y, 2 = radius.
-        """
+        ...
     @typing.overload
     def __init__(self, pos: Vec2, radius: typing.SupportsFloat) -> None:
         """
@@ -469,17 +465,11 @@ class Circle:
         Create a circle from a nested sequence: ([x, y], radius).
         """
     def __iter__(self) -> collections.abc.Iterator:
-        """
-        Return an iterator over (x, y, radius).
-        """
+        ...
     def __len__(self) -> int:
-        """
-        Always returns 3 for (x, y, radius).
-        """
+        ...
     def __ne__(self, other: Circle) -> bool:
-        """
-        Check if two circles are not equal.
-        """
+        ...
     def as_rect(self) -> Rect:
         """
         Return the smallest rectangle that fully contains the circle.
@@ -524,28 +514,9 @@ class Color:
     """
     __hash__: typing.ClassVar[None] = None
     def __eq__(self, other: Color) -> bool:
-        """
-        Check if two Color objects are equal (all RGBA components match).
-        
-        Args:
-            other (Color): The color to compare with.
-        
-        Returns:
-            bool: True if colors are identical, False otherwise.
-        """
+        ...
     def __getitem__(self, index: typing.SupportsInt) -> int:
-        """
-        Access color channels by index.
-        
-        Args:
-            index (int): Channel index (0=r, 1=g, 2=b, 3=a).
-        
-        Returns:
-            int: Channel value (0-255).
-        
-        Raises:
-            IndexError: If index is not in range [0, 3].
-        """
+        ...
     @typing.overload
     def __init__(self) -> None:
         """
@@ -581,113 +552,25 @@ class Color:
                 - 4 values: RGBA
         """
     def __iter__(self) -> collections.abc.Iterator:
-        """
-        Return an iterator over color channels.
-        
-        Yields:
-            int: The r, g, b, a values in that order (0-255 each).
-        
-        Example:
-            for channel in color:
-                print(channel)  # Prints r, g, b, a values
-        """
+        ...
     def __len__(self) -> int:
-        """
-        Return the number of color channels.
-        
-        Returns:
-            int: Always returns 4 (for r, g, b, a channels).
-        """
+        ...
     def __mul__(self, scalar: typing.SupportsFloat) -> Color:
-        """
-        Multiply RGB color channels by a scalar value.
-        
-        Multiplies each RGB component by the scalar. Results are clamped to [0, 255].
-        The alpha channel is preserved unchanged.
-        Negative scalars invert the color before applying the absolute value.
-        
-        Args:
-            scalar (float): Scalar multiplier (any positive or negative value).
-        
-        Returns:
-            Color: New Color with scaled RGB values and original alpha.
-        """
+        ...
     def __ne__(self, other: Color) -> bool:
-        """
-        Check if two Color objects are not equal.
-        
-        Args:
-            other (Color): The color to compare with.
-        
-        Returns:
-            bool: True if any component differs, False otherwise.
-        """
+        ...
     def __neg__(self) -> Color:
-        """
-        Unary negation operator to invert the color.
-        
-        Returns the inverted color by flipping RGB channels (255 - value).
-        The alpha channel is preserved unchanged.
-        
-        Returns:
-            Color: New Color with inverted RGB values and original alpha.
-        """
+        ...
     def __repr__(self) -> str:
-        """
-        Return a string suitable for debugging and recreation.
-        
-        Returns:
-            str: String in format "Color(r, g, b, a)" that can recreate the object.
-        """
+        ...
     def __rmul__(self, scalar: typing.SupportsFloat) -> Color:
-        """
-        Multiply RGB color channels by a scalar value (reverse multiplication).
-        
-        Allows scalar * color syntax in addition to color * scalar.
-        Results are clamped to [0, 255]. The alpha channel is preserved unchanged.
-        Negative scalars invert the color before applying the absolute value.
-        
-        Args:
-            scalar (float): Scalar multiplier (any positive or negative value).
-        
-        Returns:
-            Color: New Color with scaled RGB values and original alpha.
-        """
+        ...
     def __setitem__(self, index: typing.SupportsInt, value: typing.SupportsInt) -> None:
-        """
-        Set a color channel by index.
-        
-        Args:
-            index (int): Channel index (0=r, 1=g, 2=b, 3=a).
-            value (int): New channel value (0-255).
-        
-        Raises:
-            IndexError: If index is not in range [0, 3].
-        """
+        ...
     def __str__(self) -> str:
-        """
-        Return a human-readable string representation.
-        
-        Returns:
-            str: String in format "(r, g, b, a)" with integer values.
-        """
+        ...
     def __truediv__(self, scalar: typing.SupportsFloat) -> Color:
-        """
-        Divide RGB color channels by a scalar value.
-        
-        Divides each RGB component by the scalar. Results are clamped to [0, 255].
-        The alpha channel is preserved unchanged.
-        Negative scalars invert the color before applying the absolute value.
-        
-        Args:
-            scalar (float): Scalar divisor (any positive or negative value except 0).
-        
-        Returns:
-            Color: New Color with divided RGB values and original alpha.
-        
-        Raises:
-            ValueError: If scalar is zero.
-        """
+        ...
     def copy(self) -> Color:
         """
         Create a copy of the color.
@@ -833,17 +716,7 @@ class Event:
             
     """
     def __getattr__(self, arg0: str) -> typing.Any:
-        """
-        Dynamically access event attributes.
-        
-        Examples:
-            event.key
-            event.button
-            event.pos
-        
-        Raises:
-            AttributeError: If the requested attribute doesn't exist.
-        """
+        ...
     @property
     def type(self) -> int:
         """
@@ -1369,23 +1242,9 @@ class Line:
     """
     __hash__: typing.ClassVar[None] = None
     def __eq__(self, other: Line) -> bool:
-        """
-        Check if two lines are equal.
-        
-        Args:
-            other (Line): The other line to compare.
-        
-        Returns:
-            bool: True if all components are equal.
-        """
-    def __getitem__(self, arg0: typing.SupportsInt) -> float:
-        """
-        Get coordinate by index:
-            0 = ax, 1 = ay, 2 = bx, 3 = by
-        
-        Raises:
-            IndexError: If index is not 0-3.
-        """
+        ...
+    def __getitem__(self, index: typing.SupportsInt) -> float:
+        ...
     @typing.overload
     def __init__(self) -> None:
         """
@@ -1442,22 +1301,9 @@ class Line:
     def __iter__(self) -> collections.abc.Iterator:
         ...
     def __len__(self) -> int:
-        """
-        Return the number of components (always 4).
-        
-        Returns:
-            int: Always returns 4 (ax, ay, bx, by).
-        """
+        ...
     def __ne__(self, other: Line) -> bool:
-        """
-        Check if two lines are not equal.
-        
-        Args:
-            other (Line): The other line to compare.
-        
-        Returns:
-            bool: True if any component differs.
-        """
+        ...
     def copy(self) -> Line:
         """
         Return a copy of this line.
@@ -1928,122 +1774,65 @@ class PixelArray:
 class PolarCoordinate:
     """
     
-    Represents a polar coordinate with angle and radius components.
+    PolarCoordinate models a polar coordinate pair.
     
-    A polar coordinate system uses an angle (in radians) and radius to define a position
-    relative to a fixed origin point.
-        
+    Attributes:
+        angle (float): Angle in radians.
+        radius (float): Distance from origin.
+    
+    Methods:
+        to_cartesian: Convert the coordinate to a Vec2.
+            
     """
     def __eq__(self, arg0: PolarCoordinate) -> bool:
-        """
-        Check if two PolarCoordinates are equal.
-        
-        Args:
-            other (PolarCoordinate): The other PolarCoordinate to compare.
-        
-        Returns:
-            bool: True if both angle and radius are equal.
-        """
+        ...
     def __getitem__(self, index: typing.SupportsInt) -> float:
-        """
-        Access polar coordinate components by index.
-        
-        Args:
-            index (int): Index (0=angle, 1=radius).
-        
-        Returns:
-            float: The component value.
-        
-        Raises:
-            IndexError: If index is not 0 or 1.
-        """
+        ...
     def __hash__(self) -> int:
-        """
-        Return a hash value for the PolarCoordinate.
-        
-        Returns:
-            int: Hash value based on angle and radius.
-        """
+        ...
     @typing.overload
     def __init__(self) -> None:
         """
-        Create a PolarCoordinate with default values (0.0, 0.0).
+        Initialize a PolarCoordinate with zero angle and radius.
         """
     @typing.overload
     def __init__(self, angle: typing.SupportsFloat, radius: typing.SupportsFloat) -> None:
         """
-        Create a PolarCoordinate from angle and radius.
+        Initialize a PolarCoordinate from explicit values.
         
         Args:
-            angle (float): The angle in radians.
-            radius (float): The radius/distance from origin.
+            angle (float): Angle in radians.
+            radius (float): Distance from the origin.
         """
     @typing.overload
     def __init__(self, arg0: collections.abc.Sequence) -> None:
         """
-        Create a PolarCoordinate from a sequence of two elements.
+        Initialize a PolarCoordinate from a two-item sequence.
         
         Args:
-            sequence: A sequence (list, tuple) containing [angle, radius].
+            sequence (Sequence[float]): Iterable containing [angle, radius].
         
         Raises:
-            RuntimeError: If sequence doesn't contain exactly 2 elements.
+            RuntimeError: If the sequence does not contain exactly two elements.
         """
     def __iter__(self) -> collections.abc.Iterator:
-        """
-        Return an iterator over (angle, radius).
-        
-        Returns:
-            iterator: Iterator that yields angle first, then radius.
-        """
+        ...
     def __len__(self) -> int:
-        """
-        Return the number of components (always 2).
-        
-        Returns:
-            int: Always returns 2 (angle and radius).
-        """
+        ...
     def __ne__(self, arg0: PolarCoordinate) -> bool:
-        """
-        Check if two PolarCoordinates are not equal.
-        
-        Args:
-            other (PolarCoordinate): The other PolarCoordinate to compare.
-        
-        Returns:
-            bool: True if angle or radius are different.
-        """
+        ...
     def __repr__(self) -> str:
-        """
-        Return a string suitable for debugging and recreation.
-        
-        Returns:
-            str: String in format "PolarCoordinate(angle, radius)".
-        """
+        ...
     def __setitem__(self, index: typing.SupportsInt, value: typing.SupportsFloat) -> None:
-        """
-        Set polar coordinate components by index.
-        
-        Args:
-            index (int): Index (0=angle, 1=radius).
-            value (float): The new value to set.
-        
-        Raises:
-            IndexError: If index is not 0 or 1.
-        """
+        ...
     def __str__(self) -> str:
-        """
-        Return a human-readable string representation.
-        
-        Returns:
-            str: String in format "(angle, radius)".
-        """
+        ...
     def to_cartesian(self) -> Vec2:
         """
-        Convert polar coordinates to Cartesian coordinates.
+        Convert this PolarCoordinate to a Vec2.
         
         Returns:
-            Vec2: The equivalent Cartesian coordinates as a Vec2.
+            Vec2: Cartesian representation of this coordinate.
         """
     @property
     def angle(self) -> float:
@@ -2071,18 +1860,7 @@ class Polygon:
         
     """
     def __getitem__(self, index: typing.SupportsInt) -> Vec2:
-        """
-        Get a point by index.
-        
-        Args:
-            index (int): The index of the point to retrieve.
-        
-        Returns:
-            Vec2: The point at the specified index.
-        
-        Raises:
-            IndexError: If index is out of range.
-        """
+        ...
     @typing.overload
     def __init__(self) -> None:
         """
@@ -2097,16 +1875,9 @@ class Polygon:
             points (list[Vec2]): List of Vec2 points defining the polygon vertices.
         """
     def __iter__(self) -> collections.abc.Iterator:
-        """
-        Return an iterator over the polygon's points.
-        """
+        ...
     def __len__(self) -> int:
-        """
-        Return the number of points in the polygon.
-        
-        Returns:
-            int: The number of vertices.
-        """
+        ...
     def copy(self) -> Polygon:
         """
         Return a copy of the polygon.
@@ -2194,39 +1965,15 @@ class Rect:
     
     A Rect is defined by its top-left corner position (x, y) and dimensions (w, h).
     Supports various geometric operations, collision detection, and positioning methods.
-        
+            
     """
     __hash__: typing.ClassVar[None] = None
     def __bool__(self) -> bool:
-        """
-        Check if the rectangle has positive area.
-        
-        Returns:
-            bool: True if both width and height are greater than 0.
-        """
+        ...
     def __eq__(self, other: Rect) -> bool:
-        """
-        Check if two rectangles are equal.
-        
-        Args:
-            other (Rect): The other rectangle to compare.
-        
-        Returns:
-            bool: True if all components (x, y, w, h) are equal.
-        """
+        ...
     def __getitem__(self, index: typing.SupportsInt) -> float:
-        """
-        Access rectangle components by index.
-        
-        Args:
-            index (int): Index (0=x, 1=y, 2=w, 3=h).
-        
-        Returns:
-            float: The component value.
-        
-        Raises:
-            IndexError: If index is not 0, 1, 2, or 3.
-        """
+        ...
     @typing.overload
     def __init__(self) -> None:
         """
@@ -2284,43 +2031,15 @@ class Rect:
             RuntimeError: If sequence doesn't contain exactly 4 elements.
         """
     def __iter__(self) -> collections.abc.Iterator:
-        """
-        Return an iterator over (x, y, w, h).
-        
-        Returns:
-            iterator: Iterator that yields x, y, w, h in order.
-        """
+        ...
     def __len__(self) -> int:
-        """
-        Return the number of components (always 4).
-        
-        Returns:
-            int: Always returns 4 (x, y, w, h).
-        """
+        ...
     def __ne__(self, other: Rect) -> bool:
-        """
-        Check if two rectangles are not equal.
-        
-        Args:
-            other (Rect): The other rectangle to compare.
-        
-        Returns:
-            bool: True if any component differs.
-        """
+        ...
     def __repr__(self) -> str:
-        """
-        Return a string suitable for debugging and recreation.
-        
-        Returns:
-            str: String in format "Rect(x=..., y=..., w=..., h=...)".
-        """
+        ...
     def __str__(self) -> str:
-        """
-        Return a human-readable string representation.
-        
-        Returns:
-            str: String in format "[x, y, w, h]".
-        """
+        ...
     @typing.overload
     def clamp(self, other: Rect) -> None:
         """
@@ -2710,9 +2429,9 @@ class ShaderState:
     """
     def __init__(self, fragment_file_path: str, uniform_buffer_count: typing.SupportsInt = 0, sampler_count: typing.SupportsInt = 1) -> None:
         """
-        Creates a ShaderState from the specified fragment shader file.
+        Create a ShaderState from the specified fragment shader file.
         
-        Parameters:
+        Args:
             fragment_file_path (str): Path to the fragment shader file.
             uniform_buffer_count (int, optional): Number of uniform buffers used by the shader. Default is 0.
             sampler_count (int, optional): Number of samplers used by the shader. Default is 1.
@@ -2723,11 +2442,11 @@ class ShaderState:
         """
     def set_uniform(self, binding: typing.SupportsInt, data: collections.abc.Buffer) -> None:
         """
-        Sets uniform data for the fragment shader at the specified binding point.
+        Set uniform data for the fragment shader at the specified binding point.
         
-        Parameters:
-            binding (int): The uniform buffer binding index.
-            data (buffer): A buffer or bytes object containing the uniform data to upload.
+        Args:
+            binding (int): Uniform buffer binding index.
+            data (buffer): Buffer or bytes object containing the uniform data to upload.
         """
     def unbind(self) -> None:
         """
@@ -3276,358 +2995,226 @@ class Timer:
 class Vec2:
     """
     
-    Represents a 2D vector with x and y components.
+    Vec2 represents a 2D vector.
     
-    Vec2 is used for positions, directions, velocities, and other 2D vector operations.
-    Supports arithmetic operations, comparisons, and various mathematical functions.
-        
+    Attributes:
+        x (float): Horizontal component.
+        y (float): Vertical component.
+    
+    Methods:
+        copy: Return a duplicated Vec2.
+        is_zero: Test whether components are near zero.
+        rotate: Rotate the vector in place.
+        to_polar: Convert the vector to a PolarCoordinate.
+        scale_to_length: Scale the vector to a specific length.
+        project: Project onto another Vec2.
+        reject: Remove the projection onto another Vec2.
+        reflect: Reflect across another Vec2.
+        normalize: Normalize the vector in place.
+        distance_to: Measure distance to another Vec2.
+        distance_squared_to: Measure squared distance to another Vec2.
+            
     """
     def __add__(self, other: Vec2) -> Vec2:
-        """
-        Add another Vec2 to this Vec2.
-        
-        Args:
-            other (Vec2): The Vec2 to add.
-        
-        Returns:
-            Vec2: A new Vec2 with the result of the addition.
-        """
+        ...
     def __bool__(self) -> bool:
-        """
-        Check if the vector is not zero.
-        
-        Returns:
-            bool: True if the vector is not zero, False if it is zero.
-        """
+        ...
     def __eq__(self, other: Vec2) -> bool:
-        """
-        Check if two Vec2s are equal (within tolerance).
-        
-        Args:
-            other (Vec2): The other Vec2 to compare.
-        
-        Returns:
-            bool: True if vectors are equal within tolerance.
-        """
+        ...
     def __ge__(self, other: Vec2) -> bool:
-        """
-        Check if this Vec2 is component-wise greater than or equal to another.
-        
-        Args:
-            other (Vec2): The other Vec2 to compare.
-        
-        Returns:
-            bool: True if not component-wise less than other.
-        """
+        ...
     def __getitem__(self, index: typing.SupportsInt) -> float:
-        """
-        Access vector components by index.
-        
-        Args:
-            index (int): Index (0=x, 1=y).
-        
-        Returns:
-            float: The component value.
-        
-        Raises:
-            IndexError: If index is not 0 or 1.
-        """
+        ...
     def __gt__(self, other: Vec2) -> bool:
-        """
-        Check if this Vec2 is component-wise greater than another.
-        
-        Args:
-            other (Vec2): The other Vec2 to compare.
-        
-        Returns:
-            bool: True if both x and y are greater than other's x and y.
-        """
+        ...
     def __hash__(self) -> int:
-        """
-        Return a hash value for the Vec2.
-        
-        Returns:
-            int: Hash value based on x and y components.
-        """
+        ...
     def __iadd__(self, other: Vec2) -> Vec2:
-        """
-        In-place addition (self += other).
-        
-        Args:
-            other (Vec2): The Vec2 to add.
-        
-        Returns:
-            Vec2: Reference to self after modification.
-        """
+        ...
     def __imul__(self, scalar: typing.SupportsFloat) -> Vec2:
-        """
-        In-place multiplication by a scalar value (self *= scalar).
-        
-        Args:
-            scalar (float): The scalar to multiply by.
-        
-        Returns:
-            Vec2: Reference to self after modification.
-        """
+        ...
     @typing.overload
     def __init__(self) -> None:
         """
-        Create a zero vector (0, 0).
+        Initialize a Vec2 with zeroed components.
         """
     @typing.overload
     def __init__(self, value: typing.SupportsFloat) -> None:
         """
-        Create a Vec2 with both x and y set to the same value.
+        Initialize a Vec2 with identical x and y values.
         
         Args:
-            value (float): Value to set for both x and y components.
+            value (float): Value assigned to both components.
         """
     @typing.overload
     def __init__(self, x: typing.SupportsFloat, y: typing.SupportsFloat) -> None:
         """
-        Create a Vec2 with given x and y values.
+        Initialize a Vec2 with explicit component values.
         
         Args:
-            x (float): The x component.
-            y (float): The y component.
+            x (float): Horizontal component.
+            y (float): Vertical component.
         """
     @typing.overload
     def __init__(self, arg0: collections.abc.Sequence) -> None:
         """
-        Create a Vec2 from a sequence of two elements.
+        Initialize a Vec2 from a two-item sequence.
         
         Args:
-            sequence: A sequence (list, tuple) containing [x, y].
+            sequence (Sequence[float]): Iterable containing [x, y].
         
         Raises:
-            RuntimeError: If sequence doesn't contain exactly 2 elements.
+            RuntimeError: If the sequence does not contain exactly two elements.
         """
     def __isub__(self, other: Vec2) -> Vec2:
-        """
-        In-place subtraction (self -= other).
-        
-        Args:
-            other (Vec2): The Vec2 to subtract.
-        
-        Returns:
-            Vec2: Reference to self after modification.
-        """
+        ...
     def __iter__(self) -> collections.abc.Iterator:
-        """
-        Return an iterator over (x, y).
-        
-        Returns:
-            iterator: Iterator that yields x first, then y.
-        """
+        ...
     def __itruediv__(self, scalar: typing.SupportsFloat) -> Vec2:
-        """
-        In-place division by a scalar value (self /= scalar).
-        
-        Args:
-            scalar (float): The scalar to divide by.
-        
-        Returns:
-            Vec2: Reference to self after modification.
-        """
+        ...
     def __le__(self, other: Vec2) -> bool:
-        """
-        Check if this Vec2 is component-wise less than or equal to another.
-        
-        Args:
-            other (Vec2): The other Vec2 to compare.
-        
-        Returns:
-            bool: True if not component-wise greater than other.
-        """
+        ...
     def __len__(self) -> int:
-        """
-        Return the number of components (always 2).
-        
-        Returns:
-            int: Always returns 2 (x and y).
-        """
+        ...
     def __lt__(self, other: Vec2) -> bool:
-        """
-        Check if this Vec2 is component-wise less than another.
-        
-        Args:
-            other (Vec2): The other Vec2 to compare.
-        
-        Returns:
-            bool: True if both x and y are less than other's x and y.
-        """
+        ...
     def __mul__(self, scalar: typing.SupportsFloat) -> Vec2:
-        """
-        Multiply the vector by a scalar value.
-        
-        Args:
-            scalar (float): The scalar to multiply by.
-        
-        Returns:
-            Vec2: A new Vec2 with multiplied components.
-        """
+        ...
     def __ne__(self, other: Vec2) -> bool:
-        """
-        Check if two Vec2s are not equal.
-        
-        Args:
-            other (Vec2): The other Vec2 to compare.
-        
-        Returns:
-            bool: True if vectors are not equal.
-        """
+        ...
     def __neg__(self) -> Vec2:
-        """
-        Return the negation of this vector (-self).
-        
-        Returns:
-            Vec2: A new Vec2 with negated x and y components.
-        """
+        ...
     def __radd__(self, other: Vec2) -> Vec2:
-        """
-        Right-hand addition (other + self).
-        
-        Args:
-            other (Vec2): The Vec2 to add.
-        
-        Returns:
-            Vec2: A new Vec2 with the result of the addition.
-        """
+        ...
     def __repr__(self) -> str:
-        """
-        Return a string suitable for debugging and recreation.
-        
-        Returns:
-            str: String in format "Vec2(x, y)".
-        """
+        ...
     def __rmul__(self, scalar: typing.SupportsFloat) -> Vec2:
-        """
-        Right-hand multiplication (scalar * self).
-        
-        Args:
-            scalar (float): The scalar to multiply by.
-        
-        Returns:
-            Vec2: A new Vec2 with multiplied components.
-        """
+        ...
     def __rsub__(self, other: Vec2) -> Vec2:
-        """
-        Right-hand subtraction (other - self).
-        
-        Args:
-            other (Vec2): The Vec2 to subtract from.
-        
-        Returns:
-            Vec2: A new Vec2 with the result of the subtraction.
-        """
+        ...
     def __setitem__(self, index: typing.SupportsInt, value: typing.SupportsFloat) -> None:
-        """
-        Set vector components by index.
-        
-        Args:
-            index (int): Index (0=x, 1=y).
-            value (float): The new value to set.
-        
-        Raises:
-            IndexError: If index is not 0 or 1.
-        """
+        ...
     def __str__(self) -> str:
-        """
-        Return a human-readable string representation.
-        
-        Returns:
-            str: String in format "<x, y>".
-        """
+        ...
     def __sub__(self, other: Vec2) -> Vec2:
-        """
-        Subtract another Vec2 from this Vec2.
-        
-        Args:
-            other (Vec2): The Vec2 to subtract.
-        
-        Returns:
-            Vec2: A new Vec2 with the result of the subtraction.
-        """
+        ...
     def __truediv__(self, scalar: typing.SupportsFloat) -> Vec2:
+        ...
+    def copy(self) -> Vec2:
         """
-        Divide the vector by a scalar value.
-        
-        Args:
-            scalar (float): The scalar to divide by.
+        Return a copy of this Vec2.
         
         Returns:
-            Vec2: A new Vec2 with divided components.
+            Vec2: A duplicated vector with the same components.
         """
     def distance_squared_to(self, other: Vec2) -> float:
         """
-        Calculate the squared distance to another vector.
+        Compute the squared distance to another Vec2.
         
         Args:
-            other (Vec2): The other vector.
+            other (Vec2): Comparison vector.
         
         Returns:
-            float: The squared distance between the vectors.
+            float: Squared distance between the vectors.
         """
     def distance_to(self, other: Vec2) -> float:
         """
-        Calculate the distance to another vector.
+        Compute the Euclidean distance to another Vec2.
         
         Args:
-            other (Vec2): The other vector.
+            other (Vec2): Comparison vector.
         
         Returns:
-            float: The Euclidean distance between the vectors.
+            float: Distance between the vectors.
+        """
+    def is_zero(self, tolerance: typing.SupportsFloat = 1e-08) -> bool:
+        """
+        Determine whether this Vec2 is effectively zero.
+        
+        Args:
+            tolerance (float): Largest allowed absolute component magnitude.
+        
+        Returns:
+            bool: True if both components are within the tolerance.
         """
     def normalize(self) -> None:
         """
-        Normalize the vector to unit length in-place.
+        Normalize this Vec2 in place.
+        """
+    def project(self, other: Vec2) -> Vec2:
+        """
+        Project this Vec2 onto another Vec2.
         
-        If the vector is zero, it remains unchanged.
+        Args:
+            other (Vec2): The vector to project onto.
+        
+        Returns:
+            Vec2: Projection of this vector onto the other vector.
+        """
+    def reflect(self, other: Vec2) -> Vec2:
+        """
+        Reflect this Vec2 across another Vec2.
+        
+        Args:
+            other (Vec2): The vector used as the reflection normal.
+        
+        Returns:
+            Vec2: Reflected vector.
+        """
+    def reject(self, other: Vec2) -> Vec2:
+        """
+        Compute the rejection of this Vec2 from another Vec2.
+        
+        Args:
+            other (Vec2): The vector defining the projection axis.
+        
+        Returns:
+            Vec2: Component of this vector orthogonal to the other vector.
         """
     def rotate(self, radians: typing.SupportsFloat) -> None:
         """
-        Rotate the vector by the given angle in radians.
+        Rotate this Vec2 in place.
         
         Args:
-            radians (float): The angle to rotate by in radians.
+            radians (float): Rotation angle in radians.
         """
     def scale_to_length(self, length: typing.SupportsFloat) -> None:
         """
-        Scale the vector to the specified length in-place.
+        Scale this Vec2 to a specific magnitude.
         
         Args:
-            length (float): The target length.
+            length (float): Target vector length.
         """
     def to_polar(self) -> PolarCoordinate:
         """
-        Convert to polar coordinates.
+        Convert this Vec2 to polar coordinates.
         
         Returns:
-            PolarCoordinate: A polar coordinate representation (angle, length).
+            PolarCoordinate: Polar representation with angle and length.
         """
     @property
     def angle(self) -> float:
         """
-        Get the angle of the vector in radians.
+        Return the vector angle in radians.
         
         Returns:
-            float: The angle from the positive x-axis to this vector.
+            float: Angle measured from the positive x-axis.
         """
     @property
     def length(self) -> float:
         """
-        Get the length (magnitude) of the vector.
+        Return the magnitude of this Vec2.
         
         Returns:
-            float: The Euclidean length of the vector.
+            float: Euclidean length of the vector.
         """
     @property
     def length_squared(self) -> float:
         """
-        Get the squared length of the vector.
+        Return the squared magnitude of this Vec2.
         
         Returns:
-            float: The squared length of the vector.
+            float: Squared Euclidean length.
         """
     @property
     def x(self) -> float:
@@ -3640,12 +3227,18 @@ class Vec2:
     @property
     def xx(self) -> Vec2:
         """
-        Get a new Vec2 with both components set to x.
+        Return a Vec2 with both components set to x.
+        
+        Returns:
+            Vec2: Vector composed of (x, x).
         """
     @property
     def xy(self) -> Vec2:
         """
-        Get or set the (x, y) components as a new Vec2.
+        Access or assign the (x, y) components as a Vec2.
+        
+        Returns:
+            Vec2: Current (x, y) components.
         """
     @xy.setter
     def xy(self, arg1: typing.SupportsFloat, arg2: typing.SupportsFloat) -> None:
@@ -3661,7 +3254,10 @@ class Vec2:
     @property
     def yx(self) -> Vec2:
         """
-        Get or set the (y, x) components as a new Vec2.
+        Access or assign the (y, x) components as a Vec2.
+        
+        Returns:
+            Vec2: Current (y, x) components.
         """
     @yx.setter
     def yx(self, arg1: typing.SupportsFloat, arg2: typing.SupportsFloat) -> None:
@@ -3669,19 +3265,21 @@ class Vec2:
     @property
     def yy(self) -> Vec2:
         """
-        Get a new Vec2 with both components set to y.
+        Return a Vec2 with both components set to y.
+        
+        Returns:
+            Vec2: Vector composed of (y, y).
         """
 def init() -> None:
     """
-    Initialize the Kraken Engine.
+    Initialize the Kraken engine subsystems.
     
-    This sets up internal systems and must be called before using any other features.
+    Raises:
+        RuntimeError: If SDL initialization fails.
     """
 def quit() -> None:
     """
-    Shut down the Kraken Engine and clean up resources.
-    
-    Call this once you're done using the engine to avoid memory leaks.
+    Tear down the Kraken engine subsystems.
     """
 AUDIO_DEVICE_ADDED: EventType  # value = <EventType.AUDIO_DEVICE_ADDED: 4352>
 AUDIO_DEVICE_FORMAT_CHANGED: EventType  # value = <EventType.AUDIO_DEVICE_FORMAT_CHANGED: 4354>

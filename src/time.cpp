@@ -205,73 +205,6 @@ void _tick()
 
 void _bind(py::module_& module)
 {
-    py::classh<Timer>(module, "Timer", R"doc(
-A timer for tracking countdown durations with pause/resume functionality.
-
-The Timer class provides a simple countdown timer that can be started, paused,
-and resumed. It's useful for implementing time-based game mechanics like
-cooldowns, temporary effects, or timed events.
-    )doc")
-        .def(py::init<double>(), py::arg("duration"), R"doc(
-Create a new Timer instance with the specified duration.
-
-Args:
-    duration (float): The countdown duration in seconds. Must be greater than 0.
-
-Raises:
-    RuntimeError: If duration is less than or equal to 0.
-        )doc")
-        .def("start", &Timer::start, R"doc(
-Start or restart the timer countdown.
-
-This begins the countdown from the full duration. If the timer was previously
-started, this will reset it back to the beginning.
-        )doc")
-        .def("pause", &Timer::pause, R"doc(
-Pause the timer countdown.
-
-The timer will stop counting down but retain its current state. Use resume()
-to continue the countdown from where it was paused. Has no effect if the
-timer is not started or already paused.
-        )doc")
-        .def("resume", &Timer::resume, R"doc(
-Resume a paused timer countdown.
-
-Continues the countdown from where it was paused. Has no effect if the
-timer is not started or not currently paused.
-        )doc")
-        .def("reset", &Timer::reset, R"doc(
-Reset the timer to its initial state.
-
-Stops the timer and resets it back to its initial, unstarted state.
-The timer can be started again with `start()` after being reset.
-        )doc")
-
-        .def_property_readonly("done", &Timer::isDone, R"doc(
-bool: True if the timer has finished counting down, False otherwise.
-
-A timer is considered done when the elapsed time since start (excluding
-paused time) equals or exceeds the specified duration.
-        )doc")
-        .def_property_readonly("time_remaining", &Timer::timeRemaining, R"doc(
-float: The remaining time in seconds before the timer completes.
-
-Returns the full duration if the timer hasn't been started, or 0.0 if
-the timer has already finished.
-        )doc")
-        .def_property_readonly("elapsed_time", &Timer::elapsedTime, R"doc(
-float: The time elapsed since the timer was started, in seconds.
-
-Returns 0.0 if the timer hasn't been started. This includes time spent
-while paused, giving you the total wall-clock time since start().
-        )doc")
-        .def_property_readonly("progress", &Timer::progress, R"doc(
-float: The completion progress of the timer as a value between 0.0 and 1.0.
-
-Returns 0.0 if the timer hasn't been started, and 1.0 when the timer
-is complete. Useful for progress bars and interpolated animations.
-        )doc");
-
     auto subTime = module.def_submodule("time", "Time related functions");
 
     subTime.def("get_delta", &getDelta, R"doc(
@@ -289,10 +222,10 @@ Returns:
     subTime.def("set_max_delta", &setMaxDelta, py::arg("max_delta"), R"doc(
 Set the maximum allowed delta time between frames.
 
-Parameters:
-    max_delta (float): The maximum delta time in seconds, greater than 0.0.
-                       This is useful to prevent large delta values during
-                       frame drops or pauses that could destabilize physics or animations.
+Args:
+    max_delta (float): Maximum delta time in seconds (> 0.0).
+                       Use this to avoid large deltas during frame drops or pauses
+                       that could destabilize physics or animations.
         )doc");
 
     subTime.def("get_fps", &getFPS, R"doc(
@@ -342,6 +275,74 @@ Get the current global time scale factor.
 Returns:
     float: The current time scale factor.
         )doc");
+
+    py::classh<Timer>(module, "Timer", R"doc(
+A timer for tracking countdown durations with pause/resume functionality.
+
+The Timer class provides a simple countdown timer that can be started, paused,
+and resumed. It's useful for implementing time-based game mechanics like
+cooldowns, temporary effects, or timed events.
+    )doc")
+        .def(py::init<double>(), py::arg("duration"), R"doc(
+Create a new Timer instance with the specified duration.
+
+Args:
+    duration (float): The countdown duration in seconds. Must be greater than 0.
+
+Raises:
+    RuntimeError: If duration is less than or equal to 0.
+    )doc")
+
+        .def_property_readonly("done", &Timer::isDone, R"doc(
+bool: True if the timer has finished counting down, False otherwise.
+
+A timer is considered done when the elapsed time since start (excluding
+paused time) equals or exceeds the specified duration.
+    )doc")
+        .def_property_readonly("time_remaining", &Timer::timeRemaining, R"doc(
+float: The remaining time in seconds before the timer completes.
+
+Returns the full duration if the timer hasn't been started, or 0.0 if
+the timer has already finished.
+    )doc")
+        .def_property_readonly("elapsed_time", &Timer::elapsedTime, R"doc(
+float: The time elapsed since the timer was started, in seconds.
+
+Returns 0.0 if the timer hasn't been started. This includes time spent
+while paused, giving you the total wall-clock time since start().
+    )doc")
+        .def_property_readonly("progress", &Timer::progress, R"doc(
+float: The completion progress of the timer as a value between 0.0 and 1.0.
+
+Returns 0.0 if the timer hasn't been started, and 1.0 when the timer
+is complete. Useful for progress bars and interpolated animations.
+    )doc")
+
+        .def("start", &Timer::start, R"doc(
+Start or restart the timer countdown.
+
+This begins the countdown from the full duration. If the timer was previously
+started, this will reset it back to the beginning.
+    )doc")
+        .def("pause", &Timer::pause, R"doc(
+Pause the timer countdown.
+
+The timer will stop counting down but retain its current state. Use resume()
+to continue the countdown from where it was paused. Has no effect if the
+timer is not started or already paused.
+    )doc")
+        .def("resume", &Timer::resume, R"doc(
+Resume a paused timer countdown.
+
+Continues the countdown from where it was paused. Has no effect if the
+timer is not started or not currently paused.
+    )doc")
+        .def("reset", &Timer::reset, R"doc(
+Reset the timer to its initial state.
+
+Stops the timer and resets it back to its initial, unstarted state.
+The timer can be started again with `start()` after being reset.
+    )doc");
 }
 } // namespace time
 } // namespace kn

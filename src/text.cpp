@@ -209,6 +209,37 @@ Args:
 Raises:
     RuntimeError: If text creation fails.
     )doc")
+
+        .def_property("wrap_width", &Text::getWrapWidth, &Text::setWrapWidth, R"doc(
+Get or set the wrap width in pixels for text wrapping.
+
+Set to 0 to disable wrapping. Negative values are clamped to 0.
+        )doc")
+        .def_property("text", &Text::getText, &Text::setText, R"doc(
+Get or set the text string to be rendered.
+        )doc")
+        .def_property("color", &Text::getColor, &Text::setColor, R"doc(
+Get or set the color of the rendered text.
+        )doc")
+        .def_property_readonly("size", &Text::getSize, R"doc(
+Get the size (width, height) of the current text as a Vec2.
+
+Returns:
+    Vec2: The text dimensions.
+        )doc")
+        .def_property_readonly("width", &Text::getWidth, R"doc(
+Get the width in pixels of the current text.
+
+Returns:
+    int: The text width.
+        )doc")
+        .def_property_readonly("height", &Text::getHeight, R"doc(
+Get the height in pixels of the current text.
+
+Returns:
+    int: The text height.
+        )doc")
+
         .def(
             "draw",
             [](const Text& self, const py::object& posObj, const Anchor anchor) -> void
@@ -245,36 +276,7 @@ Get the bounding rectangle of the current text.
 
 Returns:
     Rect: A rectangle with x=0, y=0, and width/height of the text.
-        )doc")
-        .def_property("wrap_width", &Text::getWrapWidth, &Text::setWrapWidth, R"doc(
-Get or set the wrap width in pixels for text wrapping.
-
-Set to 0 to disable wrapping. Negative values are clamped to 0.
-        )doc")
-        .def_property("text", &Text::getText, &Text::setText, R"doc(
-Get or set the text string to be rendered.
-        )doc")
-        .def_property("color", &Text::getColor, &Text::setColor, R"doc(
-Get or set the color of the rendered text.
-        )doc")
-        .def_property_readonly("size", &Text::getSize, R"doc(
-Get the size (width, height) of the current text as a Vec2.
-
-Returns:
-    Vec2: The text dimensions.
-        )doc")
-        .def_property_readonly("width", &Text::getWidth, R"doc(
-Get the width in pixels of the current text.
-
-Returns:
-    int: The text width.
-        )doc")
-        .def_property_readonly("height", &Text::getHeight, R"doc(
-Get the height in pixels of the current text.
-
-Returns:
-    int: The text height.
-        )doc");
+    )doc");
 }
 } // namespace text
 } // namespace kn

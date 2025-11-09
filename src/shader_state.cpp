@@ -164,9 +164,9 @@ void _bind(py::module_& module)
                             "Encapsulates a GPU shader and its associated render state.")
         .def(py::init<const std::string&, Uint32, Uint32>(), py::arg("fragment_file_path"),
              py::arg("uniform_buffer_count") = 0, py::arg("sampler_count") = 1, R"doc(
-Creates a ShaderState from the specified fragment shader file.
+Create a ShaderState from the specified fragment shader file.
 
-Parameters:
+Args:
     fragment_file_path (str): Path to the fragment shader file.
     uniform_buffer_count (int, optional): Number of uniform buffers used by the shader. Default is 0.
     sampler_count (int, optional): Number of samplers used by the shader. Default is 1.
@@ -192,11 +192,11 @@ Unbinds the current shader state, reverting to the default render state.
                 self.setUniform(binding, ptr, nbytes);
             },
             py::arg("binding"), py::arg("data"), R"doc(
-Sets uniform data for the fragment shader at the specified binding point.
+Set uniform data for the fragment shader at the specified binding point.
 
-Parameters:
-    binding (int): The uniform buffer binding index.
-    data (buffer): A buffer or bytes object containing the uniform data to upload.
+Args:
+    binding (int): Uniform buffer binding index.
+    data (buffer): Buffer or bytes object containing the uniform data to upload.
             )doc");
 }
 } // namespace shader_state

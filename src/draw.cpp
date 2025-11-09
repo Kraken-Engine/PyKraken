@@ -16,104 +16,8 @@ static Uint64 packPoint(int x, int y);
 
 namespace kn::draw
 {
-static void _circleThin(SDL_Renderer* renderer, Vec2 center, int radius);
-static void _circle(SDL_Renderer* renderer, Vec2 center, int radius, int thickness);
-
-void _bind(py::module_& module)
-{
-    auto subDraw = module.def_submodule("draw", "Functions for drawing shape objects");
-
-    subDraw.def("point", &point, py::arg("point"), py::arg("color"), R"doc(
-Draw a single point to the renderer.
-
-Args:
-    point (Vec2): The position of the point.
-    color (Color): The color of the point.
-
-Raises:
-    RuntimeError: If point rendering fails.
-    )doc");
-
-    subDraw.def("points", &points, py::arg("points"), py::arg("color"), R"doc(
-Batch draw an array of points to the renderer.
-
-Args:
-    points (Sequence[Vec2]): The points to batch draw.
-    color (Color): The color of the points.
-
-Raises:
-    RuntimeError: If point rendering fails.
-    )doc");
-
-    subDraw.def("points_from_ndarray", &pointsFromNDArray, py::arg("points"), py::arg("color"),
-                R"doc(
-Batch draw points from a NumPy array.
-
-This fast path accepts a contiguous NumPy array of shape (N,2) (dtype float64) and
-reads coordinates directly with minimal overhead. Use this to measure the best-case
-zero-copy/buffer-backed path.
-
-Args:
-    points (numpy.ndarray): Array with shape (N,2) containing x,y coordinates.
-    color (Color): The color of the points.
-
-Raises:
-    ValueError: If the array shape is not (N,2).
-    RuntimeError: If point rendering fails.
-    )doc");
-
-    subDraw.def("circle", &circle, py::arg("circle"), py::arg("color"), py::arg("thickness") = 0,
-                R"doc(
-Draw a circle to the renderer.
-
-Args:
-    circle (Circle): The circle to draw.
-    color (Color): The color of the circle.
-    thickness (int, optional): The line thickness. If 0 or >= radius, draws filled circle.
-                              Defaults to 0 (filled).
-    )doc");
-
-    subDraw.def("line", &line, py::arg("line"), py::arg("color"), py::arg("thickness") = 1,
-                R"doc(
-Draw a line to the renderer.
-
-Args:
-    line (Line): The line to draw.
-    color (Color): The color of the line.
-    thickness (int, optional): The line thickness in pixels. Defaults to 1.
-    )doc");
-
-    subDraw.def("rect", &rect, py::arg("rect"), py::arg("color"), py::arg("thickness") = 0,
-                R"doc(
-Draw a rectangle to the renderer.
-
-Args:
-    rect (Rect): The rectangle to draw.
-    color (Color): The color of the rectangle.
-    thickness (int, optional): The border thickness. If 0 or >= half width/height, draws filled rectangle. Defaults to 0 (filled).
-    )doc");
-
-    subDraw.def("rects", &rects, py::arg("rects"), py::arg("color"), py::arg("thickness") = 0,
-                R"doc(
-Batch draw an array of rectangles to the renderer.
-
-Args:
-    rects (Sequence[Rect]): The rectangles to batch draw.
-    color (Color): The color of the rectangles.
-    thickness (int, optional): The border thickness of the rectangles. If 0 or >= half width/height, draws filled rectangles. Defaults to 0 (filled).
-    )doc");
-
-    subDraw.def("polygon", &polygon, py::arg("polygon"), py::arg("color"),
-                py::arg("filled") = false, R"doc(
-Draw a polygon to the renderer.
-
-Args:
-    polygon (Polygon): The polygon to draw.
-    color (Color): The color of the polygon.
-    filled (bool, optional): Whether to draw a filled polygon or just the outline.
-                             Defaults to False (outline). Works with both convex and concave polygons.
-    )doc");
-}
+static void _circleThin(SDL_Renderer* renderer, const Vec2& center, int radius);
+static void _circle(SDL_Renderer* renderer, const Vec2& center, int radius, int thickness);
 
 void point(const Vec2& point, const Color& color)
 {
@@ -333,7 +237,7 @@ void polygon(const Polygon& polygon, const Color& color, const bool filled)
                     color.g, color.b, color.a);
 }
 
-void _circleThin(SDL_Renderer* renderer, Vec2 center, const int radius)
+void _circleThin(SDL_Renderer* renderer, const Vec2& center, const int radius)
 {
     int f = 1 - radius;
     int ddF_x = 0;
@@ -343,7 +247,6 @@ void _circleThin(SDL_Renderer* renderer, Vec2 center, const int radius)
 
     std::set<Uint64> pointSet;
 
-    center -= camera::getActivePos();
     auto emit = [&](const int dx, const int dy)
     {
         pointSet.insert(
@@ -385,10 +288,9 @@ void _circleThin(SDL_Renderer* renderer, Vec2 center, const int radius)
     SDL_RenderPoints(renderer, points.data(), static_cast<int>(points.size()));
 }
 
-void _circle(SDL_Renderer* renderer, Vec2 center, const int radius, const int thickness)
+void _circle(SDL_Renderer* renderer, const Vec2& center, const int radius, const int thickness)
 {
     const int innerRadius = thickness <= 0 || thickness >= radius ? -1 : radius - thickness;
-    center -= camera::getActivePos();
 
     auto hLine = [&](const int x1, const int y, const int x2)
     {
@@ -458,6 +360,102 @@ void _circle(SDL_Renderer* renderer, Vec2 center, const int radius, const int th
                 hLine(snd + 1, y, outer.second);
         }
     }
+}
+
+void _bind(py::module_& module)
+{
+    auto subDraw = module.def_submodule("draw", "Functions for drawing shape objects");
+
+    subDraw.def("point", &point, py::arg("point"), py::arg("color"), R"doc(
+Draw a single point to the renderer.
+
+Args:
+    point (Vec2): The position of the point.
+    color (Color): The color of the point.
+
+Raises:
+    RuntimeError: If point rendering fails.
+    )doc");
+
+    subDraw.def("points", &points, py::arg("points"), py::arg("color"), R"doc(
+Batch draw an array of points to the renderer.
+
+Args:
+    points (Sequence[Vec2]): The points to batch draw.
+    color (Color): The color of the points.
+
+Raises:
+    RuntimeError: If point rendering fails.
+    )doc");
+
+    subDraw.def("points_from_ndarray", &pointsFromNDArray, py::arg("points"), py::arg("color"),
+                R"doc(
+Batch draw points from a NumPy array.
+
+This fast path accepts a contiguous NumPy array of shape (N,2) (dtype float64) and
+reads coordinates directly with minimal overhead. Use this to measure the best-case
+zero-copy/buffer-backed path.
+
+Args:
+    points (numpy.ndarray): Array with shape (N,2) containing x,y coordinates.
+    color (Color): The color of the points.
+
+Raises:
+    ValueError: If the array shape is not (N,2).
+    RuntimeError: If point rendering fails.
+    )doc");
+
+    subDraw.def("circle", &circle, py::arg("circle"), py::arg("color"), py::arg("thickness") = 0,
+                R"doc(
+Draw a circle to the renderer.
+
+Args:
+    circle (Circle): The circle to draw.
+    color (Color): The color of the circle.
+    thickness (int, optional): The line thickness. If 0 or >= radius, draws filled circle.
+                              Defaults to 0 (filled).
+    )doc");
+
+    subDraw.def("line", &line, py::arg("line"), py::arg("color"), py::arg("thickness") = 1,
+                R"doc(
+Draw a line to the renderer.
+
+Args:
+    line (Line): The line to draw.
+    color (Color): The color of the line.
+    thickness (int, optional): The line thickness in pixels. Defaults to 1.
+    )doc");
+
+    subDraw.def("rect", &rect, py::arg("rect"), py::arg("color"), py::arg("thickness") = 0,
+                R"doc(
+Draw a rectangle to the renderer.
+
+Args:
+    rect (Rect): The rectangle to draw.
+    color (Color): The color of the rectangle.
+    thickness (int, optional): The border thickness. If 0 or >= half width/height, draws filled rectangle. Defaults to 0 (filled).
+    )doc");
+
+    subDraw.def("rects", &rects, py::arg("rects"), py::arg("color"), py::arg("thickness") = 0,
+                R"doc(
+Batch draw an array of rectangles to the renderer.
+
+Args:
+    rects (Sequence[Rect]): The rectangles to batch draw.
+    color (Color): The color of the rectangles.
+    thickness (int, optional): The border thickness of the rectangles. If 0 or >= half width/height, draws filled rectangles. Defaults to 0 (filled).
+    )doc");
+
+    subDraw.def("polygon", &polygon, py::arg("polygon"), py::arg("color"),
+                py::arg("filled") = false, R"doc(
+Draw a polygon to the renderer.
+
+Args:
+    polygon (Polygon): The polygon to draw.
+    color (Color): The color of the polygon.
+    filled (bool, optional): Whether to draw a filled polygon or just the outline.
+                             Defaults to False (outline). Works with both convex and concave polygons.
+    )doc");
 }
 } // namespace kn::draw
 

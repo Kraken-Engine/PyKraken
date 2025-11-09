@@ -220,29 +220,47 @@ double angleBetween(const Vec2& a, const Vec2& b)
 
 void _bind(py::module_& module)
 {
-    auto vecPyClass = py::classh<Vec2>(module, "Vec2", R"doc(
-Represents a 2D vector with x and y components.
+    auto vec2PyClass = py::classh<Vec2>(module, "Vec2", R"doc(
+Vec2 represents a 2D vector.
 
-Vec2 is used for positions, directions, velocities, and other 2D vector operations.
-Supports arithmetic operations, comparisons, and various mathematical functions.
-    )doc");
+Attributes:
+    x (float): Horizontal component.
+    y (float): Vertical component.
+
+Methods:
+    copy: Return a duplicated Vec2.
+    is_zero: Test whether components are near zero.
+    rotate: Rotate the vector in place.
+    to_polar: Convert the vector to a PolarCoordinate.
+    scale_to_length: Scale the vector to a specific length.
+    project: Project onto another Vec2.
+    reject: Remove the projection onto another Vec2.
+    reflect: Reflect across another Vec2.
+    normalize: Normalize the vector in place.
+    distance_to: Measure distance to another Vec2.
+    distance_squared_to: Measure squared distance to another Vec2.
+        )doc");
 
     // -------------- PolarCoordinate ----------------
     py::classh<PolarCoordinate>(module, "PolarCoordinate", R"doc(
-Represents a polar coordinate with angle and radius components.
+PolarCoordinate models a polar coordinate pair.
 
-A polar coordinate system uses an angle (in radians) and radius to define a position
-relative to a fixed origin point.
-    )doc")
+Attributes:
+    angle (float): Angle in radians.
+    radius (float): Distance from origin.
+
+Methods:
+    to_cartesian: Convert the coordinate to a Vec2.
+        )doc")
         .def(py::init(), R"doc(
-Create a PolarCoordinate with default values (0.0, 0.0).
+Initialize a PolarCoordinate with zero angle and radius.
         )doc")
         .def(py::init<double, double>(), py::arg("angle"), py::arg("radius"), R"doc(
-Create a PolarCoordinate from angle and radius.
+Initialize a PolarCoordinate from explicit values.
 
 Args:
-    angle (float): The angle in radians.
-    radius (float): The radius/distance from origin.
+    angle (float): Angle in radians.
+    radius (float): Distance from the origin.
         )doc")
         .def(py::init(
                  [](const py::sequence& s) -> PolarCoordinate
@@ -252,77 +270,45 @@ Args:
                      return {s[0].cast<double>(), s[1].cast<double>()};
                  }),
              R"doc(
-Create a PolarCoordinate from a sequence of two elements.
+Initialize a PolarCoordinate from a two-item sequence.
 
 Args:
-    sequence: A sequence (list, tuple) containing [angle, radius].
+    sequence (Sequence[float]): Iterable containing [angle, radius].
 
 Raises:
-    RuntimeError: If sequence doesn't contain exactly 2 elements.
+    RuntimeError: If the sequence does not contain exactly two elements.
         )doc")
 
-        .def("to_cartesian", &PolarCoordinate::toCartesian, R"doc(
-Convert polar coordinates to Cartesian coordinates.
-
-Returns:
-    Vec2: The equivalent Cartesian coordinates as a Vec2.
-        )doc")
-
-        .def("__eq__", &PolarCoordinate::operator==, R"doc(
-Check if two PolarCoordinates are equal.
-
-Args:
-    other (PolarCoordinate): The other PolarCoordinate to compare.
-
-Returns:
-    bool: True if both angle and radius are equal.
-        )doc")
-        .def("__ne__", &PolarCoordinate::operator!=, R"doc(
-Check if two PolarCoordinates are not equal.
-
-Args:
-    other (PolarCoordinate): The other PolarCoordinate to compare.
-
-Returns:
-    bool: True if angle or radius are different.
-        )doc")
-
+        // Properties
         .def_readwrite("angle", &PolarCoordinate::angle, R"doc(
 The angle component in radians.
         )doc")
         .def_readwrite("radius", &PolarCoordinate::radius, R"doc(
 The radius component (distance from origin).
         )doc")
-        .def(
-            "__str__", [](const PolarCoordinate& p) -> std::string
-            { return "(" + std::to_string(p.angle) + ", " + std::to_string(p.radius) + ")"; },
-            R"doc(
-Return a human-readable string representation.
+
+        // Methods
+        .def("to_cartesian", &PolarCoordinate::toCartesian, R"doc(
+Convert this PolarCoordinate to a Vec2.
 
 Returns:
-    str: String in format "(angle, radius)".
+    Vec2: Cartesian representation of this coordinate.
         )doc")
-        .def(
-            "__repr__",
-            [](const PolarCoordinate& p) -> std::string
-            {
-                return "PolarCoordinate(" + std::to_string(p.angle) + ", " +
-                       std::to_string(p.radius) + ")";
-            },
-            R"doc(
-Return a string suitable for debugging and recreation.
 
-Returns:
-    str: String in format "PolarCoordinate(angle, radius)".
-        )doc")
+        // Dunder methods
+        .def("__eq__", &PolarCoordinate::operator==)
+        .def("__ne__", &PolarCoordinate::operator!=)
+        .def("__str__", [](const PolarCoordinate& p) -> std::string
+             { return "(" + std::to_string(p.angle) + ", " + std::to_string(p.radius) + ")"; })
+        .def("__repr__",
+             [](const PolarCoordinate& p) -> std::string
+             {
+                 return "PolarCoordinate(" + std::to_string(p.angle) + ", " +
+                        std::to_string(p.radius) + ")";
+             })
         .def(
             "__iter__", [](const PolarCoordinate& p) -> py::iterator
-            { return py::make_iterator(&p.angle, &p.angle + 2); }, py::keep_alive<0, 1>(), R"doc(
-Return an iterator over (angle, radius).
-
-Returns:
-    iterator: Iterator that yields angle first, then radius.
-        )doc")
+            { return py::make_iterator(&p.angle, &p.angle + 2); }, py::keep_alive<0, 1>())
         .def(
             "__getitem__",
             [](const PolarCoordinate& p, const size_t i) -> double
@@ -333,18 +319,7 @@ Returns:
                     return p.radius;
                 throw py::index_error("Index out of range");
             },
-            py::arg("index"), R"doc(
-Access polar coordinate components by index.
-
-Args:
-    index (int): Index (0=angle, 1=radius).
-
-Returns:
-    float: The component value.
-
-Raises:
-    IndexError: If index is not 0 or 1.
-        )doc")
+            py::arg("index"))
         .def(
             "__setitem__",
             [](PolarCoordinate& p, const size_t i, const double value) -> void
@@ -356,57 +331,35 @@ Raises:
                 else
                     throw py::index_error("Index out of range");
             },
-            py::arg("index"), py::arg("value"), R"doc(
-Set polar coordinate components by index.
-
-Args:
-    index (int): Index (0=angle, 1=radius).
-    value (float): The new value to set.
-
-Raises:
-    IndexError: If index is not 0 or 1.
-        )doc")
-        .def(
-            "__len__", [](const PolarCoordinate&) -> int { return 2; }, R"doc(
-Return the number of components (always 2).
-
-Returns:
-    int: Always returns 2 (angle and radius).
-        )doc")
-        .def(
-            "__hash__",
-            [](const PolarCoordinate& p) -> size_t
-            {
-                const size_t ha = std::hash<double>{}(p.angle);
-                const size_t hr = std::hash<double>{}(p.radius);
-                return ha ^ hr << 1;
-            },
-            R"doc(
-Return a hash value for the PolarCoordinate.
-
-Returns:
-    int: Hash value based on angle and radius.
-        )doc");
+            py::arg("index"), py::arg("value"))
+        .def("__len__", [](const PolarCoordinate&) -> int { return 2; })
+        .def("__hash__",
+             [](const PolarCoordinate& p) -> size_t
+             {
+                 const size_t ha = std::hash<double>{}(p.angle);
+                 const size_t hr = std::hash<double>{}(p.radius);
+                 return ha ^ hr << 1;
+             });
     py::implicitly_convertible<py::sequence, PolarCoordinate>();
 
     // -------------- Vec2 ----------------
 
-    vecPyClass
+    vec2PyClass
         .def(py::init(), R"doc(
-Create a zero vector (0, 0).
+Initialize a Vec2 with zeroed components.
         )doc")
         .def(py::init<double>(), py::arg("value"), R"doc(
-Create a Vec2 with both x and y set to the same value.
+Initialize a Vec2 with identical x and y values.
 
 Args:
-    value (float): Value to set for both x and y components.
+    value (float): Value assigned to both components.
         )doc")
         .def(py::init<double, double>(), py::arg("x"), py::arg("y"), R"doc(
-Create a Vec2 with given x and y values.
+Initialize a Vec2 with explicit component values.
 
 Args:
-    x (float): The x component.
-    y (float): The y component.
+    x (float): Horizontal component.
+    y (float): Vertical component.
         )doc")
         .def(py::init(
                  [](const py::sequence& s) -> Vec2
@@ -416,48 +369,174 @@ Args:
                      return {s[0].cast<double>(), s[1].cast<double>()};
                  }),
              R"doc(
-Create a Vec2 from a sequence of two elements.
+Initialize a Vec2 from a two-item sequence.
 
 Args:
-    sequence: A sequence (list, tuple) containing [x, y].
+    sequence (Sequence[float]): Iterable containing [x, y].
 
 Raises:
-    RuntimeError: If sequence doesn't contain exactly 2 elements.
+    RuntimeError: If the sequence does not contain exactly two elements.
         )doc")
 
-        // Fields
+        // Properties
         .def_readwrite("x", &Vec2::x, R"doc(
 The x component of the vector.
         )doc")
         .def_readwrite("y", &Vec2::y, R"doc(
 The y component of the vector.
         )doc")
-
-        // Magic methods
-        .def(
-            "__str__", [](const Vec2& v) -> std::string
-            { return "<" + std::to_string(v.x) + ", " + std::to_string(v.y) + ">"; }, R"doc(
-Return a human-readable string representation.
+        .def_property_readonly("length", &Vec2::getLength, R"doc(
+Return the magnitude of this Vec2.
 
 Returns:
-    str: String in format "<x, y>".
+    float: Euclidean length of the vector.
         )doc")
-        .def(
-            "__repr__", [](const Vec2& v) -> std::string
-            { return "Vec2(" + std::to_string(v.x) + ", " + std::to_string(v.y) + ")"; }, R"doc(
-Return a string suitable for debugging and recreation.
+        .def_property_readonly("length_squared", &Vec2::getLengthSquared, R"doc(
+Return the squared magnitude of this Vec2.
 
 Returns:
-    str: String in format "Vec2(x, y)".
+    float: Squared Euclidean length.
         )doc")
+        .def_property_readonly("angle", &Vec2::getAngle, R"doc(
+Return the vector angle in radians.
+
+Returns:
+    float: Angle measured from the positive x-axis.
+        )doc")
+        .def_property_readonly(
+            "xx", [](const Vec2& self) -> Vec2 { return {self.x, self.x}; },
+            R"doc(
+Return a Vec2 with both components set to x.
+
+Returns:
+    Vec2: Vector composed of (x, x).
+        )doc")
+        .def_property(
+            "xy", [](const Vec2& self) -> Vec2 { return {self.x, self.y}; },
+            [](Vec2& self, const double lhs, const double rhs)
+            {
+                self.x = lhs;
+                self.y = rhs;
+            },
+            R"doc(
+Access or assign the (x, y) components as a Vec2.
+
+Returns:
+    Vec2: Current (x, y) components.
+        )doc")
+        .def_property(
+            "yx", [](const Vec2& self) -> Vec2 { return {self.y, self.x}; },
+            [](Vec2& self, const double lhs, const double rhs)
+            {
+                self.x = lhs;
+                self.y = rhs;
+            },
+            R"doc(
+Access or assign the (y, x) components as a Vec2.
+
+Returns:
+    Vec2: Current (y, x) components.
+        )doc")
+        .def_property_readonly(
+            "yy", [](const Vec2& self) -> Vec2 { return {self.y, self.y}; },
+            R"doc(
+Return a Vec2 with both components set to y.
+
+Returns:
+    Vec2: Vector composed of (y, y).
+        )doc")
+
+        // Methods
+        .def("copy", &Vec2::copy, R"doc(
+Return a copy of this Vec2.
+
+Returns:
+    Vec2: A duplicated vector with the same components.
+        )doc")
+        .def("is_zero", &Vec2::isZero, py::arg("tolerance") = 1e-8, R"doc(
+Determine whether this Vec2 is effectively zero.
+
+Args:
+    tolerance (float): Largest allowed absolute component magnitude.
+
+Returns:
+    bool: True if both components are within the tolerance.
+        )doc")
+        .def("project", &Vec2::project, py::arg("other"), R"doc(
+Project this Vec2 onto another Vec2.
+
+Args:
+    other (Vec2): The vector to project onto.
+
+Returns:
+    Vec2: Projection of this vector onto the other vector.
+        )doc")
+        .def("reject", &Vec2::reject, py::arg("other"), R"doc(
+Compute the rejection of this Vec2 from another Vec2.
+
+Args:
+    other (Vec2): The vector defining the projection axis.
+
+Returns:
+    Vec2: Component of this vector orthogonal to the other vector.
+        )doc")
+        .def("reflect", &Vec2::reflect, py::arg("other"), R"doc(
+Reflect this Vec2 across another Vec2.
+
+Args:
+    other (Vec2): The vector used as the reflection normal.
+
+Returns:
+    Vec2: Reflected vector.
+        )doc")
+        .def("rotate", &Vec2::rotate, py::arg("radians"), R"doc(
+Rotate this Vec2 in place.
+
+Args:
+    radians (float): Rotation angle in radians.
+        )doc")
+        .def("normalize", &Vec2::normalize, R"doc(
+Normalize this Vec2 in place.
+        )doc")
+        .def("scale_to_length", &Vec2::scaleToLength, py::arg("length"), R"doc(
+Scale this Vec2 to a specific magnitude.
+
+Args:
+    length (float): Target vector length.
+        )doc")
+        .def("distance_to", &Vec2::distanceTo, py::arg("other"), R"doc(
+Compute the Euclidean distance to another Vec2.
+
+Args:
+    other (Vec2): Comparison vector.
+
+Returns:
+    float: Distance between the vectors.
+        )doc")
+        .def("distance_squared_to", &Vec2::distanceSquaredTo, py::arg("other"), R"doc(
+Compute the squared distance to another Vec2.
+
+Args:
+    other (Vec2): Comparison vector.
+
+Returns:
+    float: Squared distance between the vectors.
+        )doc")
+        .def("to_polar", &Vec2::toPolar, R"doc(
+Convert this Vec2 to polar coordinates.
+
+Returns:
+    PolarCoordinate: Polar representation with angle and length.
+        )doc")
+
+        // Dunder methods
+        .def("__str__", [](const Vec2& v) -> std::string
+             { return "<" + std::to_string(v.x) + ", " + std::to_string(v.y) + ">"; })
+        .def("__repr__", [](const Vec2& v) -> std::string
+             { return "Vec2(" + std::to_string(v.x) + ", " + std::to_string(v.y) + ")"; })
         .def(
             "__iter__", [](const Vec2& v) -> py::iterator
-            { return py::make_iterator(&v.x, &v.x + 2); }, py::keep_alive<0, 1>(), R"doc(
-Return an iterator over (x, y).
-
-Returns:
-    iterator: Iterator that yields x first, then y.
-        )doc")
+            { return py::make_iterator(&v.x, &v.x + 2); }, py::keep_alive<0, 1>())
         .def(
             "__getitem__",
             [](const Vec2& v, const size_t i) -> double
@@ -469,18 +548,7 @@ Returns:
 
                 throw py::index_error("Index out of range");
             },
-            py::arg("index"), R"doc(
-Access vector components by index.
-
-Args:
-    index (int): Index (0=x, 1=y).
-
-Returns:
-    float: The component value.
-
-Raises:
-    IndexError: If index is not 0 or 1.
-        )doc")
+            py::arg("index"))
         .def(
             "__setitem__",
             [](Vec2& v, const size_t i, const double value) -> void
@@ -492,309 +560,43 @@ Raises:
                 else
                     throw py::index_error("Index out of range");
             },
-            py::arg("index"), py::arg("value"), R"doc(
-Set vector components by index.
+            py::arg("index"), py::arg("value"))
+        .def("__len__", [](const Vec2&) -> int { return 2; })
 
-Args:
-    index (int): Index (0=x, 1=y).
-    value (float): The new value to set.
-
-Raises:
-    IndexError: If index is not 0 or 1.
-        )doc")
-        .def(
-            "__len__", [](const Vec2&) -> int { return 2; }, R"doc(
-Return the number of components (always 2).
-
-Returns:
-    int: Always returns 2 (x and y).
-        )doc")
-
-        // Arithmetic operators
-        .def("__add__", &Vec2::operator+, py::arg("other"), R"doc(
-Add another Vec2 to this Vec2.
-
-Args:
-    other (Vec2): The Vec2 to add.
-
-Returns:
-    Vec2: A new Vec2 with the result of the addition.
-        )doc")
-        .def("__radd__", &Vec2::operator+, py::arg("other"), R"doc(
-Right-hand addition (other + self).
-
-Args:
-    other (Vec2): The Vec2 to add.
-
-Returns:
-    Vec2: A new Vec2 with the result of the addition.
-        )doc")
-        .def("__iadd__", &Vec2::operator+=, py::arg("other"), R"doc(
-In-place addition (self += other).
-
-Args:
-    other (Vec2): The Vec2 to add.
-
-Returns:
-    Vec2: Reference to self after modification.
-        )doc")
-
+        // Arithmetic dunder methods
+        .def("__add__", &Vec2::operator+, py::arg("other"))
+        .def("__radd__", &Vec2::operator+, py::arg("other"))
+        .def("__iadd__", &Vec2::operator+=, py::arg("other"))
         .def("__sub__", py::overload_cast<const Vec2&>(&Vec2::operator-, py::const_),
-             py::arg("other"), R"doc(
-Subtract another Vec2 from this Vec2.
-
-Args:
-    other (Vec2): The Vec2 to subtract.
-
-Returns:
-    Vec2: A new Vec2 with the result of the subtraction.
-        )doc")
+             py::arg("other"))
         .def(
             "__rsub__", [](const Vec2& self, const Vec2& other) -> Vec2 { return other - self; },
-            py::arg("other"), R"doc(
-Right-hand subtraction (other - self).
-
-Args:
-    other (Vec2): The Vec2 to subtract from.
-
-Returns:
-    Vec2: A new Vec2 with the result of the subtraction.
-        )doc")
-        .def("__isub__", &Vec2::operator-=, py::arg("other"), R"doc(
-In-place subtraction (self -= other).
-
-Args:
-    other (Vec2): The Vec2 to subtract.
-
-Returns:
-    Vec2: Reference to self after modification.
-        )doc")
-
-        .def("__neg__", py::overload_cast<>(&Vec2::operator-, py::const_), R"doc(
-Return the negation of this vector (-self).
-
-Returns:
-    Vec2: A new Vec2 with negated x and y components.
-        )doc")
-        .def(
-            "__bool__", [](const Vec2& v) -> bool { return !v.isZero(); }, R"doc(
-Check if the vector is not zero.
-
-Returns:
-    bool: True if the vector is not zero, False if it is zero.
-        )doc")
-
-        .def("__truediv__", &Vec2::operator/, py::arg("scalar"), R"doc(
-Divide the vector by a scalar value.
-
-Args:
-    scalar (float): The scalar to divide by.
-
-Returns:
-    Vec2: A new Vec2 with divided components.
-        )doc")
-        .def("__itruediv__", &Vec2::operator/=, py::arg("scalar"), R"doc(
-In-place division by a scalar value (self /= scalar).
-
-Args:
-    scalar (float): The scalar to divide by.
-
-Returns:
-    Vec2: Reference to self after modification.
-        )doc")
-
-        .def("__mul__", &Vec2::operator*, py::arg("scalar"), R"doc(
-Multiply the vector by a scalar value.
-
-Args:
-    scalar (float): The scalar to multiply by.
-
-Returns:
-    Vec2: A new Vec2 with multiplied components.
-        )doc")
+            py::arg("other"))
+        .def("__isub__", &Vec2::operator-=, py::arg("other"))
+        .def("__neg__", py::overload_cast<>(&Vec2::operator-, py::const_))
+        .def("__bool__", [](const Vec2& v) -> bool { return !v.isZero(); })
+        .def("__truediv__", &Vec2::operator/, py::arg("scalar"))
+        .def("__itruediv__", &Vec2::operator/=, py::arg("scalar"))
+        .def("__mul__", &Vec2::operator*, py::arg("scalar"))
         .def(
             "__rmul__", [](const Vec2& self, const double s) { return self * s; },
-            py::arg("scalar"), R"doc(
-Right-hand multiplication (scalar * self).
+            py::arg("scalar"))
+        .def("__imul__", &Vec2::operator*=, py::arg("scalar"))
 
-Args:
-    scalar (float): The scalar to multiply by.
-
-Returns:
-    Vec2: A new Vec2 with multiplied components.
-        )doc")
-        .def("__imul__", &Vec2::operator*=, py::arg("scalar"), R"doc(
-In-place multiplication by a scalar value (self *= scalar).
-
-Args:
-    scalar (float): The scalar to multiply by.
-
-Returns:
-    Vec2: Reference to self after modification.
-        )doc")
-
-        .def(
-            "__hash__",
-            [](const Vec2& v) -> size_t
-            {
-                const std::size_t hx = std::hash<double>{}(v.x);
-                const std::size_t hy = std::hash<double>{}(v.y);
-                return hx ^ hy << 1;
-            },
-            R"doc(
-Return a hash value for the Vec2.
-
-Returns:
-    int: Hash value based on x and y components.
-        )doc")
-
-        // Comparison operators
-        .def("__eq__", &Vec2::operator==, py::arg("other"), R"doc(
-Check if two Vec2s are equal (within tolerance).
-
-Args:
-    other (Vec2): The other Vec2 to compare.
-
-Returns:
-    bool: True if vectors are equal within tolerance.
-        )doc")
-        .def("__ne__", &Vec2::operator!=, py::arg("other"), R"doc(
-Check if two Vec2s are not equal.
-
-Args:
-    other (Vec2): The other Vec2 to compare.
-
-Returns:
-    bool: True if vectors are not equal.
-        )doc")
-        .def("__lt__", &Vec2::operator<, py::arg("other"), R"doc(
-Check if this Vec2 is component-wise less than another.
-
-Args:
-    other (Vec2): The other Vec2 to compare.
-
-Returns:
-    bool: True if both x and y are less than other's x and y.
-        )doc")
-        .def("__le__", &Vec2::operator<=, py::arg("other"), R"doc(
-Check if this Vec2 is component-wise less than or equal to another.
-
-Args:
-    other (Vec2): The other Vec2 to compare.
-
-Returns:
-    bool: True if not component-wise greater than other.
-        )doc")
-        .def("__gt__", &Vec2::operator>, py::arg("other"), R"doc(
-Check if this Vec2 is component-wise greater than another.
-
-Args:
-    other (Vec2): The other Vec2 to compare.
-
-Returns:
-    bool: True if both x and y are greater than other's x and y.
-        )doc")
-        .def("__ge__", &Vec2::operator>=, py::arg("other"), R"doc(
-Check if this Vec2 is component-wise greater than or equal to another.
-
-Args:
-    other (Vec2): The other Vec2 to compare.
-
-Returns:
-    bool: True if not component-wise less than other.
-        )doc")
-
-        // Utility methods
-        .def_property_readonly("length", &Vec2::getLength, R"doc(
-Get the length (magnitude) of the vector.
-
-Returns:
-    float: The Euclidean length of the vector.
-        )doc")
-        .def_property_readonly("length_squared", &Vec2::getLengthSquared, R"doc(
-Get the squared length of the vector.
-
-Returns:
-    float: The squared length of the vector.
-        )doc")
-        .def_property_readonly("angle", &Vec2::getAngle, R"doc(
-Get the angle of the vector in radians.
-
-Returns:
-    float: The angle from the positive x-axis to this vector.
-        )doc")
-        .def_property_readonly(
-            "xx", [](const Vec2& self) -> Vec2 { return {self.x, self.x}; },
-            R"doc(
-Get a new Vec2 with both components set to x.
-        )doc")
-        .def_property(
-            "xy", [](const Vec2& self) -> Vec2 { return {self.x, self.y}; },
-            [](Vec2& self, const double lhs, const double rhs)
-            {
-                self.x = lhs;
-                self.y = rhs;
-            },
-            R"doc(
-Get or set the (x, y) components as a new Vec2.
-        )doc")
-        .def_property(
-            "yx", [](const Vec2& self) -> Vec2 { return {self.y, self.x}; },
-            [](Vec2& self, const double lhs, const double rhs)
-            {
-                self.x = lhs;
-                self.y = rhs;
-            },
-            R"doc(
-Get or set the (y, x) components as a new Vec2.
-        )doc")
-        .def_property_readonly(
-            "yy", [](const Vec2& self) -> Vec2 { return {self.y, self.y}; },
-            R"doc(
-Get a new Vec2 with both components set to y.
-        )doc")
-
-        .def("rotate", &Vec2::rotate, py::arg("radians"), R"doc(
-Rotate the vector by the given angle in radians.
-
-Args:
-    radians (float): The angle to rotate by in radians.
-        )doc")
-        .def("normalize", &Vec2::normalize, R"doc(
-Normalize the vector to unit length in-place.
-
-If the vector is zero, it remains unchanged.
-        )doc")
-        .def("scale_to_length", &Vec2::scaleToLength, py::arg("length"), R"doc(
-Scale the vector to the specified length in-place.
-
-Args:
-    length (float): The target length.
-        )doc")
-        .def("distance_to", &Vec2::distanceTo, py::arg("other"), R"doc(
-Calculate the distance to another vector.
-
-Args:
-    other (Vec2): The other vector.
-
-Returns:
-    float: The Euclidean distance between the vectors.
-        )doc")
-        .def("distance_squared_to", &Vec2::distanceSquaredTo, py::arg("other"), R"doc(
-Calculate the squared distance to another vector.
-
-Args:
-    other (Vec2): The other vector.
-
-Returns:
-    float: The squared distance between the vectors.
-        )doc")
-        .def("to_polar", &Vec2::toPolar, R"doc(
-Convert to polar coordinates.
-
-Returns:
-    PolarCoordinate: A polar coordinate representation (angle, length).
-        )doc");
+        // Hash and comparison dunder methods
+        .def("__hash__",
+             [](const Vec2& v) -> size_t
+             {
+                 const std::size_t hx = std::hash<double>{}(v.x);
+                 const std::size_t hy = std::hash<double>{}(v.y);
+                 return hx ^ hy << 1;
+             })
+        .def("__eq__", &Vec2::operator==, py::arg("other"))
+        .def("__ne__", &Vec2::operator!=, py::arg("other"))
+        .def("__lt__", &Vec2::operator<, py::arg("other"))
+        .def("__le__", &Vec2::operator<=, py::arg("other"))
+        .def("__gt__", &Vec2::operator>, py::arg("other"))
+        .def("__ge__", &Vec2::operator>=, py::arg("other"));
     py::implicitly_convertible<py::sequence, Vec2>();
 
     auto subMath = module.def_submodule("math", "Math related functions");
@@ -809,6 +611,7 @@ Args:
 Returns:
     Vec2: A new vector scaled to the specified length.
         )doc");
+
     subMath.def("from_polar", py::overload_cast<double, double>(&fromPolar), py::arg("angle"),
                 py::arg("radius"), R"doc(
 Convert polar coordinates to a Cartesian vector.
@@ -820,6 +623,7 @@ Args:
 Returns:
     Vec2: The equivalent Cartesian vector.
         )doc");
+
     subMath.def("from_polar", py::overload_cast<const PolarCoordinate&>(&fromPolar),
                 py::arg("polar"), R"doc(
 Convert a PolarCoordinate object to a Cartesian vector.
@@ -830,27 +634,30 @@ Args:
 Returns:
     Vec2: The equivalent Cartesian vector.
         )doc");
+
     subMath.def("normalize", &normalize, py::arg("vec"), R"doc(
 Normalize a vector to unit length.
 
 Args:
-    vector (Vec2): The input vector.
+    vec (Vec2): The input vector.
 
 Returns:
     Vec2: A new normalized vector.
         )doc");
+
     subMath.def("clamp", &clampVec, py::arg("vec"), py::arg("min_vec"), py::arg("max_vec"),
                 R"doc(
 Clamp a vector between two boundary vectors.
 
 Args:
-    vector (Vec2): The vector to clamp.
+    vec (Vec2): The vector to clamp.
     min_vec (Vec2): The minimum boundary vector.
     max_vec (Vec2): The maximum boundary vector.
 
 Returns:
     Vec2: A new vector with components clamped between min and max.
         )doc");
+
     subMath.def(
         "clamp", [](const double value, const double min_val, const double max_val) -> double
         { return std::clamp(value, min_val, max_val); }, py::arg("value"), py::arg("min_val"),
@@ -865,6 +672,7 @@ Args:
 Returns:
     float: The clamped value.
         )doc");
+
     subMath.def("lerp", py::overload_cast<const Vec2&, const Vec2&, double>(&lerp), py::arg("a"),
                 py::arg("b"), py::arg("t"), R"doc(
 Linearly interpolate between two Vec2s.
@@ -877,6 +685,7 @@ Args:
 Returns:
     Vec2: The interpolated vector.
         )doc");
+
     subMath.def("lerp", py::overload_cast<double, double, double>(&lerp), py::arg("a"),
                 py::arg("b"), py::arg("t"), R"doc(
 Linearly interpolate between two values.
@@ -889,6 +698,7 @@ Args:
 Returns:
     float: The interpolated value.
         )doc");
+
     subMath.def("remap", &remap, py::arg("in_min"), py::arg("in_max"), py::arg("out_min"),
                 py::arg("out_max"), py::arg("value"), R"doc(
 Remap a value from one range to another.
@@ -906,6 +716,7 @@ Returns:
 Raises:
     ValueError: If in_min equals in_max.
         )doc");
+
     subMath.def("to_deg", &toDegrees, py::arg("radians"), R"doc(
 Convert radians to degrees.
 
@@ -915,6 +726,7 @@ Args:
 Returns:
     float: The angle in degrees.
         )doc");
+
     subMath.def("to_rad", &toRadians, py::arg("degrees"), R"doc(
 Convert degrees to radians.
 
@@ -924,6 +736,7 @@ Args:
 Returns:
     float: The angle in radians.
         )doc");
+
     subMath.def("dot", &dot, py::arg("a"), py::arg("b"), R"doc(
 Calculate the dot product of two vectors.
 
@@ -934,6 +747,7 @@ Args:
 Returns:
     float: The dot product (a.x * b.x + a.y * b.y).
         )doc");
+
     subMath.def("cross", &cross, py::arg("a"), py::arg("b"), R"doc(
 Calculate the 2D cross product of two vectors.
 
@@ -944,6 +758,7 @@ Args:
 Returns:
     float: The 2D cross product (a.x * b.y - a.y * b.x).
         )doc");
+
     subMath.def("angle_between", &angleBetween, py::arg("a"), py::arg("b"), R"doc(
 Calculate the angle between two vectors.
 
@@ -954,16 +769,17 @@ Args:
 Returns:
     float: The angle between the vectors in radians [0, π].
         )doc");
+
     subMath.def("rotate", &rotate, py::arg("vec"), py::arg("radians"), R"doc(
-    Rotate a vector by the given angle (non-mutating).
+Rotate a vector by an angle without mutating the input.
 
-    Args:
-        vec (Vec2): The vector to rotate.
-        radians (float): Angle in radians.
+Args:
+    vec (Vec2): The vector to rotate.
+    radians (float): Rotation angle in radians.
 
-    Returns:
-        Vec2: A new rotated vector.
-            )doc");
+Returns:
+    Vec2: A new rotated vector.
+        )doc");
 }
 } // namespace math
 } // namespace kn

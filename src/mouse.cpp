@@ -139,6 +139,8 @@ void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
         e.data["y"] = sdlEvent.motion.y;
         e.data["xrel"] = sdlEvent.motion.xrel;
         e.data["yrel"] = sdlEvent.motion.yrel;
+        e.data["state"] = sdlEvent.motion.state;
+        e.data["window_id"] = sdlEvent.motion.windowID;
         break;
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
     case SDL_EVENT_MOUSE_BUTTON_UP:
@@ -146,7 +148,12 @@ void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
             _mousePressed[sdlEvent.button.button - 1] = true;
         else if (sdlEvent.type == SDL_EVENT_MOUSE_BUTTON_UP)
             _mouseReleased[sdlEvent.button.button - 1] = true;
+        e.data["which"] = sdlEvent.button.which;
         e.data["button"] = static_cast<MouseButton>(sdlEvent.button.button);
+        e.data["x"] = sdlEvent.button.x;
+        e.data["y"] = sdlEvent.button.y;
+        e.data["clicks"] = sdlEvent.button.clicks;
+        e.data["window_id"] = sdlEvent.button.windowID;
         break;
     case SDL_EVENT_MOUSE_WHEEL:
     {
@@ -156,6 +163,9 @@ void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
         e.data["y"] = static_cast<float>(dir) * sdlEvent.wheel.y;
         e.data["intx"] = dir * sdlEvent.wheel.integer_x;
         e.data["inty"] = dir * sdlEvent.wheel.integer_y;
+        e.data["window_id"] = sdlEvent.wheel.windowID;
+        e.data["mouse_x"] = sdlEvent.wheel.mouse_x;
+        e.data["mouse_y"] = sdlEvent.wheel.mouse_y;
         break;
     }
     case SDL_EVENT_MOUSE_ADDED:

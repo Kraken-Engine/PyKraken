@@ -321,6 +321,16 @@ Raises:
     RuntimeError: If the pixel array is invalid.
         )doc")
 
+        .def_property_readonly("width", &Mask::getWidth, R"doc(
+The width of the mask in pixels.
+    )doc")
+        .def_property_readonly("height", &Mask::getHeight, R"doc(
+The height of the mask in pixels.
+    )doc")
+        .def_property_readonly("size", &Mask::getSize, R"doc(
+The size of the mask as a Vec2.
+    )doc")
+
         .def("copy", &Mask::copy, R"doc(
 Create a copy of this mask.
 
@@ -587,17 +597,7 @@ Raises:
         )doc")
         .def("get_rect", &Mask::getRect, R"doc(
 Get the bounding rectangle of the mask starting at (0, 0).
-        )doc")
-
-        .def_property_readonly("width", &Mask::getWidth, R"doc(
-The width of the mask in pixels.
-        )doc")
-        .def_property_readonly("height", &Mask::getHeight, R"doc(
-The height of the mask in pixels.
-        )doc")
-        .def_property_readonly("size", &Mask::getSize, R"doc(
-The size of the mask as a Vec2.
-        )doc");
+    )doc");
 }
 } // namespace mask
 } // namespace kn

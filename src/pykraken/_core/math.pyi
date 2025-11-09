@@ -22,7 +22,7 @@ def clamp(vec: pykraken._core.Vec2, min_vec: pykraken._core.Vec2, max_vec: pykra
     Clamp a vector between two boundary vectors.
     
     Args:
-        vector (Vec2): The vector to clamp.
+        vec (Vec2): The vector to clamp.
         min_vec (Vec2): The minimum boundary vector.
         max_vec (Vec2): The maximum boundary vector.
     
@@ -118,7 +118,7 @@ def normalize(vec: pykraken._core.Vec2) -> pykraken._core.Vec2:
     Normalize a vector to unit length.
     
     Args:
-        vector (Vec2): The input vector.
+        vec (Vec2): The input vector.
     
     Returns:
         Vec2: A new normalized vector.
@@ -142,14 +142,14 @@ def remap(in_min: typing.SupportsFloat, in_max: typing.SupportsFloat, out_min: t
     """
 def rotate(vec: pykraken._core.Vec2, radians: typing.SupportsFloat) -> pykraken._core.Vec2:
     """
-        Rotate a vector by the given angle (non-mutating).
+    Rotate a vector by an angle without mutating the input.
     
-        Args:
-            vec (Vec2): The vector to rotate.
-            radians (float): Angle in radians.
+    Args:
+        vec (Vec2): The vector to rotate.
+        radians (float): Rotation angle in radians.
     
-        Returns:
-            Vec2: A new rotated vector.
+    Returns:
+        Vec2: A new rotated vector.
     """
 def scale_to_length(vector: pykraken._core.Vec2, length: typing.SupportsFloat) -> pykraken._core.Vec2:
     """

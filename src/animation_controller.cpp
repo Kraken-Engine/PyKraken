@@ -270,7 +270,58 @@ The AnimationController handles loading animations from sprite sheets or image f
 managing playback state, and providing frame-by-frame animation control.
     )doc")
         .def(py::init<>())
+        .def_property_readonly("current_animation_name",
+                               &AnimationController::getCurrentAnimationName, R"doc(
+The name of the currently active animation.
 
+Returns:
+    str: The name of the current animation, or empty string if none is set.
+                               )doc")
+        .def_property_readonly("current_frame", &AnimationController::getCurrentFrame,
+                               py::return_value_policy::reference_internal, R"doc(
+The current animation frame being displayed.
+
+Returns:
+    Frame: The current frame with texture and rectangle data.
+
+Raises:
+    RuntimeError: If no animation is currently set or the animation has no frames.
+                               )doc")
+        .def_property_readonly("frame_index", &AnimationController::getFrameIndex, R"doc(
+The current frame index in the animation sequence.
+
+Returns the integer frame index (0-based) of the currently displayed frame.
+
+Returns:
+    int: The current frame index.
+                               )doc")
+        .def_property_readonly("progress", &AnimationController::getProgress, R"doc(
+The normalized progress through the current animation.
+
+Returns a value between 0.0 (start) and 1.0 (end) representing how far through
+the animation sequence the playback has progressed. Useful for UI progress bars
+or triggering events at specific points in the animation.
+
+Returns:
+    float: The animation progress as a value between 0.0 and 1.0.
+                               )doc")
+        .def_property("playback_speed", &AnimationController::getPlaybackSpeed,
+                      &AnimationController::setPlaybackSpeed, R"doc(
+The playback speed multiplier for animation timing.
+
+A value of 1.0 represents normal speed, 2.0 is double speed, 0.5 is half speed.
+Setting to 0 will pause the animation.
+
+Returns:
+    float: The current playback speed multiplier.
+                      )doc")
+        .def_property("looping", &AnimationController::isLooping, &AnimationController::setLooping,
+                      R"doc(
+Whether the animation should loop when it reaches the end.
+
+Returns:
+    bool: True if the animation is set to loop, False otherwise.
+                      )doc")
         .def("load_sprite_sheet", &AnimationController::loadSpriteSheet, py::arg("file_path"),
              py::arg("frame_size"), py::arg("strips"), R"doc(
 Load one or more animations from a sprite sheet texture.
@@ -353,60 +404,7 @@ Resume paused animation playback.
 
 Resumes animation frame advancement if the playback speed is greater than 0.
 Does nothing if the animation is already playing or playback speed is 0.
-            )doc")
-
-        .def_property_readonly("current_animation_name",
-                               &AnimationController::getCurrentAnimationName, R"doc(
-The name of the currently active animation.
-
-Returns:
-    str: The name of the current animation, or empty string if none is set.
-                               )doc")
-        .def_property_readonly("current_frame", &AnimationController::getCurrentFrame,
-                               py::return_value_policy::reference_internal, R"doc(
-The current animation frame being displayed.
-
-Returns:
-    Frame: The current frame with texture and rectangle data.
-
-Raises:
-    RuntimeError: If no animation is currently set or the animation has no frames.
-                               )doc")
-        .def_property_readonly("frame_index", &AnimationController::getFrameIndex, R"doc(
-The current frame index in the animation sequence.
-
-Returns the integer frame index (0-based) of the currently displayed frame.
-
-Returns:
-    int: The current frame index.
-                               )doc")
-        .def_property_readonly("progress", &AnimationController::getProgress, R"doc(
-The normalized progress through the current animation.
-
-Returns a value between 0.0 (start) and 1.0 (end) representing how far through
-the animation sequence the playback has progressed. Useful for UI progress bars
-or triggering events at specific points in the animation.
-
-Returns:
-    float: The animation progress as a value between 0.0 and 1.0.
-                               )doc")
-        .def_property("playback_speed", &AnimationController::getPlaybackSpeed,
-                      &AnimationController::setPlaybackSpeed, R"doc(
-The playback speed multiplier for animation timing.
-
-A value of 1.0 represents normal speed, 2.0 is double speed, 0.5 is half speed.
-Setting to 0 will pause the animation.
-
-Returns:
-    float: The current playback speed multiplier.
-                      )doc")
-        .def_property("looping", &AnimationController::isLooping, &AnimationController::setLooping,
-                      R"doc(
-Whether the animation should loop when it reaches the end.
-
-Returns:
-    bool: True if the animation is set to loop, False otherwise.
-                      )doc");
+            )doc");
 }
 } // namespace animation_controller
 } // namespace kn

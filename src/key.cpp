@@ -64,6 +64,8 @@ void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
         e.data["key"] = static_cast<Keycode>(sdlEvent.key.key);
         e.data["scan"] = sdlEvent.key.scancode;
         e.data["repeat"] = sdlEvent.key.repeat;
+        e.data["mod"] = sdlEvent.key.mod;
+        e.data["window_id"] = sdlEvent.key.windowID;
         break;
     case SDL_EVENT_TEXT_EDITING:
         e.data["window_id"] = sdlEvent.edit.windowID;
@@ -72,6 +74,7 @@ void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
         e.data["length"] = sdlEvent.edit.length;
         break;
     case SDL_EVENT_TEXT_INPUT:
+        e.data["window_id"] = sdlEvent.text.windowID;
         e.data["text"] = sdlEvent.text.text;
         break;
     case SDL_EVENT_KEYBOARD_ADDED:

@@ -52,10 +52,10 @@ def set_max_delta(max_delta: typing.SupportsFloat) -> None:
     """
     Set the maximum allowed delta time between frames.
     
-    Parameters:
-        max_delta (float): The maximum delta time in seconds, greater than 0.0.
-                           This is useful to prevent large delta values during
-                           frame drops or pauses that could destabilize physics or animations.
+    Args:
+        max_delta (float): Maximum delta time in seconds (> 0.0).
+                           Use this to avoid large deltas during frame drops or pauses
+                           that could destabilize physics or animations.
     """
 def set_scale(scale: typing.SupportsFloat) -> None:
     """

@@ -63,14 +63,13 @@ static void quit()
 PYBIND11_MODULE(_core, m)
 {
     m.def("init", &init, R"doc(
-Initialize the Kraken Engine.
+Initialize the Kraken engine subsystems.
 
-This sets up internal systems and must be called before using any other features.
+Raises:
+    RuntimeError: If SDL initialization fails.
     )doc");
     m.def("quit", &quit, R"doc(
-Shut down the Kraken Engine and clean up resources.
-
-Call this once you're done using the engine to avoid memory leaks.
+Tear down the Kraken engine subsystems.
     )doc");
 
     // These are ordered based on dependencies

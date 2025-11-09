@@ -231,7 +231,7 @@ Represents a rectangle with position and size.
 
 A Rect is defined by its top-left corner position (x, y) and dimensions (w, h).
 Supports various geometric operations, collision detection, and positioning methods.
-    )doc")
+        )doc")
         .def(py::init(), R"doc(
 Create a Rect with default values (0, 0, 0, 0).
         )doc")
@@ -425,72 +425,25 @@ Raises:
     ValueError: If width or height is <= 0.
         )doc")
 
-        .def("__eq__", &Rect::operator==, py::arg("other"), R"doc(
-Check if two rectangles are equal.
-
-Args:
-    other (Rect): The other rectangle to compare.
-
-Returns:
-    bool: True if all components (x, y, w, h) are equal.
-        )doc")
-        .def("__ne__", &Rect::operator!=, py::arg("other"), R"doc(
-Check if two rectangles are not equal.
-
-Args:
-    other (Rect): The other rectangle to compare.
-
-Returns:
-    bool: True if any component differs.
-        )doc")
-        .def(
-            "__bool__", [](const Rect& rect) -> bool { return rect.w > 0 && rect.h > 0; }, R"doc(
-Check if the rectangle has positive area.
-
-Returns:
-    bool: True if both width and height are greater than 0.
-        )doc")
-        .def(
-            "__str__",
-            [](const Rect& rect) -> std::string
-            {
-                return "[" + std::to_string(rect.x) + ", " + std::to_string(rect.y) + ", " +
-                       std::to_string(rect.w) + ", " + std::to_string(rect.h) + "]";
-            },
-            R"doc(
-Return a human-readable string representation.
-
-Returns:
-    str: String in format "[x, y, w, h]".
-        )doc")
-        .def(
-            "__repr__",
-            [](const Rect& rect) -> std::string
-            {
-                return "Rect(x=" + std::to_string(rect.x) + ", y=" + std::to_string(rect.y) +
-                       ", w=" + std::to_string(rect.w) + ", h=" + std::to_string(rect.h) + ")";
-            },
-            R"doc(
-Return a string suitable for debugging and recreation.
-
-Returns:
-    str: String in format "Rect(x=..., y=..., w=..., h=...)".
-        )doc")
+        .def("__eq__", &Rect::operator==, py::arg("other"))
+        .def("__ne__", &Rect::operator!=, py::arg("other"))
+        .def("__bool__", [](const Rect& rect) -> bool { return rect.w > 0 && rect.h > 0; })
+        .def("__str__",
+             [](const Rect& rect) -> std::string
+             {
+                 return "[" + std::to_string(rect.x) + ", " + std::to_string(rect.y) + ", " +
+                        std::to_string(rect.w) + ", " + std::to_string(rect.h) + "]";
+             })
+        .def("__repr__",
+             [](const Rect& rect) -> std::string
+             {
+                 return "Rect(x=" + std::to_string(rect.x) + ", y=" + std::to_string(rect.y) +
+                        ", w=" + std::to_string(rect.w) + ", h=" + std::to_string(rect.h) + ")";
+             })
         .def(
             "__iter__", [](const Rect& rect) -> py::iterator
-            { return py::make_iterator(&rect.x, &rect.x + 4); }, py::keep_alive<0, 1>(), R"doc(
-Return an iterator over (x, y, w, h).
-
-Returns:
-    iterator: Iterator that yields x, y, w, h in order.
-        )doc")
-        .def(
-            "__len__", [](const Rect&) -> int { return 4; }, R"doc(
-Return the number of components (always 4).
-
-Returns:
-    int: Always returns 4 (x, y, w, h).
-        )doc")
+            { return py::make_iterator(&rect.x, &rect.x + 4); }, py::keep_alive<0, 1>())
+        .def("__len__", [](const Rect&) -> int { return 4; })
         .def(
             "__getitem__",
             [](const Rect& rect, const size_t i) -> double
@@ -509,18 +462,7 @@ Returns:
                     throw py::index_error("Index out of range");
                 }
             },
-            py::arg("index"), R"doc(
-Access rectangle components by index.
-
-Args:
-    index (int): Index (0=x, 1=y, 2=w, 3=h).
-
-Returns:
-    float: The component value.
-
-Raises:
-    IndexError: If index is not 0, 1, 2, or 3.
-        )doc");
+            py::arg("index"));
     py::implicitly_convertible<py::sequence, Rect>();
 
     auto subRect = module.def_submodule("rect", "Rectangle related functions");

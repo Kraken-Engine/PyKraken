@@ -73,53 +73,6 @@ Args:
 Create a circle from a nested sequence: ([x, y], radius).
         )doc")
 
-        .def(
-            "__iter__",
-            [](const Circle& circle) -> py::iterator
-            {
-                static double data[3];
-                data[0] = circle.pos.x;
-                data[1] = circle.pos.y;
-                data[2] = circle.radius;
-                return py::make_iterator(data, data + 3);
-            },
-            py::keep_alive<0, 1>(), R"doc(
-Return an iterator over (x, y, radius).
-        )doc")
-
-        .def(
-            "__getitem__",
-            [](const Circle& circle, const size_t i) -> double
-            {
-                switch (i)
-                {
-                case 0:
-                    return circle.pos.x;
-                case 1:
-                    return circle.pos.y;
-                case 2:
-                    return circle.radius;
-                default:
-                    throw py::index_error("Index out of range");
-                }
-            },
-            py::arg("index"), R"doc(
-Get component by index: 0 = x, 1 = y, 2 = radius.
-        )doc")
-
-        .def(
-            "__len__", [](const Circle&) -> int { return 3; }, R"doc(
-Always returns 3 for (x, y, radius).
-        )doc")
-
-        .def("__eq__", &Circle::operator==, py::arg("other"), R"doc(
-Check if two circles are equal.
-        )doc")
-
-        .def("__ne__", &Circle::operator!=, py::arg("other"), R"doc(
-Check if two circles are not equal.
-        )doc")
-
         .def_readwrite("pos", &Circle::pos, R"doc(
 The center position of the circle as a Vec2.
         )doc")
@@ -142,7 +95,43 @@ Return the smallest rectangle that fully contains the circle.
 
         .def("copy", &Circle::copy, R"doc(
 Return a copy of the circle.
-        )doc");
+        )doc")
+
+        .def(
+            "__iter__",
+            [](const Circle& circle) -> py::iterator
+            {
+                static double data[3];
+                data[0] = circle.pos.x;
+                data[1] = circle.pos.y;
+                data[2] = circle.radius;
+                return py::make_iterator(data, data + 3);
+            },
+            py::keep_alive<0, 1>())
+
+        .def(
+            "__getitem__",
+            [](const Circle& circle, const size_t i) -> double
+            {
+                switch (i)
+                {
+                case 0:
+                    return circle.pos.x;
+                case 1:
+                    return circle.pos.y;
+                case 2:
+                    return circle.radius;
+                default:
+                    throw py::index_error("Index out of range");
+                }
+            },
+            py::arg("index"))
+
+        .def("__len__", [](const Circle&) -> int { return 3; })
+
+        .def("__eq__", &Circle::operator==, py::arg("other"))
+
+        .def("__ne__", &Circle::operator!=, py::arg("other"));
 
     py::implicitly_convertible<py::sequence, Circle>();
 }

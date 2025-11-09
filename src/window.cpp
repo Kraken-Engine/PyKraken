@@ -216,22 +216,20 @@ void _bind(py::module_& module)
 
     subWindow.def("create", &create, py::arg("title"), py::arg("resolution"),
                   py::arg("scaled") = false, R"doc(
-Create a window with specified title and size.
+Create a window with the requested title and resolution.
 
 Args:
-    title (str): The window title. Must be non-empty and <= 255 characters.
-    resolution (Vec2): The renderer resolution as (width, height).
-    scaled (bool, optional): If True, creates a scaled up window using the
-                            display's usable bounds, retaining the resolution's ratio.
-                            Defaults to False.
+    title (str): Non-empty title no longer than 255 characters.
+    resolution (Vec2): Target renderer resolution as (width, height).
+    scaled (bool): When True, stretches to usable display bounds while maintaining aspect.
 
 Raises:
-    RuntimeError: If a window already exists or window creation fails.
-    ValueError: If title is empty, exceeds 255 characters, or size values are <= 0.
+    RuntimeError: If a window already exists or SDL window creation fails.
+    ValueError: If the title is invalid or any dimension is non-positive.
     )doc");
 
     subWindow.def("is_open", &isOpen, R"doc(
-Check if the window is open.
+Report whether the window is currently open.
 
 Returns:
     bool: True if the window is open and active.
@@ -321,6 +319,9 @@ Save a screenshot of the current frame to a file.
 
 Args:
     path (str): The path to save the screenshot to.
+
+Raises:
+    RuntimeError: If the window is not initialized or the screenshot cannot be saved.
 )doc");
 }
 } // namespace window

@@ -84,6 +84,32 @@ Raises:
     ValueError: If either point is not a 2-element sequence.
          )doc")
 
+        .def_property("a", &Line::getA, &Line::setA, R"doc(
+Get or set point A as a tuple or Vec2.
+    )doc")
+        .def_property("b", &Line::getB, &Line::setB, R"doc(
+Get or set point B as a tuple or Vec2.
+    )doc")
+
+        .def_readwrite("ax", &Line::ax, "X-coordinate of point A.")
+        .def_readwrite("ay", &Line::ay, "Y-coordinate of point A.")
+        .def_readwrite("bx", &Line::bx, "X-coordinate of point B.")
+        .def_readwrite("by", &Line::by, "Y-coordinate of point B.")
+
+        .def_property_readonly("length", &Line::getLength, R"doc(
+The Euclidean length of the line segment.
+    )doc")
+
+        .def("copy", &Line::copy, R"doc(
+Return a copy of this line.
+    )doc")
+        .def("move", &Line::move, py::arg("offset"), R"doc(
+Move this line by a Vec2 or 2-element sequence.
+
+Args:
+    offset (Vec2 | list[float]): The amount to move.
+    )doc")
+
         .def(
             "__iter__", [](const Line& self) -> py::iterator
             { return py::make_iterator(&self.ax, &self.ax + 4); }, py::keep_alive<0, 1>())
@@ -105,64 +131,10 @@ Raises:
                     throw py::index_error("Index out of range");
                 }
             },
-            R"doc(
-Get coordinate by index:
-    0 = ax, 1 = ay, 2 = bx, 3 = by
-
-Raises:
-    IndexError: If index is not 0-3.
-         )doc")
-        .def(
-            "__len__", [](const Line&) -> int { return 4; }, R"doc(
-Return the number of components (always 4).
-
-Returns:
-    int: Always returns 4 (ax, ay, bx, by).
-        )doc")
-        .def("__eq__", &Line::operator==, py::arg("other"), R"doc(
-Check if two lines are equal.
-
-Args:
-    other (Line): The other line to compare.
-
-Returns:
-    bool: True if all components are equal.
-        )doc")
-        .def("__ne__", &Line::operator!=, py::arg("other"), R"doc(
-Check if two lines are not equal.
-
-Args:
-    other (Line): The other line to compare.
-
-Returns:
-    bool: True if any component differs.
-        )doc")
-
-        .def_property("a", &Line::getA, &Line::setA, R"doc(
-Get or set point A as a tuple or Vec2.
-        )doc")
-        .def_property("b", &Line::getB, &Line::setB, R"doc(
-Get or set point B as a tuple or Vec2.
-        )doc")
-
-        .def_readwrite("ax", &Line::ax, "X-coordinate of point A.")
-        .def_readwrite("ay", &Line::ay, "Y-coordinate of point A.")
-        .def_readwrite("bx", &Line::bx, "X-coordinate of point B.")
-        .def_readwrite("by", &Line::by, "Y-coordinate of point B.")
-
-        .def_property_readonly("length", &Line::getLength, R"doc(
-The Euclidean length of the line segment.
-        )doc")
-
-        .def("copy", &Line::copy, R"doc(
-Return a copy of this line.
-        )doc")
-        .def("move", &Line::move, py::arg("offset"), R"doc(
-Move this line by a Vec2 or 2-element sequence.
-
-Args:
-    offset (Vec2 | list[float]): The amount to move.
-        )doc");
+            py::arg("index"))
+        .def("__len__", [](const Line&) -> int { return 4; })
+        .def("__eq__", &Line::operator==, py::arg("other"))
+        .def("__ne__", &Line::operator!=, py::arg("other"));
     py::implicitly_convertible<py::sequence, Line>();
 
     auto subLine = module.def_submodule("line");
