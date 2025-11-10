@@ -26,6 +26,7 @@
 #include "TileMap.hpp"
 #include "Time.hpp"
 #include "Transform.hpp"
+#include "Viewport.hpp"
 #include "Window.hpp"
 
 static void init()
@@ -102,4 +103,5 @@ Tear down the Kraken engine subsystems.
     kn::animation_controller::_bind(m);
     kn::tile_map::_bind(m);
     kn::shader_state::_bind(m);
+    kn::viewport::_bind(m);
 }

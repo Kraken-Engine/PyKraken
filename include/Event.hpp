@@ -20,5 +20,7 @@ namespace event
 void _bind(py::module_& module);
 
 std::vector<Event> poll();
+
+Event create_custom();
 } // namespace event
 } // namespace kn
