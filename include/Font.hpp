@@ -58,6 +58,8 @@ class Font
     int getHeight() const;
     int getAscent() const;
     int getDescent() const;
+
+    void setLineSkip(int lineSkip) const;
     int getLineSkip() const;
 
     void setOutline(int outline) const;
@@ -65,6 +67,9 @@ class Font
 
     void setKerning(bool enabled) const;
     bool getKerning() const;
+
+    void setCharSpacing(int charSpacing) const;
+    int getCharSpacing() const;
 
     TTF_Font* _get() const { return m_font; }
 
