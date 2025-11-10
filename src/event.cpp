@@ -6,6 +6,7 @@
 #include "Event.hpp"
 #include <SDL3/SDL.h>
 #include <pybind11/stl.h>
+#include <unordered_map>
 
 namespace kn
 {
@@ -22,6 +23,9 @@ py::object Event::getAttr(const std::string& name) const
 
 namespace event
 {
+// Track scheduled timers by event type
+static std::unordered_map<uint32_t, SDL_TimerID> scheduledTimers;
+
 std::vector<Event> poll()
 {
     gamepad::_clearStates();
@@ -174,6 +178,102 @@ std::vector<Event> poll()
     return events;
 }
 
+Event newCustom()
+{
+    const uint32_t eventType = SDL_RegisterEvents(1);
+    if (eventType == 0)
+        throw std::runtime_error("Failed to register custom event type");
+    return Event(eventType);
+}
+
+void push(const Event& event)
+{
+    if (event.type < SDL_EVENT_USER || event.type >= SDL_EVENT_LAST)
+    {
+        throw std::runtime_error("Cannot push non-custom event types");
+    }
+
+    SDL_Event sdl_event{};
+    sdl_event.type = event.type;
+    SDL_PushEvent(&sdl_event);
+}
+
+void schedule(const Event& event, uint32_t delay_ms, bool repeat)
+{
+    if (event.type < SDL_EVENT_USER || event.type >= SDL_EVENT_LAST)
+    {
+        throw std::runtime_error("Cannot schedule non-custom event types");
+    }
+
+    // Cancel any existing timer for this event type
+    auto it = scheduledTimers.find(event.type);
+    if (it != scheduledTimers.end())
+    {
+        SDL_RemoveTimer(it->second);
+        scheduledTimers.erase(it);
+    }
+
+    SDL_Event* sdl_event = new SDL_Event{};
+    sdl_event->type = event.type;
+
+    Uint32 sdl_delay = static_cast<Uint32>(delay_ms);
+    SDL_TimerID timerID;
+
+    if (repeat)
+    {
+        timerID = SDL_AddTimer(
+            sdl_delay,
+            [](void* userData, SDL_TimerID timerID, Uint32 interval) -> Uint32
+            {
+                SDL_PushEvent(static_cast<SDL_Event*>(userData));
+                return interval; // Continue the timer
+            },
+            sdl_event);
+    }
+    else
+    {
+        timerID = SDL_AddTimer(
+            sdl_delay,
+            [](void* userData, SDL_TimerID timerID, Uint32 interval) -> Uint32
+            {
+                auto* evt = static_cast<SDL_Event*>(userData);
+                SDL_PushEvent(evt);
+
+                // Remove from tracking map since timer is done
+                uint32_t eventType = evt->type;
+                delete evt;
+                scheduledTimers.erase(eventType);
+
+                return 0; // Stop the timer
+            },
+            sdl_event);
+    }
+
+    if (timerID == 0)
+    {
+        delete sdl_event;
+        throw std::runtime_error("Failed to create timer");
+    }
+
+    // Track the timer
+    scheduledTimers[event.type] = timerID;
+}
+
+void cancelScheduled(const Event& event)
+{
+    if (event.type < SDL_EVENT_USER || event.type >= SDL_EVENT_LAST)
+    {
+        throw std::runtime_error("Cannot cancel non-custom event types");
+    }
+
+    auto it = scheduledTimers.find(event.type);
+    if (it != scheduledTimers.end())
+    {
+        SDL_RemoveTimer(it->second);
+        scheduledTimers.erase(it);
+    }
+}
+
 void _bind(py::module_& module)
 {
     py::classh<Event>(module, "Event", R"doc(
@@ -198,6 +298,51 @@ This clears input states and returns a list of events that occurred since the la
 
 Returns:
     list[Event]: A list of input event objects.
+        )doc");
+
+    subEvent.def("new_custom", &newCustom, R"doc(
+Create a new custom event type.
+
+Returns:
+    Event: A new Event object with a unique custom event type.
+
+Raises:
+    RuntimeError: If registering a custom event type fails.
+        )doc");
+
+    subEvent.def("push", &push, py::arg("event"), R"doc(
+Push a custom event to the event queue.
+
+Args:
+    event (Event): The custom event to push to the queue.
+
+Raises:
+    RuntimeError: If attempting to push a non-custom event type.
+        )doc");
+
+    subEvent.def("schedule", &schedule, py::arg("event"), py::arg("delay_ms"),
+                 py::arg("repeat") = false, R"doc(
+Schedule a custom event to be pushed after a delay. Will overwrite any existing timer for the same event.
+
+Args:
+    event (Event): The custom event to schedule.
+    delay_ms (int): Delay in milliseconds before the event is pushed.
+    repeat (bool, optional): If True, the event will be pushed repeatedly at the
+        specified interval. If False, the event is pushed only once. Defaults to False.
+
+Raises:
+    RuntimeError: If attempting to schedule a non-custom event type, or if timer
+        creation fails.
+        )doc");
+
+    subEvent.def("cancel_scheduled", &cancelScheduled, py::arg("event"), R"doc(
+Cancel a scheduled event timer.
+
+Args:
+    event (Event): The custom event whose timer should be cancelled.
+
+Raises:
+    RuntimeError: If attempting to cancel a non-custom event type.
         )doc");
 }
 } // namespace event
