@@ -868,6 +868,14 @@ class Font:
     def alignment(self, arg1: Align) -> None:
         ...
     @property
+    def ascent(self) -> int:
+        """
+        Get the pixel ascent of the font.
+        
+        Returns:
+            int: The font ascent in pixels.
+        """
+    @property
     def bold(self) -> bool:
         """
         Get or set whether bold text style is enabled.
@@ -875,6 +883,22 @@ class Font:
     @bold.setter
     def bold(self, arg1: bool) -> None:
         ...
+    @property
+    def descent(self) -> int:
+        """
+        Get the pixel descent of the font.
+        
+        Returns:
+            int: The font descent in pixels.
+        """
+    @property
+    def height(self) -> int:
+        """
+        Get the maximum pixel height of all glyphs in the font.
+        
+        Returns:
+            int: The font height in pixels.
+        """
     @property
     def hinting(self) -> FontHint:
         """
@@ -893,6 +917,30 @@ class Font:
         """
     @italic.setter
     def italic(self, arg1: bool) -> None:
+        ...
+    @property
+    def kerning(self) -> bool:
+        """
+        Get or set whether kerning is enabled.
+        """
+    @kerning.setter
+    def kerning(self, arg1: bool) -> None:
+        ...
+    @property
+    def line_spacing(self) -> int:
+        """
+        Get or set the spacing between lines of text in pixels.
+        """
+    @line_spacing.setter
+    def line_spacing(self, arg1: typing.SupportsInt) -> None:
+        ...
+    @property
+    def outline(self) -> int:
+        """
+        Get or set the outline width in pixels (0 for no outline).
+        """
+    @outline.setter
+    def outline(self, arg1: typing.SupportsInt) -> None:
         ...
     @property
     def pt_size(self) -> int:
@@ -2428,14 +2476,13 @@ class ShaderState:
     """
     Encapsulates a GPU shader and its associated render state.
     """
-    def __init__(self, fragment_file_path: str, uniform_buffer_count: typing.SupportsInt = 0, sampler_count: typing.SupportsInt = 1) -> None:
+    def __init__(self, fragment_file_path: str, uniform_buffer_count: typing.SupportsInt = 0) -> None:
         """
         Create a ShaderState from the specified fragment shader file.
         
         Args:
             fragment_file_path (str): Path to the fragment shader file.
             uniform_buffer_count (int, optional): Number of uniform buffers used by the shader. Default is 0.
-            sampler_count (int, optional): Number of samplers used by the shader. Default is 1.
         """
     def bind(self) -> None:
         """

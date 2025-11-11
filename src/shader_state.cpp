@@ -9,8 +9,7 @@ namespace kn
 // Static registry to track all shader states for proper cleanup
 static std::vector<ShaderState*> _shaderStates;
 
-ShaderState::ShaderState(const std::string& fragmentFilePath, const Uint32 uniformBufferCount,
-                         const Uint32 samplerCount)
+ShaderState::ShaderState(const std::string& fragmentFilePath, const Uint32 uniformBufferCount)
 {
     const char* ext = SDL_strrchr(fragmentFilePath.c_str(), '.');
     if (ext == nullptr)
@@ -63,7 +62,7 @@ ShaderState::ShaderState(const std::string& fragmentFilePath, const Uint32 unifo
     shaderInfo.entrypoint = entrypoint;
     shaderInfo.format = shaderFormat;
     shaderInfo.stage = SDL_GPU_SHADERSTAGE_FRAGMENT;
-    shaderInfo.num_samplers = samplerCount;
+    shaderInfo.num_samplers = 1;         // Not usable yet for more than 1 sampler
     shaderInfo.num_storage_textures = 0; // Not usable yet
     shaderInfo.num_storage_buffers = 0;  // Not usable yet
     shaderInfo.num_uniform_buffers = uniformBufferCount;
@@ -162,14 +161,13 @@ void _bind(py::module_& module)
 {
     py::classh<ShaderState>(module, "ShaderState",
                             "Encapsulates a GPU shader and its associated render state.")
-        .def(py::init<const std::string&, Uint32, Uint32>(), py::arg("fragment_file_path"),
-             py::arg("uniform_buffer_count") = 0, py::arg("sampler_count") = 1, R"doc(
+        .def(py::init<const std::string&, Uint32>(), py::arg("fragment_file_path"),
+             py::arg("uniform_buffer_count") = 0, R"doc(
 Create a ShaderState from the specified fragment shader file.
 
 Args:
     fragment_file_path (str): Path to the fragment shader file.
     uniform_buffer_count (int, optional): Number of uniform buffers used by the shader. Default is 0.
-    sampler_count (int, optional): Number of samplers used by the shader. Default is 1.
             )doc")
 
         .def("bind", &ShaderState::bind, R"doc(
