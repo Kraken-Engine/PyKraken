@@ -55,6 +55,22 @@ class Font
     bool isUnderline() const;
     bool isStrikethrough() const;
 
+    int getHeight() const;
+    int getAscent() const;
+    int getDescent() const;
+
+    void setLineSkip(int lineSkip) const;
+    int getLineSkip() const;
+
+    void setOutline(int outline) const;
+    int getOutline() const;
+
+    void setKerning(bool enabled) const;
+    bool getKerning() const;
+
+    void setCharSpacing(int charSpacing) const;
+    int getCharSpacing() const;
+
     TTF_Font* _get() const { return m_font; }
 
   private:

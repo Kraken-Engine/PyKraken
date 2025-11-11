@@ -198,6 +198,28 @@ bool Font::isStrikethrough() const
     return (s & TTF_STYLE_STRIKETHROUGH) != 0;
 }
 
+int Font::getHeight() const { return TTF_GetFontHeight(m_font); }
+
+int Font::getAscent() const { return TTF_GetFontAscent(m_font); }
+
+int Font::getDescent() const { return TTF_GetFontDescent(m_font); }
+
+void Font::setLineSkip(const int lineSkip) const { TTF_SetFontLineSkip(m_font, lineSkip); }
+
+int Font::getLineSkip() const { return TTF_GetFontLineSkip(m_font); }
+
+void Font::setOutline(const int outline) const { TTF_SetFontOutline(m_font, outline); }
+
+int Font::getOutline() const { return TTF_GetFontOutline(m_font); }
+
+void Font::setKerning(const bool enabled) const { TTF_SetFontKerning(m_font, enabled); }
+
+bool Font::getKerning() const { return TTF_GetFontKerning(m_font) != 0; }
+
+void Font::setCharSpacing(const int charSpacing) const { TTF_SetFontCharSpacing(m_font, charSpacing); }
+
+int Font::getCharSpacing() const { return TTF_GetFontCharSpacing(m_font); }
+
 namespace font
 {
 void _init()
@@ -297,6 +319,45 @@ Get or set whether underline text style is enabled.
         .def_property("strikethrough", &Font::isStrikethrough, &Font::setStrikethrough,
                       R"doc(
 Get or set whether strikethrough text style is enabled.
+        )doc")
+        .def_property_readonly("height", &Font::getHeight, R"doc(
+Get the maximum pixel height of all glyphs in the font.
+
+Returns:
+    int: The font height in pixels.
+        )doc")
+        .def_property_readonly("ascent", &Font::getAscent, R"doc(
+Get the pixel ascent of the font.
+
+Returns:
+    int: The font ascent in pixels.
+        )doc")
+        .def_property_readonly("descent", &Font::getDescent, R"doc(
+Get the pixel descent of the font.
+
+Returns:
+    int: The font descent in pixels.
+        )doc")
+        .def_property("line_spacing", &Font::getLineSkip, &Font::setLineSkip, R"doc(
+Get or set the spacing between lines of text in pixels.
+
+        )doc")
+        .def_property("outline", &Font::getOutline, &Font::setOutline, R"doc(
+Get or set the outline width in pixels.
+
+Returns:
+    int: The outline width in pixels (0 for no outline).
+        )doc")
+        .def_property("kerning", &Font::getKerning, &Font::setKerning, R"doc(
+Get or set whether kerning is enabled.
+
+Returns:
+    bool: True if kerning is enabled, False otherwise.
+        )doc")
+        .def_property("char_spacing", &Font::getCharSpacing, &Font::setCharSpacing, R"doc(
+Get or set the additional spacing between characters in pixels.
+
+
         )doc");
 }
 } // namespace font
