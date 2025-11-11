@@ -13,111 +13,6 @@ constexpr int MAX_GAMEPADS = 4;
 static std::array<std::optional<SDL_JoystickID>, MAX_GAMEPADS> _gamepadSlots;
 static std::unordered_map<SDL_JoystickID, GamepadState> _connectedPads;
 
-void _bind(py::module_& module)
-{
-    auto subGamepad = module.def_submodule("gamepad", "Gamepad input handling functions");
-
-    subGamepad.def("is_pressed", &isPressed, py::arg("button"), py::arg("slot") = 0, R"doc(
-Check if a gamepad button is currently being held down.
-
-Args:
-    button (GamepadButton): The button code.
-    slot (int, optional): Gamepad slot ID (default is 0).
-
-Returns:
-    bool: True if the button is pressed.
-    )doc");
-
-    subGamepad.def("is_just_pressed", &isJustPressed, py::arg("button"), py::arg("slot") = 0,
-                   R"doc(
-Check if a gamepad button was pressed during this frame.
-
-Args:
-    button (GamepadButton): The button code.
-    slot (int, optional): Gamepad slot ID (default is 0).
-
-Returns:
-    bool: True if the button was just pressed.
-    )doc");
-
-    subGamepad.def("is_just_released", &isJustReleased, py::arg("button"), py::arg("slot") = 0,
-                   R"doc(
-Check if a gamepad button was released during this frame.
-
-Args:
-    button (GamepadButton): The button code.
-    slot (int, optional): Gamepad slot ID (default is 0).
-
-Returns:
-    bool: True if the button was just released.
-    )doc");
-
-    subGamepad.def("get_left_stick", &getLeftStick, py::arg("slot") = 0, R"doc(
-Get the left analog stick position.
-
-Args:
-    slot (int, optional): Gamepad slot ID (default is 0).
-
-Returns:
-    Vec2: A vector of stick input normalized to [-1, 1], or (0, 0) if inside dead zone.
-    )doc");
-
-    subGamepad.def("get_right_stick", &getRightStick, py::arg("slot") = 0, R"doc(
-Get the right analog stick position.
-
-Args:
-    slot (int, optional): Gamepad slot ID (default is 0).
-
-Returns:
-    Vec2: A vector of stick input normalized to [-1, 1], or (0, 0) if inside dead zone.
-    )doc");
-
-    subGamepad.def("get_left_trigger", &getLeftTrigger, py::arg("slot") = 0, R"doc(
-Get the left trigger's current pressure value.
-
-Args:
-    slot (int, optional): Gamepad slot ID (default is 0).
-
-Returns:
-    float: Trigger value in range [0.0, 1.0].
-    )doc");
-
-    subGamepad.def("get_right_trigger", &getRightTrigger, py::arg("slot") = 0, R"doc(
-Get the right trigger's current pressure value.
-
-Args:
-    slot (int, optional): Gamepad slot ID (default is 0).
-
-Returns:
-    float: Trigger value in range [0.0, 1.0].
-    )doc");
-
-    subGamepad.def("set_deadzone", &setDeadZone, py::arg("deadzone"), py::arg("slot") = 0, R"doc(
-Set the dead zone threshold for a gamepad's analog sticks.
-
-Args:
-    deadzone (float): Value from 0.0 to 1.0 where movement is ignored.
-    slot (int, optional): Gamepad slot ID (default is 0).
-    )doc");
-
-    subGamepad.def("get_deadzone", &getDeadZone, py::arg("slot") = 0, R"doc(
-Get the current dead zone value for a gamepad's analog sticks.
-
-Args:
-    slot (int, optional): Gamepad slot ID (default is 0).
-
-Returns:
-    float: Deadzone threshold.
-    )doc");
-
-    subGamepad.def("get_connected_slots", &getConnectedSlots, R"doc(
-Get a list of connected gamepad slot indices.
-
-Returns:
-    list[int]: A list of slot IDs with active gamepads.
-    )doc");
-}
-
 bool isPressed(const SDL_GamepadButton button, const int slot)
 {
     if (!verifySlot(slot))
@@ -340,6 +235,8 @@ void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
         e.data["which"] = sdlEvent.gsensor.which;
         e.data["sensor"] = sdlEvent.gsensor.sensor;
         e.data["data"] = std::vector<float>{sdlEvent.gsensor.data, sdlEvent.gsensor.data + 3};
+        e.data["timestamp"] = sdlEvent.gsensor.sensor_timestamp;
+        break;
     default:
         break;
     }
@@ -354,5 +251,110 @@ bool verifySlot(const int slot)
         return false; // No gamepad connected in this slot
 
     return true;
+}
+
+void _bind(py::module_& module)
+{
+    auto subGamepad = module.def_submodule("gamepad", "Gamepad input handling functions");
+
+    subGamepad.def("is_pressed", &isPressed, py::arg("button"), py::arg("slot") = 0, R"doc(
+Check if a gamepad button is currently being held down.
+
+Args:
+    button (GamepadButton): The button code.
+    slot (int, optional): Gamepad slot ID (default is 0).
+
+Returns:
+    bool: True if the button is pressed.
+    )doc");
+
+    subGamepad.def("is_just_pressed", &isJustPressed, py::arg("button"), py::arg("slot") = 0,
+                   R"doc(
+Check if a gamepad button was pressed during this frame.
+
+Args:
+    button (GamepadButton): The button code.
+    slot (int, optional): Gamepad slot ID (default is 0).
+
+Returns:
+    bool: True if the button was just pressed.
+    )doc");
+
+    subGamepad.def("is_just_released", &isJustReleased, py::arg("button"), py::arg("slot") = 0,
+                   R"doc(
+Check if a gamepad button was released during this frame.
+
+Args:
+    button (GamepadButton): The button code.
+    slot (int, optional): Gamepad slot ID (default is 0).
+
+Returns:
+    bool: True if the button was just released.
+    )doc");
+
+    subGamepad.def("get_left_stick", &getLeftStick, py::arg("slot") = 0, R"doc(
+Get the left analog stick position.
+
+Args:
+    slot (int, optional): Gamepad slot ID (default is 0).
+
+Returns:
+    Vec2: A vector of stick input normalized to [-1, 1], or (0, 0) if inside dead zone.
+    )doc");
+
+    subGamepad.def("get_right_stick", &getRightStick, py::arg("slot") = 0, R"doc(
+Get the right analog stick position.
+
+Args:
+    slot (int, optional): Gamepad slot ID (default is 0).
+
+Returns:
+    Vec2: A vector of stick input normalized to [-1, 1], or (0, 0) if inside dead zone.
+    )doc");
+
+    subGamepad.def("get_left_trigger", &getLeftTrigger, py::arg("slot") = 0, R"doc(
+Get the left trigger's current pressure value.
+
+Args:
+    slot (int, optional): Gamepad slot ID (default is 0).
+
+Returns:
+    float: Trigger value in range [0.0, 1.0].
+    )doc");
+
+    subGamepad.def("get_right_trigger", &getRightTrigger, py::arg("slot") = 0, R"doc(
+Get the right trigger's current pressure value.
+
+Args:
+    slot (int, optional): Gamepad slot ID (default is 0).
+
+Returns:
+    float: Trigger value in range [0.0, 1.0].
+    )doc");
+
+    subGamepad.def("set_deadzone", &setDeadZone, py::arg("deadzone"), py::arg("slot") = 0, R"doc(
+Set the dead zone threshold for a gamepad's analog sticks.
+
+Args:
+    deadzone (float): Value from 0.0 to 1.0 where movement is ignored.
+    slot (int, optional): Gamepad slot ID (default is 0).
+    )doc");
+
+    subGamepad.def("get_deadzone", &getDeadZone, py::arg("slot") = 0, R"doc(
+Get the current dead zone value for a gamepad's analog sticks.
+
+Args:
+    slot (int, optional): Gamepad slot ID (default is 0).
+
+Returns:
+    float: Deadzone threshold.
+    )doc");
+
+    subGamepad.def("get_connected_slots", &getConnectedSlots, R"doc(
+Get a list of connected gamepad slot indices.
+
+Returns:
+    list[int]: A list of slot IDs with active gamepads.
+    )doc");
 }
 } // namespace kn::gamepad

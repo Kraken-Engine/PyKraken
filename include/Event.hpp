@@ -20,5 +20,13 @@ namespace event
 void _bind(py::module_& module);
 
 std::vector<Event> poll();
+
+void push(const Event& event);
+
+void schedule(const Event& event, uint32_t delay_ms, bool repeat = false);
+
+void cancelScheduled(const Event& event);
+
+Event newCustom();
 } // namespace event
 } // namespace kn

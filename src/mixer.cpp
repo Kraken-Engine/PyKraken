@@ -398,6 +398,16 @@ Raises:
     RuntimeError: If the audio file cannot be loaded or decoded.
         )doc")
 
+        .def_property("volume", &Audio::getVolume, &Audio::setVolume, R"doc(
+The volume level for new and existing playbacks.
+
+Setting this property affects all currently playing voices and sets the default
+volume for future playbacks. Volume can exceed 1.0 for amplification.
+
+Type:
+    float: Volume level (0.0 = silent, 1.0 = original volume, >1.0 = amplified).
+        )doc")
+
         .def("play", &Audio::play, py::arg("fade_in_ms") = 0, py::arg("loop") = false,
              R"doc(
 Play the audio with optional fade-in time and loop setting.
@@ -420,16 +430,6 @@ time is specified, all voices will fade out over that duration before stopping.
 
 Args:
     fade_out_ms (int, optional): Fade-out duration in milliseconds. Defaults to 0.
-        )doc")
-
-        .def_property("volume", &Audio::getVolume, &Audio::setVolume, R"doc(
-The volume level for new and existing playbacks.
-
-Setting this property affects all currently playing voices and sets the default
-volume for future playbacks. Volume can exceed 1.0 for amplification.
-
-Type:
-    float: Volume level (0.0 = silent, 1.0 = original volume, >1.0 = amplified).
         )doc");
 
     // ------------ AudioStream -------------
@@ -452,6 +452,18 @@ Args:
 Raises:
     RuntimeError: If the audio file cannot be opened for streaming.
         )doc")
+
+        .def_property("volume", &AudioStream::getVolume, &AudioStream::setVolume, R"doc(
+The volume level of the audio stream.
+
+Volume can exceed 1.0 for amplification.
+
+Type:
+    float: Volume level (0.0 = silent, 1.0 = original volume, >1.0 = amplified).
+    )doc")
+        .def_property_readonly("current_time", &AudioStream::getCurrentTime, R"doc(
+The current playback time position in seconds.
+    )doc")
 
         .def("play", &AudioStream::play, py::arg("fade_in_ms") = 0, py::arg("loop") = false,
              py::arg("start_time_seconds") = 0.0f,
@@ -503,18 +515,6 @@ Set whether the audio stream loops continuously.
 
 Args:
     loop (bool): True to enable looping, False to disable.
-        )doc")
-
-        .def_property("volume", &AudioStream::getVolume, &AudioStream::setVolume, R"doc(
-The volume level of the audio stream.
-
-Volume can exceed 1.0 for amplification.
-
-Type:
-    float: Volume level (0.0 = silent, 1.0 = original volume, >1.0 = amplified).
-        )doc")
-        .def_property_readonly("current_time", &AudioStream::getCurrentTime, R"doc(
-The current playback time position in seconds.
         )doc");
 }
 } // namespace mixer

@@ -19,7 +19,6 @@ void _bind(const py::module_& module)
         .value("BOTTOM_LEFT", Anchor::BottomLeft)
         .value("BOTTOM_MID", Anchor::BottomMid)
         .value("BOTTOM_RIGHT", Anchor::BottomRight)
-        .export_values()
         .finalize();
 
     // Define Align enum

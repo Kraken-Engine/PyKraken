@@ -17,8 +17,9 @@ from . import rect
 from . import renderer
 from . import time
 from . import transform
+from . import viewport
 from . import window
-__all__: list[str] = ['AUDIO_DEVICE_ADDED', 'AUDIO_DEVICE_FORMAT_CHANGED', 'AUDIO_DEVICE_REMOVED', 'Align', 'Anchor', 'Animation', 'AnimationController', 'Audio', 'AudioStream', 'BOTTOM_LEFT', 'BOTTOM_MID', 'BOTTOM_RIGHT', 'CAMERA_DEVICE_ADDED', 'CAMERA_DEVICE_APPROVED', 'CAMERA_DEVICE_DENIED', 'CAMERA_DEVICE_REMOVED', 'CENTER', 'CLIPBOARD_UPDATE', 'C_BACK', 'C_DPAD_DOWN', 'C_DPAD_LEFT', 'C_DPAD_RIGHT', 'C_DPAD_UP', 'C_EAST', 'C_GUIDE', 'C_LSHOULDER', 'C_LSTICK', 'C_LTRIGGER', 'C_LX', 'C_LY', 'C_NORTH', 'C_PS3', 'C_PS4', 'C_PS5', 'C_RSHOULDER', 'C_RSTICK', 'C_RTRIGGER', 'C_RX', 'C_RY', 'C_SOUTH', 'C_STANDARD', 'C_START', 'C_SWITCH_JOYCON_LEFT', 'C_SWITCH_JOYCON_PAIR', 'C_SWITCH_JOYCON_RIGHT', 'C_SWITCH_PRO', 'C_WEST', 'C_XBOX_360', 'C_XBOX_ONE', 'Camera', 'Circle', 'Color', 'DID_ENTER_BACKGROUND', 'DID_ENTER_FOREGROUND', 'DISPLAY_ADDED', 'DISPLAY_CONTENT_SCALE_CHANGED', 'DISPLAY_CURRENT_MODE_CHANGED', 'DISPLAY_DESKTOP_MODE_CHANGED', 'DISPLAY_MOVED', 'DISPLAY_ORIENTATION', 'DISPLAY_REMOVED', 'DROP_BEGIN', 'DROP_COMPLETE', 'DROP_FILE', 'DROP_POSITION', 'DROP_TEXT', 'EasingAnimation', 'Event', 'EventType', 'FINGER_CANCELED', 'FINGER_DOWN', 'FINGER_MOTION', 'FINGER_UP', 'Font', 'FontHint', 'Frame', 'GAMEPAD_ADDED', 'GAMEPAD_AXIS_MOTION', 'GAMEPAD_BUTTON_DOWN', 'GAMEPAD_BUTTON_UP', 'GAMEPAD_REMAPPED', 'GAMEPAD_REMOVED', 'GAMEPAD_SENSOR_UPDATE', 'GAMEPAD_STEAM_HANDLE_UPDATED', 'GAMEPAD_TOUCHPAD_DOWN', 'GAMEPAD_TOUCHPAD_MOTION', 'GAMEPAD_TOUCHPAD_UP', 'GAMEPAD_UPDATE_COMPLETE', 'GamepadAxis', 'GamepadButton', 'GamepadType', 'InputAction', 'KEYBOARD_ADDED', 'KEYBOARD_REMOVED', 'KEYMAP_CHANGED', 'KEY_DOWN', 'KEY_UP', 'K_0', 'K_1', 'K_2', 'K_3', 'K_4', 'K_5', 'K_6', 'K_7', 'K_8', 'K_9', 'K_AGAIN', 'K_AMPERSAND', 'K_APPLICATION', 'K_ASTERISK', 'K_AT', 'K_BACKSLASH', 'K_BACKSPACE', 'K_CALL', 'K_CAPS', 'K_CARET', 'K_CHANNEL_DEC', 'K_CHANNEL_INC', 'K_COLON', 'K_COMMA', 'K_COPY', 'K_CUT', 'K_DBLQUOTE', 'K_DEL', 'K_DOLLAR', 'K_DOWN', 'K_END', 'K_ENDCALL', 'K_EQ', 'K_ESC', 'K_EXCLAIM', 'K_EXECUTE', 'K_F1', 'K_F10', 'K_F11', 'K_F12', 'K_F13', 'K_F14', 'K_F15', 'K_F2', 'K_F3', 'K_F4', 'K_F5', 'K_F6', 'K_F7', 'K_F8', 'K_F9', 'K_FIND', 'K_GRAVE', 'K_GT', 'K_HASH', 'K_HELP', 'K_HOME', 'K_INS', 'K_KP_0', 'K_KP_1', 'K_KP_2', 'K_KP_3', 'K_KP_4', 'K_KP_5', 'K_KP_6', 'K_KP_7', 'K_KP_8', 'K_KP_9', 'K_KP_DIV', 'K_KP_ENTER', 'K_KP_MINUS', 'K_KP_MULT', 'K_KP_PERIOD', 'K_KP_PLUS', 'K_LALT', 'K_LBRACE', 'K_LBRACKET', 'K_LCTRL', 'K_LEFT', 'K_LGUI', 'K_LPAREN', 'K_LSHIFT', 'K_LT', 'K_MEDIA_EJECT', 'K_MEDIA_FF', 'K_MEDIA_NEXT', 'K_MEDIA_PAUSE', 'K_MEDIA_PLAY', 'K_MEDIA_PLAY_PAUSE', 'K_MEDIA_PREV', 'K_MEDIA_REC', 'K_MEDIA_REWIND', 'K_MEDIA_SELECT', 'K_MEDIA_STOP', 'K_MENU', 'K_MINUS', 'K_MODE', 'K_MUTE', 'K_NUMLOCK', 'K_PASTE', 'K_PAUSE', 'K_PERCENT', 'K_PERIOD', 'K_PGDOWN', 'K_PGUP', 'K_PIPE', 'K_PLUS', 'K_POWER', 'K_PRTSCR', 'K_QUESTION', 'K_RALT', 'K_RBRACE', 'K_RBRACKET', 'K_RCTRL', 'K_RETURN', 'K_RGUI', 'K_RIGHT', 'K_RPAREN', 'K_RSHIFT', 'K_SCRLK', 'K_SELECT', 'K_SEMICOLON', 'K_SGLQUOTE', 'K_SLASH', 'K_SLEEP', 'K_SOFTLEFT', 'K_SOFTRIGHT', 'K_SPACE', 'K_STOP', 'K_TAB', 'K_TILDE', 'K_UNDERSCORE', 'K_UNDO', 'K_UNKNOWN', 'K_UP', 'K_VOLDOWN', 'K_VOLUP', 'K_WAKE', 'K_a', 'K_b', 'K_c', 'K_d', 'K_e', 'K_f', 'K_g', 'K_h', 'K_i', 'K_j', 'K_k', 'K_l', 'K_m', 'K_n', 'K_o', 'K_p', 'K_q', 'K_r', 'K_s', 'K_t', 'K_u', 'K_v', 'K_w', 'K_x', 'K_y', 'K_z', 'Keycode', 'LOCALE_CHANGED', 'LOW_MEMORY', 'Line', 'MID_LEFT', 'MID_RIGHT', 'MOUSE_ADDED', 'MOUSE_BUTTON_DOWN', 'MOUSE_BUTTON_UP', 'MOUSE_MOTION', 'MOUSE_REMOVED', 'MOUSE_WHEEL', 'M_LEFT', 'M_MIDDLE', 'M_RIGHT', 'M_SIDE1', 'M_SIDE2', 'Mask', 'MouseButton', 'PEN_AXIS', 'PEN_BUTTON_DOWN', 'PEN_BUTTON_UP', 'PEN_DOWN', 'PEN_MOTION', 'PEN_PROXIMITY_IN', 'PEN_PROXIMITY_OUT', 'PEN_UP', 'P_DISTANCE', 'P_PRESSURE', 'P_ROTATION', 'P_SLIDER', 'P_TANGENTIAL_PRESSURE', 'P_TILT_X', 'P_TILT_Y', 'PenAxis', 'PixelArray', 'PolarCoordinate', 'Polygon', 'QUIT', 'RENDER_DEVICE_LOST', 'RENDER_DEVICE_RESET', 'RENDER_TARGETS_RESET', 'Rect', 'SENSOR_UPDATE', 'SYSTEM_THEME_CHANGED', 'S_0', 'S_1', 'S_2', 'S_3', 'S_4', 'S_5', 'S_6', 'S_7', 'S_8', 'S_9', 'S_AGAIN', 'S_APOSTROPHE', 'S_APPLICATION', 'S_BACKSLASH', 'S_BACKSPACE', 'S_CALL', 'S_CAPS', 'S_CHANNEL_DEC', 'S_CHANNEL_INC', 'S_COMMA', 'S_COPY', 'S_CUT', 'S_DEL', 'S_DOWN', 'S_END', 'S_ENDCALL', 'S_EQ', 'S_ESC', 'S_EXECUTE', 'S_F1', 'S_F10', 'S_F11', 'S_F12', 'S_F13', 'S_F14', 'S_F15', 'S_F2', 'S_F3', 'S_F4', 'S_F5', 'S_F6', 'S_F7', 'S_F8', 'S_F9', 'S_FIND', 'S_GRAVE', 'S_HELP', 'S_HOME', 'S_INS', 'S_KP_0', 'S_KP_1', 'S_KP_2', 'S_KP_3', 'S_KP_4', 'S_KP_5', 'S_KP_6', 'S_KP_7', 'S_KP_8', 'S_KP_9', 'S_KP_DIV', 'S_KP_ENTER', 'S_KP_MINUS', 'S_KP_MULT', 'S_KP_PERIOD', 'S_KP_PLUS', 'S_LALT', 'S_LBRACKET', 'S_LCTRL', 'S_LEFT', 'S_LGUI', 'S_LSHIFT', 'S_MEDIA_EJECT', 'S_MEDIA_FAST_FORWARD', 'S_MEDIA_NEXT', 'S_MEDIA_PAUSE', 'S_MEDIA_PLAY', 'S_MEDIA_PLAY_PAUSE', 'S_MEDIA_PREV', 'S_MEDIA_REC', 'S_MEDIA_REWIND', 'S_MEDIA_SELECT', 'S_MEDIA_STOP', 'S_MENU', 'S_MINUS', 'S_MODE', 'S_MUTE', 'S_NUMLOCK', 'S_PASTE', 'S_PAUSE', 'S_PERIOD', 'S_PGDOWN', 'S_PGUP', 'S_POWER', 'S_PRTSCR', 'S_RALT', 'S_RBRACKET', 'S_RCTRL', 'S_RETURN', 'S_RGUI', 'S_RIGHT', 'S_RSHIFT', 'S_SCRLK', 'S_SELECT', 'S_SEMICOLON', 'S_SLASH', 'S_SLEEP', 'S_SOFTLEFT', 'S_SOFTRIGHT', 'S_SPACE', 'S_STOP', 'S_TAB', 'S_UNDO', 'S_UP', 'S_VOLDOWN', 'S_VOLUP', 'S_WAKE', 'S_a', 'S_b', 'S_c', 'S_d', 'S_e', 'S_f', 'S_g', 'S_h', 'S_i', 'S_j', 'S_k', 'S_l', 'S_m', 'S_n', 'S_o', 'S_p', 'S_q', 'S_r', 'S_s', 'S_t', 'S_u', 'S_v', 'S_w', 'S_x', 'S_y', 'S_z', 'Scancode', 'ShaderState', 'SheetStrip', 'TERMINATING', 'TEXT_EDITING', 'TEXT_EDITING_CANDIDATES', 'TEXT_INPUT', 'TOP_LEFT', 'TOP_MID', 'TOP_RIGHT', 'Text', 'Texture', 'Tile', 'TileLayer', 'TileMap', 'Timer', 'Vec2', 'WILL_ENTER_BACKGROUND', 'WILL_ENTER_FOREGROUND', 'WINDOW_CLOSE_REQUESTED', 'WINDOW_DESTROYED', 'WINDOW_DISPLAY_CHANGED', 'WINDOW_DISPLAY_SCALE_CHANGED', 'WINDOW_ENTER_FULLSCREEN', 'WINDOW_EXPOSED', 'WINDOW_FOCUS_GAINED', 'WINDOW_FOCUS_LOST', 'WINDOW_HDR_STATE_CHANGED', 'WINDOW_HIDDEN', 'WINDOW_HIT_TEST', 'WINDOW_ICCPROF_CHANGED', 'WINDOW_LEAVE_FULLSCREEN', 'WINDOW_MAXIMIZED', 'WINDOW_MINIMIZED', 'WINDOW_MOUSE_ENTER', 'WINDOW_MOUSE_LEAVE', 'WINDOW_MOVED', 'WINDOW_OCCLUDED', 'WINDOW_RESIZED', 'WINDOW_RESTORED', 'WINDOW_SAFE_AREA_CHANGED', 'WINDOW_SHOWN', 'collision', 'color', 'draw', 'ease', 'event', 'gamepad', 'init', 'input', 'key', 'line', 'math', 'mouse', 'quit', 'rect', 'renderer', 'time', 'transform', 'window']
+__all__: list[str] = ['AUDIO_DEVICE_ADDED', 'AUDIO_DEVICE_FORMAT_CHANGED', 'AUDIO_DEVICE_REMOVED', 'Align', 'Anchor', 'Animation', 'AnimationController', 'Audio', 'AudioStream', 'CAMERA_DEVICE_ADDED', 'CAMERA_DEVICE_APPROVED', 'CAMERA_DEVICE_DENIED', 'CAMERA_DEVICE_REMOVED', 'CLIPBOARD_UPDATE', 'C_BACK', 'C_DPAD_DOWN', 'C_DPAD_LEFT', 'C_DPAD_RIGHT', 'C_DPAD_UP', 'C_EAST', 'C_GUIDE', 'C_LSHOULDER', 'C_LSTICK', 'C_LTRIGGER', 'C_LX', 'C_LY', 'C_NORTH', 'C_PS3', 'C_PS4', 'C_PS5', 'C_RSHOULDER', 'C_RSTICK', 'C_RTRIGGER', 'C_RX', 'C_RY', 'C_SOUTH', 'C_STANDARD', 'C_START', 'C_SWITCH_JOYCON_LEFT', 'C_SWITCH_JOYCON_PAIR', 'C_SWITCH_JOYCON_RIGHT', 'C_SWITCH_PRO', 'C_WEST', 'C_XBOX_360', 'C_XBOX_ONE', 'Camera', 'Circle', 'Color', 'DID_ENTER_BACKGROUND', 'DID_ENTER_FOREGROUND', 'DISPLAY_ADDED', 'DISPLAY_CONTENT_SCALE_CHANGED', 'DISPLAY_CURRENT_MODE_CHANGED', 'DISPLAY_DESKTOP_MODE_CHANGED', 'DISPLAY_MOVED', 'DISPLAY_ORIENTATION', 'DISPLAY_REMOVED', 'DROP_BEGIN', 'DROP_COMPLETE', 'DROP_FILE', 'DROP_POSITION', 'DROP_TEXT', 'EasingAnimation', 'Event', 'EventType', 'FINGER_CANCELED', 'FINGER_DOWN', 'FINGER_MOTION', 'FINGER_UP', 'Font', 'FontHint', 'Frame', 'GAMEPAD_ADDED', 'GAMEPAD_AXIS_MOTION', 'GAMEPAD_BUTTON_DOWN', 'GAMEPAD_BUTTON_UP', 'GAMEPAD_REMAPPED', 'GAMEPAD_REMOVED', 'GAMEPAD_SENSOR_UPDATE', 'GAMEPAD_STEAM_HANDLE_UPDATED', 'GAMEPAD_TOUCHPAD_DOWN', 'GAMEPAD_TOUCHPAD_MOTION', 'GAMEPAD_TOUCHPAD_UP', 'GAMEPAD_UPDATE_COMPLETE', 'GamepadAxis', 'GamepadButton', 'GamepadType', 'InputAction', 'KEYBOARD_ADDED', 'KEYBOARD_REMOVED', 'KEYMAP_CHANGED', 'KEY_DOWN', 'KEY_UP', 'K_0', 'K_1', 'K_2', 'K_3', 'K_4', 'K_5', 'K_6', 'K_7', 'K_8', 'K_9', 'K_AGAIN', 'K_AMPERSAND', 'K_APPLICATION', 'K_ASTERISK', 'K_AT', 'K_BACKSLASH', 'K_BACKSPACE', 'K_CALL', 'K_CAPS', 'K_CARET', 'K_CHANNEL_DEC', 'K_CHANNEL_INC', 'K_COLON', 'K_COMMA', 'K_COPY', 'K_CUT', 'K_DBLQUOTE', 'K_DEL', 'K_DOLLAR', 'K_DOWN', 'K_END', 'K_ENDCALL', 'K_EQ', 'K_ESC', 'K_EXCLAIM', 'K_EXECUTE', 'K_F1', 'K_F10', 'K_F11', 'K_F12', 'K_F13', 'K_F14', 'K_F15', 'K_F2', 'K_F3', 'K_F4', 'K_F5', 'K_F6', 'K_F7', 'K_F8', 'K_F9', 'K_FIND', 'K_GRAVE', 'K_GT', 'K_HASH', 'K_HELP', 'K_HOME', 'K_INS', 'K_KP_0', 'K_KP_1', 'K_KP_2', 'K_KP_3', 'K_KP_4', 'K_KP_5', 'K_KP_6', 'K_KP_7', 'K_KP_8', 'K_KP_9', 'K_KP_DIV', 'K_KP_ENTER', 'K_KP_MINUS', 'K_KP_MULT', 'K_KP_PERIOD', 'K_KP_PLUS', 'K_LALT', 'K_LBRACE', 'K_LBRACKET', 'K_LCTRL', 'K_LEFT', 'K_LGUI', 'K_LPAREN', 'K_LSHIFT', 'K_LT', 'K_MEDIA_EJECT', 'K_MEDIA_FF', 'K_MEDIA_NEXT', 'K_MEDIA_PAUSE', 'K_MEDIA_PLAY', 'K_MEDIA_PLAY_PAUSE', 'K_MEDIA_PREV', 'K_MEDIA_REC', 'K_MEDIA_REWIND', 'K_MEDIA_SELECT', 'K_MEDIA_STOP', 'K_MENU', 'K_MINUS', 'K_MODE', 'K_MUTE', 'K_NUMLOCK', 'K_PASTE', 'K_PAUSE', 'K_PERCENT', 'K_PERIOD', 'K_PGDOWN', 'K_PGUP', 'K_PIPE', 'K_PLUS', 'K_POWER', 'K_PRTSCR', 'K_QUESTION', 'K_RALT', 'K_RBRACE', 'K_RBRACKET', 'K_RCTRL', 'K_RETURN', 'K_RGUI', 'K_RIGHT', 'K_RPAREN', 'K_RSHIFT', 'K_SCRLK', 'K_SELECT', 'K_SEMICOLON', 'K_SGLQUOTE', 'K_SLASH', 'K_SLEEP', 'K_SOFTLEFT', 'K_SOFTRIGHT', 'K_SPACE', 'K_STOP', 'K_TAB', 'K_TILDE', 'K_UNDERSCORE', 'K_UNDO', 'K_UNKNOWN', 'K_UP', 'K_VOLDOWN', 'K_VOLUP', 'K_WAKE', 'K_a', 'K_b', 'K_c', 'K_d', 'K_e', 'K_f', 'K_g', 'K_h', 'K_i', 'K_j', 'K_k', 'K_l', 'K_m', 'K_n', 'K_o', 'K_p', 'K_q', 'K_r', 'K_s', 'K_t', 'K_u', 'K_v', 'K_w', 'K_x', 'K_y', 'K_z', 'Keycode', 'LOCALE_CHANGED', 'LOW_MEMORY', 'Line', 'MOUSE_ADDED', 'MOUSE_BUTTON_DOWN', 'MOUSE_BUTTON_UP', 'MOUSE_MOTION', 'MOUSE_REMOVED', 'MOUSE_WHEEL', 'M_LEFT', 'M_MIDDLE', 'M_RIGHT', 'M_SIDE1', 'M_SIDE2', 'Mask', 'MouseButton', 'PEN_AXIS', 'PEN_BUTTON_DOWN', 'PEN_BUTTON_UP', 'PEN_DOWN', 'PEN_MOTION', 'PEN_PROXIMITY_IN', 'PEN_PROXIMITY_OUT', 'PEN_UP', 'P_DISTANCE', 'P_PRESSURE', 'P_ROTATION', 'P_SLIDER', 'P_TANGENTIAL_PRESSURE', 'P_TILT_X', 'P_TILT_Y', 'PenAxis', 'PixelArray', 'PolarCoordinate', 'Polygon', 'QUIT', 'RENDER_DEVICE_LOST', 'RENDER_DEVICE_RESET', 'RENDER_TARGETS_RESET', 'Rect', 'SENSOR_UPDATE', 'SYSTEM_THEME_CHANGED', 'S_0', 'S_1', 'S_2', 'S_3', 'S_4', 'S_5', 'S_6', 'S_7', 'S_8', 'S_9', 'S_AGAIN', 'S_APOSTROPHE', 'S_APPLICATION', 'S_BACKSLASH', 'S_BACKSPACE', 'S_CALL', 'S_CAPS', 'S_CHANNEL_DEC', 'S_CHANNEL_INC', 'S_COMMA', 'S_COPY', 'S_CUT', 'S_DEL', 'S_DOWN', 'S_END', 'S_ENDCALL', 'S_EQ', 'S_ESC', 'S_EXECUTE', 'S_F1', 'S_F10', 'S_F11', 'S_F12', 'S_F13', 'S_F14', 'S_F15', 'S_F2', 'S_F3', 'S_F4', 'S_F5', 'S_F6', 'S_F7', 'S_F8', 'S_F9', 'S_FIND', 'S_GRAVE', 'S_HELP', 'S_HOME', 'S_INS', 'S_KP_0', 'S_KP_1', 'S_KP_2', 'S_KP_3', 'S_KP_4', 'S_KP_5', 'S_KP_6', 'S_KP_7', 'S_KP_8', 'S_KP_9', 'S_KP_DIV', 'S_KP_ENTER', 'S_KP_MINUS', 'S_KP_MULT', 'S_KP_PERIOD', 'S_KP_PLUS', 'S_LALT', 'S_LBRACKET', 'S_LCTRL', 'S_LEFT', 'S_LGUI', 'S_LSHIFT', 'S_MEDIA_EJECT', 'S_MEDIA_FAST_FORWARD', 'S_MEDIA_NEXT', 'S_MEDIA_PAUSE', 'S_MEDIA_PLAY', 'S_MEDIA_PLAY_PAUSE', 'S_MEDIA_PREV', 'S_MEDIA_REC', 'S_MEDIA_REWIND', 'S_MEDIA_SELECT', 'S_MEDIA_STOP', 'S_MENU', 'S_MINUS', 'S_MODE', 'S_MUTE', 'S_NUMLOCK', 'S_PASTE', 'S_PAUSE', 'S_PERIOD', 'S_PGDOWN', 'S_PGUP', 'S_POWER', 'S_PRTSCR', 'S_RALT', 'S_RBRACKET', 'S_RCTRL', 'S_RETURN', 'S_RGUI', 'S_RIGHT', 'S_RSHIFT', 'S_SCRLK', 'S_SELECT', 'S_SEMICOLON', 'S_SLASH', 'S_SLEEP', 'S_SOFTLEFT', 'S_SOFTRIGHT', 'S_SPACE', 'S_STOP', 'S_TAB', 'S_UNDO', 'S_UP', 'S_VOLDOWN', 'S_VOLUP', 'S_WAKE', 'S_a', 'S_b', 'S_c', 'S_d', 'S_e', 'S_f', 'S_g', 'S_h', 'S_i', 'S_j', 'S_k', 'S_l', 'S_m', 'S_n', 'S_o', 'S_p', 'S_q', 'S_r', 'S_s', 'S_t', 'S_u', 'S_v', 'S_w', 'S_x', 'S_y', 'S_z', 'Scancode', 'ShaderState', 'SheetStrip', 'TERMINATING', 'TEXT_EDITING', 'TEXT_EDITING_CANDIDATES', 'TEXT_INPUT', 'Text', 'Texture', 'Tile', 'TileLayer', 'TileMap', 'Timer', 'Vec2', 'ViewportMode', 'WILL_ENTER_BACKGROUND', 'WILL_ENTER_FOREGROUND', 'WINDOW_CLOSE_REQUESTED', 'WINDOW_DESTROYED', 'WINDOW_DISPLAY_CHANGED', 'WINDOW_DISPLAY_SCALE_CHANGED', 'WINDOW_ENTER_FULLSCREEN', 'WINDOW_EXPOSED', 'WINDOW_FOCUS_GAINED', 'WINDOW_FOCUS_LOST', 'WINDOW_HDR_STATE_CHANGED', 'WINDOW_HIDDEN', 'WINDOW_HIT_TEST', 'WINDOW_ICCPROF_CHANGED', 'WINDOW_LEAVE_FULLSCREEN', 'WINDOW_MAXIMIZED', 'WINDOW_MINIMIZED', 'WINDOW_MOUSE_ENTER', 'WINDOW_MOUSE_LEAVE', 'WINDOW_MOVED', 'WINDOW_OCCLUDED', 'WINDOW_RESIZED', 'WINDOW_RESTORED', 'WINDOW_SAFE_AREA_CHANGED', 'WINDOW_SHOWN', 'collision', 'color', 'draw', 'ease', 'event', 'gamepad', 'init', 'input', 'key', 'line', 'math', 'mouse', 'quit', 'rect', 'renderer', 'time', 'transform', 'viewport', 'window']
 class Align(enum.IntEnum):
     CENTER: typing.ClassVar[Align]  # value = <Align.CENTER: 1>
     LEFT: typing.ClassVar[Align]  # value = <Align.LEFT: 0>
@@ -447,13 +448,9 @@ class Circle:
     """
     __hash__: typing.ClassVar[None] = None
     def __eq__(self, other: Circle) -> bool:
-        """
-        Check if two circles are equal.
-        """
+        ...
     def __getitem__(self, index: typing.SupportsInt) -> float:
-        """
-        Get component by index: 0 = x, 1 = y, 2 = radius.
-        """
+        ...
     @typing.overload
     def __init__(self, pos: Vec2, radius: typing.SupportsFloat) -> None:
         """
@@ -469,17 +466,11 @@ class Circle:
         Create a circle from a nested sequence: ([x, y], radius).
         """
     def __iter__(self) -> collections.abc.Iterator:
-        """
-        Return an iterator over (x, y, radius).
-        """
+        ...
     def __len__(self) -> int:
-        """
-        Always returns 3 for (x, y, radius).
-        """
+        ...
     def __ne__(self, other: Circle) -> bool:
-        """
-        Check if two circles are not equal.
-        """
+        ...
     def as_rect(self) -> Rect:
         """
         Return the smallest rectangle that fully contains the circle.
@@ -524,28 +515,9 @@ class Color:
     """
     __hash__: typing.ClassVar[None] = None
     def __eq__(self, other: Color) -> bool:
-        """
-        Check if two Color objects are equal (all RGBA components match).
-        
-        Args:
-            other (Color): The color to compare with.
-        
-        Returns:
-            bool: True if colors are identical, False otherwise.
-        """
+        ...
     def __getitem__(self, index: typing.SupportsInt) -> int:
-        """
-        Access color channels by index.
-        
-        Args:
-            index (int): Channel index (0=r, 1=g, 2=b, 3=a).
-        
-        Returns:
-            int: Channel value (0-255).
-        
-        Raises:
-            IndexError: If index is not in range [0, 3].
-        """
+        ...
     @typing.overload
     def __init__(self) -> None:
         """
@@ -581,113 +553,25 @@ class Color:
                 - 4 values: RGBA
         """
     def __iter__(self) -> collections.abc.Iterator:
-        """
-        Return an iterator over color channels.
-        
-        Yields:
-            int: The r, g, b, a values in that order (0-255 each).
-        
-        Example:
-            for channel in color:
-                print(channel)  # Prints r, g, b, a values
-        """
+        ...
     def __len__(self) -> int:
-        """
-        Return the number of color channels.
-        
-        Returns:
-            int: Always returns 4 (for r, g, b, a channels).
-        """
+        ...
     def __mul__(self, scalar: typing.SupportsFloat) -> Color:
-        """
-        Multiply RGB color channels by a scalar value.
-        
-        Multiplies each RGB component by the scalar. Results are clamped to [0, 255].
-        The alpha channel is preserved unchanged.
-        Negative scalars invert the color before applying the absolute value.
-        
-        Args:
-            scalar (float): Scalar multiplier (any positive or negative value).
-        
-        Returns:
-            Color: New Color with scaled RGB values and original alpha.
-        """
+        ...
     def __ne__(self, other: Color) -> bool:
-        """
-        Check if two Color objects are not equal.
-        
-        Args:
-            other (Color): The color to compare with.
-        
-        Returns:
-            bool: True if any component differs, False otherwise.
-        """
+        ...
     def __neg__(self) -> Color:
-        """
-        Unary negation operator to invert the color.
-        
-        Returns the inverted color by flipping RGB channels (255 - value).
-        The alpha channel is preserved unchanged.
-        
-        Returns:
-            Color: New Color with inverted RGB values and original alpha.
-        """
+        ...
     def __repr__(self) -> str:
-        """
-        Return a string suitable for debugging and recreation.
-        
-        Returns:
-            str: String in format "Color(r, g, b, a)" that can recreate the object.
-        """
+        ...
     def __rmul__(self, scalar: typing.SupportsFloat) -> Color:
-        """
-        Multiply RGB color channels by a scalar value (reverse multiplication).
-        
-        Allows scalar * color syntax in addition to color * scalar.
-        Results are clamped to [0, 255]. The alpha channel is preserved unchanged.
-        Negative scalars invert the color before applying the absolute value.
-        
-        Args:
-            scalar (float): Scalar multiplier (any positive or negative value).
-        
-        Returns:
-            Color: New Color with scaled RGB values and original alpha.
-        """
+        ...
     def __setitem__(self, index: typing.SupportsInt, value: typing.SupportsInt) -> None:
-        """
-        Set a color channel by index.
-        
-        Args:
-            index (int): Channel index (0=r, 1=g, 2=b, 3=a).
-            value (int): New channel value (0-255).
-        
-        Raises:
-            IndexError: If index is not in range [0, 3].
-        """
+        ...
     def __str__(self) -> str:
-        """
-        Return a human-readable string representation.
-        
-        Returns:
-            str: String in format "(r, g, b, a)" with integer values.
-        """
+        ...
     def __truediv__(self, scalar: typing.SupportsFloat) -> Color:
-        """
-        Divide RGB color channels by a scalar value.
-        
-        Divides each RGB component by the scalar. Results are clamped to [0, 255].
-        The alpha channel is preserved unchanged.
-        Negative scalars invert the color before applying the absolute value.
-        
-        Args:
-            scalar (float): Scalar divisor (any positive or negative value except 0).
-        
-        Returns:
-            Color: New Color with divided RGB values and original alpha.
-        
-        Raises:
-            ValueError: If scalar is zero.
-        """
+        ...
     def copy(self) -> Color:
         """
         Create a copy of the color.
@@ -833,17 +717,7 @@ class Event:
             
     """
     def __getattr__(self, arg0: str) -> typing.Any:
-        """
-        Dynamically access event attributes.
-        
-        Examples:
-            event.key
-            event.button
-            event.pos
-        
-        Raises:
-            AttributeError: If the requested attribute doesn't exist.
-        """
+        ...
     @property
     def type(self) -> int:
         """
@@ -994,6 +868,14 @@ class Font:
     def alignment(self, arg1: Align) -> None:
         ...
     @property
+    def ascent(self) -> int:
+        """
+        Get the pixel ascent of the font.
+        
+        Returns:
+            int: The font ascent in pixels.
+        """
+    @property
     def bold(self) -> bool:
         """
         Get or set whether bold text style is enabled.
@@ -1001,6 +883,22 @@ class Font:
     @bold.setter
     def bold(self, arg1: bool) -> None:
         ...
+    @property
+    def descent(self) -> int:
+        """
+        Get the pixel descent of the font.
+        
+        Returns:
+            int: The font descent in pixels.
+        """
+    @property
+    def height(self) -> int:
+        """
+        Get the maximum pixel height of all glyphs in the font.
+        
+        Returns:
+            int: The font height in pixels.
+        """
     @property
     def hinting(self) -> FontHint:
         """
@@ -1019,6 +917,30 @@ class Font:
         """
     @italic.setter
     def italic(self, arg1: bool) -> None:
+        ...
+    @property
+    def kerning(self) -> bool:
+        """
+        Get or set whether kerning is enabled.
+        """
+    @kerning.setter
+    def kerning(self, arg1: bool) -> None:
+        ...
+    @property
+    def line_spacing(self) -> int:
+        """
+        Get or set the spacing between lines of text in pixels.
+        """
+    @line_spacing.setter
+    def line_spacing(self, arg1: typing.SupportsInt) -> None:
+        ...
+    @property
+    def outline(self) -> int:
+        """
+        Get or set the outline width in pixels (0 for no outline).
+        """
+    @outline.setter
+    def outline(self, arg1: typing.SupportsInt) -> None:
         ...
     @property
     def pt_size(self) -> int:
@@ -1369,23 +1291,9 @@ class Line:
     """
     __hash__: typing.ClassVar[None] = None
     def __eq__(self, other: Line) -> bool:
-        """
-        Check if two lines are equal.
-        
-        Args:
-            other (Line): The other line to compare.
-        
-        Returns:
-            bool: True if all components are equal.
-        """
-    def __getitem__(self, arg0: typing.SupportsInt) -> float:
-        """
-        Get coordinate by index:
-            0 = ax, 1 = ay, 2 = bx, 3 = by
-        
-        Raises:
-            IndexError: If index is not 0-3.
-        """
+        ...
+    def __getitem__(self, index: typing.SupportsInt) -> float:
+        ...
     @typing.overload
     def __init__(self) -> None:
         """
@@ -1442,22 +1350,9 @@ class Line:
     def __iter__(self) -> collections.abc.Iterator:
         ...
     def __len__(self) -> int:
-        """
-        Return the number of components (always 4).
-        
-        Returns:
-            int: Always returns 4 (ax, ay, bx, by).
-        """
+        ...
     def __ne__(self, other: Line) -> bool:
-        """
-        Check if two lines are not equal.
-        
-        Args:
-            other (Line): The other line to compare.
-        
-        Returns:
-            bool: True if any component differs.
-        """
+        ...
     def copy(self) -> Line:
         """
         Return a copy of this line.
@@ -1928,122 +1823,65 @@ class PixelArray:
 class PolarCoordinate:
     """
     
-    Represents a polar coordinate with angle and radius components.
+    PolarCoordinate models a polar coordinate pair.
     
-    A polar coordinate system uses an angle (in radians) and radius to define a position
-    relative to a fixed origin point.
-        
+    Attributes:
+        angle (float): Angle in radians.
+        radius (float): Distance from origin.
+    
+    Methods:
+        to_cartesian: Convert the coordinate to a Vec2.
+            
     """
     def __eq__(self, arg0: PolarCoordinate) -> bool:
-        """
-        Check if two PolarCoordinates are equal.
-        
-        Args:
-            other (PolarCoordinate): The other PolarCoordinate to compare.
-        
-        Returns:
-            bool: True if both angle and radius are equal.
-        """
+        ...
     def __getitem__(self, index: typing.SupportsInt) -> float:
-        """
-        Access polar coordinate components by index.
-        
-        Args:
-            index (int): Index (0=angle, 1=radius).
-        
-        Returns:
-            float: The component value.
-        
-        Raises:
-            IndexError: If index is not 0 or 1.
-        """
+        ...
     def __hash__(self) -> int:
-        """
-        Return a hash value for the PolarCoordinate.
-        
-        Returns:
-            int: Hash value based on angle and radius.
-        """
+        ...
     @typing.overload
     def __init__(self) -> None:
         """
-        Create a PolarCoordinate with default values (0.0, 0.0).
+        Initialize a PolarCoordinate with zero angle and radius.
         """
     @typing.overload
     def __init__(self, angle: typing.SupportsFloat, radius: typing.SupportsFloat) -> None:
         """
-        Create a PolarCoordinate from angle and radius.
+        Initialize a PolarCoordinate from explicit values.
         
         Args:
-            angle (float): The angle in radians.
-            radius (float): The radius/distance from origin.
+            angle (float): Angle in radians.
+            radius (float): Distance from the origin.
         """
     @typing.overload
     def __init__(self, arg0: collections.abc.Sequence) -> None:
         """
-        Create a PolarCoordinate from a sequence of two elements.
+        Initialize a PolarCoordinate from a two-item sequence.
         
         Args:
-            sequence: A sequence (list, tuple) containing [angle, radius].
+            sequence (Sequence[float]): Iterable containing [angle, radius].
         
         Raises:
-            RuntimeError: If sequence doesn't contain exactly 2 elements.
+            RuntimeError: If the sequence does not contain exactly two elements.
         """
     def __iter__(self) -> collections.abc.Iterator:
-        """
-        Return an iterator over (angle, radius).
-        
-        Returns:
-            iterator: Iterator that yields angle first, then radius.
-        """
+        ...
     def __len__(self) -> int:
-        """
-        Return the number of components (always 2).
-        
-        Returns:
-            int: Always returns 2 (angle and radius).
-        """
+        ...
     def __ne__(self, arg0: PolarCoordinate) -> bool:
-        """
-        Check if two PolarCoordinates are not equal.
-        
-        Args:
-            other (PolarCoordinate): The other PolarCoordinate to compare.
-        
-        Returns:
-            bool: True if angle or radius are different.
-        """
+        ...
     def __repr__(self) -> str:
-        """
-        Return a string suitable for debugging and recreation.
-        
-        Returns:
-            str: String in format "PolarCoordinate(angle, radius)".
-        """
+        ...
     def __setitem__(self, index: typing.SupportsInt, value: typing.SupportsFloat) -> None:
-        """
-        Set polar coordinate components by index.
-        
-        Args:
-            index (int): Index (0=angle, 1=radius).
-            value (float): The new value to set.
-        
-        Raises:
-            IndexError: If index is not 0 or 1.
-        """
+        ...
     def __str__(self) -> str:
-        """
-        Return a human-readable string representation.
-        
-        Returns:
-            str: String in format "(angle, radius)".
-        """
+        ...
     def to_cartesian(self) -> Vec2:
         """
-        Convert polar coordinates to Cartesian coordinates.
+        Convert this PolarCoordinate to a Vec2.
         
         Returns:
-            Vec2: The equivalent Cartesian coordinates as a Vec2.
+            Vec2: Cartesian representation of this coordinate.
         """
     @property
     def angle(self) -> float:
@@ -2071,18 +1909,7 @@ class Polygon:
         
     """
     def __getitem__(self, index: typing.SupportsInt) -> Vec2:
-        """
-        Get a point by index.
-        
-        Args:
-            index (int): The index of the point to retrieve.
-        
-        Returns:
-            Vec2: The point at the specified index.
-        
-        Raises:
-            IndexError: If index is out of range.
-        """
+        ...
     @typing.overload
     def __init__(self) -> None:
         """
@@ -2097,16 +1924,9 @@ class Polygon:
             points (list[Vec2]): List of Vec2 points defining the polygon vertices.
         """
     def __iter__(self) -> collections.abc.Iterator:
-        """
-        Return an iterator over the polygon's points.
-        """
+        ...
     def __len__(self) -> int:
-        """
-        Return the number of points in the polygon.
-        
-        Returns:
-            int: The number of vertices.
-        """
+        ...
     def copy(self) -> Polygon:
         """
         Return a copy of the polygon.
@@ -2194,39 +2014,15 @@ class Rect:
     
     A Rect is defined by its top-left corner position (x, y) and dimensions (w, h).
     Supports various geometric operations, collision detection, and positioning methods.
-        
+            
     """
     __hash__: typing.ClassVar[None] = None
     def __bool__(self) -> bool:
-        """
-        Check if the rectangle has positive area.
-        
-        Returns:
-            bool: True if both width and height are greater than 0.
-        """
+        ...
     def __eq__(self, other: Rect) -> bool:
-        """
-        Check if two rectangles are equal.
-        
-        Args:
-            other (Rect): The other rectangle to compare.
-        
-        Returns:
-            bool: True if all components (x, y, w, h) are equal.
-        """
+        ...
     def __getitem__(self, index: typing.SupportsInt) -> float:
-        """
-        Access rectangle components by index.
-        
-        Args:
-            index (int): Index (0=x, 1=y, 2=w, 3=h).
-        
-        Returns:
-            float: The component value.
-        
-        Raises:
-            IndexError: If index is not 0, 1, 2, or 3.
-        """
+        ...
     @typing.overload
     def __init__(self) -> None:
         """
@@ -2284,43 +2080,15 @@ class Rect:
             RuntimeError: If sequence doesn't contain exactly 4 elements.
         """
     def __iter__(self) -> collections.abc.Iterator:
-        """
-        Return an iterator over (x, y, w, h).
-        
-        Returns:
-            iterator: Iterator that yields x, y, w, h in order.
-        """
+        ...
     def __len__(self) -> int:
-        """
-        Return the number of components (always 4).
-        
-        Returns:
-            int: Always returns 4 (x, y, w, h).
-        """
+        ...
     def __ne__(self, other: Rect) -> bool:
-        """
-        Check if two rectangles are not equal.
-        
-        Args:
-            other (Rect): The other rectangle to compare.
-        
-        Returns:
-            bool: True if any component differs.
-        """
+        ...
     def __repr__(self) -> str:
-        """
-        Return a string suitable for debugging and recreation.
-        
-        Returns:
-            str: String in format "Rect(x=..., y=..., w=..., h=...)".
-        """
+        ...
     def __str__(self) -> str:
-        """
-        Return a human-readable string representation.
-        
-        Returns:
-            str: String in format "[x, y, w, h]".
-        """
+        ...
     @typing.overload
     def clamp(self, other: Rect) -> None:
         """
@@ -2708,14 +2476,13 @@ class ShaderState:
     """
     Encapsulates a GPU shader and its associated render state.
     """
-    def __init__(self, fragment_file_path: str, uniform_buffer_count: typing.SupportsInt = 0, sampler_count: typing.SupportsInt = 1) -> None:
+    def __init__(self, fragment_file_path: str, uniform_buffer_count: typing.SupportsInt = 0) -> None:
         """
-        Creates a ShaderState from the specified fragment shader file.
+        Create a ShaderState from the specified fragment shader file.
         
-        Parameters:
+        Args:
             fragment_file_path (str): Path to the fragment shader file.
             uniform_buffer_count (int, optional): Number of uniform buffers used by the shader. Default is 0.
-            sampler_count (int, optional): Number of samplers used by the shader. Default is 1.
         """
     def bind(self) -> None:
         """
@@ -2723,11 +2490,11 @@ class ShaderState:
         """
     def set_uniform(self, binding: typing.SupportsInt, data: collections.abc.Buffer) -> None:
         """
-        Sets uniform data for the fragment shader at the specified binding point.
+        Set uniform data for the fragment shader at the specified binding point.
         
-        Parameters:
-            binding (int): The uniform buffer binding index.
-            data (buffer): A buffer or bytes object containing the uniform data to upload.
+        Args:
+            binding (int): Uniform buffer binding index.
+            data (buffer): Buffer or bytes object containing the uniform data to upload.
         """
     def unbind(self) -> None:
         """
@@ -3276,358 +3043,226 @@ class Timer:
 class Vec2:
     """
     
-    Represents a 2D vector with x and y components.
+    Vec2 represents a 2D vector.
     
-    Vec2 is used for positions, directions, velocities, and other 2D vector operations.
-    Supports arithmetic operations, comparisons, and various mathematical functions.
-        
+    Attributes:
+        x (float): Horizontal component.
+        y (float): Vertical component.
+    
+    Methods:
+        copy: Return a duplicated Vec2.
+        is_zero: Test whether components are near zero.
+        rotate: Rotate the vector in place.
+        to_polar: Convert the vector to a PolarCoordinate.
+        scale_to_length: Scale the vector to a specific length.
+        project: Project onto another Vec2.
+        reject: Remove the projection onto another Vec2.
+        reflect: Reflect across another Vec2.
+        normalize: Normalize the vector in place.
+        distance_to: Measure distance to another Vec2.
+        distance_squared_to: Measure squared distance to another Vec2.
+            
     """
     def __add__(self, other: Vec2) -> Vec2:
-        """
-        Add another Vec2 to this Vec2.
-        
-        Args:
-            other (Vec2): The Vec2 to add.
-        
-        Returns:
-            Vec2: A new Vec2 with the result of the addition.
-        """
+        ...
     def __bool__(self) -> bool:
-        """
-        Check if the vector is not zero.
-        
-        Returns:
-            bool: True if the vector is not zero, False if it is zero.
-        """
+        ...
     def __eq__(self, other: Vec2) -> bool:
-        """
-        Check if two Vec2s are equal (within tolerance).
-        
-        Args:
-            other (Vec2): The other Vec2 to compare.
-        
-        Returns:
-            bool: True if vectors are equal within tolerance.
-        """
+        ...
     def __ge__(self, other: Vec2) -> bool:
-        """
-        Check if this Vec2 is component-wise greater than or equal to another.
-        
-        Args:
-            other (Vec2): The other Vec2 to compare.
-        
-        Returns:
-            bool: True if not component-wise less than other.
-        """
+        ...
     def __getitem__(self, index: typing.SupportsInt) -> float:
-        """
-        Access vector components by index.
-        
-        Args:
-            index (int): Index (0=x, 1=y).
-        
-        Returns:
-            float: The component value.
-        
-        Raises:
-            IndexError: If index is not 0 or 1.
-        """
+        ...
     def __gt__(self, other: Vec2) -> bool:
-        """
-        Check if this Vec2 is component-wise greater than another.
-        
-        Args:
-            other (Vec2): The other Vec2 to compare.
-        
-        Returns:
-            bool: True if both x and y are greater than other's x and y.
-        """
+        ...
     def __hash__(self) -> int:
-        """
-        Return a hash value for the Vec2.
-        
-        Returns:
-            int: Hash value based on x and y components.
-        """
+        ...
     def __iadd__(self, other: Vec2) -> Vec2:
-        """
-        In-place addition (self += other).
-        
-        Args:
-            other (Vec2): The Vec2 to add.
-        
-        Returns:
-            Vec2: Reference to self after modification.
-        """
+        ...
     def __imul__(self, scalar: typing.SupportsFloat) -> Vec2:
-        """
-        In-place multiplication by a scalar value (self *= scalar).
-        
-        Args:
-            scalar (float): The scalar to multiply by.
-        
-        Returns:
-            Vec2: Reference to self after modification.
-        """
+        ...
     @typing.overload
     def __init__(self) -> None:
         """
-        Create a zero vector (0, 0).
+        Initialize a Vec2 with zeroed components.
         """
     @typing.overload
     def __init__(self, value: typing.SupportsFloat) -> None:
         """
-        Create a Vec2 with both x and y set to the same value.
+        Initialize a Vec2 with identical x and y values.
         
         Args:
-            value (float): Value to set for both x and y components.
+            value (float): Value assigned to both components.
         """
     @typing.overload
     def __init__(self, x: typing.SupportsFloat, y: typing.SupportsFloat) -> None:
         """
-        Create a Vec2 with given x and y values.
+        Initialize a Vec2 with explicit component values.
         
         Args:
-            x (float): The x component.
-            y (float): The y component.
+            x (float): Horizontal component.
+            y (float): Vertical component.
         """
     @typing.overload
     def __init__(self, arg0: collections.abc.Sequence) -> None:
         """
-        Create a Vec2 from a sequence of two elements.
+        Initialize a Vec2 from a two-item sequence.
         
         Args:
-            sequence: A sequence (list, tuple) containing [x, y].
+            sequence (Sequence[float]): Iterable containing [x, y].
         
         Raises:
-            RuntimeError: If sequence doesn't contain exactly 2 elements.
+            RuntimeError: If the sequence does not contain exactly two elements.
         """
     def __isub__(self, other: Vec2) -> Vec2:
-        """
-        In-place subtraction (self -= other).
-        
-        Args:
-            other (Vec2): The Vec2 to subtract.
-        
-        Returns:
-            Vec2: Reference to self after modification.
-        """
+        ...
     def __iter__(self) -> collections.abc.Iterator:
-        """
-        Return an iterator over (x, y).
-        
-        Returns:
-            iterator: Iterator that yields x first, then y.
-        """
+        ...
     def __itruediv__(self, scalar: typing.SupportsFloat) -> Vec2:
-        """
-        In-place division by a scalar value (self /= scalar).
-        
-        Args:
-            scalar (float): The scalar to divide by.
-        
-        Returns:
-            Vec2: Reference to self after modification.
-        """
+        ...
     def __le__(self, other: Vec2) -> bool:
-        """
-        Check if this Vec2 is component-wise less than or equal to another.
-        
-        Args:
-            other (Vec2): The other Vec2 to compare.
-        
-        Returns:
-            bool: True if not component-wise greater than other.
-        """
+        ...
     def __len__(self) -> int:
-        """
-        Return the number of components (always 2).
-        
-        Returns:
-            int: Always returns 2 (x and y).
-        """
+        ...
     def __lt__(self, other: Vec2) -> bool:
-        """
-        Check if this Vec2 is component-wise less than another.
-        
-        Args:
-            other (Vec2): The other Vec2 to compare.
-        
-        Returns:
-            bool: True if both x and y are less than other's x and y.
-        """
+        ...
     def __mul__(self, scalar: typing.SupportsFloat) -> Vec2:
-        """
-        Multiply the vector by a scalar value.
-        
-        Args:
-            scalar (float): The scalar to multiply by.
-        
-        Returns:
-            Vec2: A new Vec2 with multiplied components.
-        """
+        ...
     def __ne__(self, other: Vec2) -> bool:
-        """
-        Check if two Vec2s are not equal.
-        
-        Args:
-            other (Vec2): The other Vec2 to compare.
-        
-        Returns:
-            bool: True if vectors are not equal.
-        """
+        ...
     def __neg__(self) -> Vec2:
-        """
-        Return the negation of this vector (-self).
-        
-        Returns:
-            Vec2: A new Vec2 with negated x and y components.
-        """
+        ...
     def __radd__(self, other: Vec2) -> Vec2:
-        """
-        Right-hand addition (other + self).
-        
-        Args:
-            other (Vec2): The Vec2 to add.
-        
-        Returns:
-            Vec2: A new Vec2 with the result of the addition.
-        """
+        ...
     def __repr__(self) -> str:
-        """
-        Return a string suitable for debugging and recreation.
-        
-        Returns:
-            str: String in format "Vec2(x, y)".
-        """
+        ...
     def __rmul__(self, scalar: typing.SupportsFloat) -> Vec2:
-        """
-        Right-hand multiplication (scalar * self).
-        
-        Args:
-            scalar (float): The scalar to multiply by.
-        
-        Returns:
-            Vec2: A new Vec2 with multiplied components.
-        """
+        ...
     def __rsub__(self, other: Vec2) -> Vec2:
-        """
-        Right-hand subtraction (other - self).
-        
-        Args:
-            other (Vec2): The Vec2 to subtract from.
-        
-        Returns:
-            Vec2: A new Vec2 with the result of the subtraction.
-        """
+        ...
     def __setitem__(self, index: typing.SupportsInt, value: typing.SupportsFloat) -> None:
-        """
-        Set vector components by index.
-        
-        Args:
-            index (int): Index (0=x, 1=y).
-            value (float): The new value to set.
-        
-        Raises:
-            IndexError: If index is not 0 or 1.
-        """
+        ...
     def __str__(self) -> str:
-        """
-        Return a human-readable string representation.
-        
-        Returns:
-            str: String in format "<x, y>".
-        """
+        ...
     def __sub__(self, other: Vec2) -> Vec2:
-        """
-        Subtract another Vec2 from this Vec2.
-        
-        Args:
-            other (Vec2): The Vec2 to subtract.
-        
-        Returns:
-            Vec2: A new Vec2 with the result of the subtraction.
-        """
+        ...
     def __truediv__(self, scalar: typing.SupportsFloat) -> Vec2:
+        ...
+    def copy(self) -> Vec2:
         """
-        Divide the vector by a scalar value.
-        
-        Args:
-            scalar (float): The scalar to divide by.
+        Return a copy of this Vec2.
         
         Returns:
-            Vec2: A new Vec2 with divided components.
+            Vec2: A duplicated vector with the same components.
         """
     def distance_squared_to(self, other: Vec2) -> float:
         """
-        Calculate the squared distance to another vector.
+        Compute the squared distance to another Vec2.
         
         Args:
-            other (Vec2): The other vector.
+            other (Vec2): Comparison vector.
         
         Returns:
-            float: The squared distance between the vectors.
+            float: Squared distance between the vectors.
         """
     def distance_to(self, other: Vec2) -> float:
         """
-        Calculate the distance to another vector.
+        Compute the Euclidean distance to another Vec2.
         
         Args:
-            other (Vec2): The other vector.
+            other (Vec2): Comparison vector.
         
         Returns:
-            float: The Euclidean distance between the vectors.
+            float: Distance between the vectors.
+        """
+    def is_zero(self, tolerance: typing.SupportsFloat = 1e-08) -> bool:
+        """
+        Determine whether this Vec2 is effectively zero.
+        
+        Args:
+            tolerance (float): Largest allowed absolute component magnitude.
+        
+        Returns:
+            bool: True if both components are within the tolerance.
         """
     def normalize(self) -> None:
         """
-        Normalize the vector to unit length in-place.
+        Normalize this Vec2 in place.
+        """
+    def project(self, other: Vec2) -> Vec2:
+        """
+        Project this Vec2 onto another Vec2.
         
-        If the vector is zero, it remains unchanged.
+        Args:
+            other (Vec2): The vector to project onto.
+        
+        Returns:
+            Vec2: Projection of this vector onto the other vector.
+        """
+    def reflect(self, other: Vec2) -> Vec2:
+        """
+        Reflect this Vec2 across another Vec2.
+        
+        Args:
+            other (Vec2): The vector used as the reflection normal.
+        
+        Returns:
+            Vec2: Reflected vector.
+        """
+    def reject(self, other: Vec2) -> Vec2:
+        """
+        Compute the rejection of this Vec2 from another Vec2.
+        
+        Args:
+            other (Vec2): The vector defining the projection axis.
+        
+        Returns:
+            Vec2: Component of this vector orthogonal to the other vector.
         """
     def rotate(self, radians: typing.SupportsFloat) -> None:
         """
-        Rotate the vector by the given angle in radians.
+        Rotate this Vec2 in place.
         
         Args:
-            radians (float): The angle to rotate by in radians.
+            radians (float): Rotation angle in radians.
         """
     def scale_to_length(self, length: typing.SupportsFloat) -> None:
         """
-        Scale the vector to the specified length in-place.
+        Scale this Vec2 to a specific magnitude.
         
         Args:
-            length (float): The target length.
+            length (float): Target vector length.
         """
     def to_polar(self) -> PolarCoordinate:
         """
-        Convert to polar coordinates.
+        Convert this Vec2 to polar coordinates.
         
         Returns:
-            PolarCoordinate: A polar coordinate representation (angle, length).
+            PolarCoordinate: Polar representation with angle and length.
         """
     @property
     def angle(self) -> float:
         """
-        Get the angle of the vector in radians.
+        Return the vector angle in radians.
         
         Returns:
-            float: The angle from the positive x-axis to this vector.
+            float: Angle measured from the positive x-axis.
         """
     @property
     def length(self) -> float:
         """
-        Get the length (magnitude) of the vector.
+        Return the magnitude of this Vec2.
         
         Returns:
-            float: The Euclidean length of the vector.
+            float: Euclidean length of the vector.
         """
     @property
     def length_squared(self) -> float:
         """
-        Get the squared length of the vector.
+        Return the squared magnitude of this Vec2.
         
         Returns:
-            float: The squared length of the vector.
+            float: Squared Euclidean length.
         """
     @property
     def x(self) -> float:
@@ -3640,12 +3275,18 @@ class Vec2:
     @property
     def xx(self) -> Vec2:
         """
-        Get a new Vec2 with both components set to x.
+        Return a Vec2 with both components set to x.
+        
+        Returns:
+            Vec2: Vector composed of (x, x).
         """
     @property
     def xy(self) -> Vec2:
         """
-        Get or set the (x, y) components as a new Vec2.
+        Access or assign the (x, y) components as a Vec2.
+        
+        Returns:
+            Vec2: Current (x, y) components.
         """
     @xy.setter
     def xy(self, arg1: typing.SupportsFloat, arg2: typing.SupportsFloat) -> None:
@@ -3661,7 +3302,10 @@ class Vec2:
     @property
     def yx(self) -> Vec2:
         """
-        Get or set the (y, x) components as a new Vec2.
+        Access or assign the (y, x) components as a Vec2.
+        
+        Returns:
+            Vec2: Current (y, x) components.
         """
     @yx.setter
     def yx(self, arg1: typing.SupportsFloat, arg2: typing.SupportsFloat) -> None:
@@ -3669,31 +3313,39 @@ class Vec2:
     @property
     def yy(self) -> Vec2:
         """
-        Get a new Vec2 with both components set to y.
+        Return a Vec2 with both components set to y.
+        
+        Returns:
+            Vec2: Vector composed of (y, y).
+        """
+class ViewportMode(enum.IntEnum):
+    HORIZONTAL: typing.ClassVar[ViewportMode]  # value = <ViewportMode.HORIZONTAL: 1>
+    VERTICAL: typing.ClassVar[ViewportMode]  # value = <ViewportMode.VERTICAL: 0>
+    @classmethod
+    def __new__(cls, value):
+        ...
+    def __format__(self, format_spec):
+        """
+        Convert to a string according to format_spec.
         """
 def init() -> None:
     """
-    Initialize the Kraken Engine.
+    Initialize the Kraken engine subsystems.
     
-    This sets up internal systems and must be called before using any other features.
+    Raises:
+        RuntimeError: If SDL initialization fails.
     """
 def quit() -> None:
     """
-    Shut down the Kraken Engine and clean up resources.
-    
-    Call this once you're done using the engine to avoid memory leaks.
+    Tear down the Kraken engine subsystems.
     """
 AUDIO_DEVICE_ADDED: EventType  # value = <EventType.AUDIO_DEVICE_ADDED: 4352>
 AUDIO_DEVICE_FORMAT_CHANGED: EventType  # value = <EventType.AUDIO_DEVICE_FORMAT_CHANGED: 4354>
 AUDIO_DEVICE_REMOVED: EventType  # value = <EventType.AUDIO_DEVICE_REMOVED: 4353>
-BOTTOM_LEFT: Anchor  # value = <Anchor.BOTTOM_LEFT: 6>
-BOTTOM_MID: Anchor  # value = <Anchor.BOTTOM_MID: 7>
-BOTTOM_RIGHT: Anchor  # value = <Anchor.BOTTOM_RIGHT: 8>
 CAMERA_DEVICE_ADDED: EventType  # value = <EventType.CAMERA_DEVICE_ADDED: 5120>
 CAMERA_DEVICE_APPROVED: EventType  # value = <EventType.CAMERA_DEVICE_APPROVED: 5122>
 CAMERA_DEVICE_DENIED: EventType  # value = <EventType.CAMERA_DEVICE_DENIED: 5123>
 CAMERA_DEVICE_REMOVED: EventType  # value = <EventType.CAMERA_DEVICE_REMOVED: 5121>
-CENTER: Anchor  # value = <Anchor.CENTER: 4>
 CLIPBOARD_UPDATE: EventType  # value = <EventType.CLIPBOARD_UPDATE: 2304>
 C_BACK: GamepadButton  # value = <GamepadButton.C_BACK: 4>
 C_DPAD_DOWN: GamepadButton  # value = <GamepadButton.C_DPAD_DOWN: 12>
@@ -3927,8 +3579,6 @@ K_y: Keycode  # value = <Keycode.K_y: 121>
 K_z: Keycode  # value = <Keycode.K_z: 122>
 LOCALE_CHANGED: EventType  # value = <EventType.LOCALE_CHANGED: 263>
 LOW_MEMORY: EventType  # value = <EventType.LOW_MEMORY: 258>
-MID_LEFT: Anchor  # value = <Anchor.MID_LEFT: 3>
-MID_RIGHT: Anchor  # value = <Anchor.MID_RIGHT: 5>
 MOUSE_ADDED: EventType  # value = <EventType.MOUSE_ADDED: 1028>
 MOUSE_BUTTON_DOWN: EventType  # value = <EventType.MOUSE_BUTTON_DOWN: 1025>
 MOUSE_BUTTON_UP: EventType  # value = <EventType.MOUSE_BUTTON_UP: 1026>
@@ -4107,9 +3757,6 @@ TERMINATING: EventType  # value = <EventType.TERMINATING: 257>
 TEXT_EDITING: EventType  # value = <EventType.TEXT_EDITING: 770>
 TEXT_EDITING_CANDIDATES: EventType  # value = <EventType.TEXT_EDITING_CANDIDATES: 775>
 TEXT_INPUT: EventType  # value = <EventType.TEXT_INPUT: 771>
-TOP_LEFT: Anchor  # value = <Anchor.TOP_LEFT: 0>
-TOP_MID: Anchor  # value = <Anchor.TOP_MID: 1>
-TOP_RIGHT: Anchor  # value = <Anchor.TOP_RIGHT: 2>
 WILL_ENTER_BACKGROUND: EventType  # value = <EventType.WILL_ENTER_BACKGROUND: 259>
 WILL_ENTER_FOREGROUND: EventType  # value = <EventType.WILL_ENTER_FOREGROUND: 261>
 WINDOW_CLOSE_REQUESTED: EventType  # value = <EventType.WINDOW_CLOSE_REQUESTED: 528>

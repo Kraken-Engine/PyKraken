@@ -220,6 +220,50 @@ Raises:
     RuntimeError: If the file cannot be loaded or doesn't exist.
         )doc")
 
+        .def_property("color_key", &PixelArray::getColorKey, &PixelArray::setColorKey, R"doc(
+The color key for transparency.
+
+When set, pixels of this color will be treated as transparent during blitting operations.
+Used for simple transparency effects.
+
+Returns:
+    Color: The current color key.
+
+Raises:
+    RuntimeError: If getting the color key fails.
+        )doc")
+        .def_property("alpha_mod", &PixelArray::getAlpha, &PixelArray::setAlpha, R"doc(
+The alpha modulation value for the pixel array.
+
+Controls the overall transparency of the pixel array. Values range from 0 (fully transparent)
+to 255 (fully opaque).
+
+Returns:
+    int: The current alpha modulation value [0-255].
+
+Raises:
+    RuntimeError: If getting the alpha value fails.
+        )doc")
+
+        .def_property_readonly("width", &PixelArray::getWidth, R"doc(
+The width of the pixel array.
+
+Returns:
+    int: The pixel array width.
+        )doc")
+        .def_property_readonly("height", &PixelArray::getHeight, R"doc(
+The height of the pixel array.
+
+Returns:
+    int: The pixel array height.
+        )doc")
+        .def_property_readonly("size", &PixelArray::getSize, R"doc(
+The size of the pixel array as a Vec2.
+
+Returns:
+    Vec2: The pixel array size as (width, height).
+        )doc")
+
         .def("fill", &PixelArray::fill, py::arg("color"), R"doc(
 Fill the entire pixel array with a solid color.
 
@@ -315,50 +359,6 @@ Get a rectangle representing the pixel array bounds.
 
 Returns:
     Rect: A rectangle with position (0, 0) and the pixel array's dimensions.
-        )doc")
-
-        .def_property("color_key", &PixelArray::getColorKey, &PixelArray::setColorKey, R"doc(
-The color key for transparency.
-
-When set, pixels of this color will be treated as transparent during blitting operations.
-Used for simple transparency effects.
-
-Returns:
-    Color: The current color key.
-
-Raises:
-    RuntimeError: If getting the color key fails.
-        )doc")
-        .def_property("alpha_mod", &PixelArray::getAlpha, &PixelArray::setAlpha, R"doc(
-The alpha modulation value for the pixel array.
-
-Controls the overall transparency of the pixel array. Values range from 0 (fully transparent)
-to 255 (fully opaque).
-
-Returns:
-    int: The current alpha modulation value [0-255].
-
-Raises:
-    RuntimeError: If getting the alpha value fails.
-        )doc")
-
-        .def_property_readonly("width", &PixelArray::getWidth, R"doc(
-The width of the pixel array.
-
-Returns:
-    int: The pixel array width.
-        )doc")
-        .def_property_readonly("height", &PixelArray::getHeight, R"doc(
-The height of the pixel array.
-
-Returns:
-    int: The pixel array height.
-        )doc")
-        .def_property_readonly("size", &PixelArray::getSize, R"doc(
-The size of the pixel array as a Vec2.
-
-Returns:
-    Vec2: The pixel array size as (width, height).
         )doc");
 }
 } // namespace pixel_array

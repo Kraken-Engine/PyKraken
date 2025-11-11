@@ -26,6 +26,7 @@
 #include "TileMap.hpp"
 #include "Time.hpp"
 #include "Transform.hpp"
+#include "Viewport.hpp"
 #include "Window.hpp"
 
 static void init()
@@ -63,14 +64,13 @@ static void quit()
 PYBIND11_MODULE(_core, m)
 {
     m.def("init", &init, R"doc(
-Initialize the Kraken Engine.
+Initialize the Kraken engine subsystems.
 
-This sets up internal systems and must be called before using any other features.
+Raises:
+    RuntimeError: If SDL initialization fails.
     )doc");
     m.def("quit", &quit, R"doc(
-Shut down the Kraken Engine and clean up resources.
-
-Call this once you're done using the engine to avoid memory leaks.
+Tear down the Kraken engine subsystems.
     )doc");
 
     // These are ordered based on dependencies
@@ -103,4 +103,5 @@ Call this once you're done using the engine to avoid memory leaks.
     kn::animation_controller::_bind(m);
     kn::tile_map::_bind(m);
     kn::shader_state::_bind(m);
+    kn::viewport::_bind(m);
 }

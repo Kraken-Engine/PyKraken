@@ -17,8 +17,7 @@ void _quit();
 class ShaderState
 {
   public:
-    ShaderState(const std::string& fragmentFilePath, Uint32 uniformBufferCount = 0,
-                Uint32 samplerCount = 1);
+    ShaderState(const std::string& fragmentFilePath, Uint32 uniformBufferCount = 0);
     ~ShaderState();
 
     void bind() const;

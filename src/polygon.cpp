@@ -2,9 +2,9 @@
 #include "Rect.hpp"
 
 #include "Polygon.hpp"
-#include <pybind11/stl.h>
 #include <cmath>
 #include <limits>
+#include <pybind11/stl.h>
 
 namespace kn
 {
@@ -24,6 +24,7 @@ double Polygon::getPerimeter() const
         const Vec2& next = points[(i + 1) % points.size()];
         distance += current.distanceTo(next);
     }
+
     return distance;
 }
 
@@ -39,28 +40,30 @@ double Polygon::getArea() const
         const Vec2& next = points[(i + 1) % points.size()];
         sum += current.x * next.y - next.x * current.y;
     }
+
     return std::abs(sum) * 0.5;
 }
 
 Vec2 Polygon::getCentroid() const
 {
     if (points.empty())
-        return Vec2{0.0, 0.0};
+        return {};
+    const size_t n = points.size();
 
-    if (points.size() == 1)
+    if (n == 1)
         return points[0];
 
-    if (points.size() == 2)
-        return Vec2{(points[0].x + points[1].x) * 0.5, (points[0].y + points[1].y) * 0.5};
+    if (n == 2)
+        return {(points[0].x + points[1].x) * 0.5, (points[0].y + points[1].y) * 0.5};
 
     double cx = 0.0;
     double cy = 0.0;
     double signedArea = 0.0;
 
-    for (size_t i = 0; i < points.size(); ++i)
+    for (size_t i = 0; i < n; ++i)
     {
         const Vec2& current = points[i];
-        const Vec2& next = points[(i + 1) % points.size()];
+        const Vec2& next = points[(i + 1) % n];
         double cross = current.x * next.y - next.x * current.y;
         signedArea += cross;
         cx += (current.x + next.x) * cross;
@@ -77,18 +80,19 @@ Vec2 Polygon::getCentroid() const
             sumX += point.x;
             sumY += point.y;
         }
-        return Vec2{sumX / points.size(), sumY / points.size()};
+        return {sumX / n, sumY / n};
     }
 
     cx /= (6.0 * signedArea);
     cy /= (6.0 * signedArea);
-    return Vec2{cx, cy};
+
+    return {cx, cy};
 }
 
 Rect Polygon::getBounds() const
 {
     if (points.empty())
-        return Rect{0, 0, 0, 0};
+        return {};
 
     double minX = std::numeric_limits<double>::max();
     double minY = std::numeric_limits<double>::max();
@@ -103,7 +107,7 @@ Rect Polygon::getBounds() const
         maxY = std::max(maxY, point.y);
     }
 
-    return Rect{minX, minY, maxX - minX, maxY - minY};
+    return {minX, minY, maxX - minX, maxY - minY};
 }
 
 void Polygon::rotate(double angle, const Vec2& pivot)
@@ -169,52 +173,8 @@ Args:
     points (list[Vec2]): List of Vec2 points defining the polygon vertices.
         )doc")
 
-        .def(
-            "__iter__", [](const Polygon& polygon) -> py::iterator
-            { return py::make_iterator(polygon.points.begin(), polygon.points.end()); },
-            py::keep_alive<0, 1>(), R"doc(
-Return an iterator over the polygon's points.
-        )doc")
-
-        .def(
-            "__getitem__",
-            [](const Polygon& polygon, const size_t i) -> Vec2
-            {
-                if (i >= polygon.points.size())
-                    throw py::index_error("Index out of range");
-                return polygon.points[i];
-            },
-            py::arg("index"), R"doc(
-Get a point by index.
-
-Args:
-    index (int): The index of the point to retrieve.
-
-Returns:
-    Vec2: The point at the specified index.
-
-Raises:
-    IndexError: If index is out of range.
-        )doc")
-
-        .def(
-            "__len__", [](const Polygon& polygon) -> size_t { return polygon.points.size(); },
-            R"doc(
-Return the number of points in the polygon.
-
-Returns:
-    int: The number of vertices.
-        )doc")
-
         .def_readwrite("points", &Polygon::points, R"doc(
 The list of Vec2 points that define the polygon vertices.
-        )doc")
-
-        .def("copy", &Polygon::copy, R"doc(
-Return a copy of the polygon.
-
-Returns:
-    Polygon: A new polygon with the same points.
         )doc")
 
         .def_property_readonly("perimeter", &Polygon::getPerimeter, R"doc(
@@ -243,6 +203,13 @@ Get the bounding rectangle of the polygon.
 
 Returns:
     Rect: The smallest rectangle that contains the polygon.
+        )doc")
+
+        .def("copy", &Polygon::copy, R"doc(
+Return a copy of the polygon.
+
+Returns:
+    Polygon: A new polygon with the same points.
         )doc")
 
         .def("rotate", &Polygon::rotate, py::arg("angle"), py::arg("pivot"), R"doc(
@@ -276,7 +243,24 @@ Scale the polygon non-uniformly from a pivot point.
 Args:
     factor (Vec2): The scaling factors for x and y.
     pivot (Vec2): The point to scale from.
-        )doc");
+        )doc")
+
+        .def(
+            "__iter__", [](const Polygon& polygon) -> py::iterator
+            { return py::make_iterator(polygon.points.begin(), polygon.points.end()); },
+            py::keep_alive<0, 1>())
+
+        .def(
+            "__getitem__",
+            [](const Polygon& polygon, const size_t i) -> Vec2
+            {
+                if (i >= polygon.points.size())
+                    throw py::index_error("Index out of range");
+                return polygon.points[i];
+            },
+            py::arg("index"))
+
+        .def("__len__", [](const Polygon& polygon) -> size_t { return polygon.points.size(); });
 
     py::implicitly_convertible<py::sequence, Polygon>();
 }
