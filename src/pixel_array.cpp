@@ -183,16 +183,76 @@ std::unique_ptr<PixelArray> PixelArray::copy() const
 
 SDL_Surface* PixelArray::getSDL() const { return m_surface; }
 
+void PixelArray::scroll(const int dx, const int dy, const pixel_array::ScrollType scrollType) const
+{
+    if (!m_surface || (dx == 0 && dy == 0))
+        return;
+
+    const int width = m_surface->w;
+    const int height = m_surface->h;
+    const int pitch = m_surface->pitch;
+    const auto formatDetails = SDL_GetPixelFormatDetails(m_surface->format);
+    const int bytesPerPixel = formatDetails->bytes_per_pixel;
+
+    const int scrollX = dx % width;
+    const int scrollY = dy % height;
+
+    if (scrollX == 0 && scrollY == 0)
+        return;
+
+    auto* pixels = static_cast<uint8_t*>(m_surface->pixels);
+    std::vector<uint8_t> tempBuffer(pitch * height);
+    std::memcpy(tempBuffer.data(), pixels, pitch * height);
+
+    for (int y = 0; y < height; ++y)
+    {
+        for (int x = 0; x < width; ++x)
+        {
+            int srcX = x - scrollX;
+            int srcY = y - scrollY;
+
+            switch (scrollType)
+            {
+            case pixel_array::ScrollType::SCROLL_REPEAT:
+                srcX = (srcX % width + width) % width;
+                srcY = (srcY % height + height) % height;
+                break;
+
+            case pixel_array::ScrollType::SCROLL_ERASE:
+                if (srcX < 0 || srcX >= width || srcY < 0 || srcY >= height)
+                {
+                    const int dstOffset = y * pitch + x * bytesPerPixel;
+                    std::memset(pixels + dstOffset, 0, bytesPerPixel);
+                    continue;
+                }
+                break;
+
+            case pixel_array::ScrollType::SCROLL_SMEAR:
+            default:
+                srcX = std::max(0, std::min(width - 1, srcX));
+                srcY = std::max(0, std::min(height - 1, srcY));
+                break;
+            }
+
+            const int srcOffset = srcY * pitch + srcX * bytesPerPixel;
+            const int dstOffset = y * pitch + x * bytesPerPixel;
+            std::memcpy(pixels + dstOffset, tempBuffer.data() + srcOffset, bytesPerPixel);
+        }
+    }
+}
+
 namespace pixel_array
 {
 void _bind(const py::module_& module)
 {
-    // py::native_enum<ScrollType>(module, "ScrollType", "enum.IntEnum")
-    //     .value("SCROLL_SMEAR", ScrollType::SCROLL_SMEAR)
-    //     .value("SCROLL_ERASE", ScrollType::SCROLL_ERASE)
-    //     .value("SCROLL_REPEAT", ScrollType::SCROLL_REPEAT)
-    //     .export_values()
-    //     .finalize();
+    py::native_enum<ScrollType>(module, "ScrollType", "enum.IntEnum", R"doc(
+How out-of-bounds pixels are handled during scrolling.
+    )doc")
+        .value("SCROLL_SMEAR", ScrollType::SCROLL_SMEAR)
+        .value("SCROLL_ERASE", ScrollType::SCROLL_ERASE)
+        .value("SCROLL_REPEAT", ScrollType::SCROLL_REPEAT)
+        .export_values()
+        .finalize();
 
     py::classh<PixelArray>(module, "PixelArray", R"doc(
 Represents a 2D pixel buffer for image manipulation and blitting operations.
@@ -359,6 +419,15 @@ Get a rectangle representing the pixel array bounds.
 
 Returns:
     Rect: A rectangle with position (0, 0) and the pixel array's dimensions.
+        )doc")
+        .def("scroll", &PixelArray::scroll, py::arg("dx"), py::arg("dy"),
+             py::arg("scroll_type") = ScrollType::SCROLL_SMEAR, R"doc(
+Scroll pixel array contents by the specified offset.
+
+Args:
+    dx (int): Horizontal scroll distance. Positive scrolls right.
+    dy (int): Vertical scroll distance. Positive scrolls down.
+    scroll_type (ScrollType, optional): Out-of-bounds pixel handling. Defaults to SCROLL_SMEAR.
         )doc");
 }
 } // namespace pixel_array

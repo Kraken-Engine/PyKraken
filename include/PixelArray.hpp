@@ -55,6 +55,8 @@ public:
 
     [[nodiscard]] std::unique_ptr<PixelArray> copy() const;
 
+    void scroll(int dx, int dy, pixel_array::ScrollType scrollType = pixel_array::ScrollType::SCROLL_SMEAR) const;
+
 private:
     SDL_Surface* m_surface = nullptr;
 };
@@ -63,11 +65,11 @@ namespace pixel_array
 {
 void _bind(const py::module_& module);
 
-// enum class ScrollType
-// {
-//     SCROLL_SMEAR,
-//     SCROLL_ERASE,
-//     SCROLL_REPEAT,
-// };
+enum class ScrollType
+{
+    SCROLL_SMEAR,
+    SCROLL_ERASE,
+    SCROLL_REPEAT,
+};
 } // namespace pixel_array
 } // namespace kn
