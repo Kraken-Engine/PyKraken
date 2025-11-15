@@ -7,7 +7,7 @@ import numpy
 import numpy.typing
 import pykraken._core
 import typing
-__all__: list[str] = ['circle', 'line', 'point', 'points', 'points_from_ndarray', 'polygon', 'rect', 'rects']
+__all__: list[str] = ['circle', 'ellipse', 'line', 'point', 'points', 'points_from_ndarray', 'polygon', 'rect', 'rects']
 def circle(circle: pykraken._core.Circle, color: pykraken._core.Color, thickness: typing.SupportsInt = 0) -> None:
     """
     Draw a circle to the renderer.
@@ -17,6 +17,16 @@ def circle(circle: pykraken._core.Circle, color: pykraken._core.Color, thickness
         color (Color): The color of the circle.
         thickness (int, optional): The line thickness. If 0 or >= radius, draws filled circle.
                                   Defaults to 0 (filled).
+    """
+def ellipse(bounds: pykraken._core.Rect, color: pykraken._core.Color, filled: bool = False) -> None:
+    """
+    Draw an ellipse to the renderer.
+    
+    Args:
+        bounds (Rect): The bounding box of the ellipse.
+        color (Color): The color of the ellipse.
+        filled (bool, optional): Whether to draw a filled ellipse or just the outline.
+                                 Defaults to False (outline).
     """
 def line(line: pykraken._core.Line, color: pykraken._core.Color, thickness: typing.SupportsInt = 1) -> None:
     """

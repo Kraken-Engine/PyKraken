@@ -103,13 +103,14 @@ void draw(const Texture& texture, Rect dstRect, const Rect& srcRect)
     dstRect.x -= cameraPos.x;
     dstRect.y -= cameraPos.y;
     const SDL_FRect dstSDLRect = {
-        std::roundf(static_cast<float>(dstRect.x)),
-        std::roundf(static_cast<float>(dstRect.y)),
-        std::roundf(static_cast<float>(dstRect.w)),
-        std::roundf(static_cast<float>(dstRect.h)),
+        static_cast<float>(std::round(dstRect.x)),
+        static_cast<float>(std::round(dstRect.y)),
+        static_cast<float>(std::round(dstRect.w)),
+        static_cast<float>(std::round(dstRect.h)),
     };
     const auto srcSDLRect =
         static_cast<SDL_FRect>(srcRect.w == 0.0 && srcRect.h == 0.0 ? texture.getRect() : srcRect);
+
     SDL_RenderTextureRotated(_renderer, texture.getSDL(), &srcSDLRect, &dstSDLRect,
                              TO_DEGREES(texture.angle), nullptr, flipAxis);
 }

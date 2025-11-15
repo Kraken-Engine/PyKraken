@@ -1,9 +1,10 @@
 #include "Color.hpp"
 #include "Math.hpp"
+#include "PixelArray.hpp"
 #include "Rect.hpp"
 
-#include "PixelArray.hpp"
 #include <SDL3_image/SDL_image.h>
+#include <pybind11/native_enum.h>
 
 namespace kn
 {
@@ -181,18 +182,105 @@ std::unique_ptr<PixelArray> PixelArray::copy() const
     return std::make_unique<PixelArray>(surfaceCopy);
 }
 
+void PixelArray::scroll(const int dx, const int dy, const ScrollMode scrollMode) const
+{
+    if (!m_surface || (dx == 0 && dy == 0))
+        return;
+
+    const int width = m_surface->w;
+    const int height = m_surface->h;
+    const int pitch = m_surface->pitch;
+    const auto formatDetails = SDL_GetPixelFormatDetails(m_surface->format);
+    const int bytesPerPixel = formatDetails->bytes_per_pixel;
+
+    // For REPEAT mode, optimize with modulo; for others, keep full offset
+    int scrollX = dx;
+    int scrollY = dy;
+
+    if (scrollMode == ScrollMode::REPEAT)
+    {
+        scrollX = dx % width;
+        scrollY = dy % height;
+
+        if (scrollX == 0 && scrollY == 0)
+            return;
+    }
+
+    auto* pixels = static_cast<uint8_t*>(m_surface->pixels);
+    std::vector<uint8_t> tempBuffer(pitch * height);
+    std::memcpy(tempBuffer.data(), pixels, pitch * height);
+
+    // Process each destination row
+    for (int dstY = 0; dstY < height; ++dstY)
+    {
+        int srcY = dstY - scrollY;
+
+        // Handle Y boundary based on scroll mode
+        switch (scrollMode)
+        {
+        case ScrollMode::REPEAT:
+            srcY = (srcY % height + height) % height;
+            break;
+
+        case ScrollMode::ERASE:
+            if (srcY < 0 || srcY >= height)
+            {
+                // Erase entire row
+                std::memset(pixels + dstY * pitch, 0, width * bytesPerPixel);
+                continue;
+            }
+            break;
+
+        case ScrollMode::SMEAR:
+            srcY = std::max(0, std::min(height - 1, srcY));
+            break;
+        }
+
+        // Process row with optimized X handling
+        uint8_t* dstRow = pixels + dstY * pitch;
+        const uint8_t* srcRow = tempBuffer.data() + srcY * pitch;
+
+        for (int dstX = 0; dstX < width; ++dstX)
+        {
+            int srcX = dstX - scrollX;
+
+            // Handle X boundary based on scroll mode
+            switch (scrollMode)
+            {
+            case ScrollMode::REPEAT:
+                srcX = (srcX % width + width) % width;
+                break;
+
+            case ScrollMode::ERASE:
+                if (srcX < 0 || srcX >= width)
+                {
+                    std::memset(dstRow + dstX * bytesPerPixel, 0, bytesPerPixel);
+                    continue;
+                }
+                break;
+
+            case ScrollMode::SMEAR:
+                srcX = std::max(0, std::min(width - 1, srcX));
+                break;
+            }
+
+            std::memcpy(dstRow + dstX * bytesPerPixel, srcRow + srcX * bytesPerPixel,
+                        bytesPerPixel);
+        }
+    }
+}
+
 SDL_Surface* PixelArray::getSDL() const { return m_surface; }
 
 namespace pixel_array
 {
 void _bind(const py::module_& module)
 {
-    // py::native_enum<ScrollType>(module, "ScrollType", "enum.IntEnum")
-    //     .value("SCROLL_SMEAR", ScrollType::SCROLL_SMEAR)
-    //     .value("SCROLL_ERASE", ScrollType::SCROLL_ERASE)
-    //     .value("SCROLL_REPEAT", ScrollType::SCROLL_REPEAT)
-    //     .export_values()
-    //     .finalize();
+    py::native_enum<ScrollMode>(module, "ScrollMode", "enum.IntEnum")
+        .value("SMEAR", ScrollMode::SMEAR)
+        .value("ERASE", ScrollMode::ERASE)
+        .value("REPEAT", ScrollMode::REPEAT)
+        .finalize();
 
     py::classh<PixelArray>(module, "PixelArray", R"doc(
 Represents a 2D pixel buffer for image manipulation and blitting operations.
@@ -359,6 +447,18 @@ Get a rectangle representing the pixel array bounds.
 
 Returns:
     Rect: A rectangle with position (0, 0) and the pixel array's dimensions.
+        )doc")
+        .def("scroll", &PixelArray::scroll, py::arg("dx"), py::arg("dy"), py::arg("scroll_mode"),
+             R"doc(
+Scroll the pixel array's contents by the specified offset.
+
+Args:
+    dx (int): Horizontal scroll offset in pixels.
+    dy (int): Vertical scroll offset in pixels.
+    scroll_mode (ScrollMode, optional): Behavior for pixels scrolled off the edge.
+        - REPEAT: Wrap pixels around to the opposite edge.
+        - ERASE: Fill scrolled areas with transparent pixels.
+        - SMEAR: Extend edge pixels into scrolled areas.
         )doc");
 }
 } // namespace pixel_array

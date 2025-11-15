@@ -770,12 +770,12 @@ Returns:
     float: The angle between the vectors in radians [0, π].
         )doc");
 
-    subMath.def("rotate", &rotate, py::arg("vec"), py::arg("radians"), R"doc(
-Rotate a vector by an angle without mutating the input.
+    subMath.def("rotate", &rotate, py::arg("vec"), py::arg("angle"), R"doc(
+Rotate a vector by an angle.
 
 Args:
     vec (Vec2): The vector to rotate.
-    radians (float): Rotation angle in radians.
+    angle (float): Rotation angle in radians.
 
 Returns:
     Vec2: A new rotated vector.

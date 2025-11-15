@@ -1,7 +1,6 @@
-
+#include "Ease.hpp"
 #include "Time.hpp"
 
-#include "Ease.hpp"
 #include <cmath>
 #include <pybind11/functional.h>
 #include <utility>
@@ -16,9 +15,8 @@
 
 namespace kn
 {
-EasingAnimation::EasingAnimation(const Vec2& start, const Vec2& end, const double duration,
-                                 ease::EasingFunction easeFunc)
-    : startPos(start), endPos(end), duration(duration), easingFunc(std::move(easeFunc))
+EasingAnimation::EasingAnimation(ease::EasingFunction easeFunc, const double duration)
+    : easingFunc(std::move(easeFunc)), duration(duration)
 {
 }
 
@@ -512,15 +510,19 @@ A class for animating values over time using easing functions.
 This class supports pausing, resuming, reversing, and checking progress.
     )doc")
 
-        .def(py::init<const Vec2&, const Vec2&, double, EasingFunction>(), py::arg("start"),
-             py::arg("end"), py::arg("duration"), py::arg("ease_func"), R"doc(
+        .def(py::init<EasingFunction, double>(), py::arg("ease_func"), py::arg("duration"), R"doc(
 Create an EasingAnimation.
 
 Args:
-    start (Vec2): Starting position.
-    end (Vec2): Ending position.
-    duration (float): Time in seconds for full animation.
     ease_func (Callable): Easing function that maps [0, 1] → [0, 1].
+    duration (float): Time in seconds for full animation.
+    )doc")
+
+        .def_readwrite("start_pos", &EasingAnimation::startPos, R"doc(
+The starting position of the animation.
+    )doc")
+        .def_readwrite("end_pos", &EasingAnimation::endPos, R"doc(
+The ending position of the animation.
     )doc")
 
         .def_property_readonly("is_done", &EasingAnimation::isDone, R"doc(
@@ -528,24 +530,20 @@ Check whether the animation has finished.
     )doc")
 
         .def("step", &EasingAnimation::step, R"doc(
-Advance the animation get its current position.
+Advance the animation and get its current position.
 
 Returns:
     Vec2: Interpolated position.
     )doc")
-
         .def("pause", &EasingAnimation::pause, R"doc(
 Pause the animation's progression.
     )doc")
-
         .def("resume", &EasingAnimation::resume, R"doc(
 Resume the animation from its current state.
     )doc")
-
         .def("restart", &EasingAnimation::restart, R"doc(
 Restart the animation from the beginning.
     )doc")
-
         .def("reverse", &EasingAnimation::reverse, R"doc(
 Reverse the direction of the animation.
     )doc");

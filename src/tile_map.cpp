@@ -13,10 +13,18 @@
 #include <optional>
 #include <utility>
 
+#ifndef M_PI
+#define M_PI 3.1415926535897932384626433832795
+#endif
+
+#ifndef M_PI_2
+#define M_PI_2 1.5707963267948966192313216916398
+#endif
+
 namespace kn
 {
 TileLayer::TileLayer(const Type type, const bool isVisible, std::string name,
-             const std::shared_ptr<Texture>& tileSetTexture)
+                     const std::shared_ptr<Texture>& tileSetTexture)
     : type(type), isVisible(isVisible), name(std::move(name)), m_tileSetTexture(tileSetTexture)
 {
 }
@@ -27,7 +35,7 @@ void TileLayer::render() const
     {
         if (tile.antiDiagFlip)
         {
-            m_tileSetTexture->angle = 90.0;
+            m_tileSetTexture->angle = M_PI_2;
             m_tileSetTexture->flip.h = tile.vFlip;
             m_tileSetTexture->flip.v = !tile.hFlip;
         }
@@ -43,7 +51,7 @@ void TileLayer::render() const
 }
 
 void TileLayer::buildTileGrid(const int mapWidth, const int mapHeight, const int tileWidth,
-                          const int tileHeight)
+                              const int tileHeight)
 {
     if (type != TILE)
         return;
@@ -162,8 +170,8 @@ TileMap::TileMap(const std::string& tmxPath, int borderSize)
 
             std::stringstream ss(dataContent);
             std::string value;
-            layerPtr =
-                std::make_shared<TileLayer>(TileLayer(TileLayer::TILE, isVisible, layerName, tileSetTexture));
+            layerPtr = std::make_shared<TileLayer>(
+                TileLayer(TileLayer::TILE, isVisible, layerName, tileSetTexture));
 
             int tileCounter = 0;
             while (std::getline(ss, value, ','))
@@ -208,8 +216,8 @@ TileMap::TileMap(const std::string& tmxPath, int borderSize)
         }
         else if (childName == "objectgroup")
         {
-            layerPtr =
-                std::make_shared<TileLayer>(TileLayer(TileLayer::OBJECT, isVisible, layerName, tileSetTexture));
+            layerPtr = std::make_shared<TileLayer>(
+                TileLayer(TileLayer::OBJECT, isVisible, layerName, tileSetTexture));
 
             for (const auto& object : child.children())
             {
@@ -251,9 +259,11 @@ TileMap::TileMap(const std::string& tmxPath, int borderSize)
                     objectDstRect.setBottomLeft({destX, destY}); // 0 degrees
                 }
 
+                const double angleRad = static_cast<double>(angle) * M_PI / 180.0;
+
                 tiles.push_back({layerPtr, objectSrcRect, objectDstRect,
                                  getFittedRect(surface, objectSrcRect, objectDstRect.getTopLeft()),
-                                 horizontalFlip, verticalFlip, false, static_cast<double>(angle)});
+                                 horizontalFlip, verticalFlip, false, angleRad});
             }
             layerPtr->tiles = std::move(tiles);
         }
@@ -264,7 +274,7 @@ TileMap::TileMap(const std::string& tmxPath, int borderSize)
 }
 
 std::shared_ptr<const TileLayer> TileMap::getLayer(const std::string& name,
-                                               const TileLayer::Type type) const
+                                                   const TileLayer::Type type) const
 {
     for (const auto& layer : m_layerVec)
     {
@@ -275,7 +285,10 @@ std::shared_ptr<const TileLayer> TileMap::getLayer(const std::string& name,
     throw std::invalid_argument("Layer not found or type mismatch: " + name);
 }
 
-const std::vector<std::shared_ptr<const TileLayer>>& TileMap::getLayers() const { return m_layerVec; }
+const std::vector<std::shared_ptr<const TileLayer>>& TileMap::getLayers() const
+{
+    return m_layerVec;
+}
 
 void TileMap::render() const
 {
@@ -392,7 +405,7 @@ Whether the tile is flipped vertically.
 Whether the tile is flipped across the anti-diagonal.
         )doc")
         .def_readonly("angle", &Tile::angle, R"doc(
-The rotation angle in degrees.
+The rotation angle in radians.
         )doc");
 
     // Layer bindings cont.

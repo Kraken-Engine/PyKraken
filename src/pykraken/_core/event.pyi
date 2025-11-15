@@ -4,17 +4,7 @@ Input event handling
 from __future__ import annotations
 import pykraken._core
 import typing
-__all__: list[str] = ['cancel_scheduled', 'new_custom', 'poll', 'push', 'schedule']
-def cancel_scheduled(event: pykraken._core.Event) -> None:
-    """
-    Cancel a scheduled event timer.
-    
-    Args:
-        event (Event): The custom event whose timer should be cancelled.
-    
-    Raises:
-        RuntimeError: If attempting to cancel a non-custom event type.
-    """
+__all__: list[str] = ['new_custom', 'poll', 'push', 'schedule', 'unschedule']
 def new_custom() -> pykraken._core.Event:
     """
     Create a new custom event type.
@@ -57,4 +47,14 @@ def schedule(event: pykraken._core.Event, delay_ms: typing.SupportsInt, repeat: 
     Raises:
         RuntimeError: If attempting to schedule a non-custom event type, or if timer
             creation fails.
+    """
+def unschedule(event: pykraken._core.Event) -> None:
+    """
+    Cancel a scheduled event timer.
+    
+    Args:
+        event (Event): The custom event whose timer should be cancelled.
+    
+    Raises:
+        RuntimeError: If attempting to cancel a non-custom event type.
     """

@@ -81,8 +81,10 @@ double inOutBounce(double t);
 class EasingAnimation
 {
   public:
-    EasingAnimation(const Vec2& start, const Vec2& end, double duration,
-                    ease::EasingFunction easeFunc);
+    Vec2 startPos{};
+    Vec2 endPos{};
+
+    EasingAnimation(ease::EasingFunction easeFunc, double duration);
     ~EasingAnimation() = default;
 
     Vec2 step();
@@ -105,10 +107,8 @@ class EasingAnimation
         DONE,
     };
 
-    Vec2 startPos;
-    Vec2 endPos;
-    double duration;
     ease::EasingFunction easingFunc;
+    double duration;
 
     double elapsedTime = 0.0;
     State state = State::PLAYING;

@@ -1,4 +1,5 @@
 #include "Text.hpp"
+#include "Camera.hpp"
 #include "Font.hpp"
 #include "Rect.hpp"
 #include "Renderer.hpp"
@@ -47,11 +48,11 @@ Text::~Text()
 
 void Text::setFont(const Font& font) const { TTF_SetTextFont(m_text, font._get()); }
 
-void Text::draw(const Vec2& pos, const Anchor anchor) const
+void Text::draw(Vec2 pos, const Anchor anchor) const
 {
-    // Round incoming position to the nearest pixel
-    int x = static_cast<int>(std::lround(pos.x));
-    int y = static_cast<int>(std::lround(pos.y));
+    const Vec2 cameraPos = camera::getActivePos();
+    pos.x -= cameraPos.x;
+    pos.y -= cameraPos.y;
 
     // Get text size so we can offset based on the anchor
     int textW = 0, textH = 0;
@@ -63,36 +64,39 @@ void Text::draw(const Vec2& pos, const Anchor anchor) const
         // no offset
         break;
     case Anchor::TopMid:
-        x -= textW / 2;
+        pos.x -= textW / 2.0;
         break;
     case Anchor::TopRight:
-        x -= textW;
+        pos.x -= textW;
         break;
     case Anchor::MidLeft:
-        y -= textH / 2;
+        pos.y -= textH / 2.0;
         break;
     case Anchor::Center:
-        x -= textW / 2;
-        y -= textH / 2;
+        pos.x -= textW / 2.0;
+        pos.y -= textH / 2.0;
         break;
     case Anchor::MidRight:
-        x -= textW;
-        y -= textH / 2;
+        pos.x -= textW;
+        pos.y -= textH / 2.0;
         break;
     case Anchor::BottomLeft:
-        y -= textH;
+        pos.y -= textH;
         break;
     case Anchor::BottomMid:
-        x -= textW / 2;
-        y -= textH;
+        pos.x -= textW / 2.0;
+        pos.y -= textH;
         break;
     case Anchor::BottomRight:
-        x -= textW;
-        y -= textH;
+        pos.x -= textW;
+        pos.y -= textH;
         break;
     }
 
-    TTF_DrawRendererText(m_text, x, y);
+    const int drawX = static_cast<int>(std::round(pos.x));
+    const int drawY = static_cast<int>(std::round(pos.y));
+
+    TTF_DrawRendererText(m_text, drawX, drawY);
 }
 
 void Text::setWrapWidth(int wrapWidth) const

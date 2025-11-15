@@ -140,13 +140,13 @@ def remap(in_min: typing.SupportsFloat, in_max: typing.SupportsFloat, out_min: t
     Raises:
         ValueError: If in_min equals in_max.
     """
-def rotate(vec: pykraken._core.Vec2, radians: typing.SupportsFloat) -> pykraken._core.Vec2:
+def rotate(vec: pykraken._core.Vec2, angle: typing.SupportsFloat) -> pykraken._core.Vec2:
     """
-    Rotate a vector by an angle without mutating the input.
+    Rotate a vector by an angle.
     
     Args:
         vec (Vec2): The vector to rotate.
-        radians (float): Rotation angle in radians.
+        angle (float): Rotation angle in radians.
     
     Returns:
         Vec2: A new rotated vector.
