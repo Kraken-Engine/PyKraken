@@ -255,11 +255,11 @@ void schedule(const Event& event, uint32_t delay_ms, bool repeat)
     scheduledTimers[event.type] = timerID;
 }
 
-void cancelScheduled(const Event& event)
+void unschedule(const Event& event)
 {
     if (event.type < SDL_EVENT_USER || event.type >= SDL_EVENT_LAST)
     {
-        throw std::runtime_error("Cannot cancel non-custom event types");
+        throw std::runtime_error("Cannot unschedule non-custom event types");
     }
 
     auto it = scheduledTimers.find(event.type);
@@ -331,7 +331,7 @@ Raises:
         creation fails.
         )doc");
 
-    subEvent.def("cancel_scheduled", &cancelScheduled, py::arg("event"), R"doc(
+    subEvent.def("unschedule", &unschedule, py::arg("event"), R"doc(
 Cancel a scheduled event timer.
 
 Args:

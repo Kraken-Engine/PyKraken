@@ -25,7 +25,7 @@ void push(const Event& event);
 
 void schedule(const Event& event, uint32_t delay_ms, bool repeat = false);
 
-void cancelScheduled(const Event& event);
+void unschedule(const Event& event);
 
 Event newCustom();
 } // namespace event
