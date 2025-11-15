@@ -669,15 +669,13 @@ class EasingAnimation:
     This class supports pausing, resuming, reversing, and checking progress.
         
     """
-    def __init__(self, start: Vec2, end: Vec2, duration: typing.SupportsFloat, ease_func: collections.abc.Callable[[typing.SupportsFloat], float]) -> None:
+    def __init__(self, ease_func: collections.abc.Callable[[typing.SupportsFloat], float], duration: typing.SupportsFloat) -> None:
         """
         Create an EasingAnimation.
         
         Args:
-            start (Vec2): Starting position.
-            end (Vec2): Ending position.
-            duration (float): Time in seconds for full animation.
             ease_func (Callable): Easing function that maps [0, 1] → [0, 1].
+            duration (float): Time in seconds for full animation.
         """
     def pause(self) -> None:
         """
@@ -697,16 +695,32 @@ class EasingAnimation:
         """
     def step(self) -> Vec2:
         """
-        Advance the animation get its current position.
+        Advance the animation and get its current position.
         
         Returns:
             Vec2: Interpolated position.
         """
     @property
+    def end_pos(self) -> Vec2:
+        """
+        The ending position of the animation.
+        """
+    @end_pos.setter
+    def end_pos(self, arg0: Vec2) -> None:
+        ...
+    @property
     def is_done(self) -> bool:
         """
         Check whether the animation has finished.
         """
+    @property
+    def start_pos(self) -> Vec2:
+        """
+        The starting position of the animation.
+        """
+    @start_pos.setter
+    def start_pos(self, arg0: Vec2) -> None:
+        ...
 class Event:
     """
     
@@ -2794,7 +2808,7 @@ class Tile:
     @property
     def angle(self) -> float:
         """
-        The rotation angle in degrees.
+        The rotation angle in radians.
         """
     @property
     def anti_diag_flip(self) -> bool:

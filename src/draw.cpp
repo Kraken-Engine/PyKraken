@@ -102,6 +102,30 @@ void circle(const Circle& circle, const Color& color, const int thickness)
                 thickness);
 }
 
+void ellipse(const Rect& bounds, const Color& color, const bool filled)
+{
+    if (bounds.w < 1 || bounds.h < 1)
+        return;
+
+    SDL_Renderer* rend = renderer::_get();
+    SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a);
+
+    const Vec2 cameraPos = camera::getActivePos();
+    const auto sdlRect = static_cast<SDL_FRect>(
+        Rect(bounds.x - cameraPos.x, bounds.y - cameraPos.y, bounds.w, bounds.h));
+
+    if (filled)
+        filledEllipseRGBA(rend, static_cast<Sint16>(sdlRect.x + sdlRect.w / 2),
+                          static_cast<Sint16>(sdlRect.y + sdlRect.h / 2),
+                          static_cast<Sint16>(sdlRect.w / 2), static_cast<Sint16>(sdlRect.h / 2),
+                          color.r, color.g, color.b, color.a);
+    else
+        ellipseRGBA(rend, static_cast<Sint16>(sdlRect.x + sdlRect.w / 2),
+                    static_cast<Sint16>(sdlRect.y + sdlRect.h / 2),
+                    static_cast<Sint16>(sdlRect.w / 2), static_cast<Sint16>(sdlRect.h / 2), color.r,
+                    color.g, color.b, color.a);
+}
+
 void line(const Line& line, const Color& color, const int thickness)
 {
     const Vec2 cameraPos = camera::getActivePos();
@@ -414,6 +438,17 @@ Args:
     color (Color): The color of the circle.
     thickness (int, optional): The line thickness. If 0 or >= radius, draws filled circle.
                               Defaults to 0 (filled).
+    )doc");
+
+    subDraw.def("ellipse", &ellipse, py::arg("bounds"), py::arg("color"), py::arg("filled") = false,
+                R"doc(
+Draw an ellipse to the renderer.
+
+Args:
+    bounds (Rect): The bounding box of the ellipse.
+    color (Color): The color of the ellipse.
+    filled (bool, optional): Whether to draw a filled ellipse or just the outline.
+                             Defaults to False (outline).
     )doc");
 
     subDraw.def("line", &line, py::arg("line"), py::arg("color"), py::arg("thickness") = 1,
