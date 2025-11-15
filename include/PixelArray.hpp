@@ -5,8 +5,8 @@
 #include <pybind11/pybind11.h>
 #include <string>
 
-#include "_globals.hpp"
 #include "Rect.hpp"
+#include "_globals.hpp"
 
 namespace py = pybind11;
 
@@ -15,9 +15,16 @@ namespace kn
 class Vec2;
 struct Color;
 
+enum class ScrollMode
+{
+    SMEAR,
+    ERASE,
+    REPEAT,
+};
+
 class PixelArray
 {
-public:
+  public:
     PixelArray() = default;
     explicit PixelArray(SDL_Surface* sdlSurface);
     explicit PixelArray(const Vec2& size);
@@ -55,19 +62,14 @@ public:
 
     [[nodiscard]] std::unique_ptr<PixelArray> copy() const;
 
-private:
+    void scroll(int dx, int dy, ScrollMode scrollMode) const;
+
+  private:
     SDL_Surface* m_surface = nullptr;
 };
 
 namespace pixel_array
 {
 void _bind(const py::module_& module);
-
-// enum class ScrollType
-// {
-//     SCROLL_SMEAR,
-//     SCROLL_ERASE,
-//     SCROLL_REPEAT,
-// };
 } // namespace pixel_array
 } // namespace kn
