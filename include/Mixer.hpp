@@ -52,7 +52,7 @@ class Audio : public std::enable_shared_from_this<Audio>
     ma_sound m_proto{};
     std::mutex m_mutex;
     std::vector<std::unique_ptr<Voice>> m_voices;
-    std::atomic<float> m_volume{1.0f};
+    float m_volume = 1.0f;
 
     static ma_uint64 msToFrames(int ms);
 
@@ -90,6 +90,7 @@ class AudioStream
         MA_SOUND_FLAG_STREAM | MA_SOUND_FLAG_NO_SPATIALIZATION | MA_SOUND_FLAG_NO_PITCH;
 
     ma_sound m_snd{};
+    float m_volume = 1.f;
 
     [[nodiscard]] static ma_uint64 msToFrames(int ms);
 

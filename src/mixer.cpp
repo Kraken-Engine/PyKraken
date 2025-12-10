@@ -100,13 +100,13 @@ void Audio::stop(const int fadeOutMs)
 
 void Audio::setVolume(const float volume)
 {
-    m_volume.store(volume, std::memory_order_relaxed);
+    m_volume = volume;
     std::lock_guard g(m_mutex);
     for (const auto& v : m_voices)
         ma_sound_set_volume(&v->snd, volume);
 }
 
-float Audio::getVolume() const { return m_volume.load(std::memory_order_relaxed); }
+float Audio::getVolume() const { return m_volume; }
 
 void Audio::cleanup()
 {
@@ -145,7 +145,7 @@ void Audio::doFadeStop(ma_sound& snd, const float currentVol, const int fadeOutM
     ma_sound_set_stop_time_in_pcm_frames(&snd, now + fadeFrames);
 }
 
-AudioStream::AudioStream(const std::string& filePath, const float volume)
+AudioStream::AudioStream(const std::string& filePath, const float volume) : m_volume(volume)
 {
     if (!hasSupportedExtension(filePath))
         throw std::invalid_argument("Unsupported audio format: " + filePath);
@@ -154,7 +154,7 @@ AudioStream::AudioStream(const std::string& filePath, const float volume)
         MA_SUCCESS)
         throw std::runtime_error("ma_sound_init_from_file(STREAM) failed: " + filePath);
 
-    setVolume(volume);
+    ma_sound_set_volume(&m_snd, volume);
 
     // Register this stream for cleanup
     std::lock_guard g(_streamsMutex);
@@ -189,11 +189,14 @@ void AudioStream::play(const int fadeInMs, const bool loop, const float startTim
     startTimeSeconds > 0.0f ? seek(startTimeSeconds) : rewind();
 
     ma_sound_set_looping(&m_snd, loop ? MA_TRUE : MA_FALSE);
-    const float volume = ma_sound_get_volume(&m_snd);
     if (fadeInMs > 0)
     {
         const ma_uint64 frames = msToFrames(fadeInMs);
-        ma_sound_set_fade_in_pcm_frames(&m_snd, 0.0f, volume, frames);
+        ma_sound_set_fade_in_pcm_frames(&m_snd, 0.0f, m_volume, frames);
+    }
+    else
+    {
+        ma_sound_set_volume(&m_snd, m_volume);
     }
     ma_sound_start(&m_snd);
 }
@@ -244,9 +247,13 @@ float AudioStream::getCurrentTime()
     return static_cast<float>(currentFrame) / static_cast<float>(sampleRate);
 }
 
-void AudioStream::setVolume(const float volume) { ma_sound_set_volume(&m_snd, volume); }
+void AudioStream::setVolume(const float volume)
+{
+    m_volume = volume;
+    ma_sound_set_volume(&m_snd, volume);
+}
 
-float AudioStream::getVolume() const { return ma_sound_get_volume(&m_snd); }
+float AudioStream::getVolume() const { return m_volume; }
 
 void AudioStream::setLooping(const bool loop)
 {
