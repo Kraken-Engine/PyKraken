@@ -48,10 +48,11 @@ void Rect::clamp(const Vec2& min, const Vec2& max)
     if (w > maxX - minX || h > maxY - minY)
         throw std::invalid_argument("Rect size exceeds the given area");
 
-    x = std::max(minX, std::min(x, maxX));
-    y = std::max(minY, std::min(y, maxY));
-    w = std::max(0.0, std::min(w, maxX - x));
-    h = std::max(0.0, std::min(h, maxY - y));
+    const double maxXPos = maxX - w;
+    const double maxYPos = maxY - h;
+
+    x = std::max(minX, std::min(x, maxXPos));
+    y = std::max(minY, std::min(y, maxYPos));
 }
 
 void Rect::clamp(const Rect& other) { clamp(other.getTopLeft(), other.getBottomRight()); }
