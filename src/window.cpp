@@ -86,7 +86,7 @@ void create(const std::string& title, const Vec2& res, const bool scaled, const 
             throw std::invalid_argument("Window resolution values must be greater than 0");
     }
 
-    _window = SDL_CreateWindow(title.c_str(), winW, winH, 0);
+    _window = SDL_CreateWindow(title.c_str(), winW, winH, SDL_WINDOW_RESIZABLE);
     if (!_window)
         throw std::runtime_error(SDL_GetError());
 
@@ -136,9 +136,15 @@ int getScale()
 void setFullscreen(const bool fullscreen)
 {
     if (!_window)
-        throw std::runtime_error("Window not initialized");
+    {
+        log::warn("Attempted to set fullscreen on uninitialized window");
+        return;
+    }
 
-    SDL_SetWindowFullscreen(_window, fullscreen);
+    if (!SDL_SetWindowFullscreen(_window, fullscreen))
+    {
+        log::warn("Failed to set fullscreen mode: {}", SDL_GetError());
+    }
 }
 
 bool isFullscreen()
