@@ -22,7 +22,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if (MSVC)
   add_compile_definitions(NOMINMAX WIN32_LEAN_AND_MEAN)
-  add_compile_options(/bigobj)
+  add_compile_options(/bigobj /utf-8)
 endif()
 
 # -------------------------

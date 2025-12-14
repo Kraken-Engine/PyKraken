@@ -1,5 +1,6 @@
 #include "AnimationController.hpp"
 #include "Font.hpp"
+#include "Log.hpp"
 #include "Math.hpp"
 #include "Mixer.hpp"
 #include "Renderer.hpp"
@@ -24,10 +25,13 @@ static int _scale = 1;
 
 SDL_Window* _get() { return _window; }
 
-void create(const std::string& title, const Vec2& res, const bool scaled)
+void create(const std::string& title, const Vec2& res, const bool scaled, const bool debug)
 {
     if (_window)
         throw std::runtime_error("Window already created");
+
+    if (debug)
+        log::_init();
 
     if (title.empty())
         throw std::invalid_argument("Title cannot be empty");
@@ -215,13 +219,14 @@ void _bind(py::module_& module)
     auto subWindow = module.def_submodule("window", "Window related functions");
 
     subWindow.def("create", &create, py::arg("title"), py::arg("resolution"),
-                  py::arg("scaled") = false, R"doc(
+                  py::arg("scaled") = false, py::arg("debug") = false, R"doc(
 Create a window with the requested title and resolution.
 
 Args:
     title (str): Non-empty title no longer than 255 characters.
     resolution (Vec2): Target renderer resolution as (width, height).
     scaled (bool): When True, stretches to usable display bounds while maintaining aspect.
+    debug (bool): When True, initializes logging outputs.
 
 Raises:
     RuntimeError: If a window already exists or SDL window creation fails.

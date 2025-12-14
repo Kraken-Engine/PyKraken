@@ -4,16 +4,13 @@ Input event handling
 from __future__ import annotations
 import pykraken._core
 import typing
-__all__: list[str] = ['new_custom', 'poll', 'push', 'schedule', 'unschedule']
+__all__: list[str] = ['new_custom', 'poll', 'push', 'schedule', 'start_text_input', 'stop_text_input', 'unschedule']
 def new_custom() -> pykraken._core.Event:
     """
     Create a new custom event type.
     
     Returns:
-        Event: A new Event object with a unique custom event type.
-    
-    Raises:
-        RuntimeError: If registering a custom event type fails.
+        Event: The newly registered custom Event. If registration fails, the Event has type 0.
     """
 def poll() -> list[pykraken._core.Event]:
     """
@@ -24,17 +21,17 @@ def poll() -> list[pykraken._core.Event]:
     Returns:
         list[Event]: A list of input event objects.
     """
-def push(event: pykraken._core.Event) -> None:
+def push(event: pykraken._core.Event) -> bool:
     """
     Push a custom event to the event queue.
     
     Args:
         event (Event): The custom event to push to the queue.
     
-    Raises:
-        RuntimeError: If attempting to push a non-custom event type.
+    Returns:
+        bool: True if the event was queued, False otherwise.
     """
-def schedule(event: pykraken._core.Event, delay_ms: typing.SupportsInt, repeat: bool = False) -> None:
+def schedule(event: pykraken._core.Event, delay_ms: typing.SupportsInt, repeat: bool = False) -> bool:
     """
     Schedule a custom event to be pushed after a delay. Will overwrite any existing timer for the same event.
     
@@ -44,17 +41,30 @@ def schedule(event: pykraken._core.Event, delay_ms: typing.SupportsInt, repeat: 
         repeat (bool, optional): If True, the event will be pushed repeatedly at the
             specified interval. If False, the event is pushed only once. Defaults to False.
     
-    Raises:
-        RuntimeError: If attempting to schedule a non-custom event type, or if timer
-            creation fails.
+    Returns:
+        bool: True if the timer was scheduled, False on invalid types or timer creation failure.
     """
-def unschedule(event: pykraken._core.Event) -> None:
+def start_text_input() -> bool:
+    """
+    Start text input for TEXT_INPUT and TEXT_EDITING events.
+    
+    Returns:
+        bool: True if text input was started successfully, False otherwise.
+    """
+def stop_text_input() -> bool:
+    """
+    Stop text input for TEXT_INPUT and TEXT_EDITING events.
+    
+    Returns:
+        bool: True if text input was stopped successfully, False otherwise.
+    """
+def unschedule(event: pykraken._core.Event) -> bool:
     """
     Cancel a scheduled event timer.
     
     Args:
         event (Event): The custom event whose timer should be cancelled.
     
-    Raises:
-        RuntimeError: If attempting to cancel a non-custom event type.
+    Returns:
+        bool: True if a timer was found and removed, False otherwise.
     """

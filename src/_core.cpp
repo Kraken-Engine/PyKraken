@@ -12,6 +12,7 @@
 #include "Input.hpp"
 #include "Key.hpp"
 #include "Line.hpp"
+#include "Log.hpp"
 #include "Mask.hpp"
 #include "Math.hpp"
 #include "Mixer.hpp"
@@ -32,7 +33,9 @@
 static void init()
 {
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
-        throw std::runtime_error(SDL_GetError());
+    {
+        kn::log::error("Failed to initialize SDL: {}", SDL_GetError());
+    }
 
     kn::mixer::_init();
 }
@@ -87,6 +90,7 @@ Tear down the Kraken engine subsystems.
     kn::collision::_bind(m);
     kn::ease::_bind(m);
     kn::event::_bind(m);
+    kn::log::_bind(m);
     kn::font::_bind(m);
     kn::text::_bind(m);
     kn::gamepad::_bind(m);

@@ -1,9 +1,10 @@
+#include "Event.hpp"
 #include "Gamepad.hpp"
 #include "Key.hpp"
+#include "Log.hpp"
 #include "Mouse.hpp"
 #include "Window.hpp"
 
-#include "Event.hpp"
 #include <SDL3/SDL.h>
 #include <pybind11/stl.h>
 #include <unordered_map>
@@ -18,13 +19,34 @@ py::object Event::getAttr(const std::string& name) const
         return py::int_(type);
     if (data.contains(name))
         return data[name.c_str()];
-    throw py::attribute_error("Attribute '" + name + "' not found");
+
+    log::error("Attribute '{}' not found", name);
 }
 
 namespace event
 {
 // Track scheduled timers by event type
 static std::unordered_map<uint32_t, SDL_TimerID> scheduledTimers;
+
+bool start_text_input()
+{
+    if (!SDL_StartTextInput(window::_get()))
+    {
+        log::error("Failed to start text input: {}", SDL_GetError());
+        return false;
+    }
+    return true;
+}
+
+bool stop_text_input()
+{
+    if (!SDL_StopTextInput(window::_get()))
+    {
+        log::error("Failed to stop text input: {}", SDL_GetError());
+        return false;
+    }
+    return true;
+}
 
 std::vector<Event> poll()
 {
@@ -182,24 +204,41 @@ Event newCustom()
 {
     const uint32_t eventType = SDL_RegisterEvents(1);
     if (eventType == 0)
-        throw std::runtime_error("Failed to register custom event type");
+    {
+        log::error("Failed to register custom event type");
+        return Event(0);
+    }
+
     return Event(eventType);
 }
 
-void push(const Event& event)
+bool push(const Event& event)
 {
     if (event.type < SDL_EVENT_USER || event.type >= SDL_EVENT_LAST)
-        throw std::runtime_error("Cannot push non-custom event types");
+    {
+        log::error("Cannot push non-custom event types");
+        return false;
+    }
 
     SDL_Event sdl_event{};
     sdl_event.type = event.type;
-    SDL_PushEvent(&sdl_event);
+
+    if (!SDL_PushEvent(&sdl_event))
+    {
+        log::error("Failed to push event of type {}", event.type);
+        return false;
+    }
+
+    return true;
 }
 
-void schedule(const Event& event, uint32_t delay_ms, bool repeat)
+bool schedule(const Event& event, uint32_t delay_ms, bool repeat)
 {
     if (event.type < SDL_EVENT_USER || event.type >= SDL_EVENT_LAST)
-        throw std::runtime_error("Cannot schedule non-custom event types");
+    {
+        log::error("Cannot schedule non-custom event types");
+        return false;
+    }
 
     // Cancel any existing timer for this event type
     auto it = scheduledTimers.find(event.type);
@@ -248,18 +287,21 @@ void schedule(const Event& event, uint32_t delay_ms, bool repeat)
     if (timerID == 0)
     {
         delete sdl_event;
-        throw std::runtime_error("Failed to create timer");
+        log::error("Failed to create timer for event type {}", event.type);
+        return false;
     }
 
     // Track the timer
     scheduledTimers[event.type] = timerID;
+    return true;
 }
 
-void unschedule(const Event& event)
+bool unschedule(const Event& event)
 {
     if (event.type < SDL_EVENT_USER || event.type >= SDL_EVENT_LAST)
     {
-        throw std::runtime_error("Cannot unschedule non-custom event types");
+        log::error("Cannot unschedule non-custom event types");
+        return false;
     }
 
     auto it = scheduledTimers.find(event.type);
@@ -267,7 +309,10 @@ void unschedule(const Event& event)
     {
         SDL_RemoveTimer(it->second);
         scheduledTimers.erase(it);
+        return true;
     }
+
+    return false;
 }
 
 void _bind(py::module_& module)
@@ -300,10 +345,7 @@ Returns:
 Create a new custom event type.
 
 Returns:
-    Event: A new Event object with a unique custom event type.
-
-Raises:
-    RuntimeError: If registering a custom event type fails.
+    Event: The newly registered custom Event. If registration fails, the Event has type 0.
         )doc");
 
     subEvent.def("push", &push, py::arg("event"), R"doc(
@@ -312,8 +354,8 @@ Push a custom event to the event queue.
 Args:
     event (Event): The custom event to push to the queue.
 
-Raises:
-    RuntimeError: If attempting to push a non-custom event type.
+Returns:
+    bool: True if the event was queued, False otherwise.
         )doc");
 
     subEvent.def("schedule", &schedule, py::arg("event"), py::arg("delay_ms"),
@@ -326,9 +368,8 @@ Args:
     repeat (bool, optional): If True, the event will be pushed repeatedly at the
         specified interval. If False, the event is pushed only once. Defaults to False.
 
-Raises:
-    RuntimeError: If attempting to schedule a non-custom event type, or if timer
-        creation fails.
+Returns:
+    bool: True if the timer was scheduled, False on invalid types or timer creation failure.
         )doc");
 
     subEvent.def("unschedule", &unschedule, py::arg("event"), R"doc(
@@ -337,8 +378,22 @@ Cancel a scheduled event timer.
 Args:
     event (Event): The custom event whose timer should be cancelled.
 
-Raises:
-    RuntimeError: If attempting to cancel a non-custom event type.
+Returns:
+    bool: True if a timer was found and removed, False otherwise.
+        )doc");
+
+    subEvent.def("start_text_input", &start_text_input, R"doc(
+Start text input for TEXT_INPUT and TEXT_EDITING events.
+
+Returns:
+    bool: True if text input was started successfully, False otherwise.
+        )doc");
+
+    subEvent.def("stop_text_input", &stop_text_input, R"doc(
+Stop text input for TEXT_INPUT and TEXT_EDITING events.
+
+Returns:
+    bool: True if text input was stopped successfully, False otherwise.
         )doc");
 }
 } // namespace event
