@@ -173,10 +173,10 @@ void AnimationController::update(const double delta)
         return;
     }
 
-    // Clamp to the last frame and pause
+    // When not looping, clamp to the ends and pause
     if (m_index >= frameCount)
     {
-        m_index = frameCount - 1.0;
+        m_index = frameCount;
         pause();
     }
     else if (m_index < 0.0)
@@ -229,7 +229,7 @@ Defines a single animation within a sprite sheet by specifying the animation nam
 the number of frames to extract from the strip, and the playback speed in frames
 per second (FPS).
     )doc")
-        .def(py::init<>([](const std::string& name, int frame_count, int fps) -> SheetStrip
+        .def(py::init<>([](const std::string& name, int frame_count, double fps) -> SheetStrip
                         { return {name, frame_count, fps}; }),
              py::arg("name"), py::arg("frame_count"), py::arg("fps"), R"doc(
 Create a sprite sheet strip definition.
@@ -237,7 +237,7 @@ Create a sprite sheet strip definition.
 Args:
     name (str): Unique identifier for this animation.
     frame_count (int): Number of frames to extract from this strip/row.
-    fps (int): Frames per second for playback timing.
+    fps (float): Frames per second for playback timing.
              )doc")
         .def_readwrite("name", &SheetStrip::name, R"doc(
 The unique name identifier for this animation strip.
@@ -260,7 +260,7 @@ The playback speed in frames per second.
 Determines how fast the animation plays. Higher values result in faster playback.
 
 Type:
-    int: The frames per second for this animation.
+    float: The frames per second for this animation.
         )doc");
 
     py::classh<AnimationController>(module, "AnimationController", R"doc(
@@ -333,10 +333,7 @@ Frames are read left-to-right within each strip, and strips are read top-to-bott
 Args:
     file_path (str): Path to the sprite sheet image file.
     frame_size (Vec2): Size of each frame as (width, height).
-    strips (list[SheetStrip]): List of strip definitions, each containing:
-        - name (str): Unique identifier for the animation
-        - frame_count (int): Number of frames in this strip/animation
-        - fps (int): Frames per second for playback timing
+    strips (list[SheetStrip]): List of strip definitions.
 
 Raises:
     ValueError: If frame size is not positive, no strips provided, frame count is not
@@ -347,7 +344,7 @@ Raises:
         .def("set", &AnimationController::set, py::arg("name"), R"doc(
 Set the current active animation by name without affecting playback state.
 
-Switches to the specified animation while preserving the current frame index and 
+Switches to the specified animation while preserving the current frame index and
 playback state (paused/playing). Useful for seamless animation transitions.
 
 Args:

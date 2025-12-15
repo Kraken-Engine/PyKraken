@@ -58,7 +58,7 @@ class Animation:
             
     """
     @property
-    def fps(self) -> int:
+    def fps(self) -> float:
         """
         The frames per second rate for animation playback.
         """
@@ -100,10 +100,7 @@ class AnimationController:
         Args:
             file_path (str): Path to the sprite sheet image file.
             frame_size (Vec2): Size of each frame as (width, height).
-            strips (list[SheetStrip]): List of strip definitions, each containing:
-                - name (str): Unique identifier for the animation
-                - frame_count (int): Number of frames in this strip/animation
-                - fps (int): Frames per second for playback timing
+            strips (list[SheetStrip]): List of strip definitions.
         
         Raises:
             ValueError: If frame size is not positive, no strips provided, frame count is not
@@ -159,7 +156,7 @@ class AnimationController:
         """
         Set the current active animation by name without affecting playback state.
         
-        Switches to the specified animation while preserving the current frame index and 
+        Switches to the specified animation while preserving the current frame index and
         playback state (paused/playing). Useful for seamless animation transitions.
         
         Args:
@@ -2548,27 +2545,27 @@ class SheetStrip:
     per second (FPS).
         
     """
-    def __init__(self, name: str, frame_count: typing.SupportsInt, fps: typing.SupportsInt) -> None:
+    def __init__(self, name: str, frame_count: typing.SupportsInt, fps: typing.SupportsFloat) -> None:
         """
         Create a sprite sheet strip definition.
         
         Args:
             name (str): Unique identifier for this animation.
             frame_count (int): Number of frames to extract from this strip/row.
-            fps (int): Frames per second for playback timing.
+            fps (float): Frames per second for playback timing.
         """
     @property
-    def fps(self) -> int:
+    def fps(self) -> float:
         """
         The playback speed in frames per second.
         
         Determines how fast the animation plays. Higher values result in faster playback.
         
         Type:
-            int: The frames per second for this animation.
+            float: The frames per second for this animation.
         """
     @fps.setter
-    def fps(self, arg0: typing.SupportsInt) -> None:
+    def fps(self, arg0: typing.SupportsFloat) -> None:
         ...
     @property
     def frame_count(self) -> int:
@@ -2618,7 +2615,7 @@ class Text:
         Raises:
             RuntimeError: If text creation fails.
         """
-    def draw(self, pos: typing.Any = None, anchor: Anchor = Anchor.TOP_LEFT) -> None:
+    def draw(self, pos: typing.Any = None, anchor: Anchor = Anchor.TOP_LEFT) -> bool:
         """
         Draw the text to the renderer at the specified position with alignment.
         
@@ -2633,7 +2630,7 @@ class Text:
         Returns:
             Rect: A rectangle with x=0, y=0, and width/height of the text.
         """
-    def set_font(self, font: Font) -> None:
+    def set_font(self, font: Font) -> bool:
         """
         Set the font to use for rendering this text.
         
@@ -2646,7 +2643,7 @@ class Text:
         Get or set the color of the rendered text.
         """
     @color.setter
-    def color(self, arg1: Color) -> None:
+    def color(self, arg1: Color) -> bool:
         ...
     @property
     def height(self) -> int:
@@ -2670,7 +2667,7 @@ class Text:
         Get or set the text string to be rendered.
         """
     @text.setter
-    def text(self, arg1: str) -> None:
+    def text(self, arg1: str) -> bool:
         ...
     @property
     def width(self) -> int:
@@ -2688,7 +2685,7 @@ class Text:
         Set to 0 to disable wrapping. Negative values are clamped to 0.
         """
     @wrap_width.setter
-    def wrap_width(self, arg1: typing.SupportsInt) -> None:
+    def wrap_width(self, arg1: typing.SupportsInt) -> bool:
         ...
 class Texture:
     """
@@ -3366,9 +3363,12 @@ class ViewportMode(enum.IntEnum):
         """
         Convert to a string according to format_spec.
         """
-def init() -> None:
+def init(debug: bool = False) -> None:
     """
     Initialize the Kraken engine subsystems.
+    
+    Args:
+        debug (bool): When True, enables logging outputs.
     
     Raises:
         RuntimeError: If SDL initialization fails.

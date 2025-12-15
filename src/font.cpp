@@ -1,4 +1,5 @@
 #include "Font.hpp"
+#include "Log.hpp"
 #include "misc/SpaceGrotesk.h"
 #include "misc/minecraftia.h"
 
@@ -231,6 +232,9 @@ void _init()
 {
     if (!TTF_Init())
         throw std::runtime_error("Failed to initialize SDL_ttf");
+
+    log::info("SDL_ttf version: {}.{}.{}", SDL_TTF_MAJOR_VERSION, SDL_TTF_MINOR_VERSION,
+              SDL_TTF_MICRO_VERSION);
 }
 
 void _quit()

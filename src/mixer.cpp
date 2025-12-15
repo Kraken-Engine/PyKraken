@@ -1,9 +1,13 @@
 #define MINIAUDIO_IMPLEMENTATION
 
 #include "Mixer.hpp"
+#include "Log.hpp"
+
 #include <algorithm>
 #include <atomic>
 #include <stdexcept>
+
+const char* getBackendName(ma_backend backend);
 
 namespace kn
 {
@@ -273,6 +277,11 @@ void _init()
         throw std::runtime_error("Audio engine init failed");
 
     ma_engine_listener_set_enabled(&_engine, 0, MA_FALSE);
+
+    kn::log::info("Miniaudio version: {}", MA_VERSION_STRING);
+    kn::log::info("Audio device: {}", _engine.pDevice->playback.name);
+    kn::log::info("Audio sample rate: {} Hz", _engine.pDevice->sampleRate);
+    kn::log::info("Audio channels: {}", _engine.pDevice->playback.channels);
 }
 
 void _quit()
@@ -526,3 +535,36 @@ Args:
 }
 } // namespace mixer
 } // namespace kn
+
+const char* getBackendName(ma_backend backend)
+{
+    switch (backend)
+    {
+    case ma_backend_wasapi:
+        return "WASAPI";
+    case ma_backend_dsound:
+        return "DirectSound";
+    case ma_backend_winmm:
+        return "WinMM";
+    case ma_backend_coreaudio:
+        return "CoreAudio";
+    case ma_backend_alsa:
+        return "ALSA";
+    case ma_backend_pulseaudio:
+        return "PulseAudio";
+    case ma_backend_jack:
+        return "JACK";
+    case ma_backend_oss:
+        return "OSS";
+    case ma_backend_aaudio:
+        return "AAudio";
+    case ma_backend_opensl:
+        return "OpenSL ES";
+    case ma_backend_webaudio:
+        return "WebAudio";
+    case ma_backend_null:
+        return "Null";
+    default:
+        return "Unknown";
+    }
+}

@@ -30,8 +30,24 @@
 #include "Viewport.hpp"
 #include "Window.hpp"
 
-static void init()
+constexpr int KRAKEN_MAJOR_VERSION = 1;
+constexpr int KRAKEN_MINOR_VERSION = 4;
+constexpr int KRAKEN_MICRO_VERSION = 0;
+
+constexpr const char* getPlatform();
+constexpr const char* getArchitecture();
+
+static void init(const bool debug = false)
 {
+    if (debug)
+        kn::log::_init();
+
+    kn::log::info("Kraken Engine v{}.{}.{}", KRAKEN_MAJOR_VERSION, KRAKEN_MINOR_VERSION,
+                  KRAKEN_MICRO_VERSION);
+
+    // log platform and architecture
+    kn::log::info("Platform: {} ({})", getPlatform(), getArchitecture());
+
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
     {
         kn::log::error("Failed to initialize SDL: {}", SDL_GetError());
@@ -66,8 +82,11 @@ static void quit()
 
 PYBIND11_MODULE(_core, m)
 {
-    m.def("init", &init, R"doc(
+    m.def("init", &init, py::arg("debug") = false, R"doc(
 Initialize the Kraken engine subsystems.
+
+Args:
+    debug (bool): When True, enables logging outputs.
 
 Raises:
     RuntimeError: If SDL initialization fails.
@@ -108,4 +127,38 @@ Tear down the Kraken engine subsystems.
     kn::tile_map::_bind(m);
     kn::shader_state::_bind(m);
     kn::viewport::_bind(m);
+}
+
+constexpr const char* getPlatform()
+{
+#if defined(_WIN32)
+    return "Windows";
+#elif defined(__APPLE__)
+    return "macOS";
+#elif defined(__linux__)
+    return "Linux";
+#elif defined(__unix__)
+    return "Unix";
+#else
+    return "Unknown OS";
+#endif
+}
+
+constexpr const char* getArchitecture()
+{
+#if defined(_M_X64) || defined(__x86_64__)
+    return "x64";
+#elif defined(_M_IX86) || defined(__i386__) || defined(__i686__)
+    return "x86";
+#elif defined(_M_ARM64) || defined(__aarch64__)
+    return "ARM64";
+#elif defined(_M_ARM) || defined(__arm__)
+    return "ARM";
+#elif defined(__ppc64__) || defined(__PPC64__)
+    return "PowerPC64";
+#elif defined(__ppc__) || defined(__PPC__)
+    return "PowerPC";
+#else
+    return "Unknown Architecture";
+#endif
 }

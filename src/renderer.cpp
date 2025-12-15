@@ -1,5 +1,6 @@
 #include "Renderer.hpp"
 #include "Camera.hpp"
+#include "Log.hpp"
 #include "PixelArray.hpp"
 #include "Texture.hpp"
 
@@ -35,6 +36,11 @@ void _init(SDL_Window* window, const Vec2& resolution)
                                 static_cast<int>(resolution.x), static_cast<int>(resolution.y));
     SDL_SetTextureScaleMode(_target, SDL_SCALEMODE_NEAREST);
     SDL_SetRenderTarget(_renderer, _target);
+
+    const auto gpuProperties = SDL_GetGPUDeviceProperties(_gpuDevice);
+    const char* gpuName =
+        SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_NAME_STRING, "Unknown Device");
+    log::info("GPU Device: {}", gpuName);
 }
 
 void _quit()

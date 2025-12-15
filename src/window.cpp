@@ -25,13 +25,10 @@ static int _scale = 1;
 
 SDL_Window* _get() { return _window; }
 
-void create(const std::string& title, const Vec2& res, const bool scaled, const bool debug)
+void create(const std::string& title, const Vec2& res, const bool scaled)
 {
     if (_window)
         throw std::runtime_error("Window already created");
-
-    if (debug)
-        log::_init();
 
     if (title.empty())
         throw std::invalid_argument("Title cannot be empty");
@@ -98,6 +95,10 @@ void create(const std::string& title, const Vec2& res, const bool scaled, const 
     _isOpen = true;
 
     renderer::_init(_window, res);
+
+    log::info("SDL version: {}.{}.{}", SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_MICRO_VERSION);
+    log::info("SDL_image version: {}.{}.{}", SDL_IMAGE_MAJOR_VERSION, SDL_IMAGE_MINOR_VERSION,
+              SDL_IMAGE_MICRO_VERSION);
     font::_init();
     text::_init();
 }
@@ -225,14 +226,13 @@ void _bind(py::module_& module)
     auto subWindow = module.def_submodule("window", "Window related functions");
 
     subWindow.def("create", &create, py::arg("title"), py::arg("resolution"),
-                  py::arg("scaled") = false, py::arg("debug") = false, R"doc(
+                  py::arg("scaled") = false, R"doc(
 Create a window with the requested title and resolution.
 
 Args:
     title (str): Non-empty title no longer than 255 characters.
     resolution (Vec2): Target renderer resolution as (width, height).
     scaled (bool): When True, stretches to usable display bounds while maintaining aspect.
-    debug (bool): When True, initializes logging outputs.
 
 Raises:
     RuntimeError: If a window already exists or SDL window creation fails.

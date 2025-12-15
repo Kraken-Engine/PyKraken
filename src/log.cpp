@@ -10,16 +10,16 @@ bool _loggerEnabled = false;
 void _init()
 {
     if (_loggerEnabled)
+    {
+        log::warn("Logger already initialized");
         return;
+    }
 
     auto console = spdlog::stdout_color_mt("console");
-    auto file = spdlog::basic_logger_mt("file", "kn-debug.log");
-
     spdlog::set_default_logger(console);
-    spdlog::set_level(spdlog::level::debug);
-    spdlog::flush_on(spdlog::level::warn);
-
-    spdlog::info("Logger initialized");
+    spdlog::set_level(spdlog::level::level_enum::debug);
+    spdlog::flush_on(spdlog::level::level_enum::warn);
+    spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
 
     _loggerEnabled = true;
 }

@@ -27,14 +27,14 @@ struct Frame
 struct Animation
 {
     std::vector<Frame> frames;
-    int fps;
+    double fps;
 };
 
 struct SheetStrip
 {
     std::string name;
     int frameCount;
-    int fps;
+    double fps;
 };
 
 class AnimationController
