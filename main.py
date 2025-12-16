@@ -1,16 +1,19 @@
 import pykraken as kn
 
 kn.init(debug=True)
-kn.window.create("test", (300, 300), scaled=True)
+kn.window.create("test", (1920, 1080), scaled=True)
 
 anim = kn.AnimationController()
-anim.load_sprite_sheet("astroidle.png", (19, 30), [kn.SheetStrip("idle", 10, 2.5)])
-anim.looping = False
+anim.load_sprite_sheet("astroidle.png", (19, 30), [kn.SheetStrip("idle", 10, 6)])
+# anim.looping = False
 
 dst = kn.Rect(0, 0, 19, 30)
 dst.center = kn.renderer.get_res() / 2
 
-elapsed = 0
+font = kn.Font("kraken-retro", 8)
+text = kn.Text(font)
+text.text = "Hello, PyKraken!"
+
 while kn.window.is_open():
     for event in kn.event.poll():
         if event.type == kn.KEY_DOWN:
@@ -21,12 +24,10 @@ while kn.window.is_open():
 
     kn.renderer.clear("#444")
 
-    elapsed += kn.time.get_delta()
-    if anim.progress == 1.0:
-        print(elapsed)
-        kn.window.close()
     frame = anim.current_frame
-    kn.renderer.draw(frame.tex, dst=dst, src=frame.src)
+    kn.renderer.draw(frame.tex, dst, frame.src)
+
+    text.draw()
 
     kn.renderer.present()
 

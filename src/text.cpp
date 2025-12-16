@@ -21,16 +21,13 @@ Text::Text(const Font& font)
 {
     if (!_textEngine)
     {
-        log::error("Text engine not initialized; create a window first");
-        m_text = nullptr;
-        return;
+        throw std::runtime_error("Text engine not initialized; create a window first");
     }
 
     m_text = TTF_CreateText(_textEngine, font._get(), "", 0);
     if (!m_text)
     {
-        log::error("Failed to create text: {}", SDL_GetError());
-        return;
+        throw std::runtime_error(std::string("Failed to create text: ") + SDL_GetError());
     }
 
     TTF_SetTextColor(m_text, 255, 255, 255, 255);
@@ -60,29 +57,23 @@ Text::~Text()
     }
 }
 
-bool Text::setFont(const Font& font) const
+void Text::setFont(const Font& font) const
 {
     if (!m_text)
-    {
-        log::error("set_font called on destroyed or uninitialized Text");
-        return false;
-    }
+        throw std::runtime_error("Text is destroyed or uninitialized");
 
     if (!TTF_SetTextFont(m_text, font._get()))
     {
-        log::error("Failed to set text font: {}", SDL_GetError());
-        return false;
+        throw std::runtime_error(std::string("Failed to set text font: ") + SDL_GetError());
     }
-    return true;
 }
 
-bool Text::draw(Vec2 pos, const Anchor anchor) const
+void Text::draw(Vec2 pos, const Anchor anchor) const
 {
-    if (!m_text)
-    {
-        log::error("draw called on destroyed or uninitialized Text");
-        return false;
-    }
+    if (!renderer::_get())
+        throw std::runtime_error("Renderer not initialized");
+    if (!TTF_GetTextFont(m_text))
+        throw std::runtime_error("Text font is not set or has gone out of scope");
 
     const Vec2 cameraPos = camera::getActivePos();
     pos.x -= cameraPos.x;
@@ -131,101 +122,73 @@ bool Text::draw(Vec2 pos, const Anchor anchor) const
     const int drawY = static_cast<int>(std::round(pos.y));
 
     TTF_DrawRendererText(m_text, drawX, drawY);
-    return true;
 }
 
-bool Text::setWrapWidth(int wrapWidth) const
+void Text::setWrapWidth(int wrapWidth) const
 {
     if (!m_text)
-    {
-        log::error("set_wrap_width called on destroyed or uninitialized Text");
-        return false;
-    }
+        throw std::runtime_error("Text is destroyed or uninitialized");
 
     if (wrapWidth < 0)
         wrapWidth = 0;
     if (!TTF_SetTextWrapWidth(m_text, wrapWidth))
     {
-        log::error("Failed to set text wrap width: {}", SDL_GetError());
-        return false;
+        throw std::runtime_error(std::string("Failed to set text wrap width: ") + SDL_GetError());
     }
-    return true;
 }
 
 int Text::getWrapWidth() const
 {
     if (!m_text)
-    {
-        log::error("get_wrap_width called on destroyed or uninitialized Text");
-        return 0;
-    }
+        throw std::runtime_error("Text is destroyed or uninitialized");
 
     int wrapWidth;
     if (!TTF_GetTextWrapWidth(m_text, &wrapWidth))
     {
-        log::error("Failed to get text wrap width: {}", SDL_GetError());
-        return 0;
+        throw std::runtime_error(std::string("Failed to get text wrap width: ") + SDL_GetError());
     }
     return wrapWidth;
 }
 
-bool Text::setText(const std::string& text) const
+void Text::setText(const std::string& text) const
 {
     if (!m_text)
-    {
-        log::error("set_text called on destroyed or uninitialized Text");
-        return false;
-    }
+        throw std::runtime_error("Text is destroyed or uninitialized");
 
     if (!TTF_SetTextString(m_text, text.c_str(), 0))
     {
-        log::error("Failed to set text string: {}", SDL_GetError());
-        return false;
+        throw std::runtime_error(std::string("Failed to set text string: ") + SDL_GetError());
     }
-
-    return true;
 }
 
 std::string Text::getText() const
 {
     if (!m_text)
-    {
-        log::error("get_text called on destroyed or uninitialized Text");
-        return {};
-    }
+        throw std::runtime_error("Text is destroyed or uninitialized");
 
     return m_text->text ? std::string(m_text->text) : "";
 }
 
-bool Text::setColor(const Color& color) const
+void Text::setColor(const Color& color) const
 {
     if (!m_text)
-    {
-        log::error("set_color called on destroyed or uninitialized Text");
-        return false;
-    }
+        throw std::runtime_error("Text is destroyed or uninitialized");
 
     if (!TTF_SetTextColor(m_text, color.r, color.g, color.b, color.a))
     {
-        log::error("Failed to set text color: {}", SDL_GetError());
-        return false;
+        throw std::runtime_error(std::string("Failed to set text color: ") + SDL_GetError());
     }
-    return true;
 }
 
 Color Text::getColor() const
 {
     if (!m_text)
-    {
-        log::error("get_color called on destroyed or uninitialized Text");
-        return {0, 0, 0, 0};
-    }
+        throw std::runtime_error("Text is destroyed or uninitialized");
 
     Color color;
     if (!TTF_GetTextColor(m_text, &color.r, &color.g, &color.b, &color.a))
     {
-        log::error("Failed to get text color: {}", SDL_GetError());
-        return {0, 0, 0, 0};
+        throw std::runtime_error(std::string("Failed to get text color: ") + SDL_GetError());
     }
     return color;
 }
@@ -233,16 +196,12 @@ Color Text::getColor() const
 Rect Text::getRect() const
 {
     if (!m_text)
-    {
-        log::error("get_rect called on destroyed or uninitialized Text");
-        return {0, 0, 0, 0};
-    }
+        throw std::runtime_error("Text is destroyed or uninitialized");
 
     int w, h;
     if (!TTF_GetTextSize(m_text, &w, &h))
     {
-        log::error("Failed to get text size: {}", SDL_GetError());
-        return {0, 0, 0, 0};
+        throw std::runtime_error(std::string("Failed to get text size: ") + SDL_GetError());
     }
     return {0, 0, w, h};
 }
@@ -250,16 +209,12 @@ Rect Text::getRect() const
 Vec2 Text::getSize() const
 {
     if (!m_text)
-    {
-        log::error("get_size called on destroyed or uninitialized Text");
-        return {0, 0};
-    }
+        throw std::runtime_error("Text is destroyed or uninitialized");
 
     int w, h;
     if (!TTF_GetTextSize(m_text, &w, &h))
     {
-        log::error("Failed to get text size: {}", SDL_GetError());
-        return {0, 0};
+        throw std::runtime_error(std::string("Failed to get text size: ") + SDL_GetError());
     }
     return {w, h};
 }
@@ -267,16 +222,12 @@ Vec2 Text::getSize() const
 int Text::getWidth() const
 {
     if (!m_text)
-    {
-        log::error("get_width called on destroyed or uninitialized Text");
-        return 0;
-    }
+        throw std::runtime_error("Text is destroyed or uninitialized");
 
     int w;
     if (!TTF_GetTextSize(m_text, &w, nullptr))
     {
-        log::error("Failed to get text width: {}", SDL_GetError());
-        return 0;
+        throw std::runtime_error(std::string("Failed to get text width: ") + SDL_GetError());
     }
     return w;
 }
@@ -284,16 +235,12 @@ int Text::getWidth() const
 int Text::getHeight() const
 {
     if (!m_text)
-    {
-        log::error("get_height called on destroyed or uninitialized Text");
-        return 0;
-    }
+        throw std::runtime_error("Text is destroyed or uninitialized");
 
     int h;
     if (!TTF_GetTextSize(m_text, nullptr, &h))
     {
-        log::error("Failed to get text height: {}", SDL_GetError());
-        return 0;
+        throw std::runtime_error(std::string("Failed to get text height: ") + SDL_GetError());
     }
     return h;
 }
@@ -305,7 +252,7 @@ void _init()
     _textEngine = TTF_CreateRendererTextEngine(renderer::_get());
     if (!_textEngine)
     {
-        log::error("Failed to create text engine: {}", SDL_GetError());
+        throw std::runtime_error(std::string("Failed to create text engine: ") + SDL_GetError());
     }
 }
 
@@ -389,7 +336,7 @@ Returns:
 
         .def(
             "draw",
-            [](const Text& self, const py::object& posObj, const Anchor anchor) -> bool
+            [](const Text& self, const py::object& posObj, const Anchor anchor) -> void
             {
                 Vec2 pos{};
                 if (!posObj.is_none())
@@ -403,7 +350,7 @@ Returns:
                         throw py::type_error("Invalid type for 'pos', expected Vec2");
                     }
                 }
-                return self.draw(pos, anchor);
+                self.draw(pos, anchor);
             },
             py::arg("pos") = py::none(), py::arg("anchor") = Anchor::TopLeft, R"doc(
 Draw the text to the renderer at the specified position with alignment.
@@ -411,6 +358,10 @@ Draw the text to the renderer at the specified position with alignment.
 Args:
     pos (Vec2 | None): The position in pixels. Defaults to (0, 0).
     anchor (Anchor): The anchor point for alignment. Defaults to TopLeft.
+
+Raises:
+    RuntimeError: If the renderer is not initialized or text drawing fails.
+    RuntimeError: If the text font is not set or has gone out of scope.
         )doc")
         .def("set_font", &Text::setFont, py::arg("font"), R"doc(
 Set the font to use for rendering this text.

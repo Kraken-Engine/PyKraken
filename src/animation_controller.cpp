@@ -1,12 +1,13 @@
+#include "AnimationController.hpp"
+#include "Log.hpp"
 #include "Math.hpp"
+#include "Renderer.hpp"
 #include "Texture.hpp"
 #include "Time.hpp"
 
 #include <algorithm>
 #include <filesystem>
 #include <pybind11/stl.h>
-
-#include "AnimationController.hpp"
 
 namespace fs = std::filesystem;
 
@@ -21,9 +22,17 @@ void AnimationController::loadSpriteSheet(const std::string& filePath, const Vec
                                           const std::vector<SheetStrip>& strips)
 {
     if (frameSize.x <= 0 || frameSize.y <= 0)
+    {
         throw std::invalid_argument("Frame size must be positive non-zero values");
+    }
     if (strips.empty())
+    {
         throw std::invalid_argument("No strips provided for sprite sheet");
+    }
+
+    if (renderer::_get() == nullptr)
+        throw std::runtime_error(
+            "Renderer not initialized; create a window before loading sprite sheets");
 
     const auto texPtr = std::make_shared<Texture>(filePath);
     const Vec2 size = texPtr->getSize();
@@ -156,6 +165,8 @@ void AnimationController::resume()
 void AnimationController::update(const double delta)
 {
     if (m_paused)
+        return;
+    if (m_currAnim.empty())
         return;
 
     const auto& [frames, fps] = m_animMap.at(m_currAnim);

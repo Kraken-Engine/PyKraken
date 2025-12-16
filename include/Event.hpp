@@ -21,15 +21,15 @@ void _bind(py::module_& module);
 
 std::vector<Event> poll();
 
-bool start_text_input();
+void start_text_input();
 
-bool stop_text_input();
+void stop_text_input();
 
-bool push(const Event& event);
+void push(const Event& event);
 
-bool schedule(const Event& event, uint32_t delay_ms, bool repeat = false);
+void schedule(const Event& event, uint32_t delay_ms, bool repeat = false);
 
-bool unschedule(const Event& event);
+void unschedule(const Event& event);
 
 Event newCustom();
 } // namespace event

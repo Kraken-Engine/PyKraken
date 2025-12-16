@@ -14,15 +14,14 @@ ShaderState::ShaderState(const std::string& fragmentFilePath, const Uint32 unifo
     const char* ext = SDL_strrchr(fragmentFilePath.c_str(), '.');
     if (ext == nullptr)
     {
-        SDL_Log("Warning: Shader file has no extension: %s", fragmentFilePath.c_str());
-        throw std::runtime_error("Shader file has no extension");
+        throw std::runtime_error("Shader file has no extension: " + fragmentFilePath);
     }
 
     SDL_GPUShaderFormat formats = SDL_GetGPUShaderFormats(renderer::_getGPUDevice());
     if (formats == SDL_GPU_SHADERFORMAT_INVALID)
     {
-        SDL_Log("Couldn't get supported shader formats: %s", SDL_GetError());
-        throw std::runtime_error("Couldn't get supported shader formats");
+        throw std::runtime_error("Couldn't get supported shader formats: " +
+                                 std::string(SDL_GetError()));
     }
 
     SDL_GPUShaderFormat shaderFormat = SDL_GPU_SHADERFORMAT_INVALID;
@@ -44,16 +43,15 @@ ShaderState::ShaderState(const std::string& fragmentFilePath, const Uint32 unifo
     }
     else
     {
-        SDL_Log("Warning: Unknown shader extension '%s' or unsupported format", ext);
-        throw std::runtime_error("Unknown shader extension or unsupported format");
+        throw std::runtime_error("Unknown shader extension " + std::string(ext) +
+                                 " or unsupported format");
     }
 
     size_t codeSize;
     void* code = SDL_LoadFile(fragmentFilePath.c_str(), &codeSize);
     if (code == nullptr)
     {
-        SDL_Log("Failed to load shader from disk! %s", fragmentFilePath.c_str());
-        throw std::runtime_error("Failed to load shader from disk");
+        throw std::runtime_error("Failed to load shader from disk: " + fragmentFilePath);
     }
 
     SDL_GPUShaderCreateInfo shaderInfo{};
@@ -70,9 +68,8 @@ ShaderState::ShaderState(const std::string& fragmentFilePath, const Uint32 unifo
     m_fragShader = SDL_CreateGPUShader(renderer::_getGPUDevice(), &shaderInfo);
     if (m_fragShader == nullptr)
     {
-        SDL_Log("Failed to create shader!");
         SDL_free(code);
-        throw std::runtime_error("Failed to create shader");
+        throw std::runtime_error("Failed to create shader: " + std::string(SDL_GetError()));
     }
 
     SDL_free(code);
@@ -82,9 +79,8 @@ ShaderState::ShaderState(const std::string& fragmentFilePath, const Uint32 unifo
     m_renderState = SDL_CreateGPURenderState(renderer::_get(), &renderStateInfo);
     if (m_renderState == nullptr)
     {
-        SDL_Log("Failed to create render state!");
         SDL_ReleaseGPUShader(renderer::_getGPUDevice(), m_fragShader);
-        throw std::runtime_error("Failed to create render state");
+        throw std::runtime_error("Failed to create render state: " + std::string(SDL_GetError()));
     }
 
     // Register this shader state for cleanup

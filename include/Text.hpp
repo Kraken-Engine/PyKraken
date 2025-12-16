@@ -29,17 +29,17 @@ class Text
     Text(const Font& font);
     ~Text();
 
-    bool draw(Vec2 pos = {}, Anchor anchor = Anchor::TopLeft) const;
+    void draw(Vec2 pos = {}, Anchor anchor = Anchor::TopLeft) const;
 
-    bool setFont(const Font& font) const;
+    void setFont(const Font& font) const;
 
-    bool setWrapWidth(int wrapWidth) const;
+    void setWrapWidth(int wrapWidth) const;
     int getWrapWidth() const;
 
-    bool setText(const std::string& text) const;
+    void setText(const std::string& text) const;
     std::string getText() const;
 
-    bool setColor(const Color& color) const;
+    void setColor(const Color& color) const;
     Color getColor() const;
 
     Rect getRect() const;

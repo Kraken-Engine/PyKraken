@@ -49,9 +49,7 @@ static void init(const bool debug = false)
     kn::log::info("Platform: {} ({})", getPlatform(), getArchitecture());
 
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
-    {
-        kn::log::error("Failed to initialize SDL: {}", SDL_GetError());
-    }
+        throw std::runtime_error(std::string("Failed to initialize SDL: ") + SDL_GetError());
 
     kn::mixer::_init();
 }

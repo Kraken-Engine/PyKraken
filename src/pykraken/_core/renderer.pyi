@@ -36,16 +36,24 @@ def draw(texture: pykraken._core.Texture, dst: pykraken._core.Rect, src: typing.
         texture (Texture): The texture to render.
         dst (Rect): The destination rectangle on the renderer.
         src (Rect, optional): The source rectangle from the texture. Defaults to entire texture if not specified.
+    
+    Raises:
+        TypeError: If 'src' is not of type Rect.
+        RuntimeError: If renderer is not initialized.
     """
 @typing.overload
-def draw(texture: pykraken._core.Texture, pos: typing.Any = None, anchor: pykraken._core.Anchor = pykraken._core.Anchor.CENTER) -> None:
+def draw(texture: pykraken._core.Texture, pos: typing.Any = None, anchor: pykraken._core.Anchor = pykraken._core.Anchor.TOP_LEFT) -> None:
     """
     Render a texture at the specified position with anchor alignment.
     
     Args:
         texture (Texture): The texture to render.
         pos (Vec2, optional): The position to draw at. Defaults to (0, 0).
-        anchor (Anchor, optional): The anchor point for positioning. Defaults to CENTER.
+        anchor (Anchor, optional): The anchor point for positioning. Defaults to TOP_LEFT.
+    
+    Raises:
+        TypeError: If 'pos' is not of type Vec2.
+        RuntimeError: If renderer is not initialized.
     """
 def get_res() -> pykraken._core.Vec2:
     """

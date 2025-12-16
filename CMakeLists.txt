@@ -80,7 +80,7 @@ if (PYK_VENDOR_SDL)
 
   FetchContent_Declare(SDL3
     GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-    GIT_TAG        preview-3.3.4
+    GIT_TAG        prerelease-3.3.4
     GIT_SHALLOW    TRUE
   )
   FetchContent_Declare(SDL_image

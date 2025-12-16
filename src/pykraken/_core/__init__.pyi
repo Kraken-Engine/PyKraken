@@ -2615,13 +2615,17 @@ class Text:
         Raises:
             RuntimeError: If text creation fails.
         """
-    def draw(self, pos: typing.Any = None, anchor: Anchor = Anchor.TOP_LEFT) -> bool:
+    def draw(self, pos: typing.Any = None, anchor: Anchor = Anchor.TOP_LEFT) -> None:
         """
         Draw the text to the renderer at the specified position with alignment.
         
         Args:
             pos (Vec2 | None): The position in pixels. Defaults to (0, 0).
             anchor (Anchor): The anchor point for alignment. Defaults to TopLeft.
+        
+        Raises:
+            RuntimeError: If the renderer is not initialized or text drawing fails.
+            RuntimeError: If the text font is not set or has gone out of scope.
         """
     def get_rect(self) -> Rect:
         """
@@ -2630,7 +2634,7 @@ class Text:
         Returns:
             Rect: A rectangle with x=0, y=0, and width/height of the text.
         """
-    def set_font(self, font: Font) -> bool:
+    def set_font(self, font: Font) -> None:
         """
         Set the font to use for rendering this text.
         
@@ -2643,7 +2647,7 @@ class Text:
         Get or set the color of the rendered text.
         """
     @color.setter
-    def color(self, arg1: Color) -> bool:
+    def color(self, arg1: Color) -> None:
         ...
     @property
     def height(self) -> int:
@@ -2667,7 +2671,7 @@ class Text:
         Get or set the text string to be rendered.
         """
     @text.setter
-    def text(self, arg1: str) -> bool:
+    def text(self, arg1: str) -> None:
         ...
     @property
     def width(self) -> int:
@@ -2685,7 +2689,7 @@ class Text:
         Set to 0 to disable wrapping. Negative values are clamped to 0.
         """
     @wrap_width.setter
-    def wrap_width(self, arg1: typing.SupportsInt) -> bool:
+    def wrap_width(self, arg1: typing.SupportsInt) -> None:
         ...
 class Texture:
     """

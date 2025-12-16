@@ -98,6 +98,9 @@ std::unique_ptr<PixelArray> readPixels(const Rect& src)
 
 void draw(const Texture& texture, Rect dstRect, const Rect& srcRect)
 {
+    if (!renderer::_get())
+        throw std::runtime_error("Renderer not initialized");
+
     const Vec2 cameraPos = camera::getActivePos();
 
     SDL_FlipMode flipAxis = SDL_FLIP_NONE;
@@ -123,6 +126,9 @@ void draw(const Texture& texture, Rect dstRect, const Rect& srcRect)
 
 void draw(const Texture& texture, Vec2 pos, const Anchor anchor)
 {
+    if (!renderer::_get())
+        throw std::runtime_error("Renderer not initialized");
+
     SDL_FlipMode flipAxis = SDL_FLIP_NONE;
     if (texture.flip.h)
         flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_HORIZONTAL);
@@ -249,6 +255,10 @@ Args:
     texture (Texture): The texture to render.
     dst (Rect): The destination rectangle on the renderer.
     src (Rect, optional): The source rectangle from the texture. Defaults to entire texture if not specified.
+
+Raises:
+    TypeError: If 'src' is not of type Rect.
+    RuntimeError: If renderer is not initialized.
         )doc");
 
     subRenderer.def(
@@ -265,13 +275,18 @@ Args:
                 throw py::type_error("Invalid type for 'pos', expected Vec2");
             }
         },
-        py::arg("texture"), py::arg("pos") = py::none(), py::arg("anchor") = Anchor::Center, R"doc(
+        py::arg("texture"), py::arg("pos") = py::none(), py::arg("anchor") = Anchor::TopLeft,
+        R"doc(
 Render a texture at the specified position with anchor alignment.
 
 Args:
     texture (Texture): The texture to render.
     pos (Vec2, optional): The position to draw at. Defaults to (0, 0).
-    anchor (Anchor, optional): The anchor point for positioning. Defaults to CENTER.
+    anchor (Anchor, optional): The anchor point for positioning. Defaults to TOP_LEFT.
+
+Raises:
+    TypeError: If 'pos' is not of type Vec2.
+    RuntimeError: If renderer is not initialized.
         )doc");
 
     subRenderer.def(
