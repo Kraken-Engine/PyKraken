@@ -48,6 +48,7 @@ void _bind(const py::module_& module)
         .value("DISPLAY_DESKTOP_MODE_CHANGED", SDL_EVENT_DISPLAY_DESKTOP_MODE_CHANGED)
         .value("DISPLAY_CURRENT_MODE_CHANGED", SDL_EVENT_DISPLAY_CURRENT_MODE_CHANGED)
         .value("DISPLAY_CONTENT_SCALE_CHANGED", SDL_EVENT_DISPLAY_CONTENT_SCALE_CHANGED)
+        .value("DISPLAY_USABLE_BOUNDS_CHANGED", SDL_EVENT_DISPLAY_USABLE_BOUNDS_CHANGED)
 
         // Window events
         .value("WINDOW_SHOWN", SDL_EVENT_WINDOW_SHOWN)
@@ -83,6 +84,8 @@ void _bind(const py::module_& module)
         .value("KEYBOARD_ADDED", SDL_EVENT_KEYBOARD_ADDED)
         .value("KEYBOARD_REMOVED", SDL_EVENT_KEYBOARD_REMOVED)
         .value("TEXT_EDITING_CANDIDATES", SDL_EVENT_TEXT_EDITING_CANDIDATES)
+        .value("SCREEN_KEYBOARD_SHOWN", SDL_EVENT_SCREEN_KEYBOARD_SHOWN)
+        .value("SCREEN_KEYBOARD_HIDDEN", SDL_EVENT_SCREEN_KEYBOARD_HIDDEN)
 
         // Mouse events
         .value("MOUSE_MOTION", SDL_EVENT_MOUSE_MOTION)
@@ -148,6 +151,11 @@ void _bind(const py::module_& module)
         .value("RENDER_TARGETS_RESET", SDL_EVENT_RENDER_TARGETS_RESET)
         .value("RENDER_DEVICE_RESET", SDL_EVENT_RENDER_DEVICE_RESET)
         .value("RENDER_DEVICE_LOST", SDL_EVENT_RENDER_DEVICE_LOST)
+
+        // Pinch gesture events
+        .value("PINCH_BEGIN", SDL_EVENT_PINCH_BEGIN)
+        .value("PINCH_UPDATE", SDL_EVENT_PINCH_UPDATE)
+        .value("PINCH_END", SDL_EVENT_PINCH_END)
 
         .export_values()
         .finalize();

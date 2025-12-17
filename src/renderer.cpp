@@ -22,6 +22,8 @@ void _init(SDL_Window* window, const Vec2& resolution)
     _gpuDevice = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_DXIL |
                                          SDL_GPU_SHADERFORMAT_MSL,
                                      true, nullptr);
+    if (_gpuDevice == nullptr)
+        throw std::runtime_error("GPU device failed to create: " + std::string(SDL_GetError()));
 
     _renderer = SDL_CreateGPURenderer(_gpuDevice, window);
     if (_renderer == nullptr)
@@ -34,6 +36,9 @@ void _init(SDL_Window* window, const Vec2& resolution)
 
     _target = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET,
                                 static_cast<int>(resolution.x), static_cast<int>(resolution.y));
+    if (_target == nullptr)
+        throw std::runtime_error("Render target texture failed to create: " + std::string(SDL_GetError()));
+
     SDL_SetTextureScaleMode(_target, SDL_SCALEMODE_NEAREST);
     SDL_SetRenderTarget(_renderer, _target);
 

@@ -89,7 +89,13 @@ void create(const std::string& title, const Vec2& res, const bool scaled)
         throw std::runtime_error(SDL_GetError());
 
     SDL_IOStream* iconStream = SDL_IOFromMem(kraken_icon_png, kraken_icon_png_len);
+    if (!iconStream)
+        throw std::runtime_error("Failed to create icon stream: " + std::string(SDL_GetError()));
+
     SDL_Surface* iconSurf = IMG_Load_IO(iconStream, true);
+    if (!iconSurf)
+        throw std::runtime_error("Failed to load window icon: " + std::string(SDL_GetError()));
+
     SDL_SetWindowIcon(_window, iconSurf);
     SDL_DestroySurface(iconSurf);
 

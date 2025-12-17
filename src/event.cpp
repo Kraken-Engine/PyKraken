@@ -73,6 +73,7 @@ std::vector<Event> poll()
         case SDL_EVENT_DISPLAY_DESKTOP_MODE_CHANGED:
         case SDL_EVENT_DISPLAY_CURRENT_MODE_CHANGED:
         case SDL_EVENT_DISPLAY_CONTENT_SCALE_CHANGED:
+        case SDL_EVENT_DISPLAY_USABLE_BOUNDS_CHANGED:
             e.data["display_id"] = event.display.displayID;
             e.data["data1"] = event.display.data1;
             e.data["data2"] = event.display.data2;
@@ -185,6 +186,12 @@ std::vector<Event> poll()
         case SDL_EVENT_CAMERA_DEVICE_APPROVED:
         case SDL_EVENT_CAMERA_DEVICE_DENIED:
             e.data["which"] = event.cdevice.which;
+            break;
+        case SDL_EVENT_PINCH_BEGIN:
+        case SDL_EVENT_PINCH_UPDATE:
+        case SDL_EVENT_PINCH_END:
+            e.data["window_id"] = event.pinch.windowID;
+            e.data["scale"] = event.pinch.scale;
             break;
         default:
             break;

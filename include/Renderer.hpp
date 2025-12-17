@@ -31,6 +31,6 @@ Vec2 getResolution();
 std::unique_ptr<PixelArray> readPixels(const Rect& src = {});
 
 void draw(const Texture& texture, Rect dstRect, const Rect& srcRect = {});
-void draw(const Texture& texture, Vec2 pos = {}, Anchor anchor = Anchor::Center);
+void draw(const Texture& texture, Vec2 pos = {}, Anchor anchor = Anchor::TopLeft);
 } // namespace renderer
 } // namespace kn

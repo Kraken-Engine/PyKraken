@@ -26,7 +26,6 @@
 #include "Texture.hpp"
 #include "TileMap.hpp"
 #include "Time.hpp"
-#include "Transform.hpp"
 #include "Viewport.hpp"
 #include "Window.hpp"
 
@@ -118,7 +117,6 @@ Tear down the Kraken engine subsystems.
     kn::mouse::_bind(m);
     kn::renderer::_bind(m);
     kn::time::_bind(m);
-    kn::transform::_bind(m);
     kn::window::_bind(m);
     kn::draw::_bind(m);
     kn::animation_controller::_bind(m);
