@@ -34,8 +34,8 @@ void AnimationController::loadSpriteSheet(const std::string& filePath, const Vec
         throw std::runtime_error(
             "Renderer not initialized; create a window before loading sprite sheets");
 
-    const auto texPtr = std::make_shared<Texture>(filePath);
-    const Vec2 size = texPtr->getSize();
+    m_texture = std::make_shared<Texture>(filePath);
+    const Vec2 size = m_texture->getSize();
 
     const int frameWidth = static_cast<int>(frameSize.x);
     const int frameHeight = static_cast<int>(frameSize.y);
@@ -71,8 +71,7 @@ void AnimationController::loadSpriteSheet(const std::string& filePath, const Vec
         for (int i = 0; i < strip.frameCount; ++i)
         {
             const int x = i * frameWidth;
-            const Frame frame{texPtr, {x, y, frameWidth, frameHeight}};
-            newAnim.frames.emplace_back(frame);
+            newAnim.frames.emplace_back(Rect{x, y, frameWidth, frameHeight});
         }
 
         m_animMap[name] = std::move(newAnim);
@@ -107,7 +106,7 @@ void AnimationController::playFrom(const int frameIndex)
     resume();
 }
 
-const Frame& AnimationController::getCurrentFrame() const
+const Rect& AnimationController::getCurrentClip() const
 {
     const auto& [frames, _] = m_animMap.at(m_currAnim);
 
@@ -117,6 +116,8 @@ const Frame& AnimationController::getCurrentFrame() const
 
     return frames.at(safeIndex);
 }
+
+std::shared_ptr<Texture> AnimationController::getTexture() const { return m_texture; }
 
 void AnimationController::setPlaybackSpeed(const double speed)
 {
@@ -208,26 +209,13 @@ void _tick()
 
 void _bind(const py::module_& module)
 {
-    py::classh<Frame>(module, "Frame", R"doc(
-A single animation frame containing texture and rectangle data.
-
-Represents one frame of an animation with its associated texture and the rectangle
-defining which portion of the texture to display.
-        )doc")
-        .def_readonly("tex", &Frame::tex, R"doc(
-The texture containing the frame image.
-        )doc")
-        .def_readonly("src", &Frame::src, R"doc(
-The rectangle defining the frame bounds within the texture.
-        )doc");
-
     py::classh<Animation>(module, "Animation", R"doc(
-A complete animation sequence with frames and playback settings.
+A complete animation sequence with frame rectangles and playback settings.
 
-Contains a sequence of frames and the frames per second (FPS) rate for playback timing.
+Contains a sequence of source rectangles (clips) and the frames per second (FPS) rate for playback timing.
         )doc")
         .def_readonly("frames", &Animation::frames, R"doc(
-The list of frames in the animation sequence.
+The list of source rectangles for each frame in the animation.
         )doc")
         .def_readonly("fps", &Animation::fps, R"doc(
 The frames per second rate for animation playback.
@@ -288,15 +276,24 @@ The name of the currently active animation.
 Returns:
     str: The name of the current animation, or empty string if none is set.
                                )doc")
-        .def_property_readonly("current_frame", &AnimationController::getCurrentFrame,
+        .def_property_readonly("clip", &AnimationController::getCurrentClip,
                                py::return_value_policy::reference_internal, R"doc(
-The current animation frame being displayed.
+The source rectangle (clip) for the current animation frame.
 
 Returns:
-    Frame: The current frame with texture and rectangle data.
+    Rect: The source rectangle defining which portion of the texture to display.
 
 Raises:
     RuntimeError: If no animation is currently set or the animation has no frames.
+                               )doc")
+        .def_property_readonly("texture", &AnimationController::getTexture, R"doc(
+The sprite sheet texture used by this animation controller.
+
+Returns:
+    Texture: The texture containing all animation frames.
+
+Raises:
+    RuntimeError: If no sprite sheet has been loaded.
                                )doc")
         .def_property_readonly("frame_index", &AnimationController::getFrameIndex, R"doc(
 The current frame index in the animation sequence.

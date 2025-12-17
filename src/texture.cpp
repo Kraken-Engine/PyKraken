@@ -62,12 +62,7 @@ Vec2 Texture::getSize() const
     return {w, h};
 }
 
-Rect Texture::getRect() const
-{
-    float w, h;
-    SDL_GetTextureSize(m_texPtr, &w, &h);
-    return {0.f, 0.f, w, h};
-}
+Rect Texture::getRect() const { return {0.0, 0.0, getSize()}; }
 
 void Texture::setTint(const Color& tint) const
 {
@@ -148,11 +143,6 @@ Raises:
     RuntimeError: If texture creation from pixel array fails.
         )doc")
 
-        .def_readwrite("angle", &Texture::angle, R"doc(
-The rotation angle in radians for rendering.
-
-When the texture is drawn, it will be rotated by this angle about its center.
-        )doc")
         .def_readwrite("flip", &Texture::flip, R"doc(
 The flip settings for horizontal and vertical mirroring.
 
@@ -166,10 +156,7 @@ Get or set the alpha modulation of the texture as a float between `0.0` and `1.0
 Get or set the color tint applied to the texture during rendering.
         )doc")
         .def_property_readonly("size", &Texture::getSize, R"doc(
-Get the size of the texture.
-
-Returns:
-    Vec2: The texture size as (width, height).
+Get the dimensions of the texture as a Vec2 (width, height).
         )doc")
 
         .def("get_rect", &Texture::getRect, R"doc(

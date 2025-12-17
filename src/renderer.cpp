@@ -37,7 +37,8 @@ void _init(SDL_Window* window, const Vec2& resolution)
     _target = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET,
                                 static_cast<int>(resolution.x), static_cast<int>(resolution.y));
     if (_target == nullptr)
-        throw std::runtime_error("Render target texture failed to create: " + std::string(SDL_GetError()));
+        throw std::runtime_error("Render target texture failed to create: " +
+                                 std::string(SDL_GetError()));
 
     SDL_SetTextureScaleMode(_target, SDL_SCALEMODE_NEAREST);
     SDL_SetRenderTarget(_renderer, _target);
@@ -101,10 +102,10 @@ std::unique_ptr<PixelArray> readPixels(const Rect& src)
     return std::make_unique<PixelArray>(surface);
 }
 
-void draw(const Texture& texture, Rect dstRect, const Rect& srcRect)
+void draw(const Texture& texture, Transform transform, const Rect& srcRect)
 {
-    if (!renderer::_get())
-        throw std::runtime_error("Renderer not initialized");
+    if (!_renderer)
+        throw std::runtime_error("Renderer not yet initialized");
 
     const Vec2 cameraPos = camera::getActivePos();
 
@@ -114,73 +115,70 @@ void draw(const Texture& texture, Rect dstRect, const Rect& srcRect)
     if (texture.flip.v)
         flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_VERTICAL);
 
-    dstRect.x -= cameraPos.x;
-    dstRect.y -= cameraPos.y;
-    const SDL_FRect dstSDLRect = {
-        static_cast<float>(std::round(dstRect.x)),
-        static_cast<float>(std::round(dstRect.y)),
-        static_cast<float>(std::round(dstRect.w)),
-        static_cast<float>(std::round(dstRect.h)),
-    };
-    const auto srcSDLRect =
-        static_cast<SDL_FRect>(srcRect.w == 0.0 && srcRect.h == 0.0 ? texture.getRect() : srcRect);
+    Vec2 baseSize = transform.size;
+    if (baseSize.isZero())
+        baseSize = texture.getSize();
 
-    SDL_RenderTextureRotated(_renderer, texture.getSDL(), &srcSDLRect, &dstSDLRect,
-                             TO_DEGREES(texture.angle), nullptr, flipAxis);
-}
+    Rect dstRect{};
+    dstRect.setSize({baseSize.x * transform.scale.x, baseSize.y * transform.scale.y});
 
-void draw(const Texture& texture, Vec2 pos, const Anchor anchor)
-{
-    if (!renderer::_get())
-        throw std::runtime_error("Renderer not initialized");
-
-    SDL_FlipMode flipAxis = SDL_FLIP_NONE;
-    if (texture.flip.h)
-        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_HORIZONTAL);
-    if (texture.flip.v)
-        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_VERTICAL);
-
-    pos -= camera::getActivePos();
-    Rect rect = texture.getRect();
-    switch (anchor)
+    // Position based on anchor
+    Vec2 pos = transform.pos - cameraPos;
+    switch (transform.anchor)
     {
     case Anchor::TopLeft:
-        rect.setTopLeft(pos);
+        dstRect.setTopLeft(pos);
         break;
     case Anchor::TopMid:
-        rect.setTopMid(pos);
+        dstRect.setTopMid(pos);
         break;
     case Anchor::TopRight:
-        rect.setTopRight(pos);
+        dstRect.setTopRight(pos);
         break;
     case Anchor::MidLeft:
-        rect.setMidLeft(pos);
+        dstRect.setMidLeft(pos);
         break;
     case Anchor::Center:
-        rect.setCenter(pos);
+        dstRect.setCenter(pos);
         break;
     case Anchor::MidRight:
-        rect.setMidRight(pos);
+        dstRect.setMidRight(pos);
         break;
     case Anchor::BottomLeft:
-        rect.setBottomLeft(pos);
+        dstRect.setBottomLeft(pos);
         break;
     case Anchor::BottomMid:
-        rect.setBottomMid(pos);
+        dstRect.setBottomMid(pos);
         break;
     case Anchor::BottomRight:
-        rect.setBottomRight(pos);
+        dstRect.setBottomRight(pos);
         break;
     }
-
-    const SDL_FRect dstSDLRect = {
-        std::roundf(static_cast<float>(rect.x)),
-        std::roundf(static_cast<float>(rect.y)),
-        std::roundf(static_cast<float>(rect.w)),
-        std::roundf(static_cast<float>(rect.h)),
+    SDL_FRect dstSDLRect = {
+        std::roundf(static_cast<float>(dstRect.x)),
+        std::roundf(static_cast<float>(dstRect.y)),
+        std::roundf(static_cast<float>(dstRect.w)),
+        std::roundf(static_cast<float>(dstRect.h)),
     };
-    SDL_RenderTextureRotated(_renderer, texture.getSDL(), nullptr, &dstSDLRect,
-                             TO_DEGREES(texture.angle), nullptr, flipAxis);
+
+    SDL_FRect srcSDLRect{};
+    if (srcRect.w == 0.0 && srcRect.h == 0.0)
+    {
+        const Vec2 textureSize = texture.getSize();
+        srcSDLRect.w = static_cast<float>(textureSize.x);
+        srcSDLRect.h = static_cast<float>(textureSize.y);
+    }
+    else
+    {
+        srcSDLRect = static_cast<SDL_FRect>(srcRect);
+    }
+
+    SDL_FPoint pivot = {dstSDLRect.w * static_cast<float>(transform.pivot.x),
+                        dstSDLRect.h * static_cast<float>(transform.pivot.y)};
+
+    if (!SDL_RenderTextureRotated(_renderer, texture.getSDL(), &srcSDLRect, &dstSDLRect,
+                                  TO_DEGREES(transform.angle), &pivot, flipAxis))
+        throw std::runtime_error("Failed to render texture: " + std::string(SDL_GetError()));
 }
 
 SDL_Renderer* _get() { return _renderer; }
@@ -241,56 +239,31 @@ Returns:
 
     subRenderer.def(
         "draw",
-        [](const Texture& texture, const Rect& dstRect, const py::object& srcObj)
+        [](const Texture& texture, const py::object& transformObj, const py::object& srcObj)
         {
             try
             {
-                srcObj.is_none() ? draw(texture, dstRect)
-                                 : draw(texture, dstRect, srcObj.cast<Rect>());
+                const auto transform =
+                    transformObj.is_none() ? Transform() : transformObj.cast<Transform>();
+                const auto srcRect = srcObj.is_none() ? Rect() : srcObj.cast<Rect>();
+                draw(texture, transform, srcRect);
             }
             catch (const py::cast_error&)
             {
-                throw py::type_error("Invalid type for 'src', expected Rect");
+                throw py::type_error(
+                    "Invalid type for arguments, expected (Texture, Transform, Rect)");
             }
         },
-        py::arg("texture"), py::arg("dst"), py::arg("src") = py::none(), R"doc(
-Render a texture with specified destination and source rectangles.
+        py::arg("texture"), py::arg("transform") = py::none(), py::arg("src") = py::none(), R"doc(
+Render a texture with the specified transform and source rectangle.
 
 Args:
     texture (Texture): The texture to render.
-    dst (Rect): The destination rectangle on the renderer.
+    transform (Transform, optional): The transform (position, rotation, scale, anchor, pivot). Defaults to identity transform.
     src (Rect, optional): The source rectangle from the texture. Defaults to entire texture if not specified.
 
 Raises:
-    TypeError: If 'src' is not of type Rect.
-    RuntimeError: If renderer is not initialized.
-        )doc");
-
-    subRenderer.def(
-        "draw",
-        [](const Texture& texture, const py::object& pos, const Anchor anchor)
-        {
-            try
-            {
-                const auto posVec = pos.is_none() ? Vec2() : pos.cast<Vec2>();
-                draw(texture, posVec, anchor);
-            }
-            catch (const py::cast_error&)
-            {
-                throw py::type_error("Invalid type for 'pos', expected Vec2");
-            }
-        },
-        py::arg("texture"), py::arg("pos") = py::none(), py::arg("anchor") = Anchor::TopLeft,
-        R"doc(
-Render a texture at the specified position with anchor alignment.
-
-Args:
-    texture (Texture): The texture to render.
-    pos (Vec2, optional): The position to draw at. Defaults to (0, 0).
-    anchor (Anchor, optional): The anchor point for positioning. Defaults to TOP_LEFT.
-
-Raises:
-    TypeError: If 'pos' is not of type Vec2.
+    TypeError: If arguments are not of expected types.
     RuntimeError: If renderer is not initialized.
         )doc");
 

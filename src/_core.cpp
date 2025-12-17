@@ -22,6 +22,7 @@
 #include "Rect.hpp"
 #include "Renderer.hpp"
 #include "ShaderState.hpp"
+#include "Sprite.hpp"
 #include "Text.hpp"
 #include "Texture.hpp"
 #include "TileMap.hpp"
@@ -99,6 +100,7 @@ Tear down the Kraken engine subsystems.
     kn::rect::_bind(m);
     kn::pixel_array::_bind(m);
     kn::texture::_bind(m);
+    kn::sprite::_bind(m);
     kn::polygon::_bind(m);
     kn::camera::_bind(m);
     kn::line::_bind(m);

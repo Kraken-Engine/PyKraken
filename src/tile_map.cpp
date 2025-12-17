@@ -31,22 +31,27 @@ TileLayer::TileLayer(const Type type, const bool isVisible, std::string name,
 
 void TileLayer::render() const
 {
+    Transform transform{};
+
     for (const auto& tile : tiles)
     {
+        transform.pos = tile.dst.getTopLeft();
+
         if (tile.antiDiagFlip)
         {
-            m_tileSetTexture->angle = M_PI_2;
+            transform.angle = M_PI_2;
             m_tileSetTexture->flip.h = tile.vFlip;
             m_tileSetTexture->flip.v = !tile.hFlip;
         }
         else
         {
-            m_tileSetTexture->angle = tile.angle;
+            transform.angle = tile.angle;
             m_tileSetTexture->flip.h = tile.hFlip;
             m_tileSetTexture->flip.v = tile.vFlip;
         }
 
-        renderer::draw(*m_tileSetTexture, tile.dst, tile.src);
+        transform.size = tile.dst.getSize();
+        renderer::draw(*m_tileSetTexture, transform, tile.src);
     }
 }
 
