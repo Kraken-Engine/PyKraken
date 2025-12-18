@@ -22,7 +22,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if (MSVC)
   add_compile_definitions(NOMINMAX WIN32_LEAN_AND_MEAN)
-  add_compile_options(/bigobj)
+  add_compile_options(/bigobj /utf-8)
 endif()
 
 # -------------------------
@@ -80,7 +80,7 @@ if (PYK_VENDOR_SDL)
 
   FetchContent_Declare(SDL3
     GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-    GIT_TAG        preview-3.3.2
+    GIT_TAG        prerelease-3.3.4
     GIT_SHALLOW    TRUE
   )
   FetchContent_Declare(SDL_image

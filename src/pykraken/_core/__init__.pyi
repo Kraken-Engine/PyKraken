@@ -11,15 +11,16 @@ from . import gamepad
 from . import input
 from . import key
 from . import line
+from . import log
 from . import math
 from . import mouse
+from . import pixel_array
 from . import rect
 from . import renderer
 from . import time
-from . import transform
 from . import viewport
 from . import window
-__all__: list[str] = ['AUDIO_DEVICE_ADDED', 'AUDIO_DEVICE_FORMAT_CHANGED', 'AUDIO_DEVICE_REMOVED', 'Align', 'Anchor', 'Animation', 'AnimationController', 'Audio', 'AudioStream', 'CAMERA_DEVICE_ADDED', 'CAMERA_DEVICE_APPROVED', 'CAMERA_DEVICE_DENIED', 'CAMERA_DEVICE_REMOVED', 'CLIPBOARD_UPDATE', 'C_BACK', 'C_DPAD_DOWN', 'C_DPAD_LEFT', 'C_DPAD_RIGHT', 'C_DPAD_UP', 'C_EAST', 'C_GUIDE', 'C_LSHOULDER', 'C_LSTICK', 'C_LTRIGGER', 'C_LX', 'C_LY', 'C_NORTH', 'C_PS3', 'C_PS4', 'C_PS5', 'C_RSHOULDER', 'C_RSTICK', 'C_RTRIGGER', 'C_RX', 'C_RY', 'C_SOUTH', 'C_STANDARD', 'C_START', 'C_SWITCH_JOYCON_LEFT', 'C_SWITCH_JOYCON_PAIR', 'C_SWITCH_JOYCON_RIGHT', 'C_SWITCH_PRO', 'C_WEST', 'C_XBOX_360', 'C_XBOX_ONE', 'Camera', 'Circle', 'Color', 'DID_ENTER_BACKGROUND', 'DID_ENTER_FOREGROUND', 'DISPLAY_ADDED', 'DISPLAY_CONTENT_SCALE_CHANGED', 'DISPLAY_CURRENT_MODE_CHANGED', 'DISPLAY_DESKTOP_MODE_CHANGED', 'DISPLAY_MOVED', 'DISPLAY_ORIENTATION', 'DISPLAY_REMOVED', 'DROP_BEGIN', 'DROP_COMPLETE', 'DROP_FILE', 'DROP_POSITION', 'DROP_TEXT', 'EasingAnimation', 'Event', 'EventType', 'FINGER_CANCELED', 'FINGER_DOWN', 'FINGER_MOTION', 'FINGER_UP', 'Font', 'FontHint', 'Frame', 'GAMEPAD_ADDED', 'GAMEPAD_AXIS_MOTION', 'GAMEPAD_BUTTON_DOWN', 'GAMEPAD_BUTTON_UP', 'GAMEPAD_REMAPPED', 'GAMEPAD_REMOVED', 'GAMEPAD_SENSOR_UPDATE', 'GAMEPAD_STEAM_HANDLE_UPDATED', 'GAMEPAD_TOUCHPAD_DOWN', 'GAMEPAD_TOUCHPAD_MOTION', 'GAMEPAD_TOUCHPAD_UP', 'GAMEPAD_UPDATE_COMPLETE', 'GamepadAxis', 'GamepadButton', 'GamepadType', 'InputAction', 'KEYBOARD_ADDED', 'KEYBOARD_REMOVED', 'KEYMAP_CHANGED', 'KEY_DOWN', 'KEY_UP', 'K_0', 'K_1', 'K_2', 'K_3', 'K_4', 'K_5', 'K_6', 'K_7', 'K_8', 'K_9', 'K_AGAIN', 'K_AMPERSAND', 'K_APPLICATION', 'K_ASTERISK', 'K_AT', 'K_BACKSLASH', 'K_BACKSPACE', 'K_CALL', 'K_CAPS', 'K_CARET', 'K_CHANNEL_DEC', 'K_CHANNEL_INC', 'K_COLON', 'K_COMMA', 'K_COPY', 'K_CUT', 'K_DBLQUOTE', 'K_DEL', 'K_DOLLAR', 'K_DOWN', 'K_END', 'K_ENDCALL', 'K_EQ', 'K_ESC', 'K_EXCLAIM', 'K_EXECUTE', 'K_F1', 'K_F10', 'K_F11', 'K_F12', 'K_F13', 'K_F14', 'K_F15', 'K_F2', 'K_F3', 'K_F4', 'K_F5', 'K_F6', 'K_F7', 'K_F8', 'K_F9', 'K_FIND', 'K_GRAVE', 'K_GT', 'K_HASH', 'K_HELP', 'K_HOME', 'K_INS', 'K_KP_0', 'K_KP_1', 'K_KP_2', 'K_KP_3', 'K_KP_4', 'K_KP_5', 'K_KP_6', 'K_KP_7', 'K_KP_8', 'K_KP_9', 'K_KP_DIV', 'K_KP_ENTER', 'K_KP_MINUS', 'K_KP_MULT', 'K_KP_PERIOD', 'K_KP_PLUS', 'K_LALT', 'K_LBRACE', 'K_LBRACKET', 'K_LCTRL', 'K_LEFT', 'K_LGUI', 'K_LPAREN', 'K_LSHIFT', 'K_LT', 'K_MEDIA_EJECT', 'K_MEDIA_FF', 'K_MEDIA_NEXT', 'K_MEDIA_PAUSE', 'K_MEDIA_PLAY', 'K_MEDIA_PLAY_PAUSE', 'K_MEDIA_PREV', 'K_MEDIA_REC', 'K_MEDIA_REWIND', 'K_MEDIA_SELECT', 'K_MEDIA_STOP', 'K_MENU', 'K_MINUS', 'K_MODE', 'K_MUTE', 'K_NUMLOCK', 'K_PASTE', 'K_PAUSE', 'K_PERCENT', 'K_PERIOD', 'K_PGDOWN', 'K_PGUP', 'K_PIPE', 'K_PLUS', 'K_POWER', 'K_PRTSCR', 'K_QUESTION', 'K_RALT', 'K_RBRACE', 'K_RBRACKET', 'K_RCTRL', 'K_RETURN', 'K_RGUI', 'K_RIGHT', 'K_RPAREN', 'K_RSHIFT', 'K_SCRLK', 'K_SELECT', 'K_SEMICOLON', 'K_SGLQUOTE', 'K_SLASH', 'K_SLEEP', 'K_SOFTLEFT', 'K_SOFTRIGHT', 'K_SPACE', 'K_STOP', 'K_TAB', 'K_TILDE', 'K_UNDERSCORE', 'K_UNDO', 'K_UNKNOWN', 'K_UP', 'K_VOLDOWN', 'K_VOLUP', 'K_WAKE', 'K_a', 'K_b', 'K_c', 'K_d', 'K_e', 'K_f', 'K_g', 'K_h', 'K_i', 'K_j', 'K_k', 'K_l', 'K_m', 'K_n', 'K_o', 'K_p', 'K_q', 'K_r', 'K_s', 'K_t', 'K_u', 'K_v', 'K_w', 'K_x', 'K_y', 'K_z', 'Keycode', 'LOCALE_CHANGED', 'LOW_MEMORY', 'Line', 'MOUSE_ADDED', 'MOUSE_BUTTON_DOWN', 'MOUSE_BUTTON_UP', 'MOUSE_MOTION', 'MOUSE_REMOVED', 'MOUSE_WHEEL', 'M_LEFT', 'M_MIDDLE', 'M_RIGHT', 'M_SIDE1', 'M_SIDE2', 'Mask', 'MouseButton', 'PEN_AXIS', 'PEN_BUTTON_DOWN', 'PEN_BUTTON_UP', 'PEN_DOWN', 'PEN_MOTION', 'PEN_PROXIMITY_IN', 'PEN_PROXIMITY_OUT', 'PEN_UP', 'P_DISTANCE', 'P_PRESSURE', 'P_ROTATION', 'P_SLIDER', 'P_TANGENTIAL_PRESSURE', 'P_TILT_X', 'P_TILT_Y', 'PenAxis', 'PixelArray', 'PolarCoordinate', 'Polygon', 'QUIT', 'RENDER_DEVICE_LOST', 'RENDER_DEVICE_RESET', 'RENDER_TARGETS_RESET', 'Rect', 'SENSOR_UPDATE', 'SYSTEM_THEME_CHANGED', 'S_0', 'S_1', 'S_2', 'S_3', 'S_4', 'S_5', 'S_6', 'S_7', 'S_8', 'S_9', 'S_AGAIN', 'S_APOSTROPHE', 'S_APPLICATION', 'S_BACKSLASH', 'S_BACKSPACE', 'S_CALL', 'S_CAPS', 'S_CHANNEL_DEC', 'S_CHANNEL_INC', 'S_COMMA', 'S_COPY', 'S_CUT', 'S_DEL', 'S_DOWN', 'S_END', 'S_ENDCALL', 'S_EQ', 'S_ESC', 'S_EXECUTE', 'S_F1', 'S_F10', 'S_F11', 'S_F12', 'S_F13', 'S_F14', 'S_F15', 'S_F2', 'S_F3', 'S_F4', 'S_F5', 'S_F6', 'S_F7', 'S_F8', 'S_F9', 'S_FIND', 'S_GRAVE', 'S_HELP', 'S_HOME', 'S_INS', 'S_KP_0', 'S_KP_1', 'S_KP_2', 'S_KP_3', 'S_KP_4', 'S_KP_5', 'S_KP_6', 'S_KP_7', 'S_KP_8', 'S_KP_9', 'S_KP_DIV', 'S_KP_ENTER', 'S_KP_MINUS', 'S_KP_MULT', 'S_KP_PERIOD', 'S_KP_PLUS', 'S_LALT', 'S_LBRACKET', 'S_LCTRL', 'S_LEFT', 'S_LGUI', 'S_LSHIFT', 'S_MEDIA_EJECT', 'S_MEDIA_FAST_FORWARD', 'S_MEDIA_NEXT', 'S_MEDIA_PAUSE', 'S_MEDIA_PLAY', 'S_MEDIA_PLAY_PAUSE', 'S_MEDIA_PREV', 'S_MEDIA_REC', 'S_MEDIA_REWIND', 'S_MEDIA_SELECT', 'S_MEDIA_STOP', 'S_MENU', 'S_MINUS', 'S_MODE', 'S_MUTE', 'S_NUMLOCK', 'S_PASTE', 'S_PAUSE', 'S_PERIOD', 'S_PGDOWN', 'S_PGUP', 'S_POWER', 'S_PRTSCR', 'S_RALT', 'S_RBRACKET', 'S_RCTRL', 'S_RETURN', 'S_RGUI', 'S_RIGHT', 'S_RSHIFT', 'S_SCRLK', 'S_SELECT', 'S_SEMICOLON', 'S_SLASH', 'S_SLEEP', 'S_SOFTLEFT', 'S_SOFTRIGHT', 'S_SPACE', 'S_STOP', 'S_TAB', 'S_UNDO', 'S_UP', 'S_VOLDOWN', 'S_VOLUP', 'S_WAKE', 'S_a', 'S_b', 'S_c', 'S_d', 'S_e', 'S_f', 'S_g', 'S_h', 'S_i', 'S_j', 'S_k', 'S_l', 'S_m', 'S_n', 'S_o', 'S_p', 'S_q', 'S_r', 'S_s', 'S_t', 'S_u', 'S_v', 'S_w', 'S_x', 'S_y', 'S_z', 'Scancode', 'ScrollMode', 'ShaderState', 'SheetStrip', 'TERMINATING', 'TEXT_EDITING', 'TEXT_EDITING_CANDIDATES', 'TEXT_INPUT', 'Text', 'Texture', 'Tile', 'TileLayer', 'TileMap', 'Timer', 'Vec2', 'ViewportMode', 'WILL_ENTER_BACKGROUND', 'WILL_ENTER_FOREGROUND', 'WINDOW_CLOSE_REQUESTED', 'WINDOW_DESTROYED', 'WINDOW_DISPLAY_CHANGED', 'WINDOW_DISPLAY_SCALE_CHANGED', 'WINDOW_ENTER_FULLSCREEN', 'WINDOW_EXPOSED', 'WINDOW_FOCUS_GAINED', 'WINDOW_FOCUS_LOST', 'WINDOW_HDR_STATE_CHANGED', 'WINDOW_HIDDEN', 'WINDOW_HIT_TEST', 'WINDOW_ICCPROF_CHANGED', 'WINDOW_LEAVE_FULLSCREEN', 'WINDOW_MAXIMIZED', 'WINDOW_MINIMIZED', 'WINDOW_MOUSE_ENTER', 'WINDOW_MOUSE_LEAVE', 'WINDOW_MOVED', 'WINDOW_OCCLUDED', 'WINDOW_RESIZED', 'WINDOW_RESTORED', 'WINDOW_SAFE_AREA_CHANGED', 'WINDOW_SHOWN', 'collision', 'color', 'draw', 'ease', 'event', 'gamepad', 'init', 'input', 'key', 'line', 'math', 'mouse', 'quit', 'rect', 'renderer', 'time', 'transform', 'viewport', 'window']
+__all__: list[str] = ['AUDIO_DEVICE_ADDED', 'AUDIO_DEVICE_FORMAT_CHANGED', 'AUDIO_DEVICE_REMOVED', 'Align', 'Anchor', 'Animation', 'AnimationController', 'Audio', 'AudioStream', 'CAMERA_DEVICE_ADDED', 'CAMERA_DEVICE_APPROVED', 'CAMERA_DEVICE_DENIED', 'CAMERA_DEVICE_REMOVED', 'CLIPBOARD_UPDATE', 'C_BACK', 'C_DPAD_DOWN', 'C_DPAD_LEFT', 'C_DPAD_RIGHT', 'C_DPAD_UP', 'C_EAST', 'C_GUIDE', 'C_LSHOULDER', 'C_LSTICK', 'C_LTRIGGER', 'C_LX', 'C_LY', 'C_NORTH', 'C_PS3', 'C_PS4', 'C_PS5', 'C_RSHOULDER', 'C_RSTICK', 'C_RTRIGGER', 'C_RX', 'C_RY', 'C_SOUTH', 'C_STANDARD', 'C_START', 'C_SWITCH_JOYCON_LEFT', 'C_SWITCH_JOYCON_PAIR', 'C_SWITCH_JOYCON_RIGHT', 'C_SWITCH_PRO', 'C_WEST', 'C_XBOX_360', 'C_XBOX_ONE', 'Camera', 'Circle', 'Color', 'DID_ENTER_BACKGROUND', 'DID_ENTER_FOREGROUND', 'DISPLAY_ADDED', 'DISPLAY_CONTENT_SCALE_CHANGED', 'DISPLAY_CURRENT_MODE_CHANGED', 'DISPLAY_DESKTOP_MODE_CHANGED', 'DISPLAY_MOVED', 'DISPLAY_ORIENTATION', 'DISPLAY_REMOVED', 'DISPLAY_USABLE_BOUNDS_CHANGED', 'DROP_BEGIN', 'DROP_COMPLETE', 'DROP_FILE', 'DROP_POSITION', 'DROP_TEXT', 'EasingAnimation', 'Effect', 'Event', 'EventType', 'FINGER_CANCELED', 'FINGER_DOWN', 'FINGER_MOTION', 'FINGER_UP', 'Font', 'FontHint', 'GAMEPAD_ADDED', 'GAMEPAD_AXIS_MOTION', 'GAMEPAD_BUTTON_DOWN', 'GAMEPAD_BUTTON_UP', 'GAMEPAD_REMAPPED', 'GAMEPAD_REMOVED', 'GAMEPAD_SENSOR_UPDATE', 'GAMEPAD_STEAM_HANDLE_UPDATED', 'GAMEPAD_TOUCHPAD_DOWN', 'GAMEPAD_TOUCHPAD_MOTION', 'GAMEPAD_TOUCHPAD_UP', 'GAMEPAD_UPDATE_COMPLETE', 'GamepadAxis', 'GamepadButton', 'GamepadType', 'InputAction', 'KEYBOARD_ADDED', 'KEYBOARD_REMOVED', 'KEYMAP_CHANGED', 'KEY_DOWN', 'KEY_UP', 'K_0', 'K_1', 'K_2', 'K_3', 'K_4', 'K_5', 'K_6', 'K_7', 'K_8', 'K_9', 'K_AGAIN', 'K_AMPERSAND', 'K_APPLICATION', 'K_ASTERISK', 'K_AT', 'K_BACKSLASH', 'K_BACKSPACE', 'K_CALL', 'K_CAPS', 'K_CARET', 'K_CHANNEL_DEC', 'K_CHANNEL_INC', 'K_COLON', 'K_COMMA', 'K_COPY', 'K_CUT', 'K_DBLQUOTE', 'K_DEL', 'K_DOLLAR', 'K_DOWN', 'K_END', 'K_ENDCALL', 'K_EQ', 'K_ESC', 'K_EXCLAIM', 'K_EXECUTE', 'K_F1', 'K_F10', 'K_F11', 'K_F12', 'K_F13', 'K_F14', 'K_F15', 'K_F2', 'K_F3', 'K_F4', 'K_F5', 'K_F6', 'K_F7', 'K_F8', 'K_F9', 'K_FIND', 'K_GRAVE', 'K_GT', 'K_HASH', 'K_HELP', 'K_HOME', 'K_INS', 'K_KP_0', 'K_KP_1', 'K_KP_2', 'K_KP_3', 'K_KP_4', 'K_KP_5', 'K_KP_6', 'K_KP_7', 'K_KP_8', 'K_KP_9', 'K_KP_DIV', 'K_KP_ENTER', 'K_KP_MINUS', 'K_KP_MULT', 'K_KP_PERIOD', 'K_KP_PLUS', 'K_LALT', 'K_LBRACE', 'K_LBRACKET', 'K_LCTRL', 'K_LEFT', 'K_LGUI', 'K_LPAREN', 'K_LSHIFT', 'K_LT', 'K_MEDIA_EJECT', 'K_MEDIA_FF', 'K_MEDIA_NEXT', 'K_MEDIA_PAUSE', 'K_MEDIA_PLAY', 'K_MEDIA_PLAY_PAUSE', 'K_MEDIA_PREV', 'K_MEDIA_REC', 'K_MEDIA_REWIND', 'K_MEDIA_SELECT', 'K_MEDIA_STOP', 'K_MENU', 'K_MINUS', 'K_MODE', 'K_MUTE', 'K_NUMLOCK', 'K_PASTE', 'K_PAUSE', 'K_PERCENT', 'K_PERIOD', 'K_PGDOWN', 'K_PGUP', 'K_PIPE', 'K_PLUS', 'K_POWER', 'K_PRTSCR', 'K_QUESTION', 'K_RALT', 'K_RBRACE', 'K_RBRACKET', 'K_RCTRL', 'K_RETURN', 'K_RGUI', 'K_RIGHT', 'K_RPAREN', 'K_RSHIFT', 'K_SCRLK', 'K_SELECT', 'K_SEMICOLON', 'K_SGLQUOTE', 'K_SLASH', 'K_SLEEP', 'K_SOFTLEFT', 'K_SOFTRIGHT', 'K_SPACE', 'K_STOP', 'K_TAB', 'K_TILDE', 'K_UNDERSCORE', 'K_UNDO', 'K_UNKNOWN', 'K_UP', 'K_VOLDOWN', 'K_VOLUP', 'K_WAKE', 'K_a', 'K_b', 'K_c', 'K_d', 'K_e', 'K_f', 'K_g', 'K_h', 'K_i', 'K_j', 'K_k', 'K_l', 'K_m', 'K_n', 'K_o', 'K_p', 'K_q', 'K_r', 'K_s', 'K_t', 'K_u', 'K_v', 'K_w', 'K_x', 'K_y', 'K_z', 'Keycode', 'LOCALE_CHANGED', 'LOW_MEMORY', 'Line', 'MOUSE_ADDED', 'MOUSE_BUTTON_DOWN', 'MOUSE_BUTTON_UP', 'MOUSE_MOTION', 'MOUSE_REMOVED', 'MOUSE_WHEEL', 'M_LEFT', 'M_MIDDLE', 'M_RIGHT', 'M_SIDE1', 'M_SIDE2', 'Mask', 'MouseButton', 'Orchestrator', 'PEN_AXIS', 'PEN_BUTTON_DOWN', 'PEN_BUTTON_UP', 'PEN_DOWN', 'PEN_MOTION', 'PEN_PROXIMITY_IN', 'PEN_PROXIMITY_OUT', 'PEN_UP', 'PINCH_BEGIN', 'PINCH_END', 'PINCH_UPDATE', 'P_DISTANCE', 'P_PRESSURE', 'P_ROTATION', 'P_SLIDER', 'P_TANGENTIAL_PRESSURE', 'P_TILT_X', 'P_TILT_Y', 'PenAxis', 'PixelArray', 'PolarCoordinate', 'Polygon', 'QUIT', 'RENDER_DEVICE_LOST', 'RENDER_DEVICE_RESET', 'RENDER_TARGETS_RESET', 'Rect', 'SCREEN_KEYBOARD_HIDDEN', 'SCREEN_KEYBOARD_SHOWN', 'SENSOR_UPDATE', 'SYSTEM_THEME_CHANGED', 'S_0', 'S_1', 'S_2', 'S_3', 'S_4', 'S_5', 'S_6', 'S_7', 'S_8', 'S_9', 'S_AGAIN', 'S_APOSTROPHE', 'S_APPLICATION', 'S_BACKSLASH', 'S_BACKSPACE', 'S_CALL', 'S_CAPS', 'S_CHANNEL_DEC', 'S_CHANNEL_INC', 'S_COMMA', 'S_COPY', 'S_CUT', 'S_DEL', 'S_DOWN', 'S_END', 'S_ENDCALL', 'S_EQ', 'S_ESC', 'S_EXECUTE', 'S_F1', 'S_F10', 'S_F11', 'S_F12', 'S_F13', 'S_F14', 'S_F15', 'S_F2', 'S_F3', 'S_F4', 'S_F5', 'S_F6', 'S_F7', 'S_F8', 'S_F9', 'S_FIND', 'S_GRAVE', 'S_HELP', 'S_HOME', 'S_INS', 'S_KP_0', 'S_KP_1', 'S_KP_2', 'S_KP_3', 'S_KP_4', 'S_KP_5', 'S_KP_6', 'S_KP_7', 'S_KP_8', 'S_KP_9', 'S_KP_DIV', 'S_KP_ENTER', 'S_KP_MINUS', 'S_KP_MULT', 'S_KP_PERIOD', 'S_KP_PLUS', 'S_LALT', 'S_LBRACKET', 'S_LCTRL', 'S_LEFT', 'S_LGUI', 'S_LSHIFT', 'S_MEDIA_EJECT', 'S_MEDIA_FAST_FORWARD', 'S_MEDIA_NEXT', 'S_MEDIA_PAUSE', 'S_MEDIA_PLAY', 'S_MEDIA_PLAY_PAUSE', 'S_MEDIA_PREV', 'S_MEDIA_REC', 'S_MEDIA_REWIND', 'S_MEDIA_SELECT', 'S_MEDIA_STOP', 'S_MENU', 'S_MINUS', 'S_MODE', 'S_MUTE', 'S_NUMLOCK', 'S_PASTE', 'S_PAUSE', 'S_PERIOD', 'S_PGDOWN', 'S_PGUP', 'S_POWER', 'S_PRTSCR', 'S_RALT', 'S_RBRACKET', 'S_RCTRL', 'S_RETURN', 'S_RGUI', 'S_RIGHT', 'S_RSHIFT', 'S_SCRLK', 'S_SELECT', 'S_SEMICOLON', 'S_SLASH', 'S_SLEEP', 'S_SOFTLEFT', 'S_SOFTRIGHT', 'S_SPACE', 'S_STOP', 'S_TAB', 'S_UNDO', 'S_UP', 'S_VOLDOWN', 'S_VOLUP', 'S_WAKE', 'S_a', 'S_b', 'S_c', 'S_d', 'S_e', 'S_f', 'S_g', 'S_h', 'S_i', 'S_j', 'S_k', 'S_l', 'S_m', 'S_n', 'S_o', 'S_p', 'S_q', 'S_r', 'S_s', 'S_t', 'S_u', 'S_v', 'S_w', 'S_x', 'S_y', 'S_z', 'Scancode', 'ScrollMode', 'ShaderState', 'SheetStrip', 'Sprite', 'TERMINATING', 'TEXT_EDITING', 'TEXT_EDITING_CANDIDATES', 'TEXT_INPUT', 'Text', 'Texture', 'Tile', 'TileLayer', 'TileMap', 'Timer', 'Transform', 'Vec2', 'ViewportMode', 'WILL_ENTER_BACKGROUND', 'WILL_ENTER_FOREGROUND', 'WINDOW_CLOSE_REQUESTED', 'WINDOW_DESTROYED', 'WINDOW_DISPLAY_CHANGED', 'WINDOW_DISPLAY_SCALE_CHANGED', 'WINDOW_ENTER_FULLSCREEN', 'WINDOW_EXPOSED', 'WINDOW_FOCUS_GAINED', 'WINDOW_FOCUS_LOST', 'WINDOW_HDR_STATE_CHANGED', 'WINDOW_HIDDEN', 'WINDOW_HIT_TEST', 'WINDOW_ICCPROF_CHANGED', 'WINDOW_LEAVE_FULLSCREEN', 'WINDOW_MAXIMIZED', 'WINDOW_MINIMIZED', 'WINDOW_MOUSE_ENTER', 'WINDOW_MOUSE_LEAVE', 'WINDOW_MOVED', 'WINDOW_OCCLUDED', 'WINDOW_RESIZED', 'WINDOW_RESTORED', 'WINDOW_SAFE_AREA_CHANGED', 'WINDOW_SHOWN', 'collision', 'color', 'draw', 'ease', 'event', 'gamepad', 'init', 'input', 'key', 'line', 'log', 'math', 'mouse', 'pixel_array', 'quit', 'rect', 'renderer', 'time', 'viewport', 'window']
 class Align(enum.IntEnum):
     CENTER: typing.ClassVar[Align]  # value = <Align.CENTER: 1>
     LEFT: typing.ClassVar[Align]  # value = <Align.LEFT: 0>
@@ -51,20 +52,20 @@ class Anchor(enum.IntEnum):
 class Animation:
     """
     
-    A complete animation sequence with frames and playback settings.
+    A complete animation sequence with frame rectangles and playback settings.
     
-    Contains a sequence of frames and the frames per second (FPS) rate for playback timing.
+    Contains a sequence of source rectangles (clips) and the frames per second (FPS) rate for playback timing.
             
     """
     @property
-    def fps(self) -> int:
+    def fps(self) -> float:
         """
         The frames per second rate for animation playback.
         """
     @property
-    def frames(self) -> list[Frame]:
+    def frames(self) -> list[Rect]:
         """
-        The list of frames in the animation sequence.
+        The list of source rectangles for each frame in the animation.
         """
 class AnimationController:
     """
@@ -99,10 +100,7 @@ class AnimationController:
         Args:
             file_path (str): Path to the sprite sheet image file.
             frame_size (Vec2): Size of each frame as (width, height).
-            strips (list[SheetStrip]): List of strip definitions, each containing:
-                - name (str): Unique identifier for the animation
-                - frame_count (int): Number of frames in this strip/animation
-                - fps (int): Frames per second for playback timing
+            strips (list[SheetStrip]): List of strip definitions.
         
         Raises:
             ValueError: If frame size is not positive, no strips provided, frame count is not
@@ -158,7 +156,7 @@ class AnimationController:
         """
         Set the current active animation by name without affecting playback state.
         
-        Switches to the specified animation while preserving the current frame index and 
+        Switches to the specified animation while preserving the current frame index and
         playback state (paused/playing). Useful for seamless animation transitions.
         
         Args:
@@ -168,23 +166,23 @@ class AnimationController:
             ValueError: If the specified animation name is not found.
         """
     @property
+    def clip(self) -> Rect:
+        """
+        The source rectangle (clip) for the current animation frame.
+        
+        Returns:
+            Rect: The source rectangle defining which portion of the texture to display.
+        
+        Raises:
+            RuntimeError: If no animation is currently set or the animation has no frames.
+        """
+    @property
     def current_animation_name(self) -> str:
         """
         The name of the currently active animation.
         
         Returns:
             str: The name of the current animation, or empty string if none is set.
-        """
-    @property
-    def current_frame(self) -> Frame:
-        """
-        The current animation frame being displayed.
-        
-        Returns:
-            Frame: The current frame with texture and rectangle data.
-        
-        Raises:
-            RuntimeError: If no animation is currently set or the animation has no frames.
         """
     @property
     def frame_index(self) -> int:
@@ -232,6 +230,17 @@ class AnimationController:
         
         Returns:
             float: The animation progress as a value between 0.0 and 1.0.
+        """
+    @property
+    def texture(self) -> Texture:
+        """
+        The sprite sheet texture used by this animation controller.
+        
+        Returns:
+            Texture: The texture containing all animation frames.
+        
+        Raises:
+            RuntimeError: If no sprite sheet has been loaded.
         """
 class Audio:
     """
@@ -721,6 +730,12 @@ class EasingAnimation:
     @start_pos.setter
     def start_pos(self, arg0: Vec2) -> None:
         ...
+class Effect:
+    """
+    
+    Base class for timeline effects. Not directly instantiable.
+        
+    """
 class Event:
     """
     
@@ -755,6 +770,7 @@ class EventType(enum.IntEnum):
     DISPLAY_MOVED: typing.ClassVar[EventType]  # value = <EventType.DISPLAY_MOVED: 340>
     DISPLAY_ORIENTATION: typing.ClassVar[EventType]  # value = <EventType.DISPLAY_ORIENTATION: 337>
     DISPLAY_REMOVED: typing.ClassVar[EventType]  # value = <EventType.DISPLAY_REMOVED: 339>
+    DISPLAY_USABLE_BOUNDS_CHANGED: typing.ClassVar[EventType]  # value = <EventType.DISPLAY_USABLE_BOUNDS_CHANGED: 344>
     DROP_BEGIN: typing.ClassVar[EventType]  # value = <EventType.DROP_BEGIN: 4098>
     DROP_COMPLETE: typing.ClassVar[EventType]  # value = <EventType.DROP_COMPLETE: 4099>
     DROP_FILE: typing.ClassVar[EventType]  # value = <EventType.DROP_FILE: 4096>
@@ -797,10 +813,15 @@ class EventType(enum.IntEnum):
     PEN_PROXIMITY_IN: typing.ClassVar[EventType]  # value = <EventType.PEN_PROXIMITY_IN: 4864>
     PEN_PROXIMITY_OUT: typing.ClassVar[EventType]  # value = <EventType.PEN_PROXIMITY_OUT: 4865>
     PEN_UP: typing.ClassVar[EventType]  # value = <EventType.PEN_UP: 4867>
+    PINCH_BEGIN: typing.ClassVar[EventType]  # value = <EventType.PINCH_BEGIN: 1808>
+    PINCH_END: typing.ClassVar[EventType]  # value = <EventType.PINCH_END: 1810>
+    PINCH_UPDATE: typing.ClassVar[EventType]  # value = <EventType.PINCH_UPDATE: 1809>
     QUIT: typing.ClassVar[EventType]  # value = <EventType.QUIT: 256>
     RENDER_DEVICE_LOST: typing.ClassVar[EventType]  # value = <EventType.RENDER_DEVICE_LOST: 8194>
     RENDER_DEVICE_RESET: typing.ClassVar[EventType]  # value = <EventType.RENDER_DEVICE_RESET: 8193>
     RENDER_TARGETS_RESET: typing.ClassVar[EventType]  # value = <EventType.RENDER_TARGETS_RESET: 8192>
+    SCREEN_KEYBOARD_HIDDEN: typing.ClassVar[EventType]  # value = <EventType.SCREEN_KEYBOARD_HIDDEN: 777>
+    SCREEN_KEYBOARD_SHOWN: typing.ClassVar[EventType]  # value = <EventType.SCREEN_KEYBOARD_SHOWN: 776>
     SENSOR_UPDATE: typing.ClassVar[EventType]  # value = <EventType.SENSOR_UPDATE: 4608>
     SYSTEM_THEME_CHANGED: typing.ClassVar[EventType]  # value = <EventType.SYSTEM_THEME_CHANGED: 264>
     TERMINATING: typing.ClassVar[EventType]  # value = <EventType.TERMINATING: 257>
@@ -1000,25 +1021,6 @@ class FontHint(enum.IntEnum):
     def __format__(self, format_spec):
         """
         Convert to a string according to format_spec.
-        """
-class Frame:
-    """
-    
-    A single animation frame containing texture and rectangle data.
-    
-    Represents one frame of an animation with its associated texture and the rectangle
-    defining which portion of the texture to display.
-            
-    """
-    @property
-    def src(self) -> Rect:
-        """
-        The rectangle defining the frame bounds within the texture.
-        """
-    @property
-    def tex(self) -> Texture:
-        """
-        The texture containing the frame image.
         """
 class GamepadAxis(enum.IntEnum):
     C_LTRIGGER: typing.ClassVar[GamepadAxis]  # value = <GamepadAxis.C_LTRIGGER: 4>
@@ -1653,6 +1655,93 @@ class MouseButton(enum.IntEnum):
     def __format__(self, format_spec):
         """
         Convert to a string according to format_spec.
+        """
+class Orchestrator:
+    """
+    
+    Timeline animator for Transform objects.
+    
+    Allows chaining effects to create complex animations that play over time.
+    Effects can run sequentially or in parallel.
+        
+    """
+    def __init__(self, target: typing.Any) -> None:
+        """
+        Create an Orchestrator for animating transforms.
+        
+        Args:
+            target: Either a Transform object or an object with a 'transform' attribute (like Sprite).
+        """
+    def finalize(self) -> None:
+        """
+        Finalize the orchestrator, preventing further edits.
+        
+        Must be called before play(). Logs a warning if called multiple times.
+        """
+    def parallel(self, *args) -> Orchestrator:
+        """
+        Add multiple effects to run in parallel.
+        
+        Args:
+            *effects: Variable number of Effect objects to run simultaneously.
+        
+        Returns:
+            Orchestrator: Self for method chaining.
+        """
+    def pause(self) -> None:
+        """
+        Pause the animation at the current position.
+        """
+    def play(self) -> None:
+        """
+        Start playing the animation from the beginning.
+        
+        Logs a warning if not finalized or if there are no steps.
+        """
+    def resume(self) -> None:
+        """
+        Resume a paused animation.
+        """
+    def rewind(self) -> None:
+        """
+        Reset the animation to the beginning without stopping.
+        """
+    def stop(self) -> None:
+        """
+        Stop the animation and reset to the beginning.
+        """
+    def then(self, effect: Effect) -> Orchestrator:
+        """
+        Add a single effect to the timeline.
+        
+        Args:
+            effect: The Effect to add.
+        
+        Returns:
+            Orchestrator: Self for method chaining.
+        """
+    @property
+    def finalized(self) -> bool:
+        """
+        Whether the orchestrator has been finalized.
+        """
+    @property
+    def finished(self) -> bool:
+        """
+        Whether the animation has completed.
+        """
+    @property
+    def looping(self) -> bool:
+        """
+        Whether the animation should loop when finished.
+        """
+    @looping.setter
+    def looping(self, arg1: bool) -> None:
+        ...
+    @property
+    def playing(self) -> bool:
+        """
+        Whether the animation is currently playing.
         """
 class PenAxis(enum.IntEnum):
     P_DISTANCE: typing.ClassVar[PenAxis]  # value = <PenAxis.P_DISTANCE: 3>
@@ -2547,27 +2636,27 @@ class SheetStrip:
     per second (FPS).
         
     """
-    def __init__(self, name: str, frame_count: typing.SupportsInt, fps: typing.SupportsInt) -> None:
+    def __init__(self, name: str, frame_count: typing.SupportsInt, fps: typing.SupportsFloat) -> None:
         """
         Create a sprite sheet strip definition.
         
         Args:
             name (str): Unique identifier for this animation.
             frame_count (int): Number of frames to extract from this strip/row.
-            fps (int): Frames per second for playback timing.
+            fps (float): Frames per second for playback timing.
         """
     @property
-    def fps(self) -> int:
+    def fps(self) -> float:
         """
         The playback speed in frames per second.
         
         Determines how fast the animation plays. Higher values result in faster playback.
         
         Type:
-            int: The frames per second for this animation.
+            float: The frames per second for this animation.
         """
     @fps.setter
-    def fps(self, arg0: typing.SupportsInt) -> None:
+    def fps(self, arg0: typing.SupportsFloat) -> None:
         ...
     @property
     def frame_count(self) -> int:
@@ -2593,6 +2682,100 @@ class SheetStrip:
         """
     @name.setter
     def name(self, arg0: str) -> None:
+        ...
+class Sprite:
+    """
+    
+            Abstract base class for drawable game objects with a texture and transform.
+    
+            This class cannot be instantiated directly. Inherit from it and implement
+            the update() method.
+    
+            Attributes:
+                transform (Transform): The sprite's position, rotation, and scale.
+                velocity (Vec2): The sprite's velocity vector.
+                texture (Texture): The sprite's texture (can be None).
+                visible (bool): Whether the sprite should be drawn.
+    
+            Methods:
+                draw(): Draw the sprite to the screen.
+                update(): Update the sprite state (must be overridden).
+                move(): Apply frame-independent velocity to position.
+        
+    """
+    @typing.overload
+    def __init__(self) -> None:
+        """
+        Create a sprite with no texture yet.
+        """
+    @typing.overload
+    def __init__(self, texture: Texture) -> None:
+        """
+                     Create a sprite with a texture.
+        
+                     Args:
+                         texture (Texture): The sprite's texture.
+        """
+    @typing.overload
+    def __init__(self, texture: Texture, transform: Transform) -> None:
+        """
+                     Create a sprite with a texture and transform.
+        
+                        Args:
+                            texture (Texture): The sprite's texture.
+                            transform (Transform): The sprite's initial transform.
+        """
+    def draw(self) -> None:
+        """
+        Draw the sprite to the screen with its current transform.
+        """
+    def move(self) -> None:
+        """
+        Apply frame-independent velocity to position.
+        """
+    def update(self) -> None:
+        """
+        Update the sprite state (must be overridden).
+        """
+    @property
+    def clip(self) -> typing.Any:
+        """
+        Source rectangle for texture sampling (None = full texture).
+        """
+    @clip.setter
+    def clip(self, arg1: typing.Any) -> None:
+        ...
+    @property
+    def texture(self) -> Texture:
+        """
+        The sprite's texture.
+        """
+    @texture.setter
+    def texture(self, arg0: Texture) -> None:
+        ...
+    @property
+    def transform(self) -> Transform:
+        """
+        The sprite's transform.
+        """
+    @transform.setter
+    def transform(self, arg0: Transform) -> None:
+        ...
+    @property
+    def velocity(self) -> Vec2:
+        """
+        The sprite's velocity.
+        """
+    @velocity.setter
+    def velocity(self, arg0: Vec2) -> None:
+        ...
+    @property
+    def visible(self) -> bool:
+        """
+        Whether the sprite is visible.
+        """
+    @visible.setter
+    def visible(self, arg0: bool) -> None:
         ...
 class Text:
     """
@@ -2624,6 +2807,10 @@ class Text:
         Args:
             pos (Vec2 | None): The position in pixels. Defaults to (0, 0).
             anchor (Anchor): The anchor point for alignment. Defaults to TopLeft.
+        
+        Raises:
+            RuntimeError: If the renderer is not initialized or text drawing fails.
+            RuntimeError: If the text font is not set or has gone out of scope.
         """
     def get_rect(self) -> Rect:
         """
@@ -2787,16 +2974,6 @@ class Texture:
     def alpha(self, arg1: typing.SupportsFloat) -> None:
         ...
     @property
-    def angle(self) -> float:
-        """
-        The rotation angle in radians for rendering.
-        
-        When the texture is drawn, it will be rotated by this angle about its center.
-        """
-    @angle.setter
-    def angle(self, arg0: typing.SupportsFloat) -> None:
-        ...
-    @property
     def flip(self) -> Texture.Flip:
         """
         The flip settings for horizontal and vertical mirroring.
@@ -2809,10 +2986,7 @@ class Texture:
     @property
     def size(self) -> Vec2:
         """
-        Get the size of the texture.
-        
-        Returns:
-            Vec2: The texture size as (width, height).
+        Get the dimensions of the texture as a Vec2 (width, height).
         """
     @property
     def tint(self) -> Color:
@@ -3077,6 +3251,80 @@ class Timer:
         Returns the full duration if the timer hasn't been started, or 0.0 if
         the timer has already finished.
         """
+class Transform:
+    """
+    
+    Transform represents a 2D transformation with position, size, rotation, and scale.
+    
+    Attributes:
+        pos (Vec2): Position component.
+        size (Vec2): Explicit size (empty = use texture/srcRect size).
+        angle (float): Rotation component in radians.
+        scale (Vec2): Scale component.
+        anchor (Anchor): Anchor point for positioning.
+        pivot (Vec2): Normalized pivot point for rotation.
+        
+    """
+    def __init__(self, pos: typing.Any = None, size: typing.Any = None, angle: typing.SupportsFloat = 0.0, scale: typing.Any = None, anchor: Anchor = Anchor.TOP_LEFT, pivot: typing.Any = None) -> None:
+        """
+        Initialize a Transform with optional keyword arguments.
+        
+        Args:
+            pos (Vec2): Position component. Defaults to (0, 0).
+            size (Vec2): Explicit size. Defaults to empty (auto-detect).
+            angle (float): Rotation in radians. Defaults to 0.
+            scale (Vec2): Scale multiplier. Defaults to (1, 1).
+            anchor (Anchor): Anchor point for positioning. Defaults to TOP_LEFT.
+            pivot (Vec2): Normalized rotation pivot. Defaults to (0.5, 0.5) for center.
+        """
+    @property
+    def anchor(self) -> Anchor:
+        """
+        The anchor point for positioning.
+        """
+    @anchor.setter
+    def anchor(self, arg0: Anchor) -> None:
+        ...
+    @property
+    def angle(self) -> float:
+        """
+        The rotation component in radians.
+        """
+    @angle.setter
+    def angle(self, arg0: typing.SupportsFloat) -> None:
+        ...
+    @property
+    def pivot(self) -> Vec2:
+        """
+        The normalized pivot point for rotation.
+        """
+    @pivot.setter
+    def pivot(self, arg0: Vec2) -> None:
+        ...
+    @property
+    def pos(self) -> Vec2:
+        """
+        The position component as a Vec2.
+        """
+    @pos.setter
+    def pos(self, arg0: Vec2) -> None:
+        ...
+    @property
+    def scale(self) -> Vec2:
+        """
+        The scale component as a Vec2.
+        """
+    @scale.setter
+    def scale(self, arg0: Vec2) -> None:
+        ...
+    @property
+    def size(self) -> Vec2:
+        """
+        The explicit size as a Vec2. If zero/empty, uses texture or source rect size.
+        """
+    @size.setter
+    def size(self, arg0: Vec2) -> None:
+        ...
 class Vec2:
     """
     
@@ -3365,9 +3613,80 @@ class ViewportMode(enum.IntEnum):
         """
         Convert to a string according to format_spec.
         """
-def init() -> None:
+def _fx_call(callback: collections.abc.Callable[[], None]) -> Effect:
+    """
+    Create an effect that calls a function.
+    
+    Args:
+        callback (callable): Function to call when this step is reached.
+    
+    Returns:
+        Effect: The call effect.
+    """
+def _fx_move_to(pos: typing.Any = None, dur: typing.SupportsFloat = 0.0, ease: typing.Any = None) -> Effect:
+    """
+    Create a move-to effect.
+    
+    Args:
+        pos (Vec2): Target position.
+        dur (float): Duration in seconds.
+        ease (callable): Easing function (t -> t).
+    
+    Returns:
+        Effect: The move-to effect.
+    """
+def _fx_rotate_to(angle: typing.SupportsFloat, dur: typing.SupportsFloat = 0.0, ease: typing.Any = None) -> Effect:
+    """
+    Create a rotate-to effect.
+    
+    Args:
+        angle (float): Target angle in radians.
+        dur (float): Duration in seconds.
+        ease (callable): Easing function (t -> t).
+    
+    Returns:
+        Effect: The rotate-to effect.
+    """
+def _fx_scale_to(scale: typing.Any = None, dur: typing.SupportsFloat = 0.0, ease: typing.Any = None) -> Effect:
+    """
+    Create a scale-to effect.
+    
+    Args:
+        scale (float or Vec2): Target scale. A single number applies to both axes.
+        dur (float): Duration in seconds.
+        ease (callable): Easing function (t -> t).
+    
+    Returns:
+        Effect: The scale-to effect.
+    """
+def _fx_shake(amp: typing.SupportsFloat, freq: typing.SupportsFloat, dur: typing.SupportsFloat) -> Effect:
+    """
+    Create a shake effect.
+    
+    Args:
+        amp (float): Shake amplitude in pixels.
+        freq (float): Shake frequency in Hz.
+        dur (float): Duration in seconds.
+    
+    Returns:
+        Effect: The shake effect.
+    """
+def _fx_wait(dur: typing.SupportsFloat) -> Effect:
+    """
+    Create a wait/delay effect.
+    
+    Args:
+        dur (float): Duration to wait in seconds.
+    
+    Returns:
+        Effect: The wait effect.
+    """
+def init(debug: bool = False) -> None:
     """
     Initialize the Kraken engine subsystems.
+    
+    Args:
+        debug (bool): When True, enables logging outputs.
     
     Raises:
         RuntimeError: If SDL initialization fails.
@@ -3424,6 +3743,7 @@ DISPLAY_DESKTOP_MODE_CHANGED: EventType  # value = <EventType.DISPLAY_DESKTOP_MO
 DISPLAY_MOVED: EventType  # value = <EventType.DISPLAY_MOVED: 340>
 DISPLAY_ORIENTATION: EventType  # value = <EventType.DISPLAY_ORIENTATION: 337>
 DISPLAY_REMOVED: EventType  # value = <EventType.DISPLAY_REMOVED: 339>
+DISPLAY_USABLE_BOUNDS_CHANGED: EventType  # value = <EventType.DISPLAY_USABLE_BOUNDS_CHANGED: 344>
 DROP_BEGIN: EventType  # value = <EventType.DROP_BEGIN: 4098>
 DROP_COMPLETE: EventType  # value = <EventType.DROP_COMPLETE: 4099>
 DROP_FILE: EventType  # value = <EventType.DROP_FILE: 4096>
@@ -3635,6 +3955,9 @@ PEN_MOTION: EventType  # value = <EventType.PEN_MOTION: 4870>
 PEN_PROXIMITY_IN: EventType  # value = <EventType.PEN_PROXIMITY_IN: 4864>
 PEN_PROXIMITY_OUT: EventType  # value = <EventType.PEN_PROXIMITY_OUT: 4865>
 PEN_UP: EventType  # value = <EventType.PEN_UP: 4867>
+PINCH_BEGIN: EventType  # value = <EventType.PINCH_BEGIN: 1808>
+PINCH_END: EventType  # value = <EventType.PINCH_END: 1810>
+PINCH_UPDATE: EventType  # value = <EventType.PINCH_UPDATE: 1809>
 P_DISTANCE: PenAxis  # value = <PenAxis.P_DISTANCE: 3>
 P_PRESSURE: PenAxis  # value = <PenAxis.P_PRESSURE: 0>
 P_ROTATION: PenAxis  # value = <PenAxis.P_ROTATION: 4>
@@ -3646,6 +3969,8 @@ QUIT: EventType  # value = <EventType.QUIT: 256>
 RENDER_DEVICE_LOST: EventType  # value = <EventType.RENDER_DEVICE_LOST: 8194>
 RENDER_DEVICE_RESET: EventType  # value = <EventType.RENDER_DEVICE_RESET: 8193>
 RENDER_TARGETS_RESET: EventType  # value = <EventType.RENDER_TARGETS_RESET: 8192>
+SCREEN_KEYBOARD_HIDDEN: EventType  # value = <EventType.SCREEN_KEYBOARD_HIDDEN: 777>
+SCREEN_KEYBOARD_SHOWN: EventType  # value = <EventType.SCREEN_KEYBOARD_SHOWN: 776>
 SENSOR_UPDATE: EventType  # value = <EventType.SENSOR_UPDATE: 4608>
 SYSTEM_THEME_CHANGED: EventType  # value = <EventType.SYSTEM_THEME_CHANGED: 264>
 S_0: Scancode  # value = <Scancode.S_0: 39>

@@ -18,23 +18,17 @@ void _bind(const py::module_& module);
 void _tick();
 } // namespace animation_controller
 
-struct Frame
-{
-    std::shared_ptr<Texture> tex;
-    Rect src;
-};
-
 struct Animation
 {
-    std::vector<Frame> frames;
-    int fps;
+    std::vector<Rect> frames;  // Source rectangles for each frame
+    double fps;
 };
 
 struct SheetStrip
 {
     std::string name;
     int frameCount;
-    int fps;
+    double fps;
 };
 
 class AnimationController
@@ -50,7 +44,8 @@ class AnimationController
     void play(const std::string& name);
     void playFrom(int frameIndex);
 
-    [[nodiscard]] const Frame& getCurrentFrame() const;
+    [[nodiscard]] const Rect& getCurrentClip() const;
+    [[nodiscard]] std::shared_ptr<Texture> getTexture() const;
     [[nodiscard]] int getFrameIndex() const;
     [[nodiscard]] double getProgress() const;
 
@@ -69,6 +64,7 @@ class AnimationController
     void resume();
 
   private:
+    std::shared_ptr<Texture> m_texture = nullptr;
     double m_playbackSpeed = 1.0;
     double m_index = 0.0;
     double m_prevIndex = 0.0;

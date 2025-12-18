@@ -1,12 +1,13 @@
+#include "AnimationController.hpp"
+#include "Log.hpp"
 #include "Math.hpp"
+#include "Renderer.hpp"
 #include "Texture.hpp"
 #include "Time.hpp"
 
 #include <algorithm>
 #include <filesystem>
 #include <pybind11/stl.h>
-
-#include "AnimationController.hpp"
 
 namespace fs = std::filesystem;
 
@@ -21,12 +22,20 @@ void AnimationController::loadSpriteSheet(const std::string& filePath, const Vec
                                           const std::vector<SheetStrip>& strips)
 {
     if (frameSize.x <= 0 || frameSize.y <= 0)
+    {
         throw std::invalid_argument("Frame size must be positive non-zero values");
+    }
     if (strips.empty())
+    {
         throw std::invalid_argument("No strips provided for sprite sheet");
+    }
 
-    const auto texPtr = std::make_shared<Texture>(filePath);
-    const Vec2 size = texPtr->getSize();
+    if (renderer::_get() == nullptr)
+        throw std::runtime_error(
+            "Renderer not initialized; create a window before loading sprite sheets");
+
+    m_texture = std::make_shared<Texture>(filePath);
+    const Vec2 size = m_texture->getSize();
 
     const int frameWidth = static_cast<int>(frameSize.x);
     const int frameHeight = static_cast<int>(frameSize.y);
@@ -62,8 +71,7 @@ void AnimationController::loadSpriteSheet(const std::string& filePath, const Vec
         for (int i = 0; i < strip.frameCount; ++i)
         {
             const int x = i * frameWidth;
-            const Frame frame{texPtr, {x, y, frameWidth, frameHeight}};
-            newAnim.frames.emplace_back(frame);
+            newAnim.frames.emplace_back(Rect{x, y, frameWidth, frameHeight});
         }
 
         m_animMap[name] = std::move(newAnim);
@@ -98,7 +106,7 @@ void AnimationController::playFrom(const int frameIndex)
     resume();
 }
 
-const Frame& AnimationController::getCurrentFrame() const
+const Rect& AnimationController::getCurrentClip() const
 {
     const auto& [frames, _] = m_animMap.at(m_currAnim);
 
@@ -108,6 +116,8 @@ const Frame& AnimationController::getCurrentFrame() const
 
     return frames.at(safeIndex);
 }
+
+std::shared_ptr<Texture> AnimationController::getTexture() const { return m_texture; }
 
 void AnimationController::setPlaybackSpeed(const double speed)
 {
@@ -157,6 +167,8 @@ void AnimationController::update(const double delta)
 {
     if (m_paused)
         return;
+    if (m_currAnim.empty())
+        return;
 
     const auto& [frames, fps] = m_animMap.at(m_currAnim);
 
@@ -173,10 +185,10 @@ void AnimationController::update(const double delta)
         return;
     }
 
-    // Clamp to the last frame and pause
+    // When not looping, clamp to the ends and pause
     if (m_index >= frameCount)
     {
-        m_index = frameCount - 1.0;
+        m_index = frameCount;
         pause();
     }
     else if (m_index < 0.0)
@@ -197,26 +209,13 @@ void _tick()
 
 void _bind(const py::module_& module)
 {
-    py::classh<Frame>(module, "Frame", R"doc(
-A single animation frame containing texture and rectangle data.
-
-Represents one frame of an animation with its associated texture and the rectangle
-defining which portion of the texture to display.
-        )doc")
-        .def_readonly("tex", &Frame::tex, R"doc(
-The texture containing the frame image.
-        )doc")
-        .def_readonly("src", &Frame::src, R"doc(
-The rectangle defining the frame bounds within the texture.
-        )doc");
-
     py::classh<Animation>(module, "Animation", R"doc(
-A complete animation sequence with frames and playback settings.
+A complete animation sequence with frame rectangles and playback settings.
 
-Contains a sequence of frames and the frames per second (FPS) rate for playback timing.
+Contains a sequence of source rectangles (clips) and the frames per second (FPS) rate for playback timing.
         )doc")
         .def_readonly("frames", &Animation::frames, R"doc(
-The list of frames in the animation sequence.
+The list of source rectangles for each frame in the animation.
         )doc")
         .def_readonly("fps", &Animation::fps, R"doc(
 The frames per second rate for animation playback.
@@ -229,7 +228,7 @@ Defines a single animation within a sprite sheet by specifying the animation nam
 the number of frames to extract from the strip, and the playback speed in frames
 per second (FPS).
     )doc")
-        .def(py::init<>([](const std::string& name, int frame_count, int fps) -> SheetStrip
+        .def(py::init<>([](const std::string& name, int frame_count, double fps) -> SheetStrip
                         { return {name, frame_count, fps}; }),
              py::arg("name"), py::arg("frame_count"), py::arg("fps"), R"doc(
 Create a sprite sheet strip definition.
@@ -237,7 +236,7 @@ Create a sprite sheet strip definition.
 Args:
     name (str): Unique identifier for this animation.
     frame_count (int): Number of frames to extract from this strip/row.
-    fps (int): Frames per second for playback timing.
+    fps (float): Frames per second for playback timing.
              )doc")
         .def_readwrite("name", &SheetStrip::name, R"doc(
 The unique name identifier for this animation strip.
@@ -260,7 +259,7 @@ The playback speed in frames per second.
 Determines how fast the animation plays. Higher values result in faster playback.
 
 Type:
-    int: The frames per second for this animation.
+    float: The frames per second for this animation.
         )doc");
 
     py::classh<AnimationController>(module, "AnimationController", R"doc(
@@ -277,15 +276,24 @@ The name of the currently active animation.
 Returns:
     str: The name of the current animation, or empty string if none is set.
                                )doc")
-        .def_property_readonly("current_frame", &AnimationController::getCurrentFrame,
+        .def_property_readonly("clip", &AnimationController::getCurrentClip,
                                py::return_value_policy::reference_internal, R"doc(
-The current animation frame being displayed.
+The source rectangle (clip) for the current animation frame.
 
 Returns:
-    Frame: The current frame with texture and rectangle data.
+    Rect: The source rectangle defining which portion of the texture to display.
 
 Raises:
     RuntimeError: If no animation is currently set or the animation has no frames.
+                               )doc")
+        .def_property_readonly("texture", &AnimationController::getTexture, R"doc(
+The sprite sheet texture used by this animation controller.
+
+Returns:
+    Texture: The texture containing all animation frames.
+
+Raises:
+    RuntimeError: If no sprite sheet has been loaded.
                                )doc")
         .def_property_readonly("frame_index", &AnimationController::getFrameIndex, R"doc(
 The current frame index in the animation sequence.
@@ -333,10 +341,7 @@ Frames are read left-to-right within each strip, and strips are read top-to-bott
 Args:
     file_path (str): Path to the sprite sheet image file.
     frame_size (Vec2): Size of each frame as (width, height).
-    strips (list[SheetStrip]): List of strip definitions, each containing:
-        - name (str): Unique identifier for the animation
-        - frame_count (int): Number of frames in this strip/animation
-        - fps (int): Frames per second for playback timing
+    strips (list[SheetStrip]): List of strip definitions.
 
 Raises:
     ValueError: If frame size is not positive, no strips provided, frame count is not
@@ -347,7 +352,7 @@ Raises:
         .def("set", &AnimationController::set, py::arg("name"), R"doc(
 Set the current active animation by name without affecting playback state.
 
-Switches to the specified animation while preserving the current frame index and 
+Switches to the specified animation while preserving the current frame index and
 playback state (paused/playing). Useful for seamless animation transitions.
 
 Args:

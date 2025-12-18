@@ -21,6 +21,10 @@ void _bind(py::module_& module);
 
 std::vector<Event> poll();
 
+void start_text_input();
+
+void stop_text_input();
+
 void push(const Event& event);
 
 void schedule(const Event& event, uint32_t delay_ms, bool repeat = false);

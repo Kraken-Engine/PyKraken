@@ -31,22 +31,27 @@ TileLayer::TileLayer(const Type type, const bool isVisible, std::string name,
 
 void TileLayer::render() const
 {
+    Transform transform{};
+
     for (const auto& tile : tiles)
     {
+        transform.pos = tile.dst.getTopLeft();
+
         if (tile.antiDiagFlip)
         {
-            m_tileSetTexture->angle = M_PI_2;
+            transform.angle = M_PI_2;
             m_tileSetTexture->flip.h = tile.vFlip;
             m_tileSetTexture->flip.v = !tile.hFlip;
         }
         else
         {
-            m_tileSetTexture->angle = tile.angle;
+            transform.angle = tile.angle;
             m_tileSetTexture->flip.h = tile.hFlip;
             m_tileSetTexture->flip.v = tile.vFlip;
         }
 
-        renderer::draw(*m_tileSetTexture, tile.dst, tile.src);
+        transform.size = tile.dst.getSize();
+        renderer::draw(*m_tileSetTexture, transform, tile.src);
     }
 }
 
@@ -97,7 +102,7 @@ std::vector<Tile> TileLayer::getFromArea(const Rect& area) const
     std::vector<Tile> result;
     result.reserve(4);
     forEachTileInArea(area,
-                      [&result, &area](const Tile& tile)
+                      [&result, &area](const Tile& tile) -> bool
                       {
                           if (!collision::overlap(tile.collider, area))
                               return true;
@@ -126,11 +131,15 @@ std::optional<Tile> TileLayer::getTileAt(const int column, const int row) const
 
 TileMap::TileMap(const std::string& tmxPath, int borderSize)
 {
+    if (renderer::_get() == nullptr)
+        throw std::runtime_error(
+            "Renderer not initialized; create a window before loading a TileMap");
+
     pugi::xml_document doc;
     if (!doc.load_file(tmxPath.c_str()))
         throw std::runtime_error("Failed to load TMX file: " + tmxPath);
 
-    const size_t lastSlashPos = tmxPath.find_last_of('/');
+    const size_t lastSlashPos = tmxPath.find_last_of("/\\");
     m_dirPath = lastSlashPos != std::string::npos ? tmxPath.substr(0, lastSlashPos + 1) : "";
 
     const auto map = doc.child("map");
@@ -141,7 +150,13 @@ TileMap::TileMap(const std::string& tmxPath, int borderSize)
 
     const auto tileSetTexture = std::make_shared<Texture>(texturePath);
 
-    SDL_Surface* surface = IMG_Load(texturePath.c_str());
+    std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> surface(
+        IMG_Load(texturePath.c_str()), &SDL_DestroySurface);
+    if (!surface)
+        throw std::runtime_error("Failed to load tileset image surface: " + texturePath + " (" +
+                                 std::string(SDL_GetError()) + ")");
+    if (surface == nullptr)
+        throw std::runtime_error("Failed to load tileset image: " + texturePath);
 
     const int mapWidth = std::stoi(map.attribute("width").value());
     const int mapHeight = std::stoi(map.attribute("height").value());
@@ -206,9 +221,10 @@ TileMap::TileMap(const std::string& tmxPath, int borderSize)
                 const Rect tileSrcRect = {srcX, srcY, tileWidth, tileHeight};
                 const Rect tileDstRect = {destX, destY, tileWidth, tileHeight};
 
-                tiles.push_back({layerPtr, tileSrcRect, tileDstRect,
-                                 getFittedRect(surface, tileSrcRect, tileDstRect.getTopLeft()),
-                                 horizontalFlip, verticalFlip, antiDiagonalFlip, 0.0});
+                tiles.push_back(
+                    {layerPtr, tileSrcRect, tileDstRect,
+                     getFittedRect(surface.get(), tileSrcRect, tileDstRect.getTopLeft()),
+                     horizontalFlip, verticalFlip, antiDiagonalFlip, 0.0});
                 tileCounter++;
             }
             layerPtr->tiles = std::move(tiles);
@@ -261,16 +277,15 @@ TileMap::TileMap(const std::string& tmxPath, int borderSize)
 
                 const double angleRad = static_cast<double>(angle) * M_PI / 180.0;
 
-                tiles.push_back({layerPtr, objectSrcRect, objectDstRect,
-                                 getFittedRect(surface, objectSrcRect, objectDstRect.getTopLeft()),
-                                 horizontalFlip, verticalFlip, false, angleRad});
+                tiles.push_back(
+                    {layerPtr, objectSrcRect, objectDstRect,
+                     getFittedRect(surface.get(), objectSrcRect, objectDstRect.getTopLeft()),
+                     horizontalFlip, verticalFlip, false, angleRad});
             }
             layerPtr->tiles = std::move(tiles);
         }
         m_layerVec.push_back(layerPtr);
     }
-
-    SDL_DestroySurface(surface);
 }
 
 std::shared_ptr<const TileLayer> TileMap::getLayer(const std::string& name,

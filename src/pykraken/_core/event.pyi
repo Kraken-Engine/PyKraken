@@ -4,16 +4,16 @@ Input event handling
 from __future__ import annotations
 import pykraken._core
 import typing
-__all__: list[str] = ['new_custom', 'poll', 'push', 'schedule', 'unschedule']
+__all__: list[str] = ['new_custom', 'poll', 'push', 'schedule', 'start_text_input', 'stop_text_input', 'unschedule']
 def new_custom() -> pykraken._core.Event:
     """
     Create a new custom event type.
     
     Returns:
-        Event: A new Event object with a unique custom event type.
+        Event: The newly registered custom Event.
     
     Raises:
-        RuntimeError: If registering a custom event type fails.
+        RuntimeError: If registration fails.
     """
 def poll() -> list[pykraken._core.Event]:
     """
@@ -32,7 +32,8 @@ def push(event: pykraken._core.Event) -> None:
         event (Event): The custom event to push to the queue.
     
     Raises:
-        RuntimeError: If attempting to push a non-custom event type.
+        ValueError: If the event is not a custom event type.
+        RuntimeError: If the event could not be queued.
     """
 def schedule(event: pykraken._core.Event, delay_ms: typing.SupportsInt, repeat: bool = False) -> None:
     """
@@ -45,8 +46,22 @@ def schedule(event: pykraken._core.Event, delay_ms: typing.SupportsInt, repeat: 
             specified interval. If False, the event is pushed only once. Defaults to False.
     
     Raises:
-        RuntimeError: If attempting to schedule a non-custom event type, or if timer
-            creation fails.
+        ValueError: If the event is not a custom event type.
+        RuntimeError: If the timer could not be created.
+    """
+def start_text_input() -> None:
+    """
+    Start text input for TEXT_INPUT and TEXT_EDITING events.
+    
+    Raises:
+        RuntimeError: If text input could not be started.
+    """
+def stop_text_input() -> None:
+    """
+    Stop text input for TEXT_INPUT and TEXT_EDITING events.
+    
+    Raises:
+        RuntimeError: If text input could not be stopped.
     """
 def unschedule(event: pykraken._core.Event) -> None:
     """
@@ -54,7 +69,4 @@ def unschedule(event: pykraken._core.Event) -> None:
     
     Args:
         event (Event): The custom event whose timer should be cancelled.
-    
-    Raises:
-        RuntimeError: If attempting to cancel a non-custom event type.
     """

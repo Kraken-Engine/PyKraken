@@ -1,6 +1,7 @@
 #include "Text.hpp"
 #include "Camera.hpp"
 #include "Font.hpp"
+#include "Log.hpp"
 #include "Rect.hpp"
 #include "Renderer.hpp"
 
@@ -18,7 +19,17 @@ static std::mutex _textsMutex;
 
 Text::Text(const Font& font)
 {
+    if (!_textEngine)
+    {
+        throw std::runtime_error("Text engine not initialized; create a window first");
+    }
+
     m_text = TTF_CreateText(_textEngine, font._get(), "", 0);
+    if (!m_text)
+    {
+        throw std::runtime_error(std::string("Failed to create text: ") + SDL_GetError());
+    }
+
     TTF_SetTextColor(m_text, 255, 255, 255, 255);
 
     // Register this text for cleanup
@@ -46,10 +57,24 @@ Text::~Text()
     }
 }
 
-void Text::setFont(const Font& font) const { TTF_SetTextFont(m_text, font._get()); }
+void Text::setFont(const Font& font) const
+{
+    if (!m_text)
+        throw std::runtime_error("Text is destroyed or uninitialized");
+
+    if (!TTF_SetTextFont(m_text, font._get()))
+    {
+        throw std::runtime_error(std::string("Failed to set text font: ") + SDL_GetError());
+    }
+}
 
 void Text::draw(Vec2 pos, const Anchor anchor) const
 {
+    if (!renderer::_get())
+        throw std::runtime_error("Renderer not initialized");
+    if (!TTF_GetTextFont(m_text))
+        throw std::runtime_error("Text font is not set or has gone out of scope");
+
     const Vec2 cameraPos = camera::getActivePos();
     pos.x -= cameraPos.x;
     pos.y -= cameraPos.y;
@@ -101,59 +126,122 @@ void Text::draw(Vec2 pos, const Anchor anchor) const
 
 void Text::setWrapWidth(int wrapWidth) const
 {
+    if (!m_text)
+        throw std::runtime_error("Text is destroyed or uninitialized");
+
     if (wrapWidth < 0)
         wrapWidth = 0;
-    TTF_SetTextWrapWidth(m_text, wrapWidth);
+    if (!TTF_SetTextWrapWidth(m_text, wrapWidth))
+    {
+        throw std::runtime_error(std::string("Failed to set text wrap width: ") + SDL_GetError());
+    }
 }
 
 int Text::getWrapWidth() const
 {
+    if (!m_text)
+        throw std::runtime_error("Text is destroyed or uninitialized");
+
     int wrapWidth;
-    TTF_GetTextWrapWidth(m_text, &wrapWidth);
+    if (!TTF_GetTextWrapWidth(m_text, &wrapWidth))
+    {
+        throw std::runtime_error(std::string("Failed to get text wrap width: ") + SDL_GetError());
+    }
     return wrapWidth;
 }
 
-void Text::setText(const std::string& text) const { TTF_SetTextString(m_text, text.c_str(), 0); }
+void Text::setText(const std::string& text) const
+{
+    if (!m_text)
+        throw std::runtime_error("Text is destroyed or uninitialized");
 
-std::string Text::getText() const { return std::string(m_text->text); }
+    if (!TTF_SetTextString(m_text, text.c_str(), 0))
+    {
+        throw std::runtime_error(std::string("Failed to set text string: ") + SDL_GetError());
+    }
+}
+
+std::string Text::getText() const
+{
+    if (!m_text)
+        throw std::runtime_error("Text is destroyed or uninitialized");
+
+    return m_text->text ? std::string(m_text->text) : "";
+}
 
 void Text::setColor(const Color& color) const
 {
-    TTF_SetTextColor(m_text, color.r, color.g, color.b, color.a);
+    if (!m_text)
+        throw std::runtime_error("Text is destroyed or uninitialized");
+
+    if (!TTF_SetTextColor(m_text, color.r, color.g, color.b, color.a))
+    {
+        throw std::runtime_error(std::string("Failed to set text color: ") + SDL_GetError());
+    }
 }
 
 Color Text::getColor() const
 {
+    if (!m_text)
+        throw std::runtime_error("Text is destroyed or uninitialized");
+
     Color color;
-    TTF_GetTextColor(m_text, &color.r, &color.g, &color.b, &color.a);
+    if (!TTF_GetTextColor(m_text, &color.r, &color.g, &color.b, &color.a))
+    {
+        throw std::runtime_error(std::string("Failed to get text color: ") + SDL_GetError());
+    }
     return color;
 }
 
 Rect Text::getRect() const
 {
+    if (!m_text)
+        throw std::runtime_error("Text is destroyed or uninitialized");
+
     int w, h;
-    TTF_GetTextSize(m_text, &w, &h);
+    if (!TTF_GetTextSize(m_text, &w, &h))
+    {
+        throw std::runtime_error(std::string("Failed to get text size: ") + SDL_GetError());
+    }
     return {0, 0, w, h};
 }
 
 Vec2 Text::getSize() const
 {
+    if (!m_text)
+        throw std::runtime_error("Text is destroyed or uninitialized");
+
     int w, h;
-    TTF_GetTextSize(m_text, &w, &h);
+    if (!TTF_GetTextSize(m_text, &w, &h))
+    {
+        throw std::runtime_error(std::string("Failed to get text size: ") + SDL_GetError());
+    }
     return {w, h};
 }
 
 int Text::getWidth() const
 {
+    if (!m_text)
+        throw std::runtime_error("Text is destroyed or uninitialized");
+
     int w;
-    TTF_GetTextSize(m_text, &w, nullptr);
+    if (!TTF_GetTextSize(m_text, &w, nullptr))
+    {
+        throw std::runtime_error(std::string("Failed to get text width: ") + SDL_GetError());
+    }
     return w;
 }
 
 int Text::getHeight() const
 {
+    if (!m_text)
+        throw std::runtime_error("Text is destroyed or uninitialized");
+
     int h;
-    TTF_GetTextSize(m_text, nullptr, &h);
+    if (!TTF_GetTextSize(m_text, nullptr, &h))
+    {
+        throw std::runtime_error(std::string("Failed to get text height: ") + SDL_GetError());
+    }
     return h;
 }
 
@@ -163,7 +251,9 @@ void _init()
 {
     _textEngine = TTF_CreateRendererTextEngine(renderer::_get());
     if (!_textEngine)
-        throw std::runtime_error("Failed to create text engine: " + std::string(SDL_GetError()));
+    {
+        throw std::runtime_error(std::string("Failed to create text engine: ") + SDL_GetError());
+    }
 }
 
 void _cleanupTexts()
@@ -268,6 +358,10 @@ Draw the text to the renderer at the specified position with alignment.
 Args:
     pos (Vec2 | None): The position in pixels. Defaults to (0, 0).
     anchor (Anchor): The anchor point for alignment. Defaults to TopLeft.
+
+Raises:
+    RuntimeError: If the renderer is not initialized or text drawing fails.
+    RuntimeError: If the text font is not set or has gone out of scope.
         )doc")
         .def("set_font", &Text::setFont, py::arg("font"), R"doc(
 Set the font to use for rendering this text.

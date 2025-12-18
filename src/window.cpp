@@ -1,7 +1,9 @@
 #include "AnimationController.hpp"
 #include "Font.hpp"
+#include "Log.hpp"
 #include "Math.hpp"
 #include "Mixer.hpp"
+#include "Orchestrator.hpp"
 #include "Renderer.hpp"
 #include "ShaderState.hpp"
 #include "Text.hpp"
@@ -34,6 +36,9 @@ void create(const std::string& title, const Vec2& res, const bool scaled)
     if (title.size() > 255)
         throw std::invalid_argument("Title cannot exceed 255 characters");
 
+    if (res.x <= 0 || res.y <= 0)
+        throw std::invalid_argument("Window resolution values must be greater than 0");
+
     int winW;
     int winH;
     if (scaled)
@@ -41,7 +46,7 @@ void create(const std::string& title, const Vec2& res, const bool scaled)
         const SDL_DisplayID primaryDisplay = SDL_GetPrimaryDisplay();
         if (primaryDisplay == 0)
         {
-            // Fallback: if we can't get primary display, use non-scaled mode
+            log::warn("Failed to get primary display for scaling, falling back to non-scaled mode");
             winW = static_cast<int>(res.x);
             winH = static_cast<int>(res.y);
             _scale = 1;
@@ -51,7 +56,8 @@ void create(const std::string& title, const Vec2& res, const bool scaled)
             SDL_Rect usableBounds;
             if (!SDL_GetDisplayUsableBounds(primaryDisplay, &usableBounds))
             {
-                // Fallback: if we can't get bounds, use non-scaled mode
+                log::warn("Failed to get usable display bounds for scaling, falling back to "
+                          "non-scaled mode");
                 winW = static_cast<int>(res.x);
                 winH = static_cast<int>(res.y);
                 _scale = 1;
@@ -64,9 +70,9 @@ void create(const std::string& title, const Vec2& res, const bool scaled)
 
                 // Use the smaller scale to maintain an aspect ratio
                 const double minScale = scaleX < scaleY ? scaleX : scaleY;
-                _scale = static_cast<int>(minScale);
-                if (fmod(minScale, 1.0) == 0.0)
-                    _scale = static_cast<int>(minScale) - 1;
+                _scale = static_cast<int>(std::floor(minScale));
+                if (_scale < 1)
+                    _scale = 1;
 
                 winW = static_cast<int>(res.x * _scale);
                 winH = static_cast<int>(res.y * _scale);
@@ -77,23 +83,30 @@ void create(const std::string& title, const Vec2& res, const bool scaled)
     {
         winW = static_cast<int>(res.x);
         winH = static_cast<int>(res.y);
-
-        if (winW <= 0 || winH <= 0)
-            throw std::invalid_argument("Window resolution values must be greater than 0");
     }
 
-    _window = SDL_CreateWindow(title.c_str(), winW, winH, 0);
+    _window = SDL_CreateWindow(title.c_str(), winW, winH, SDL_WINDOW_RESIZABLE);
     if (!_window)
         throw std::runtime_error(SDL_GetError());
 
     SDL_IOStream* iconStream = SDL_IOFromMem(kraken_icon_png, kraken_icon_png_len);
+    if (!iconStream)
+        throw std::runtime_error("Failed to create icon stream: " + std::string(SDL_GetError()));
+
     SDL_Surface* iconSurf = IMG_Load_IO(iconStream, true);
+    if (!iconSurf)
+        throw std::runtime_error("Failed to load window icon: " + std::string(SDL_GetError()));
+
     SDL_SetWindowIcon(_window, iconSurf);
     SDL_DestroySurface(iconSurf);
 
     _isOpen = true;
 
     renderer::_init(_window, res);
+
+    log::info("SDL version: {}.{}.{}", SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_MICRO_VERSION);
+    log::info("SDL_image version: {}.{}.{}", SDL_IMAGE_MAJOR_VERSION, SDL_IMAGE_MINOR_VERSION,
+              SDL_IMAGE_MICRO_VERSION);
     font::_init();
     text::_init();
 }
@@ -104,6 +117,7 @@ bool isOpen()
 
     mixer::_tick();
     animation_controller::_tick();
+    orchestrator::_tick();
 
     return _isOpen;
 }
@@ -134,7 +148,8 @@ void setFullscreen(const bool fullscreen)
     if (!_window)
         throw std::runtime_error("Window not initialized");
 
-    SDL_SetWindowFullscreen(_window, fullscreen);
+    if (!SDL_SetWindowFullscreen(_window, fullscreen))
+        throw std::runtime_error(std::string("Failed to set fullscreen mode: ") + SDL_GetError());
 }
 
 bool isFullscreen()
@@ -249,7 +264,7 @@ Args:
     fullscreen (bool): True to enable fullscreen mode, False for windowed mode.
 
 Raises:
-    RuntimeError: If the window is not initialized.
+    RuntimeError: If the window is not initialized or fullscreen mode cannot be changed.
     )doc");
 
     subWindow.def("is_fullscreen", &isFullscreen, R"doc(

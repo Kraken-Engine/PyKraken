@@ -89,7 +89,7 @@ def set_fullscreen(fullscreen: bool) -> None:
         fullscreen (bool): True to enable fullscreen mode, False for windowed mode.
     
     Raises:
-        RuntimeError: If the window is not initialized.
+        RuntimeError: If the window is not initialized or fullscreen mode cannot be changed.
     """
 def set_icon(path: str) -> None:
     """

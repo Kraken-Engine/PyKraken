@@ -4,8 +4,8 @@
 #include <pybind11/pybind11.h>
 #include <string>
 
-#include "Rect.hpp"
 #include "Math.hpp"
+#include "Rect.hpp"
 
 namespace py = pybind11;
 
@@ -16,8 +16,7 @@ struct Color;
 
 class Texture
 {
-public:
-    double angle = 0.0;
+  public:
     struct Flip
     {
         bool h = false;
@@ -51,7 +50,7 @@ public:
 
     [[nodiscard]] SDL_Texture* getSDL() const;
 
-private:
+  private:
     SDL_Texture* m_texPtr = nullptr;
 };
 

@@ -3,6 +3,7 @@
 #include "Camera.hpp"
 #include "Event.hpp"
 #include "Mouse.hpp"
+#include "Renderer.hpp"
 #include "Window.hpp"
 #include "_globals.hpp"
 
@@ -88,18 +89,32 @@ Returns:
 
 Vec2 getPos()
 {
-    float x, y;
-    SDL_GetMouseState(&x, &y);
-    const auto pos = Vec2{x, y} / window::getScale();
-    return pos + camera::getActivePos();
+    float windowX;
+    float windowY;
+    SDL_GetMouseState(&windowX, &windowY);
+
+    float logicalX;
+    float logicalY;
+    SDL_RenderCoordinatesFromWindow(renderer::_get(), windowX, windowY, &logicalX, &logicalY);
+
+    return Vec2{logicalX, logicalY} + camera::getActivePos();
 }
 
 Vec2 getRel()
 {
     float dx, dy;
     SDL_GetRelativeMouseState(&dx, &dy);
-    const auto scale = static_cast<float>(window::getScale());
-    return {dx / scale, dy / scale};
+
+    float x0;
+    float y0;
+    float x1;
+    float y1;
+
+    auto* r = renderer::_get();
+    SDL_RenderCoordinatesFromWindow(r, 0.0f, 0.0f, &x0, &y0);
+    SDL_RenderCoordinatesFromWindow(r, dx, dy, &x1, &y1);
+
+    return {x1 - x0, y1 - y0};
 }
 
 bool isPressed(MouseButton button)
