@@ -256,6 +256,22 @@ Timeline animator for Transform objects.
 
 Allows chaining effects to create complex animations that play over time.
 Effects can run sequentially or in parallel.
+
+Attributes:
+    finalized (bool): Whether the orchestrator has been finalized.
+    playing (bool): Whether the animation is currently playing.
+    finished (bool): Whether the animation has completed.
+    looping (bool): Whether the animation should loop when finished.
+
+Methods:
+    parallel(*effects): Add multiple effects to run in parallel.
+    then(effect): Add a single effect to the timeline.
+    finalize(): Finalize the orchestrator, preventing further edits.
+    play(): Start playing the animation from the beginning.
+    pause(): Pause the animation at the current position.
+    resume(): Resume a paused animation.
+    stop(): Stop the animation and reset to the beginning.
+    rewind(): Reset the animation to the beginning without stopping.
     )doc")
         .def(py::init(
                  [](const py::object& target) -> Orchestrator
