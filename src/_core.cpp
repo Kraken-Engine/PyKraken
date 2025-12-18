@@ -17,6 +17,7 @@
 #include "Math.hpp"
 #include "Mixer.hpp"
 #include "Mouse.hpp"
+#include "Orchestrator.hpp"
 #include "PixelArray.hpp"
 #include "Polygon.hpp"
 #include "Rect.hpp"
@@ -122,6 +123,7 @@ Tear down the Kraken engine subsystems.
     kn::window::_bind(m);
     kn::draw::_bind(m);
     kn::animation_controller::_bind(m);
+    kn::orchestrator::_bind(m);
     kn::tile_map::_bind(m);
     kn::shader_state::_bind(m);
     kn::viewport::_bind(m);

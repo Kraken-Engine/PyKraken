@@ -1,4 +1,5 @@
 import pykraken as kn
+from pykraken import fx
 
 
 class Astronaut(kn.Sprite):
@@ -24,6 +25,31 @@ kn.init(debug=True)
 kn.window.create("test", (400, 300), scaled=True)
 
 astronaut = Astronaut()
+
+# Set up an animation sequence for the astronaut
+orch = kn.Orchestrator(astronaut)
+orch.parallel(
+    fx.move_to(pos=(100, 150), dur=1.0, ease=kn.ease.out_quad),
+    fx.scale_to(scale=2.0, dur=1.0, ease=kn.ease.out_back),
+).then(
+    fx.shake(amp=5, freq=30, dur=0.3)
+).then(
+    fx.rotate_to(angle=0.5, dur=0.5, ease=kn.ease.in_out_cubic)
+).parallel(
+    fx.move_to(pos=(300, 150), dur=1.5, ease=kn.ease.in_out_sin),
+    fx.rotate_to(angle=-0.5, dur=1.5, ease=kn.ease.in_out_sin),
+).then(
+    fx.wait(dur=0.5)
+).parallel(
+    fx.move_to(pos=(200, 150), dur=0.8, ease=kn.ease.out_bounce),
+    fx.scale_to(scale=1.0, dur=0.8, ease=kn.ease.out_elastic),
+    fx.rotate_to(angle=0.0, dur=0.8, ease=kn.ease.out_quad),
+).then(
+    fx.call(lambda: print("Animation complete!"))
+)
+orch.looping = True
+orch.finalize()
+orch.play()
 
 while kn.window.is_open():
     kn.event.poll()

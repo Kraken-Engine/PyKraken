@@ -3,6 +3,7 @@
 #include "Log.hpp"
 #include "Math.hpp"
 #include "Mixer.hpp"
+#include "Orchestrator.hpp"
 #include "Renderer.hpp"
 #include "ShaderState.hpp"
 #include "Text.hpp"
@@ -116,6 +117,7 @@ bool isOpen()
 
     mixer::_tick();
     animation_controller::_tick();
+    orchestrator::_tick();
 
     return _isOpen;
 }
