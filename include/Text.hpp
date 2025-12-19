@@ -27,7 +27,7 @@ class Text
 {
   public:
     Color shadowColor{};
-    Vec2 shadowOffset;
+    Vec2 shadowOffset{};
 
     Text(const Font& font);
     ~Text();
