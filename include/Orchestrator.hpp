@@ -68,13 +68,30 @@ class ScaleToEffect : public Effect
 class RotateToEffect : public Effect
 {
   public:
-    float targetAngle = 0.0f;
+    double targetAngle = 0.0;
+    bool clockwise = true;
 
     void start(Transform& transform) override;
     void update(Transform& transform, double t) override;
 
   private:
-    float m_startAngle = 0.0f;
+    double m_startAngle = 0.0;
+};
+
+/**
+ * @brief Rotate by a delta angle over time.
+ */
+class RotateByEffect : public Effect
+{
+  public:
+    double deltaAngle = 0.0;
+    bool clockwise = true;
+
+    void start(Transform& transform) override;
+    void update(Transform& transform, double t) override;
+
+  private:
+    double m_startAngle = 0.0;
 };
 
 /**

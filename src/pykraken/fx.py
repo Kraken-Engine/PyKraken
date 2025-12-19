@@ -18,9 +18,10 @@ from ._core import (
     _fx_move_to as move_to,
     _fx_scale_to as scale_to,
     _fx_rotate_to as rotate_to,
+    _fx_rotate_by as rotate_by,
     _fx_shake as shake,
     _fx_call as call,
     _fx_wait as wait,
 )
 
-__all__ = ["move_to", "scale_to", "rotate_to", "shake", "call", "wait"]
+__all__ = ["move_to", "scale_to", "rotate_to", "rotate_by", "shake", "call", "wait"]

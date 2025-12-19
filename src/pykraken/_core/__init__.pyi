@@ -1663,6 +1663,22 @@ class Orchestrator:
     
     Allows chaining effects to create complex animations that play over time.
     Effects can run sequentially or in parallel.
+    
+    Attributes:
+        finalized (bool): Whether the orchestrator has been finalized.
+        playing (bool): Whether the animation is currently playing.
+        finished (bool): Whether the animation has completed.
+        looping (bool): Whether the animation should loop when finished.
+    
+    Methods:
+        parallel(*effects): Add multiple effects to run in parallel.
+        then(effect): Add a single effect to the timeline.
+        finalize(): Finalize the orchestrator, preventing further edits.
+        play(): Start playing the animation from the beginning.
+        pause(): Pause the animation at the current position.
+        resume(): Resume a paused animation.
+        stop(): Stop the animation and reset to the beginning.
+        rewind(): Reset the animation to the beginning without stopping.
         
     """
     def __init__(self, target: typing.Any) -> None:
@@ -2803,6 +2819,7 @@ class Text:
     def draw(self, pos: typing.Any = None, anchor: Anchor = Anchor.TOP_LEFT) -> None:
         """
         Draw the text to the renderer at the specified position with alignment.
+        A shadow is drawn if shadow_color.a > 0 and shadow_offset is not (0, 0).
         
         Args:
             pos (Vec2 | None): The position in pixels. Defaults to (0, 0).
@@ -2842,6 +2859,22 @@ class Text:
         Returns:
             int: The text height.
         """
+    @property
+    def shadow_color(self) -> Color:
+        """
+        Get or set the shadow color for the text.
+        """
+    @shadow_color.setter
+    def shadow_color(self, arg0: Color) -> None:
+        ...
+    @property
+    def shadow_offset(self) -> Vec2:
+        """
+        Get or set the shadow offset for the text.
+        """
+    @shadow_offset.setter
+    def shadow_offset(self, arg0: Vec2) -> None:
+        ...
     @property
     def size(self) -> Vec2:
         """
@@ -3635,12 +3668,26 @@ def _fx_move_to(pos: typing.Any = None, dur: typing.SupportsFloat = 0.0, ease: t
     Returns:
         Effect: The move-to effect.
     """
-def _fx_rotate_to(angle: typing.SupportsFloat, dur: typing.SupportsFloat = 0.0, ease: typing.Any = None) -> Effect:
+def _fx_rotate_by(delta: typing.SupportsFloat, clockwise: bool = True, dur: typing.SupportsFloat = 0.0, ease: typing.Any = None) -> Effect:
+    """
+    Create a rotate-by effect.
+    
+    Args:
+        delta (float): Delta angle in radians to rotate by.
+        clockwise (bool): Direction of rotation. True for clockwise, False for counterclockwise.
+        dur (float): Duration in seconds.
+        ease (callable): Easing function (t -> t).
+    
+    Returns:
+        Effect: The rotate-by effect.
+    """
+def _fx_rotate_to(angle: typing.SupportsFloat, clockwise: bool = True, dur: typing.SupportsFloat = 0.0, ease: typing.Any = None) -> Effect:
     """
     Create a rotate-to effect.
     
     Args:
         angle (float): Target angle in radians.
+        clockwise (bool): Direction of rotation. True for clockwise, False for counterclockwise.
         dur (float): Duration in seconds.
         ease (callable): Easing function (t -> t).
     

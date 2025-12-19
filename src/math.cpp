@@ -253,18 +253,18 @@ Attributes:
     pivot (Vec2): Normalized pivot point for rotation.
     )doc")
         .def(py::init(
-                 [](const py::object& posObj, const py::object& sizeObj, float angle,
+                 [](const py::object& posObj, const py::object& sizeObj, double angle,
                     const py::object& scaleObj, Anchor anchor,
                     const py::object& pivotObj) -> Transform
                  {
                      try
                      {
-                         const auto pos = posObj.is_none() ? Vec2{0.0, 0.0} : posObj.cast<Vec2>();
+                         const auto pos = posObj.is_none() ? Vec2{} : posObj.cast<Vec2>();
                          const auto size = sizeObj.is_none() ? Vec2{} : sizeObj.cast<Vec2>();
                          const auto scale =
-                             scaleObj.is_none() ? Vec2{1.0, 1.0} : scaleObj.cast<Vec2>();
+                             scaleObj.is_none() ? Vec2{1.0} : scaleObj.cast<Vec2>();
                          const auto pivot =
-                             pivotObj.is_none() ? Vec2{0.5, 0.5} : pivotObj.cast<Vec2>();
+                             pivotObj.is_none() ? Vec2{0.5} : pivotObj.cast<Vec2>();
                          return {pos, size, angle, scale, anchor, pivot};
                      }
                      catch (const py::cast_error&)
@@ -274,7 +274,7 @@ Attributes:
                              "scale, and pivot");
                      }
                  }),
-             py::arg("pos") = py::none(), py::arg("size") = py::none(), py::arg("angle") = 0.0f,
+             py::arg("pos") = py::none(), py::arg("size") = py::none(), py::arg("angle") = 0.0,
              py::arg("scale") = py::none(), py::arg("anchor") = Anchor::TopLeft,
              py::arg("pivot") = py::none(),
              R"doc(

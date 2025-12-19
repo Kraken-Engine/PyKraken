@@ -117,7 +117,10 @@ void draw(const Texture& texture, Transform transform, const Rect& srcRect)
 
     Vec2 baseSize = transform.size;
     if (baseSize.isZero())
-        baseSize = texture.getSize();
+    {
+        const Vec2 srcSize = srcRect.getSize();
+        baseSize = !srcSize.isZero() ? srcSize : texture.getSize();
+    }
 
     Rect dstRect{};
     dstRect.setSize({baseSize.x * transform.scale.x, baseSize.y * transform.scale.y});
