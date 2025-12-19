@@ -116,10 +116,10 @@ Vec2 operator*(double lhs, const Vec2& rhs);
 
 struct Transform
 {
-    Vec2 pos{0.0f, 0.0f};
+    Vec2 pos{0.0, 0.0};
     Vec2 size{};          // Explicit size (empty = use texture/srcRect size)
-    float angle = 0.0f;   // In radians
-    Vec2 scale{1.0f, 1.0f};
+    double angle = 0.0;   // In radians
+    Vec2 scale{1.0, 1.0};
     Anchor anchor = Anchor::TopLeft;
     Vec2 pivot{0.5, 0.5}; // Normalized pivot point, centered by default
 };

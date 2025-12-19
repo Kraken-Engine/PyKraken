@@ -26,6 +26,9 @@ void _cleanupTexts(); // Clean up all text objects before text engine is destroy
 class Text
 {
   public:
+    Color shadowColor{};
+    Vec2 shadowOffset;
+
     Text(const Font& font);
     ~Text();
 

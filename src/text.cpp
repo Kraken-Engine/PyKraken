@@ -121,6 +121,19 @@ void Text::draw(Vec2 pos, const Anchor anchor) const
     const int drawX = static_cast<int>(std::round(pos.x));
     const int drawY = static_cast<int>(std::round(pos.y));
 
+    // Draw shadow if applicable
+    if (shadowColor.a > 0 && !shadowOffset.isZero())
+    {
+        Color originalColor = getColor();
+        setColor(shadowColor);
+
+        const int shadowX = drawX + static_cast<int>(std::round(shadowOffset.x));
+        const int shadowY = drawY + static_cast<int>(std::round(shadowOffset.y));
+        TTF_DrawRendererText(m_text, shadowX, shadowY);
+
+        setColor(originalColor);
+    }
+
     TTF_DrawRendererText(m_text, drawX, drawY);
 }
 
@@ -304,6 +317,13 @@ Raises:
     RuntimeError: If text creation fails.
     )doc")
 
+        .def_readwrite("shadow_color", &Text::shadowColor, R"doc(
+Get or set the shadow color for the text.
+        )doc")
+        .def_readwrite("shadow_offset", &Text::shadowOffset, R"doc(
+Get or set the shadow offset for the text.
+        )doc")
+
         .def_property("wrap_width", &Text::getWrapWidth, &Text::setWrapWidth, R"doc(
 Get or set the wrap width in pixels for text wrapping.
 
@@ -354,6 +374,7 @@ Returns:
             },
             py::arg("pos") = py::none(), py::arg("anchor") = Anchor::TopLeft, R"doc(
 Draw the text to the renderer at the specified position with alignment.
+A shadow is drawn if shadow_color.a > 0 and shadow_offset is not (0, 0).
 
 Args:
     pos (Vec2 | None): The position in pixels. Defaults to (0, 0).

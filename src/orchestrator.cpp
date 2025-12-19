@@ -41,7 +41,31 @@ void RotateToEffect::start(Transform& transform) { m_startAngle = transform.angl
 void RotateToEffect::update(Transform& transform, double t)
 {
     const double easedT = easing(t);
-    transform.angle = m_startAngle + (targetAngle - m_startAngle) * static_cast<float>(easedT);
+    double delta;
+    if (clockwise)
+    {
+        delta = fmod(targetAngle - m_startAngle, 2 * M_PI);
+        if (delta < 0)
+            delta += 2 * M_PI;
+    }
+    else
+    {
+        delta = fmod(m_startAngle - targetAngle, 2 * M_PI);
+        if (delta < 0)
+            delta += 2 * M_PI;
+        delta = -delta;
+    }
+    transform.angle = m_startAngle + delta * easedT;
+}
+
+// ----- RotateByEffect -----
+void RotateByEffect::start(Transform& transform) { m_startAngle = transform.angle; }
+
+void RotateByEffect::update(Transform& transform, double t)
+{
+    const double easedT = easing(t);
+    const double delta = !clockwise ? deltaAngle : -deltaAngle;
+    transform.angle = m_startAngle + delta * easedT;
 }
 
 // ----- ShakeEffect -----
@@ -487,10 +511,12 @@ Returns:
 
     module.def(
         "_fx_rotate_to",
-        [](float angle, double dur, const py::object& easeObj) -> std::shared_ptr<Effect>
+        [](double angle, bool clockwise, double dur,
+           const py::object& easeObj) -> std::shared_ptr<Effect>
         {
             auto effect = std::make_shared<RotateToEffect>();
             effect->targetAngle = angle;
+            effect->clockwise = clockwise;
             effect->duration = dur;
             if (!easeObj.is_none())
             {
@@ -505,17 +531,56 @@ Returns:
             }
             return effect;
         },
-        py::arg("angle"), py::arg("dur") = 0.0, py::arg("ease") = py::none(),
+        py::arg("angle"), py::arg("clockwise") = true, py::arg("dur") = 0.0,
+        py::arg("ease") = py::none(),
         R"doc(
 Create a rotate-to effect.
 
 Args:
     angle (float): Target angle in radians.
+    clockwise (bool): Direction of rotation. True for clockwise, False for counterclockwise.
     dur (float): Duration in seconds.
     ease (callable): Easing function (t -> t).
 
 Returns:
     Effect: The rotate-to effect.
+        )doc");
+
+    module.def(
+        "_fx_rotate_by",
+        [](double delta, bool clockwise, double dur,
+           const py::object& easeObj) -> std::shared_ptr<Effect>
+        {
+            auto effect = std::make_shared<RotateByEffect>();
+            effect->deltaAngle = delta;
+            effect->clockwise = clockwise;
+            effect->duration = dur;
+            if (!easeObj.is_none())
+            {
+                try
+                {
+                    effect->easing = easeObj.cast<std::function<double(double)>>();
+                }
+                catch (const py::cast_error&)
+                {
+                    throw py::type_error("ease must be a callable (float) -> float");
+                }
+            }
+            return effect;
+        },
+        py::arg("delta"), py::arg("clockwise") = true, py::arg("dur") = 0.0,
+        py::arg("ease") = py::none(),
+        R"doc(
+Create a rotate-by effect.
+
+Args:
+    delta (float): Delta angle in radians to rotate by.
+    clockwise (bool): Direction of rotation. True for clockwise, False for counterclockwise.
+    dur (float): Duration in seconds.
+    ease (callable): Easing function (t -> t).
+
+Returns:
+    Effect: The rotate-by effect.
         )doc");
 
     module.def(
