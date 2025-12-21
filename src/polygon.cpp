@@ -10,7 +10,10 @@
 
 namespace kn
 {
-Polygon::Polygon(const std::vector<Vec2>& points) : points(points) {}
+Polygon::Polygon(const std::vector<Vec2>& points)
+    : points(points)
+{
+}
 
 Polygon Polygon::copy() const
 {
@@ -232,28 +235,33 @@ Args:
     offset (Vec2): The offset to move by.
         )doc")
 
-        .def("scale", py::overload_cast<double, const Vec2&>(&Polygon::scale), py::arg("factor"),
-             py::arg("pivot"), R"doc(
+        .def(
+            "scale", py::overload_cast<double, const Vec2&>(&Polygon::scale), py::arg("factor"),
+            py::arg("pivot"), R"doc(
 Scale the polygon uniformly from a pivot point.
 
 Args:
     factor (float): The scaling factor.
     pivot (Vec2): The point to scale from.
-        )doc")
+        )doc"
+        )
 
-        .def("scale", py::overload_cast<const Vec2&, const Vec2&>(&Polygon::scale),
-             py::arg("factor"), py::arg("pivot"), R"doc(
+        .def(
+            "scale", py::overload_cast<const Vec2&, const Vec2&>(&Polygon::scale),
+            py::arg("factor"), py::arg("pivot"), R"doc(
 Scale the polygon non-uniformly from a pivot point.
 
 Args:
     factor (Vec2): The scaling factors for x and y.
     pivot (Vec2): The point to scale from.
-        )doc")
+        )doc"
+        )
 
         .def(
             "__iter__", [](const Polygon& polygon) -> py::iterator
             { return py::make_iterator(polygon.points.begin(), polygon.points.end()); },
-            py::keep_alive<0, 1>())
+            py::keep_alive<0, 1>()
+        )
 
         .def(
             "__getitem__",
@@ -263,7 +271,8 @@ Args:
                     throw py::index_error("Index out of range");
                 return polygon.points[i];
             },
-            py::arg("index"))
+            py::arg("index")
+        )
 
         .def("__len__", [](const Polygon& polygon) -> size_t { return polygon.points.size(); });
 

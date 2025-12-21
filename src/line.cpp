@@ -20,8 +20,9 @@ You can access or modify points using `.a`, `.b`, or directly via `.ax`, `.ay`, 
         .def(py::init(), R"doc(
 Create a default line with all values set to 0.
     )doc")
-        .def(py::init<double, double, double, double>(), py::arg("ax"), py::arg("ay"),
-             py::arg("bx"), py::arg("by"), R"doc(
+        .def(
+            py::init<double, double, double, double>(), py::arg("ax"), py::arg("ay"), py::arg("bx"),
+            py::arg("by"), R"doc(
 Create a line from two coordinate points.
 
 Args:
@@ -29,25 +30,30 @@ Args:
     ay (float): Y-coordinate of point A.
     bx (float): X-coordinate of point B.
     by (float): Y-coordinate of point B.
-         )doc")
-        .def(py::init<double, double, const Vec2&>(), py::arg("ax"), py::arg("ay"), py::arg("b"),
-             R"doc(
+         )doc"
+        )
+        .def(
+            py::init<double, double, const Vec2&>(), py::arg("ax"), py::arg("ay"), py::arg("b"),
+            R"doc(
 Create a line from A coordinates and a Vec2 B point.
 
 Args:
     ax (float): X-coordinate of point A.
     ay (float): Y-coordinate of point A.
     b (Vec2): Point B.
-         )doc")
-        .def(py::init<const Vec2&, double, double>(), py::arg("a"), py::arg("bx"), py::arg("by"),
-             R"doc(
+         )doc"
+        )
+        .def(
+            py::init<const Vec2&, double, double>(), py::arg("a"), py::arg("bx"), py::arg("by"),
+            R"doc(
 Create a line from a Vec2 A point and B coordinates.
 
 Args:
     a (Vec2): Point A.
     bx (float): X-coordinate of point B.
     by (float): Y-coordinate of point B.
-         )doc")
+         )doc"
+        )
         .def(py::init<const Vec2&, const Vec2&>(), py::arg("a"), py::arg("b"), R"doc(
 Create a line from two Vec2 points.
 
@@ -55,34 +61,39 @@ Args:
     a (Vec2): Point A.
     b (Vec2): Point B.
          )doc")
-        .def(py::init(
-                 [](const py::sequence& abSeq) -> Line
-                 {
-                     if (abSeq.size() != 2)
-                         throw std::invalid_argument("Line expects two 2D points");
+        .def(
+            py::init(
+                [](const py::sequence& abSeq) -> Line
+                {
+                    if (abSeq.size() != 2)
+                        throw std::invalid_argument("Line expects two 2D points");
 
-                     if (!py::isinstance<py::sequence>(abSeq[0]))
-                         throw std::invalid_argument("A point must be a sequence");
-                     if (!py::isinstance<py::sequence>(abSeq[1]))
-                         throw std::invalid_argument("B point must be a sequence");
+                    if (!py::isinstance<py::sequence>(abSeq[0]))
+                        throw std::invalid_argument("A point must be a sequence");
+                    if (!py::isinstance<py::sequence>(abSeq[1]))
+                        throw std::invalid_argument("B point must be a sequence");
 
-                     const auto aSeq = abSeq[0].cast<py::sequence>();
-                     const auto bSeq = abSeq[1].cast<py::sequence>();
+                    const auto aSeq = abSeq[0].cast<py::sequence>();
+                    const auto bSeq = abSeq[1].cast<py::sequence>();
 
-                     if (aSeq.size() != 2)
-                         throw std::invalid_argument("A point must be a 2-element sequence");
-                     if (bSeq.size() != 2)
-                         throw std::invalid_argument("B point must be a 2-element sequence");
+                    if (aSeq.size() != 2)
+                        throw std::invalid_argument("A point must be a 2-element sequence");
+                    if (bSeq.size() != 2)
+                        throw std::invalid_argument("B point must be a 2-element sequence");
 
-                     return {aSeq[0].cast<double>(), aSeq[1].cast<double>(), bSeq[0].cast<double>(),
-                             bSeq[1].cast<double>()};
-                 }),
-             R"doc(
+                    return {
+                        aSeq[0].cast<double>(), aSeq[1].cast<double>(), bSeq[0].cast<double>(),
+                        bSeq[1].cast<double>()
+                    };
+                }
+            ),
+            R"doc(
 Create a line from two 2-element sequences: [[ax, ay], [bx, by]].
 
 Raises:
     ValueError: If either point is not a 2-element sequence.
-         )doc")
+         )doc"
+        )
 
         .def_property("a", &Line::getA, &Line::setA, R"doc(
 Get or set point A as a tuple or Vec2.
@@ -112,7 +123,8 @@ Args:
 
         .def(
             "__iter__", [](const Line& self) -> py::iterator
-            { return py::make_iterator(&self.ax, &self.ax + 4); }, py::keep_alive<0, 1>())
+            { return py::make_iterator(&self.ax, &self.ax + 4); }, py::keep_alive<0, 1>()
+        )
         .def(
             "__getitem__",
             [](const Line& self, const size_t i) -> double
@@ -131,7 +143,8 @@ Args:
                         throw py::index_error("Index out of range");
                 }
             },
-            py::arg("index"))
+            py::arg("index")
+        )
         .def("__len__", [](const Line&) -> int { return 4; })
         .def("__eq__", &Line::operator==, py::arg("other"))
         .def("__ne__", &Line::operator!=, py::arg("other"));
@@ -148,18 +161,45 @@ Args:
 }
 }  // namespace line
 
-Line::Line() : ax(0.0), ay(0.0), bx(0.0), by(0.0) {}
-
-Line::Line(const double ax, const double ay, const double bx, const double by) :
-    ax(ax), ay(ay), bx(bx), by(by)
+Line::Line()
+    : ax(0.0),
+      ay(0.0),
+      bx(0.0),
+      by(0.0)
 {
 }
 
-Line::Line(const double ax, const double ay, const Vec2& b) : ax(ax), ay(ay), bx(b.x), by(b.y) {}
+Line::Line(const double ax, const double ay, const double bx, const double by)
+    : ax(ax),
+      ay(ay),
+      bx(bx),
+      by(by)
+{
+}
 
-Line::Line(const Vec2& a, const double bx, const double by) : ax(a.x), ay(a.y), bx(bx), by(by) {}
+Line::Line(const double ax, const double ay, const Vec2& b)
+    : ax(ax),
+      ay(ay),
+      bx(b.x),
+      by(b.y)
+{
+}
 
-Line::Line(const Vec2& a, const Vec2& b) : ax(a.x), ay(a.y), bx(b.x), by(b.y) {}
+Line::Line(const Vec2& a, const double bx, const double by)
+    : ax(a.x),
+      ay(a.y),
+      bx(bx),
+      by(by)
+{
+}
+
+Line::Line(const Vec2& a, const Vec2& b)
+    : ax(a.x),
+      ay(a.y),
+      bx(b.x),
+      by(b.y)
+{
+}
 
 double Line::getLength() const
 {

@@ -17,8 +17,9 @@
 
 namespace kn
 {
-EasingAnimation::EasingAnimation(ease::EasingFunction easeFunc, const double duration) :
-    easingFunc(std::move(easeFunc)), duration(duration)
+EasingAnimation::EasingAnimation(ease::EasingFunction easeFunc, const double duration)
+    : easingFunc(std::move(easeFunc)),
+      duration(duration)
 {
 }
 

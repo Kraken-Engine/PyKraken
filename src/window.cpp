@@ -66,8 +66,10 @@ void create(const std::string& title, const Vec2& size)
     renderer::_init(_window, winW, winH);
 
     log::info("SDL version: {}.{}.{}", SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_MICRO_VERSION);
-    log::info("SDL_image version: {}.{}.{}", SDL_IMAGE_MAJOR_VERSION, SDL_IMAGE_MINOR_VERSION,
-              SDL_IMAGE_MICRO_VERSION);
+    log::info(
+        "SDL_image version: {}.{}.{}", SDL_IMAGE_MAJOR_VERSION, SDL_IMAGE_MINOR_VERSION,
+        SDL_IMAGE_MICRO_VERSION
+    );
     font::_init();
     text::_init();
 }
@@ -239,8 +241,9 @@ Raises:
     RuntimeError: If the window is not initialized.
     )doc");
 
-    subWindow.def("get_size", &getSize,
-                  R"doc(
+    subWindow.def(
+        "get_size", &getSize,
+        R"doc(
 Get the current size of the window.
 
 Returns:
@@ -248,7 +251,8 @@ Returns:
 
 Raises:
     RuntimeError: If the window is not initialized.
-    )doc");
+    )doc"
+    );
 
     subWindow.def("get_scale", &getScale, R"doc(
 Get the scale of the window relative to the renderer resolution.

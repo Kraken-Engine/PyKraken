@@ -13,7 +13,10 @@
 
 namespace kn
 {
-Event::Event(const uint32_t type) : type(type) {}
+Event::Event(const uint32_t type)
+    : type(type)
+{
+}
 
 py::object Event::getAttr(const std::string& name) const
 {
@@ -262,7 +265,8 @@ void schedule(const Event& event, uint32_t delay_ms, bool repeat)
                 SDL_PushEvent(static_cast<SDL_Event*>(userData));
                 return interval;  // Continue the timer
             },
-            sdl_event);
+            sdl_event
+        );
     }
     else
     {
@@ -280,7 +284,8 @@ void schedule(const Event& event, uint32_t delay_ms, bool repeat)
 
                 return 0;  // Stop the timer
             },
-            sdl_event);
+            sdl_event
+        );
     }
 
     if (timerID == 0)
@@ -355,8 +360,9 @@ Raises:
     RuntimeError: If the event could not be queued.
         )doc");
 
-    subEvent.def("schedule", &schedule, py::arg("event"), py::arg("delay_ms"),
-                 py::arg("repeat") = false, R"doc(
+    subEvent.def(
+        "schedule", &schedule, py::arg("event"), py::arg("delay_ms"), py::arg("repeat") = false,
+        R"doc(
 Schedule a custom event to be pushed after a delay. Will overwrite any existing timer for the same event.
 
 Args:
@@ -368,7 +374,8 @@ Args:
 Raises:
     ValueError: If the event is not a custom event type.
     RuntimeError: If the timer could not be created.
-        )doc");
+        )doc"
+    );
 
     subEvent.def("unschedule", &unschedule, py::arg("event"), R"doc(
 Cancel a scheduled event timer.

@@ -18,8 +18,9 @@ Texture::Texture(const Vec2& size, const TextureScaleMode scaleMode)
     if (width < 1 || height < 1)
         throw std::invalid_argument("Texture size values must be at least 1");
 
-    m_texPtr = SDL_CreateTexture(renderer::_get(), SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET,
-                                 width, height);
+    m_texPtr = SDL_CreateTexture(
+        renderer::_get(), SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, width, height
+    );
     if (!m_texPtr)
     {
         throw std::runtime_error("Failed to create texture: " + std::string(SDL_GetError()));
@@ -31,8 +32,9 @@ Texture::Texture(const Vec2& size, const TextureScaleMode scaleMode)
     m_height = size.y;
 }
 
-Texture::Texture(const PixelArray& pixelArray, const TextureScaleMode scaleMode,
-                 const TextureAccess access)
+Texture::Texture(
+    const PixelArray& pixelArray, const TextureScaleMode scaleMode, const TextureAccess access
+)
 {
     SDL_Surface* surface = pixelArray.getSDL();
 
@@ -42,22 +44,25 @@ Texture::Texture(const PixelArray& pixelArray, const TextureScaleMode scaleMode,
     }
     else if (access == TextureAccess::TARGET)
     {
-        m_texPtr = SDL_CreateTexture(renderer::_get(), surface->format, SDL_TEXTUREACCESS_TARGET,
-                                     surface->w, surface->h);
+        m_texPtr = SDL_CreateTexture(
+            renderer::_get(), surface->format, SDL_TEXTUREACCESS_TARGET, surface->w, surface->h
+        );
 
         if (!SDL_UpdateTexture(m_texPtr, nullptr, surface->pixels, surface->pitch))
         {
             SDL_DestroyTexture(m_texPtr);
             m_texPtr = nullptr;
-            throw std::runtime_error("Failed to copy PixelArray to texture: " +
-                                     std::string(SDL_GetError()));
+            throw std::runtime_error(
+                "Failed to copy PixelArray to texture: " + std::string(SDL_GetError())
+            );
         }
     }
 
     if (!m_texPtr)
     {
-        throw std::runtime_error("Failed to create texture from PixelArray: " +
-                                 std::string(SDL_GetError()));
+        throw std::runtime_error(
+            "Failed to create texture from PixelArray: " + std::string(SDL_GetError())
+        );
     }
 
     SDL_SetTextureScaleMode(m_texPtr, static_cast<SDL_ScaleMode>(scaleMode));
@@ -68,8 +73,9 @@ Texture::Texture(const PixelArray& pixelArray, const TextureScaleMode scaleMode,
     m_height = static_cast<double>(h);
 }
 
-Texture::Texture(const std::string& filePath, const TextureScaleMode scaleMode,
-                 const TextureAccess access)
+Texture::Texture(
+    const std::string& filePath, const TextureScaleMode scaleMode, const TextureAccess access
+)
 {
     if (filePath.empty())
         throw std::invalid_argument("File path cannot be empty");
@@ -84,16 +90,19 @@ Texture::Texture(const std::string& filePath, const TextureScaleMode scaleMode,
     {
         SDL_Surface* surface = IMG_Load(filePath.c_str());
         if (!surface)
-            throw std::runtime_error("Failed to load image from file: " +
-                                     std::string(SDL_GetError()));
+            throw std::runtime_error(
+                "Failed to load image from file: " + std::string(SDL_GetError())
+            );
 
-        m_texPtr = SDL_CreateTexture(renderer::_get(), surface->format, SDL_TEXTUREACCESS_TARGET,
-                                     surface->w, surface->h);
+        m_texPtr = SDL_CreateTexture(
+            renderer::_get(), surface->format, SDL_TEXTUREACCESS_TARGET, surface->w, surface->h
+        );
         if (!m_texPtr)
         {
             SDL_DestroySurface(surface);
-            throw std::runtime_error("Failed to create target texture: " +
-                                     std::string(SDL_GetError()));
+            throw std::runtime_error(
+                "Failed to create target texture: " + std::string(SDL_GetError())
+            );
         }
 
         if (!SDL_UpdateTexture(m_texPtr, nullptr, surface->pixels, surface->pitch))
@@ -101,8 +110,9 @@ Texture::Texture(const std::string& filePath, const TextureScaleMode scaleMode,
             SDL_DestroyTexture(m_texPtr);
             SDL_DestroySurface(surface);
             m_texPtr = nullptr;
-            throw std::runtime_error("Failed to copy image to texture: " +
-                                     std::string(SDL_GetError()));
+            throw std::runtime_error(
+                "Failed to copy image to texture: " + std::string(SDL_GetError())
+            );
         }
 
         SDL_DestroySurface(surface);
@@ -236,25 +246,27 @@ When True, the texture is mirrored vertically (top-bottom flip).
         )doc");
 
     texture
-        .def(py::init(
-                 [](const std::string& filePath, const py::object& scaleModeObj,
-                    const TextureAccess access) -> std::shared_ptr<Texture>
-                 {
-                     TextureScaleMode mode = renderer::getDefaultScaleMode();
-                     try
-                     {
-                         if (!scaleModeObj.is_none())
-                             mode = scaleModeObj.cast<TextureScaleMode>();
-                     }
-                     catch (const py::cast_error&)
-                     {
-                         throw std::invalid_argument("Invalid scale mode provided");
-                     }
+        .def(
+            py::init(
+                [](const std::string& filePath, const py::object& scaleModeObj,
+                   const TextureAccess access) -> std::shared_ptr<Texture>
+                {
+                    TextureScaleMode mode = renderer::getDefaultScaleMode();
+                    try
+                    {
+                        if (!scaleModeObj.is_none())
+                            mode = scaleModeObj.cast<TextureScaleMode>();
+                    }
+                    catch (const py::cast_error&)
+                    {
+                        throw std::invalid_argument("Invalid scale mode provided");
+                    }
 
-                     return std::make_shared<Texture>(filePath, mode, access);
-                 }),
-             py::arg("file_path"), py::arg("scale_mode") = py::none(),
-             py::arg("access") = TextureAccess::STATIC, R"doc(
+                    return std::make_shared<Texture>(filePath, mode, access);
+                }
+            ),
+            py::arg("file_path"), py::arg("scale_mode") = py::none(),
+            py::arg("access") = TextureAccess::STATIC, R"doc(
 Create a Texture by loading an image from a file.
 If no scale mode is provided, the default renderer scale mode is used.
 
@@ -266,25 +278,28 @@ Args:
 Raises:
     ValueError: If file_path is empty.
     RuntimeError: If the file cannot be loaded or texture creation fails.
-        )doc")
-        .def(py::init(
-                 [](const PixelArray& pixelArray, const py::object& scaleModeObj,
-                    const TextureAccess access) -> std::shared_ptr<Texture>
-                 {
-                     TextureScaleMode mode = renderer::getDefaultScaleMode();
-                     try
-                     {
-                         if (!scaleModeObj.is_none())
-                             mode = scaleModeObj.cast<TextureScaleMode>();
-                     }
-                     catch (const py::cast_error&)
-                     {
-                         throw std::invalid_argument("Invalid scale mode provided");
-                     }
-                     return std::make_shared<Texture>(pixelArray, mode, access);
-                 }),
-             py::arg("pixel_array"), py::arg("scale_mode") = py::none(),
-             py::arg("access") = TextureAccess::STATIC, R"doc(
+        )doc"
+        )
+        .def(
+            py::init(
+                [](const PixelArray& pixelArray, const py::object& scaleModeObj,
+                   const TextureAccess access) -> std::shared_ptr<Texture>
+                {
+                    TextureScaleMode mode = renderer::getDefaultScaleMode();
+                    try
+                    {
+                        if (!scaleModeObj.is_none())
+                            mode = scaleModeObj.cast<TextureScaleMode>();
+                    }
+                    catch (const py::cast_error&)
+                    {
+                        throw std::invalid_argument("Invalid scale mode provided");
+                    }
+                    return std::make_shared<Texture>(pixelArray, mode, access);
+                }
+            ),
+            py::arg("pixel_array"), py::arg("scale_mode") = py::none(),
+            py::arg("access") = TextureAccess::STATIC, R"doc(
 Create a Texture from an existing PixelArray.
 If no scale mode is provided, the default renderer scale mode is used.
 
@@ -295,23 +310,26 @@ Args:
 
 Raises:
     RuntimeError: If texture creation from pixel array fails.
-        )doc")
-        .def(py::init(
-                 [](const Vec2& size, const py::object& scaleModeObj) -> std::shared_ptr<Texture>
-                 {
-                     TextureScaleMode mode = renderer::getDefaultScaleMode();
-                     try
-                     {
-                         if (!scaleModeObj.is_none())
-                             mode = scaleModeObj.cast<TextureScaleMode>();
-                     }
-                     catch (const py::cast_error&)
-                     {
-                         throw std::invalid_argument("Invalid scale mode provided");
-                     }
-                     return std::make_shared<Texture>(size, mode);
-                 }),
-             py::arg("size"), py::arg("scale_mode") = py::none(), R"doc(
+        )doc"
+        )
+        .def(
+            py::init(
+                [](const Vec2& size, const py::object& scaleModeObj) -> std::shared_ptr<Texture>
+                {
+                    TextureScaleMode mode = renderer::getDefaultScaleMode();
+                    try
+                    {
+                        if (!scaleModeObj.is_none())
+                            mode = scaleModeObj.cast<TextureScaleMode>();
+                    }
+                    catch (const py::cast_error&)
+                    {
+                        throw std::invalid_argument("Invalid scale mode provided");
+                    }
+                    return std::make_shared<Texture>(size, mode);
+                }
+            ),
+            py::arg("size"), py::arg("scale_mode") = py::none(), R"doc(
 Create a (render target) Texture with the specified size.
 If no scale mode is provided, the default renderer scale mode is used.
 
@@ -321,7 +339,8 @@ Args:
 
 Raises:
     RuntimeError: If texture creation fails.
-        )doc")
+        )doc"
+        )
 
         .def_readwrite("flip", &Texture::flip, R"doc(
 The flip settings for horizontal and vertical mirroring.

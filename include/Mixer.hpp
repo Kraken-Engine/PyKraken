@@ -39,8 +39,8 @@ class Audio : public std::enable_shared_from_this<Audio>
     [[nodiscard]] float getVolume() const;
 
   private:
-    static constexpr ma_uint32 m_flags =
-        MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_NO_SPATIALIZATION | MA_SOUND_FLAG_NO_PITCH;
+    static constexpr ma_uint32 m_flags = MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_NO_SPATIALIZATION |
+                                         MA_SOUND_FLAG_NO_PITCH;
 
     struct Voice
     {
@@ -86,8 +86,8 @@ class AudioStream
     void setLooping(bool loop);
 
   private:
-    static constexpr ma_uint32 m_flags =
-        MA_SOUND_FLAG_STREAM | MA_SOUND_FLAG_NO_SPATIALIZATION | MA_SOUND_FLAG_NO_PITCH;
+    static constexpr ma_uint32 m_flags = MA_SOUND_FLAG_STREAM | MA_SOUND_FLAG_NO_SPATIALIZATION |
+                                         MA_SOUND_FLAG_NO_PITCH;
 
     ma_sound m_snd{};
     float m_volume = 1.f;

@@ -38,10 +38,14 @@ class Texture
     } flip;
 
     Texture(const Vec2& size, TextureScaleMode scaleMode);
-    Texture(const PixelArray& pixelArray, TextureScaleMode scaleMode,
-            TextureAccess access = TextureAccess::STATIC);
-    Texture(const std::string& filePath, TextureScaleMode scaleMode,
-            TextureAccess access = TextureAccess::STATIC);
+    Texture(
+        const PixelArray& pixelArray, TextureScaleMode scaleMode,
+        TextureAccess access = TextureAccess::STATIC
+    );
+    Texture(
+        const std::string& filePath, TextureScaleMode scaleMode,
+        TextureAccess access = TextureAccess::STATIC
+    );
     ~Texture();
 
     [[nodiscard]] double getWidth() const;

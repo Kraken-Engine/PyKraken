@@ -9,7 +9,11 @@
 
 namespace kn
 {
-Circle::Circle(const Vec2& center, const double radius) : pos(center), radius(radius) {}
+Circle::Circle(const Vec2& center, const double radius)
+    : pos(center),
+      radius(radius)
+{
+}
 
 double Circle::getArea() const
 {
@@ -62,28 +66,31 @@ Args:
     radius (float): Radius of the circle.
         )doc")
 
-        .def(py::init(
-                 [](const py::sequence& prSeq) -> Circle
-                 {
-                     if (prSeq.size() != 2)
-                         throw std::invalid_argument("Circle expects a 2-element sequence");
+        .def(
+            py::init(
+                [](const py::sequence& prSeq) -> Circle
+                {
+                    if (prSeq.size() != 2)
+                        throw std::invalid_argument("Circle expects a 2-element sequence");
 
-                     if (!py::isinstance<py::sequence>(prSeq[0]))
-                         throw std::invalid_argument("Position must be a sequence");
-                     if (!py::isinstance<double>(prSeq[1]))
-                         throw std::invalid_argument("Radius must be an int or float");
+                    if (!py::isinstance<py::sequence>(prSeq[0]))
+                        throw std::invalid_argument("Position must be a sequence");
+                    if (!py::isinstance<double>(prSeq[1]))
+                        throw std::invalid_argument("Radius must be an int or float");
 
-                     const auto posSeq = prSeq[0].cast<py::sequence>();
-                     auto radius = prSeq[1].cast<double>();
+                    const auto posSeq = prSeq[0].cast<py::sequence>();
+                    auto radius = prSeq[1].cast<double>();
 
-                     if (posSeq.size() != 2)
-                         throw std::invalid_argument("Position must be a 2-element sequence");
+                    if (posSeq.size() != 2)
+                        throw std::invalid_argument("Position must be a 2-element sequence");
 
-                     return {{posSeq[0].cast<double>(), posSeq[1].cast<double>()}, radius};
-                 }),
-             R"doc(
+                    return {{posSeq[0].cast<double>(), posSeq[1].cast<double>()}, radius};
+                }
+            ),
+            R"doc(
 Create a circle from a nested sequence: ([x, y], radius).
-        )doc")
+        )doc"
+        )
 
         .def_readwrite("pos", &Circle::pos, R"doc(
 The center position of the circle as a Vec2.
@@ -119,7 +126,8 @@ Return a copy of the circle.
                 data[2] = circle.radius;
                 return py::make_iterator(data, data + 3);
             },
-            py::keep_alive<0, 1>())
+            py::keep_alive<0, 1>()
+        )
 
         .def(
             "__getitem__",
@@ -137,7 +145,8 @@ Return a copy of the circle.
                         throw py::index_error("Index out of range");
                 }
             },
-            py::arg("index"))
+            py::arg("index")
+        )
 
         .def("__len__", [](const Circle&) -> int { return 3; })
 

@@ -3,7 +3,13 @@
 namespace kn
 {
 
-Rect::Rect(const Vec2& pos, const Vec2& size) : x(pos.x), y(pos.y), w(size.x), h(size.y) {}
+Rect::Rect(const Vec2& pos, const Vec2& size)
+    : x(pos.x),
+      y(pos.y),
+      w(size.x),
+      h(size.y)
+{
+}
 
 Rect Rect::copy() const
 {
@@ -115,8 +121,9 @@ Rect::operator SDL_Rect() const
 
 Rect::operator SDL_FRect() const
 {
-    return {static_cast<float>(x), static_cast<float>(y), static_cast<float>(w),
-            static_cast<float>(h)};
+    return {
+        static_cast<float>(x), static_cast<float>(y), static_cast<float>(w), static_cast<float>(h)
+    };
 }
 
 void Rect::setSize(const Vec2& size)
@@ -299,8 +306,9 @@ Supports various geometric operations, collision detection, and positioning meth
         .def(py::init(), R"doc(
 Create a Rect with default values (0, 0, 0, 0).
         )doc")
-        .def(py::init<double, double, double, double>(), py::arg("x"), py::arg("y"), py::arg("w"),
-             py::arg("h"), R"doc(
+        .def(
+            py::init<double, double, double, double>(), py::arg("x"), py::arg("y"), py::arg("w"),
+            py::arg("h"), R"doc(
 Create a Rect with specified position and dimensions.
 
 Args:
@@ -308,25 +316,30 @@ Args:
     y (float): The y coordinate of the top-left corner.
     w (float): The width of the rectangle.
     h (float): The height of the rectangle.
-        )doc")
-        .def(py::init<double, double, const Vec2&>(), py::arg("x"), py::arg("y"), py::arg("size"),
-             R"doc(
+        )doc"
+        )
+        .def(
+            py::init<double, double, const Vec2&>(), py::arg("x"), py::arg("y"), py::arg("size"),
+            R"doc(
 Create a Rect with specified position and size vector.
 
 Args:
     x (float): The x coordinate of the top-left corner.
     y (float): The y coordinate of the top-left corner.
     size (Vec2): The size as a Vec2 (width, height).
-        )doc")
-        .def(py::init<const Vec2&, double, double>(), py::arg("pos"), py::arg("w"), py::arg("h"),
-             R"doc(
+        )doc"
+        )
+        .def(
+            py::init<const Vec2&, double, double>(), py::arg("pos"), py::arg("w"), py::arg("h"),
+            R"doc(
 Create a Rect with specified position vector and dimensions.
 
 Args:
     pos (Vec2): The position as a Vec2 (x, y).
     w (float): The width of the rectangle.
     h (float): The height of the rectangle.
-        )doc")
+        )doc"
+        )
         .def(py::init<const Vec2&, const Vec2&>(), py::arg("pos"), py::arg("size"), R"doc(
 Create a Rect with specified position and size vectors.
 
@@ -341,9 +354,12 @@ Args:
                     if (s.size() != 4)
                         throw std::runtime_error("Rect((x, y, w, h)) expects a 4-element sequence");
 
-                    return {s[0].cast<double>(), s[1].cast<double>(), s[2].cast<double>(),
-                            s[3].cast<double>()};
-                }),
+                    return {
+                        s[0].cast<double>(), s[1].cast<double>(), s[2].cast<double>(),
+                        s[3].cast<double>()
+                    };
+                }
+            ),
             R"doc(
 Create a Rect from a sequence of four elements.
 
@@ -352,7 +368,8 @@ Args:
 
 Raises:
     RuntimeError: If sequence doesn't contain exactly 4 elements.
-        )doc")
+        )doc"
+        )
 
         .def_readwrite("x", &Rect::x, R"doc(
 The x coordinate of the top-left corner.
@@ -394,10 +411,12 @@ The position of the top-right corner as (x, y).
         .def_property("mid_left", &Rect::getMidLeft, &Rect::setMidLeft, R"doc(
 The position of the middle-left point as (x, y).
         )doc")
-        .def_property("center", &Rect::getCenter, &Rect::setCenter,
-                      R"doc(
+        .def_property(
+            "center", &Rect::getCenter, &Rect::setCenter,
+            R"doc(
 The position of the center point as (x, y).
-        )doc")
+        )doc"
+        )
         .def_property("mid_right", &Rect::getMidRight, &Rect::setMidRight, R"doc(
 The position of the middle-right point as (x, y).
         )doc")
@@ -450,8 +469,9 @@ Args:
 Raises:
     ValueError: If this rectangle is larger than the clamp area.
         )doc")
-        .def("clamp", py::overload_cast<const Vec2&, const Vec2&>(&Rect::clamp), py::arg("min"),
-             py::arg("max"), R"doc(
+        .def(
+            "clamp", py::overload_cast<const Vec2&, const Vec2&>(&Rect::clamp), py::arg("min"),
+            py::arg("max"), R"doc(
 Clamp this rectangle to be within the specified bounds.
 
 Args:
@@ -460,7 +480,8 @@ Args:
 
 Raises:
     ValueError: If min >= max or rectangle is larger than the clamp area.
-        )doc")
+        )doc"
+        )
         .def("scale_by", py::overload_cast<double>(&Rect::scaleBy), py::arg("factor"), R"doc(
 Scale the rectangle by a uniform factor.
 
@@ -492,21 +513,26 @@ Raises:
         .def("__eq__", &Rect::operator==, py::arg("other"))
         .def("__ne__", &Rect::operator!=, py::arg("other"))
         .def("__bool__", [](const Rect& rect) -> bool { return rect.w > 0 && rect.h > 0; })
-        .def("__str__",
-             [](const Rect& rect) -> std::string
-             {
-                 return "[" + std::to_string(rect.x) + ", " + std::to_string(rect.y) + ", " +
-                        std::to_string(rect.w) + ", " + std::to_string(rect.h) + "]";
-             })
-        .def("__repr__",
-             [](const Rect& rect) -> std::string
-             {
-                 return "Rect(x=" + std::to_string(rect.x) + ", y=" + std::to_string(rect.y) +
-                        ", w=" + std::to_string(rect.w) + ", h=" + std::to_string(rect.h) + ")";
-             })
+        .def(
+            "__str__",
+            [](const Rect& rect) -> std::string
+            {
+                return "[" + std::to_string(rect.x) + ", " + std::to_string(rect.y) + ", " +
+                       std::to_string(rect.w) + ", " + std::to_string(rect.h) + "]";
+            }
+        )
+        .def(
+            "__repr__",
+            [](const Rect& rect) -> std::string
+            {
+                return "Rect(x=" + std::to_string(rect.x) + ", y=" + std::to_string(rect.y) +
+                       ", w=" + std::to_string(rect.w) + ", h=" + std::to_string(rect.h) + ")";
+            }
+        )
         .def(
             "__iter__", [](const Rect& rect) -> py::iterator
-            { return py::make_iterator(&rect.x, &rect.x + 4); }, py::keep_alive<0, 1>())
+            { return py::make_iterator(&rect.x, &rect.x + 4); }, py::keep_alive<0, 1>()
+        )
         .def("__len__", [](const Rect&) -> int { return 4; })
         .def(
             "__getitem__",
@@ -526,7 +552,8 @@ Raises:
                         throw py::index_error("Index out of range");
                 }
             },
-            py::arg("index"));
+            py::arg("index")
+        );
     py::implicitly_convertible<py::sequence, Rect>();
 
     auto subRect = module.def_submodule("rect", "Rectangle related functions");
@@ -541,8 +568,9 @@ Args:
 Returns:
     Rect: A new rectangle moved by the offset.
     )doc");
-    subRect.def("clamp", py::overload_cast<const Rect&, const Vec2&, const Vec2&>(&clamp),
-                py::arg("rect"), py::arg("min"), py::arg("max"), R"doc(
+    subRect.def(
+        "clamp", py::overload_cast<const Rect&, const Vec2&, const Vec2&>(&clamp), py::arg("rect"),
+        py::arg("min"), py::arg("max"), R"doc(
 Clamp a rectangle to be within the specified bounds.
 
 Args:
@@ -555,9 +583,11 @@ Returns:
 
 Raises:
     ValueError: If min >= max or rectangle is larger than the clamp area.
-    )doc");
-    subRect.def("clamp", py::overload_cast<const Rect&, const Rect&>(&clamp), py::arg("rect"),
-                py::arg("other"), R"doc(
+    )doc"
+    );
+    subRect.def(
+        "clamp", py::overload_cast<const Rect&, const Rect&>(&clamp), py::arg("rect"),
+        py::arg("other"), R"doc(
 Clamp a rectangle to be within another rectangle.
 
 Args:
@@ -569,9 +599,11 @@ Returns:
 
 Raises:
     ValueError: If rect is larger than the clamp area.
-    )doc");
-    subRect.def("scale_by", py::overload_cast<const Rect&, double>(&scaleBy), py::arg("rect"),
-                py::arg("factor"), R"doc(
+    )doc"
+    );
+    subRect.def(
+        "scale_by", py::overload_cast<const Rect&, double>(&scaleBy), py::arg("rect"),
+        py::arg("factor"), R"doc(
 Scale a rectangle by a uniform factor.
 
 Args:
@@ -583,9 +615,11 @@ Returns:
 
 Raises:
     ValueError: If factor is <= 0.
-    )doc");
-    subRect.def("scale_by", py::overload_cast<const Rect&, const Vec2&>(&scaleBy), py::arg("rect"),
-                py::arg("factor"), R"doc(
+    )doc"
+    );
+    subRect.def(
+        "scale_by", py::overload_cast<const Rect&, const Vec2&>(&scaleBy), py::arg("rect"),
+        py::arg("factor"), R"doc(
 Scale a rectangle by different factors for width and height.
 
 Args:
@@ -597,7 +631,8 @@ Returns:
 
 Raises:
     ValueError: If any factor is <= 0.
-    )doc");
+    )doc"
+    );
     subRect.def("scale_to", &scaleTo, py::arg("rect"), py::arg("size"), R"doc(
 Scale a rectangle to the specified size.
 

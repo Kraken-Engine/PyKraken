@@ -9,13 +9,19 @@ AllowShortLoopsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: Empty
 BreakBeforeBraces: Allman
 
-BreakConstructorInitializers: AfterColon
-ConstructorInitializerIndentWidth: 4
+PackConstructorInitializers: Never
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
 
 AlwaysBreakTemplateDeclarations: Yes
 PenaltyBreakTemplateDeclaration: 0
 
 AccessModifierOffset: -2
+
+BreakBeforeTernaryOperators: true
+PenaltyBreakBeforeFirstCallParameter: 1000
+PenaltyBreakAssignment: 100
+
+AlignAfterOpenBracket: BlockIndent
 ---
 Language: Cpp
 DerivePointerAlignment: false

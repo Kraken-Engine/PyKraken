@@ -21,19 +21,30 @@ overloaded(Ts...) -> overloaded<Ts...>;
 
 namespace kn
 {
-InputAction::InputAction(const SDL_Scancode scan) : data(scan) {}
-
-InputAction::InputAction(const Keycode key) : data(key) {}
-
-InputAction::InputAction(const MouseButton mButton) : data(mButton) {}
-
-InputAction::InputAction(const SDL_GamepadButton cButton, const int slot) :
-    data(cButton), padSlot(slot)
+InputAction::InputAction(const SDL_Scancode scan)
+    : data(scan)
 {
 }
 
-InputAction::InputAction(const SDL_GamepadAxis axis, const bool isPositive, const int slot) :
-    data(std::make_pair(axis, isPositive)), padSlot(slot)
+InputAction::InputAction(const Keycode key)
+    : data(key)
+{
+}
+
+InputAction::InputAction(const MouseButton mButton)
+    : data(mButton)
+{
+}
+
+InputAction::InputAction(const SDL_GamepadButton cButton, const int slot)
+    : data(cButton),
+      padSlot(slot)
+{
+}
+
+InputAction::InputAction(const SDL_GamepadAxis axis, const bool isPositive, const int slot)
+    : data(std::make_pair(axis, isPositive)),
+      padSlot(slot)
 {
 }
 
@@ -54,8 +65,10 @@ void unbind(const std::string& name)
     _inputBindings.erase(name);
 }
 
-Vec2 getDirection(const std::string& up, const std::string& right, const std::string& down,
-                  const std::string& left)
+Vec2 getDirection(
+    const std::string& up, const std::string& right, const std::string& down,
+    const std::string& left
+)
 {
     Vec2 directionVec;
     const Vec2 leftStick = gamepad::getLeftStick();
@@ -108,7 +121,8 @@ Vec2 getDirection(const std::string& up, const std::string& right, const std::st
                         process(SDL_GAMEPAD_AXIS_RIGHTY, rightStick.y);
                     },
                 },
-                action.data);
+                action.data
+            );
         }
     };
 
@@ -175,7 +189,8 @@ double getAxis(const std::string& negative, const std::string& positive)
                         process(SDL_GAMEPAD_AXIS_RIGHTY, rightStick.y);
                     },
                 },
-                action.data);
+                action.data
+            );
         }
     };
 
@@ -204,8 +219,10 @@ bool isPressed(const std::string& name)
                     { return gamepad::isPressed(cButton); },
                     [](const std::pair<SDL_GamepadAxis, bool>&) -> bool { return false; },
                 },
-                action.data);
-        });
+                action.data
+            );
+        }
+    );
 }
 
 bool isJustPressed(const std::string& name)
@@ -227,8 +244,10 @@ bool isJustPressed(const std::string& name)
                     { return gamepad::isJustPressed(cButton); },
                     [](const std::pair<SDL_GamepadAxis, bool>&) -> bool { return false; },
                 },
-                action.data);
-        });
+                action.data
+            );
+        }
+    );
 }
 
 bool isJustReleased(const std::string& name)
@@ -251,8 +270,10 @@ bool isJustReleased(const std::string& name)
                     { return gamepad::isJustReleased(cButton); },
                     [](const std::pair<SDL_GamepadAxis, bool>&) -> bool { return false; },
                 },
-                action.data);
-        });
+                action.data
+            );
+        }
+    );
 }
 
 void _bind(py::module_& module)
@@ -282,24 +303,28 @@ Args:
     mouse_button (MouseButton): Mouse button code.
         )doc")
 
-        .def(py::init<SDL_GamepadButton, int>(), py::arg("gamepad_button"), py::arg("slot") = 0,
-             R"doc(
+        .def(
+            py::init<SDL_GamepadButton, int>(), py::arg("gamepad_button"), py::arg("slot") = 0,
+            R"doc(
 Create an input action from a gamepad button.
 
 Args:
     gamepad_button (GamepadButton): Gamepad button code.
     slot (int, optional): Gamepad slot (default is 0).
-        )doc")
+        )doc"
+        )
 
-        .def(py::init<SDL_GamepadAxis, bool, int>(), py::arg("gamepad_axis"),
-             py::arg("is_positive"), py::arg("slot") = 0, R"doc(
+        .def(
+            py::init<SDL_GamepadAxis, bool, int>(), py::arg("gamepad_axis"), py::arg("is_positive"),
+            py::arg("slot") = 0, R"doc(
 Create an input action from a gamepad axis direction.
 
 Args:
     gamepad_axis (GamepadAxis): Gamepad axis code.
     is_positive (bool): True for positive direction, False for negative.
     slot (int, optional): Gamepad slot (default is 0).
-        )doc");
+        )doc"
+        );
 
     auto subInput = module.def_submodule("input", "Input handling and action binding");
 
@@ -318,8 +343,9 @@ Args:
     name (str): The binding name to remove.
         )doc");
 
-    subInput.def("get_direction", &getDirection, py::arg("up"), py::arg("right"), py::arg("down"),
-                 py::arg("left"), R"doc(
+    subInput.def(
+        "get_direction", &getDirection, py::arg("up"), py::arg("right"), py::arg("down"),
+        py::arg("left"), R"doc(
 Get a directional vector based on named input actions.
 
 This is typically used for WASD-style or D-pad movement.
@@ -332,7 +358,8 @@ Args:
 
 Returns:
     Vec2: A normalized vector representing the intended direction.
-        )doc");
+        )doc"
+    );
 
     subInput.def("get_axis", &getAxis, py::arg("negative"), py::arg("positive"), R"doc(
 Get a 1D axis value based on two opposing input actions.

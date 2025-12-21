@@ -31,7 +31,9 @@ static bool hasSupportedExtension(const std::string& path)
     return ext == "wav" || ext == "mp3" || ext == "flac";
 }
 
-Audio::Audio(const std::string& path, const float volume) : m_path(path), m_volume(volume)
+Audio::Audio(const std::string& path, const float volume)
+    : m_path(path),
+      m_volume(volume)
 {
     if (!hasSupportedExtension(path))
         throw std::invalid_argument("Unsupported audio format: " + path);
@@ -64,8 +66,9 @@ Audio::~Audio()
 
         // Unregister this instance
         std::lock_guard g(_instancesMutex);
-        std::erase_if(_audioInstances,
-                      [&](auto& w) { return w.expired() || w.lock().get() == this; });
+        std::erase_if(
+            _audioInstances, [&](auto& w) { return w.expired() || w.lock().get() == this; }
+        );
     }
 }
 
@@ -88,7 +91,8 @@ void Audio::play(const int fadeInMs, const bool loop)
     // Mark for GC on end.
     ma_sound_set_end_callback(
         &v->snd, [](void* user, ma_sound*)
-        { static_cast<Voice*>(user)->done.store(true, std::memory_order_relaxed); }, v.get());
+        { static_cast<Voice*>(user)->done.store(true, std::memory_order_relaxed); }, v.get()
+    );
 
     ma_sound_start(&v->snd);
 
@@ -119,17 +123,19 @@ float Audio::getVolume() const
 void Audio::cleanup()
 {
     std::lock_guard g(m_mutex);
-    std::erase_if(m_voices,
-                  [&](const std::unique_ptr<Voice>& v)
-                  {
-                      if (v->done.load(std::memory_order_relaxed) && !ma_sound_is_playing(&v->snd))
-                      {
-                          ma_sound_set_end_callback(&v->snd, nullptr, nullptr);
-                          ma_sound_uninit(&v->snd);
-                          return true;
-                      }
-                      return false;
-                  });
+    std::erase_if(
+        m_voices,
+        [&](const std::unique_ptr<Voice>& v)
+        {
+            if (v->done.load(std::memory_order_relaxed) && !ma_sound_is_playing(&v->snd))
+            {
+                ma_sound_set_end_callback(&v->snd, nullptr, nullptr);
+                ma_sound_uninit(&v->snd);
+                return true;
+            }
+            return false;
+        }
+    );
 }
 
 ma_uint64 Audio::msToFrames(const int ms)
@@ -153,7 +159,8 @@ void Audio::doFadeStop(ma_sound& snd, const float currentVol, const int fadeOutM
     ma_sound_set_stop_time_in_pcm_frames(&snd, now + fadeFrames);
 }
 
-AudioStream::AudioStream(const std::string& filePath, const float volume) : m_volume(volume)
+AudioStream::AudioStream(const std::string& filePath, const float volume)
+    : m_volume(volume)
 {
     if (!hasSupportedExtension(filePath))
         throw std::invalid_argument("Unsupported audio format: " + filePath);
@@ -408,18 +415,20 @@ A decoded audio object that supports multiple simultaneous playbacks.
 Audio objects decode the entire file into memory for low-latency playback. They support
 multiple concurrent playbacks of the same sound. Use this for short sound effects that may need to overlap.
     )doc")
-        .def(py::init(
-                 [](const std::string& path, float volume) -> std::shared_ptr<Audio>
-                 {
-                     auto sp = std::make_shared<Audio>(path, volume);
-                     {
-                         std::lock_guard g(_instancesMutex);
-                         _audioInstances.push_back(sp);
-                     }
-                     return sp;
-                 }),
-             py::arg("file_path"), py::arg("volume") = 1.0f,
-             R"doc(
+        .def(
+            py::init(
+                [](const std::string& path, float volume) -> std::shared_ptr<Audio>
+                {
+                    auto sp = std::make_shared<Audio>(path, volume);
+                    {
+                        std::lock_guard g(_instancesMutex);
+                        _audioInstances.push_back(sp);
+                    }
+                    return sp;
+                }
+            ),
+            py::arg("file_path"), py::arg("volume") = 1.0f,
+            R"doc(
 Create an Audio object from a file path with optional volume.
 
 Args:
@@ -428,7 +437,8 @@ Args:
 
 Raises:
     RuntimeError: If the audio file cannot be loaded or decoded.
-        )doc")
+        )doc"
+        )
 
         .def_property("volume", &Audio::getVolume, &Audio::setVolume, R"doc(
 The volume level for new and existing playbacks.
@@ -440,8 +450,9 @@ Type:
     float: Volume level (0.0 = silent, 1.0 = original volume, >1.0 = amplified).
         )doc")
 
-        .def("play", &Audio::play, py::arg("fade_in_ms") = 0, py::arg("loop") = false,
-             R"doc(
+        .def(
+            "play", &Audio::play, py::arg("fade_in_ms") = 0, py::arg("loop") = false,
+            R"doc(
 Play the audio with optional fade-in time and loop setting.
 
 Creates a new voice for playback, allowing multiple simultaneous plays of the same audio.
@@ -453,7 +464,8 @@ Args:
 
 Raises:
     RuntimeError: If audio playback initialization fails.
-        )doc")
+        )doc"
+        )
         .def("stop", &Audio::stop, py::arg("fade_out_ms") = 0, R"doc(
 Stop all active playbacks of this audio.
 
@@ -473,8 +485,9 @@ AudioStream objects stream audio data from disk during playback, using minimal m
 They support only one playback instance at a time, making them ideal for background
 music, long audio tracks, or when memory usage is a concern.
     )doc")
-        .def(py::init<const std::string&, float>(), py::arg("file_path"), py::arg("volume") = 1.0f,
-             R"doc(
+        .def(
+            py::init<const std::string&, float>(), py::arg("file_path"), py::arg("volume") = 1.0f,
+            R"doc(
 Create an AudioStream object from a file path with optional volume.
 
 Args:
@@ -483,7 +496,8 @@ Args:
 
 Raises:
     RuntimeError: If the audio file cannot be opened for streaming.
-        )doc")
+        )doc"
+        )
 
         .def_property("volume", &AudioStream::getVolume, &AudioStream::setVolume, R"doc(
 The volume level of the audio stream.
@@ -497,9 +511,10 @@ Type:
 The current playback time position in seconds.
     )doc")
 
-        .def("play", &AudioStream::play, py::arg("fade_in_ms") = 0, py::arg("loop") = false,
-             py::arg("start_time_seconds") = 0.0f,
-             R"doc(
+        .def(
+            "play", &AudioStream::play, py::arg("fade_in_ms") = 0, py::arg("loop") = false,
+            py::arg("start_time_seconds") = 0.0f,
+            R"doc(
 Play the audio stream with optional fade-in time, loop setting, and start position.
 
 Starts playback from the specified time position. If the stream is already
@@ -509,7 +524,8 @@ Args:
     fade_in_ms (int, optional): Fade-in duration in milliseconds. Defaults to 0.
     loop (bool, optional): Whether to loop the audio continuously. Defaults to False.
     start_time_seconds (float, optional): Time position in seconds to start playback from. Defaults to 0.0.
-        )doc")
+        )doc"
+        )
         .def("stop", &AudioStream::stop, py::arg("fade_out_ms") = 0, R"doc(
 Stop the audio stream playback.
 

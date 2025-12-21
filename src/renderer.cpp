@@ -22,7 +22,8 @@ void _init(SDL_Window* window, const int width, const int height)
 {
     _gpuDevice = SDL_CreateGPUDevice(
         SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_DXIL | SDL_GPU_SHADERFORMAT_MSL, true,
-        nullptr);
+        nullptr
+    );
     if (_gpuDevice == nullptr)
         throw std::runtime_error("GPU device failed to create: " + std::string(SDL_GetError()));
 
@@ -88,8 +89,9 @@ void setTarget(const std::shared_ptr<Texture>& target)
     if (!target)
     {
         if (!SDL_SetRenderTarget(_renderer, nullptr))
-            throw std::runtime_error("Failed to unset render target: " +
-                                     std::string(SDL_GetError()));
+            throw std::runtime_error(
+                "Failed to unset render target: " + std::string(SDL_GetError())
+            );
         return;
     }
 
@@ -200,11 +202,14 @@ void draw(const std::shared_ptr<Texture>& texture, Transform transform, const Re
         srcSDLRect = static_cast<SDL_FRect>(srcRect);
     }
 
-    SDL_FPoint pivot = {dstSDLRect.w * static_cast<float>(transform.pivot.x),
-                        dstSDLRect.h * static_cast<float>(transform.pivot.y)};
+    SDL_FPoint pivot =
+        {dstSDLRect.w * static_cast<float>(transform.pivot.x),
+         dstSDLRect.h * static_cast<float>(transform.pivot.y)};
 
-    if (!SDL_RenderTextureRotated(_renderer, texture->getSDL(), &srcSDLRect, &dstSDLRect,
-                                  TO_DEGREES(transform.angle), &pivot, flipAxis))
+    if (!SDL_RenderTextureRotated(
+            _renderer, texture->getSDL(), &srcSDLRect, &dstSDLRect, TO_DEGREES(transform.angle),
+            &pivot, flipAxis
+        ))
         throw std::runtime_error("Failed to render texture: " + std::string(SDL_GetError()));
 }
 
@@ -257,10 +262,12 @@ Args:
 
 Raises:
     ValueError: If color values are not between 0 and 255.
-    )doc");
+    )doc"
+    );
 
-    subRenderer.def("clear", py::overload_cast<uint8_t, uint8_t, uint8_t, uint8_t>(&clear),
-                    py::arg("r"), py::arg("g"), py::arg("b"), py::arg("a") = 255, R"doc(
+    subRenderer.def(
+        "clear", py::overload_cast<uint8_t, uint8_t, uint8_t, uint8_t>(&clear), py::arg("r"),
+        py::arg("g"), py::arg("b"), py::arg("a") = 255, R"doc(
 Clear the renderer with the specified color.
 
 Args:
@@ -268,7 +275,8 @@ Args:
     g (int): Green component (0-255).
     b (int): Blue component (0-255).
     a (int, optional): Alpha component (0-255). Defaults to 255.
-    )doc");
+    )doc"
+    );
 
     subRenderer.def("present", &present, R"doc(
 Present the rendered content to the screen.
@@ -302,15 +310,16 @@ Raises:
         {
             try
             {
-                const auto transform =
-                    transformObj.is_none() ? Transform() : transformObj.cast<Transform>();
+                const auto transform = transformObj.is_none() ? Transform()
+                                                              : transformObj.cast<Transform>();
                 const auto srcRect = srcObj.is_none() ? Rect() : srcObj.cast<Rect>();
                 draw(texture, transform, srcRect);
             }
             catch (const py::cast_error&)
             {
                 throw py::type_error(
-                    "Invalid type for arguments, expected (Texture, Transform, Rect)");
+                    "Invalid type for arguments, expected (Texture, Transform, Rect)"
+                );
             }
         },
         py::arg("texture"), py::arg("transform") = py::none(), py::arg("src") = py::none(), R"doc(
@@ -324,7 +333,8 @@ Args:
 Raises:
     TypeError: If arguments are not of expected types.
     RuntimeError: If renderer is not initialized.
-        )doc");
+        )doc"
+    );
 
     subRenderer.def(
         "read_pixels",
@@ -348,6 +358,7 @@ Returns:
     PixelArray: An array containing the pixel data.
 Raises:
     RuntimeError: If reading pixels fails.
-        )doc");
+        )doc"
+    );
 }
 }  // namespace kn::renderer

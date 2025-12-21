@@ -15,8 +15,8 @@ class Vec2;
 
 struct InputAction
 {
-    using InputData = std::variant<SDL_Scancode, Keycode, MouseButton, SDL_GamepadButton,
-                                   std::pair<SDL_GamepadAxis, bool>>;
+    using InputData = std::variant<
+        SDL_Scancode, Keycode, MouseButton, SDL_GamepadButton, std::pair<SDL_GamepadAxis, bool>>;
     InputData data;
     int padSlot = 0;
 
@@ -35,8 +35,10 @@ void bind(const std::string& name, const std::vector<InputAction>& actions);
 
 void unbind(const std::string& name);
 
-Vec2 getDirection(const std::string& up = "", const std::string& right = "",
-                  const std::string& down = "", const std::string& left = "");
+Vec2 getDirection(
+    const std::string& up = "", const std::string& right = "", const std::string& down = "",
+    const std::string& left = ""
+);
 
 double getAxis(const std::string& negative = "", const std::string& positive = "");
 

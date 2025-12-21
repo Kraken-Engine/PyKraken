@@ -43,8 +43,9 @@ static void init(const bool debug = false)
     if (debug)
         kn::log::_init();
 
-    kn::log::info("Kraken Engine v{}.{}.{}", KRAKEN_MAJOR_VERSION, KRAKEN_MINOR_VERSION,
-                  KRAKEN_MICRO_VERSION);
+    kn::log::info(
+        "Kraken Engine v{}.{}.{}", KRAKEN_MAJOR_VERSION, KRAKEN_MINOR_VERSION, KRAKEN_MICRO_VERSION
+    );
 
     // log platform and architecture
     kn::log::info("Platform: {} ({})", getPlatform(), getArchitecture());

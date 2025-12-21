@@ -7,9 +7,15 @@ namespace kn
 static Vec2 _cameraPos;
 Camera* Camera::active = nullptr;
 
-Camera::Camera(const Vec2& pos) : pos(pos) {}
+Camera::Camera(const Vec2& pos)
+    : pos(pos)
+{
+}
 
-Camera::Camera(const double x, const double y) : pos(x, y) {}
+Camera::Camera(const double x, const double y)
+    : pos(x, y)
+{
+}
 
 void Camera::setPos(const Vec2& newPos)
 {

@@ -95,7 +95,8 @@ void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
             e.data["window_id"] = sdlEvent.edit_candidates.windowID;
             e.data["candidates"] = std::vector<std::string>(
                 sdlEvent.edit_candidates.candidates,
-                sdlEvent.edit_candidates.candidates + sdlEvent.edit_candidates.num_candidates);
+                sdlEvent.edit_candidates.candidates + sdlEvent.edit_candidates.num_candidates
+            );
             e.data["num_candidates"] = sdlEvent.edit_candidates.num_candidates;
             e.data["selected_candidate"] = sdlEvent.edit_candidates.selected_candidate;
             e.data["horizontal"] = sdlEvent.edit_candidates.horizontal;
@@ -112,8 +113,9 @@ void _bind(py::module_& module)
 {
     auto subKey = module.def_submodule("key", "Keyboard key state checks");
 
-    subKey.def("is_pressed", py::overload_cast<SDL_Scancode>(&isPressed), py::arg("scancode"),
-               R"doc(
+    subKey.def(
+        "is_pressed", py::overload_cast<SDL_Scancode>(&isPressed), py::arg("scancode"),
+        R"doc(
 Check if a key is currently held down (by scancode).
 
 Args:
@@ -121,10 +123,12 @@ Args:
 
 Returns:
     bool: True if the key is held.
-        )doc");
+        )doc"
+    );
 
-    subKey.def("is_just_pressed", py::overload_cast<SDL_Scancode>(&isJustPressed),
-               py::arg("scancode"), R"doc(
+    subKey.def(
+        "is_just_pressed", py::overload_cast<SDL_Scancode>(&isJustPressed), py::arg("scancode"),
+        R"doc(
 Check if a key was pressed this frame (by scancode).
 
 Args:
@@ -132,10 +136,12 @@ Args:
 
 Returns:
     bool: True if the key was newly pressed.
-        )doc");
+        )doc"
+    );
 
-    subKey.def("is_just_released", py::overload_cast<SDL_Scancode>(&isJustReleased),
-               py::arg("scancode"), R"doc(
+    subKey.def(
+        "is_just_released", py::overload_cast<SDL_Scancode>(&isJustReleased), py::arg("scancode"),
+        R"doc(
 Check if a key was released this frame (by scancode).
 
 Args:
@@ -143,10 +149,12 @@ Args:
 
 Returns:
     bool: True if the key was newly released.
-        )doc");
+        )doc"
+    );
 
-    subKey.def("is_pressed", py::overload_cast<Keycode>(&isPressed), py::arg("keycode"),
-               R"doc(
+    subKey.def(
+        "is_pressed", py::overload_cast<Keycode>(&isPressed), py::arg("keycode"),
+        R"doc(
 Check if a key is currently held down (by keycode).
 
 Args:
@@ -154,10 +162,12 @@ Args:
 
 Returns:
     bool: True if the key is held.
-        )doc");
+        )doc"
+    );
 
-    subKey.def("is_just_pressed", py::overload_cast<Keycode>(&isJustPressed), py::arg("keycode"),
-               R"doc(
+    subKey.def(
+        "is_just_pressed", py::overload_cast<Keycode>(&isJustPressed), py::arg("keycode"),
+        R"doc(
 Check if a key was pressed this frame (by keycode).
 
 Args:
@@ -165,10 +175,12 @@ Args:
 
 Returns:
     bool: True if the key was newly pressed.
-        )doc");
+        )doc"
+    );
 
-    subKey.def("is_just_released", py::overload_cast<Keycode>(&isJustReleased), py::arg("keycode"),
-               R"doc(
+    subKey.def(
+        "is_just_released", py::overload_cast<Keycode>(&isJustReleased), py::arg("keycode"),
+        R"doc(
 Check if a key was released this frame (by keycode).
 
 Args:
@@ -176,6 +188,7 @@ Args:
 
 Returns:
     bool: True if the key was newly released.
-        )doc");
+        )doc"
+    );
 }
 }  // namespace kn::key

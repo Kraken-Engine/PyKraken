@@ -23,9 +23,14 @@
 
 namespace kn
 {
-TileLayer::TileLayer(const Type type, const bool isVisible, std::string name,
-                     const std::shared_ptr<Texture>& tileSetTexture) :
-    type(type), isVisible(isVisible), name(std::move(name)), m_tileSetTexture(tileSetTexture)
+TileLayer::TileLayer(
+    const Type type, const bool isVisible, std::string name,
+    const std::shared_ptr<Texture>& tileSetTexture
+)
+    : type(type),
+      isVisible(isVisible),
+      name(std::move(name)),
+      m_tileSetTexture(tileSetTexture)
 {
 }
 
@@ -55,8 +60,9 @@ void TileLayer::render() const
     }
 }
 
-void TileLayer::buildTileGrid(const int mapWidth, const int mapHeight, const int tileWidth,
-                              const int tileHeight)
+void TileLayer::buildTileGrid(
+    const int mapWidth, const int mapHeight, const int tileWidth, const int tileHeight
+)
 {
     if (type != TILE)
         return;
@@ -83,10 +89,12 @@ void TileLayer::buildTileGrid(const int mapWidth, const int mapHeight, const int
     {
         const auto& tile = tiles[i];
 
-        const int column =
-            static_cast<int>(std::floor(tile.dst.x / static_cast<double>(m_tileWidth)));
-        const int row =
-            static_cast<int>(std::floor(tile.dst.y / static_cast<double>(m_tileHeight)));
+        const int column = static_cast<int>(
+            std::floor(tile.dst.x / static_cast<double>(m_tileWidth))
+        );
+        const int row = static_cast<int>(
+            std::floor(tile.dst.y / static_cast<double>(m_tileHeight))
+        );
 
         if (column < 0 || column >= m_gridWidth || row < 0 || row >= m_gridHeight)
             continue;
@@ -101,14 +109,16 @@ std::vector<Tile> TileLayer::getFromArea(const Rect& area) const
 {
     std::vector<Tile> result;
     result.reserve(4);
-    forEachTileInArea(area,
-                      [&result, &area](const Tile& tile) -> bool
-                      {
-                          if (!collision::overlap(tile.collider, area))
-                              return true;
-                          result.push_back(tile);
-                          return true;
-                      });
+    forEachTileInArea(
+        area,
+        [&result, &area](const Tile& tile) -> bool
+        {
+            if (!collision::overlap(tile.collider, area))
+                return true;
+            result.push_back(tile);
+            return true;
+        }
+    );
     return result;
 }
 
@@ -120,8 +130,8 @@ std::optional<Tile> TileLayer::getTileAt(const int column, const int row) const
     if (column < 0 || column >= m_gridWidth || row < 0 || row >= m_gridHeight)
         return std::nullopt;
 
-    const size_t index =
-        static_cast<size_t>(row) * static_cast<size_t>(m_gridWidth) + static_cast<size_t>(column);
+    const size_t index = static_cast<size_t>(row) * static_cast<size_t>(m_gridWidth) +
+                         static_cast<size_t>(column);
     const int tileIndex = m_tileIndices[index];
     if (tileIndex < 0)
         return std::nullopt;
@@ -133,7 +143,8 @@ TileMap::TileMap(const std::string& tmxPath, int borderSize)
 {
     if (renderer::_get() == nullptr)
         throw std::runtime_error(
-            "Renderer not initialized; create a window before loading a TileMap");
+            "Renderer not initialized; create a window before loading a TileMap"
+        );
 
     pugi::xml_document doc;
     if (!doc.load_file(tmxPath.c_str()))
@@ -151,11 +162,13 @@ TileMap::TileMap(const std::string& tmxPath, int borderSize)
     const auto tileSetTexture =
         std::make_shared<Texture>(texturePath, renderer::getDefaultScaleMode());
 
-    std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> surface(
-        IMG_Load(texturePath.c_str()), &SDL_DestroySurface);
+    std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)>
+        surface(IMG_Load(texturePath.c_str()), &SDL_DestroySurface);
     if (!surface)
-        throw std::runtime_error("Failed to load tileset image surface: " + texturePath + " (" +
-                                 std::string(SDL_GetError()) + ")");
+        throw std::runtime_error(
+            "Failed to load tileset image surface: " + texturePath + " (" +
+            std::string(SDL_GetError()) + ")"
+        );
     if (surface == nullptr)
         throw std::runtime_error("Failed to load tileset image: " + texturePath);
 
@@ -163,8 +176,8 @@ TileMap::TileMap(const std::string& tmxPath, int borderSize)
     const int mapHeight = std::stoi(map.attribute("height").value());
     const int tileWidth = std::stoi(map.attribute("tilewidth").value());
     const int tileHeight = std::stoi(map.attribute("tileheight").value());
-    const int tileSetWidth =
-        static_cast<int>(tileSetTexture->getSize().x) / (tileWidth + 2 * borderSize);
+    const int tileSetWidth = static_cast<int>(tileSetTexture->getSize().x) /
+                             (tileWidth + 2 * borderSize);
 
     for (const auto& child : map.children())
     {
@@ -187,7 +200,8 @@ TileMap::TileMap(const std::string& tmxPath, int borderSize)
             std::stringstream ss(dataContent);
             std::string value;
             layerPtr = std::make_shared<TileLayer>(
-                TileLayer(TileLayer::TILE, isVisible, layerName, tileSetTexture));
+                TileLayer(TileLayer::TILE, isVisible, layerName, tileSetTexture)
+            );
 
             int tileCounter = 0;
             while (std::getline(ss, value, ','))
@@ -225,7 +239,8 @@ TileMap::TileMap(const std::string& tmxPath, int borderSize)
                 tiles.push_back(
                     {layerPtr, tileSrcRect, tileDstRect,
                      getFittedRect(surface.get(), tileSrcRect, tileDstRect.getTopLeft()),
-                     horizontalFlip, verticalFlip, antiDiagonalFlip, 0.0});
+                     horizontalFlip, verticalFlip, antiDiagonalFlip, 0.0}
+                );
                 tileCounter++;
             }
             layerPtr->tiles = std::move(tiles);
@@ -234,7 +249,8 @@ TileMap::TileMap(const std::string& tmxPath, int borderSize)
         else if (childName == "objectgroup")
         {
             layerPtr = std::make_shared<TileLayer>(
-                TileLayer(TileLayer::OBJECT, isVisible, layerName, tileSetTexture));
+                TileLayer(TileLayer::OBJECT, isVisible, layerName, tileSetTexture)
+            );
 
             for (const auto& object : child.children())
             {
@@ -281,7 +297,8 @@ TileMap::TileMap(const std::string& tmxPath, int borderSize)
                 tiles.push_back(
                     {layerPtr, objectSrcRect, objectDstRect,
                      getFittedRect(surface.get(), objectSrcRect, objectDstRect.getTopLeft()),
-                     horizontalFlip, verticalFlip, false, angleRad});
+                     horizontalFlip, verticalFlip, false, angleRad}
+                );
             }
             layerPtr->tiles = std::move(tiles);
         }
@@ -289,8 +306,9 @@ TileMap::TileMap(const std::string& tmxPath, int borderSize)
     }
 }
 
-std::shared_ptr<const TileLayer> TileMap::getLayer(const std::string& name,
-                                                   const TileLayer::Type type) const
+std::shared_ptr<const TileLayer> TileMap::getLayer(
+    const std::string& name, const TileLayer::Type type
+) const
 {
     for (const auto& layer : m_layerVec)
     {
@@ -321,7 +339,8 @@ void TileMap::render() const
 }
 
 std::vector<Tile> TileMap::getTileCollection(
-    const std::vector<std::shared_ptr<const TileLayer>>& layers)
+    const std::vector<std::shared_ptr<const TileLayer>>& layers
+)
 {
     std::vector<Tile> tiles;
     if (layers.empty())
@@ -369,8 +388,10 @@ Rect TileMap::getFittedRect(SDL_Surface* surface, const Rect& srcRect, const Vec
             right = std::max(right, dx - x);
         }
 
-    return {static_cast<int>(position.x) + left, static_cast<int>(position.y) + top,
-            right - left + 1, bottom - top + 1};
+    return {
+        static_cast<int>(position.x) + left, static_cast<int>(position.y) + top, right - left + 1,
+        bottom - top + 1
+    };
 }
 
 namespace tile_map
@@ -401,7 +422,8 @@ Get the owning Layer.
 
 Returns:
     Layer | None: The owning Layer if it still exists; otherwise None.
-            )doc")
+            )doc"
+        )
         .def_readonly("src", &Tile::src, R"doc(
 The source rectangle within the tileset texture.
         )doc")
@@ -475,8 +497,9 @@ Loads and renders TMX tile maps.
 
 Parses a Tiled TMX file, loads the tileset texture, and exposes layers and tiles for rendering and queries.
     )doc")
-        .def(py::init<const std::string&, int>(), py::arg("tmx_path"), py::arg("border_size") = 0,
-             R"doc(
+        .def(
+            py::init<const std::string&, int>(), py::arg("tmx_path"), py::arg("border_size") = 0,
+            R"doc(
 Create a TileMap by loading a TMX file.
 
 Args:
@@ -485,9 +508,11 @@ Args:
 
 Raises:
     RuntimeError: If the TMX or TSX files cannot be loaded or parsed.
-             )doc")
-        .def("get_layer", &TileMap::getLayer, py::arg("name"), py::arg("type") = TileLayer::TILE,
-             R"doc(
+             )doc"
+        )
+        .def(
+            "get_layer", &TileMap::getLayer, py::arg("name"), py::arg("type") = TileLayer::TILE,
+            R"doc(
 Get a layer by name and type.
 
 Args:
@@ -499,7 +524,8 @@ Returns:
 
 Raises:
     ValueError: If no matching layer is found or the type doesn't match.
-             )doc")
+             )doc"
+        )
         .def("get_layers", &TileMap::getLayers, R"doc(
 Get all layers in the map.
 
@@ -510,8 +536,9 @@ Returns:
 Render all visible layers.
         )doc")
 
-        .def_static("get_tile_collection", &TileMap::getTileCollection, py::arg("layers"),
-                    R"doc(
+        .def_static(
+            "get_tile_collection", &TileMap::getTileCollection, py::arg("layers"),
+            R"doc(
 Collect all tiles from the provided layers into a single list.
 
 Args:
@@ -519,7 +546,8 @@ Args:
 
 Returns:
     list[Tile]: A flat list of tiles from the given layers.
-                    )doc");
+                    )doc"
+        );
 }
 }  // namespace tile_map
 }  // namespace kn

@@ -89,8 +89,9 @@ void _bind(py::module_& module)
 
     py::module_ subViewport = module.def_submodule("viewport", "Viewport management functions");
 
-    subViewport.def("layout", &layout, py::arg("count"), py::arg("mode") = ViewportMode::VERTICAL,
-                    R"doc(
+    subViewport.def(
+        "layout", &layout, py::arg("count"), py::arg("mode") = ViewportMode::VERTICAL,
+        R"doc(
 Layout the screen into multiple viewports.
 The viewports are created with the current renderer target resolution in mind.
 
@@ -101,7 +102,8 @@ Args:
 
 Returns:
     list[Rect]: A list of Rects representing the viewports.
-                    )doc");
+                    )doc"
+    );
 
     subViewport.def("set", &set, py::arg("rect"), R"doc(
 Set the current viewport to the given rectangle.

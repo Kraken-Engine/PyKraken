@@ -14,7 +14,8 @@ static double _delta = 0.0;
 static double _maxDelta = std::numeric_limits<double>::infinity();
 static double _scale = 1.0;
 
-Timer::Timer(const double duration) : m_duration(duration)
+Timer::Timer(const double duration)
+    : m_duration(duration)
 {
     if (duration <= 0.0)
         throw std::invalid_argument("Timer duration must be greater than 0");

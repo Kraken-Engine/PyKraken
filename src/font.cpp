@@ -265,8 +265,10 @@ void _init()
     if (!TTF_Init())
         throw std::runtime_error("Failed to initialize SDL_ttf");
 
-    log::info("SDL_ttf version: {}.{}.{}", SDL_TTF_MAJOR_VERSION, SDL_TTF_MINOR_VERSION,
-              SDL_TTF_MICRO_VERSION);
+    log::info(
+        "SDL_ttf version: {}.{}.{}", SDL_TTF_MAJOR_VERSION, SDL_TTF_MINOR_VERSION,
+        SDL_TTF_MICRO_VERSION
+    );
 }
 
 void _quit()
@@ -320,8 +322,9 @@ Note:
     A window/renderer must be created before using fonts. Typically you should
     call kn.window.create(...) first, which initializes the font engine.
     )doc")
-        .def(py::init<const std::string&, int>(), py::arg("file_dir"), py::arg("pt_size"),
-             R"doc(
+        .def(
+            py::init<const std::string&, int>(), py::arg("file_dir"), py::arg("pt_size"),
+            R"doc(
 Create a Font.
 
 Args:
@@ -333,7 +336,8 @@ Args:
 
 Raises:
     RuntimeError: If the font fails to load.
-    )doc")
+    )doc"
+        )
 
         .def_property("alignment", &Font::getAlignment, &Font::setAlignment, R"doc(
 Get or set the text alignment for wrapped text.
@@ -358,10 +362,12 @@ Get or set whether italic text style is enabled.
         .def_property("underline", &Font::isUnderline, &Font::setUnderline, R"doc(
 Get or set whether underline text style is enabled.
         )doc")
-        .def_property("strikethrough", &Font::isStrikethrough, &Font::setStrikethrough,
-                      R"doc(
+        .def_property(
+            "strikethrough", &Font::isStrikethrough, &Font::setStrikethrough,
+            R"doc(
 Get or set whether strikethrough text style is enabled.
-        )doc")
+        )doc"
+        )
         .def_property("line_spacing", &Font::getLineSpacing, &Font::setLineSpacing, R"doc(
 Get or set the spacing between lines of text in pixels.
         )doc")

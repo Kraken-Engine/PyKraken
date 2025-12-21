@@ -34,8 +34,9 @@ class PixelArray
 
     void fill(const Color& color) const;
 
-    void blit(const PixelArray& other, const Vec2& pos, Anchor anchor,
-              const Rect& srcRect = {}) const;
+    void blit(
+        const PixelArray& other, const Vec2& pos, Anchor anchor, const Rect& srcRect = {}
+    ) const;
 
     void blit(const PixelArray& other, const Rect& dstRect, const Rect& srcRect = {}) const;
 
@@ -83,11 +84,13 @@ std::unique_ptr<PixelArray> scaleBy(const PixelArray& pixelArray, const Vec2& fa
 
 std::unique_ptr<PixelArray> rotate(const PixelArray& pixelArray, double angle);
 
-std::unique_ptr<PixelArray> boxBlur(const PixelArray& pixelArray, int radius,
-                                    bool repeatEdgePixels = true);
+std::unique_ptr<PixelArray> boxBlur(
+    const PixelArray& pixelArray, int radius, bool repeatEdgePixels = true
+);
 
-std::unique_ptr<PixelArray> gaussianBlur(const PixelArray& pixelArray, int radius,
-                                         bool repeatEdgePixels = true);
+std::unique_ptr<PixelArray> gaussianBlur(
+    const PixelArray& pixelArray, int radius, bool repeatEdgePixels = true
+);
 
 std::unique_ptr<PixelArray> invert(const PixelArray& pixelArray);
 

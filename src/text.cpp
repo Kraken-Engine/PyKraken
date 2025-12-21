@@ -307,8 +307,9 @@ Note:
     A window/renderer must be created before using text. Typically you should
     call kn.window.create(...) first, which initializes the text engine.
     )doc")
-        .def(py::init<const Font&>(), py::arg("font"),
-             R"doc(
+        .def(
+            py::init<const Font&>(), py::arg("font"),
+            R"doc(
 Create a Text object.
 
 Args:
@@ -316,7 +317,8 @@ Args:
 
 Raises:
     RuntimeError: If text creation fails.
-    )doc")
+    )doc"
+        )
 
         .def_readwrite("shadow_color", &Text::shadowColor, R"doc(
 Get or set the shadow color for the text.
@@ -384,7 +386,8 @@ Args:
 Raises:
     RuntimeError: If the renderer is not initialized or text drawing fails.
     RuntimeError: If the text font is not set or has gone out of scope.
-        )doc")
+        )doc"
+        )
         .def("set_font", &Text::setFont, py::arg("font"), R"doc(
 Set the font to use for rendering this text.
 

@@ -56,8 +56,9 @@ Vec2 getLeftStick(const int slot)
     const SDL_JoystickID id = _gamepadSlots.at(slot).value();
     const GamepadState& state = _connectedPads.at(id);
 
-    Vec2 axes = {SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_LEFTX),
-                 SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_LEFTY)};
+    Vec2 axes =
+        {SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_LEFTX),
+         SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_LEFTY)};
     axes /= SDL_MAX_SINT16;
     if (axes.getLength() > state.deadZone)
         return axes;
@@ -73,8 +74,9 @@ Vec2 getRightStick(const int slot)
     const SDL_JoystickID id = _gamepadSlots.at(slot).value();
     const GamepadState& state = _connectedPads.at(id);
 
-    Vec2 axes = {SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_RIGHTX),
-                 SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_RIGHTY)};
+    Vec2 axes =
+        {SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_RIGHTX),
+         SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_RIGHTY)};
     axes /= SDL_MAX_SINT16;
     if (axes.getLength() > state.deadZone)
         return axes;
@@ -270,8 +272,9 @@ Returns:
     bool: True if the button is pressed.
     )doc");
 
-    subGamepad.def("is_just_pressed", &isJustPressed, py::arg("button"), py::arg("slot") = 0,
-                   R"doc(
+    subGamepad.def(
+        "is_just_pressed", &isJustPressed, py::arg("button"), py::arg("slot") = 0,
+        R"doc(
 Check if a gamepad button was pressed during this frame.
 
 Args:
@@ -280,10 +283,12 @@ Args:
 
 Returns:
     bool: True if the button was just pressed.
-    )doc");
+    )doc"
+    );
 
-    subGamepad.def("is_just_released", &isJustReleased, py::arg("button"), py::arg("slot") = 0,
-                   R"doc(
+    subGamepad.def(
+        "is_just_released", &isJustReleased, py::arg("button"), py::arg("slot") = 0,
+        R"doc(
 Check if a gamepad button was released during this frame.
 
 Args:
@@ -292,7 +297,8 @@ Args:
 
 Returns:
     bool: True if the button was just released.
-    )doc");
+    )doc"
+    );
 
     subGamepad.def("get_left_stick", &getLeftStick, py::arg("slot") = 0, R"doc(
 Get the left analog stick position.

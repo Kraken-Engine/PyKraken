@@ -261,8 +261,8 @@ const unsigned int parse_default = parse_cdata | parse_escapes | parse_wconv_att
 // Nodes of all types are added to the DOM tree, character/reference entities are expanded,
 // End-of-Line characters are normalized, attribute values are normalized using CDATA normalization
 // rules.
-const unsigned int parse_full =
-    parse_default | parse_pi | parse_comments | parse_declaration | parse_doctype;
+const unsigned int parse_full = parse_default | parse_pi | parse_comments | parse_declaration |
+                                parse_doctype;
 
 // These flags determine the encoding of input data for XML document
 enum xml_encoding
@@ -357,7 +357,11 @@ class xml_object_range
     typedef It const_iterator;
     typedef It iterator;
 
-    xml_object_range(It b, It e) : _begin(b), _end(e) {}
+    xml_object_range(It b, It e)
+        : _begin(b),
+          _end(e)
+    {
+    }
 
     It begin() const
     {
@@ -719,9 +723,10 @@ class PUGIXML_CLASS xml_node
     // node. Copies/converts the buffer, so it may be deleted or changed after the function returns.
     // Note: append_buffer allocates memory that has the lifetime of the owning document; removing
     // the appended nodes does not immediately reclaim that memory.
-    xml_parse_result append_buffer(const void* contents, size_t size,
-                                   unsigned int options = parse_default,
-                                   xml_encoding encoding = encoding_auto);
+    xml_parse_result append_buffer(
+        const void* contents, size_t size, unsigned int options = parse_default,
+        xml_encoding encoding = encoding_auto
+    );
 
     // Find attribute using predicate. Returns first attribute for which predicate returned true.
     template <typename Predicate>
@@ -784,8 +789,9 @@ class PUGIXML_CLASS xml_node
     }
 
     // Find child node by attribute name/value
-    xml_node find_child_by_attribute(const char_t* name, const char_t* attr_name,
-                                     const char_t* attr_value) const;
+    xml_node find_child_by_attribute(
+        const char_t* name, const char_t* attr_name, const char_t* attr_value
+    ) const;
     xml_node find_child_by_attribute(const char_t* attr_name, const char_t* attr_value) const;
 
 #ifndef PUGIXML_NO_STL
@@ -805,8 +811,9 @@ class PUGIXML_CLASS xml_node
     xpath_node select_node(const xpath_query& query) const;
 
     // Select node set by evaluating XPath query
-    xpath_node_set select_nodes(const char_t* query,
-                                xpath_variable_set* variables = PUGIXML_NULL) const;
+    xpath_node_set select_nodes(
+        const char_t* query, xpath_variable_set* variables = PUGIXML_NULL
+    ) const;
     xpath_node_set select_nodes(const xpath_query& query) const;
 
     // (deprecated: use select_node instead) Select single node by evaluating XPath query.
@@ -817,17 +824,23 @@ class PUGIXML_CLASS xml_node
 #endif
 
     // Print subtree using a writer object
-    void print(xml_writer& writer, const char_t* indent = PUGIXML_TEXT("\t"),
-               unsigned int flags = format_default, xml_encoding encoding = encoding_auto,
-               unsigned int depth = 0) const;
+    void print(
+        xml_writer& writer, const char_t* indent = PUGIXML_TEXT("\t"),
+        unsigned int flags = format_default, xml_encoding encoding = encoding_auto,
+        unsigned int depth = 0
+    ) const;
 
 #ifndef PUGIXML_NO_STL
     // Print subtree to stream
-    void print(std::basic_ostream<char>& os, const char_t* indent = PUGIXML_TEXT("\t"),
-               unsigned int flags = format_default, xml_encoding encoding = encoding_auto,
-               unsigned int depth = 0) const;
-    void print(std::basic_ostream<wchar_t>& os, const char_t* indent = PUGIXML_TEXT("\t"),
-               unsigned int flags = format_default, unsigned int depth = 0) const;
+    void print(
+        std::basic_ostream<char>& os, const char_t* indent = PUGIXML_TEXT("\t"),
+        unsigned int flags = format_default, xml_encoding encoding = encoding_auto,
+        unsigned int depth = 0
+    ) const;
+    void print(
+        std::basic_ostream<wchar_t>& os, const char_t* indent = PUGIXML_TEXT("\t"),
+        unsigned int flags = format_default, unsigned int depth = 0
+    ) const;
 #endif
 
     // Child nodes iterators
@@ -1213,69 +1226,87 @@ class PUGIXML_CLASS xml_document : public xml_node
 
 #ifndef PUGIXML_NO_STL
     // Load document from stream.
-    xml_parse_result load(std::basic_istream<char>& stream, unsigned int options = parse_default,
-                          xml_encoding encoding = encoding_auto);
-    xml_parse_result load(std::basic_istream<wchar_t>& stream,
-                          unsigned int options = parse_default);
+    xml_parse_result load(
+        std::basic_istream<char>& stream, unsigned int options = parse_default,
+        xml_encoding encoding = encoding_auto
+    );
+    xml_parse_result load(
+        std::basic_istream<wchar_t>& stream, unsigned int options = parse_default
+    );
 #endif
 
     // (deprecated: use load_string instead) Load document from zero-terminated string. No encoding
     // conversions are applied.
-    PUGIXML_DEPRECATED xml_parse_result load(const char_t* contents,
-                                             unsigned int options = parse_default);
+    PUGIXML_DEPRECATED xml_parse_result
+    load(const char_t* contents, unsigned int options = parse_default);
 
     // Load document from zero-terminated string. No encoding conversions are applied.
     xml_parse_result load_string(const char_t* contents, unsigned int options = parse_default);
 
     // Load document from file
-    xml_parse_result load_file(const char* path, unsigned int options = parse_default,
-                               xml_encoding encoding = encoding_auto);
-    xml_parse_result load_file(const wchar_t* path, unsigned int options = parse_default,
-                               xml_encoding encoding = encoding_auto);
+    xml_parse_result load_file(
+        const char* path, unsigned int options = parse_default,
+        xml_encoding encoding = encoding_auto
+    );
+    xml_parse_result load_file(
+        const wchar_t* path, unsigned int options = parse_default,
+        xml_encoding encoding = encoding_auto
+    );
 
     // Load document from buffer. Copies/converts the buffer, so it may be deleted or changed after
     // the function returns.
-    xml_parse_result load_buffer(const void* contents, size_t size,
-                                 unsigned int options = parse_default,
-                                 xml_encoding encoding = encoding_auto);
+    xml_parse_result load_buffer(
+        const void* contents, size_t size, unsigned int options = parse_default,
+        xml_encoding encoding = encoding_auto
+    );
 
     // Load document from buffer, using the buffer for in-place parsing (the buffer is modified and
     // used for storage of document data). You should ensure that buffer data will persist
     // throughout the document's lifetime, and free the buffer memory manually once document is
     // destroyed.
-    xml_parse_result load_buffer_inplace(void* contents, size_t size,
-                                         unsigned int options = parse_default,
-                                         xml_encoding encoding = encoding_auto);
+    xml_parse_result load_buffer_inplace(
+        void* contents, size_t size, unsigned int options = parse_default,
+        xml_encoding encoding = encoding_auto
+    );
 
     // Load document from buffer, using the buffer for in-place parsing (the buffer is modified and
     // used for storage of document data). You should allocate the buffer with pugixml allocation
     // function; document will free the buffer when it is no longer needed (you can't use it
     // anymore).
-    xml_parse_result load_buffer_inplace_own(void* contents, size_t size,
-                                             unsigned int options = parse_default,
-                                             xml_encoding encoding = encoding_auto);
+    xml_parse_result load_buffer_inplace_own(
+        void* contents, size_t size, unsigned int options = parse_default,
+        xml_encoding encoding = encoding_auto
+    );
 
     // Save XML document to writer (semantics is slightly different from xml_node::print, see
     // documentation for details).
-    void save(xml_writer& writer, const char_t* indent = PUGIXML_TEXT("\t"),
-              unsigned int flags = format_default, xml_encoding encoding = encoding_auto) const;
+    void save(
+        xml_writer& writer, const char_t* indent = PUGIXML_TEXT("\t"),
+        unsigned int flags = format_default, xml_encoding encoding = encoding_auto
+    ) const;
 
 #ifndef PUGIXML_NO_STL
     // Save XML document to stream (semantics is slightly different from xml_node::print, see
     // documentation for details).
-    void save(std::basic_ostream<char>& stream, const char_t* indent = PUGIXML_TEXT("\t"),
-              unsigned int flags = format_default, xml_encoding encoding = encoding_auto) const;
-    void save(std::basic_ostream<wchar_t>& stream, const char_t* indent = PUGIXML_TEXT("\t"),
-              unsigned int flags = format_default) const;
+    void save(
+        std::basic_ostream<char>& stream, const char_t* indent = PUGIXML_TEXT("\t"),
+        unsigned int flags = format_default, xml_encoding encoding = encoding_auto
+    ) const;
+    void save(
+        std::basic_ostream<wchar_t>& stream, const char_t* indent = PUGIXML_TEXT("\t"),
+        unsigned int flags = format_default
+    ) const;
 #endif
 
     // Save XML to file
-    bool save_file(const char* path, const char_t* indent = PUGIXML_TEXT("\t"),
-                   unsigned int flags = format_default,
-                   xml_encoding encoding = encoding_auto) const;
-    bool save_file(const wchar_t* path, const char_t* indent = PUGIXML_TEXT("\t"),
-                   unsigned int flags = format_default,
-                   xml_encoding encoding = encoding_auto) const;
+    bool save_file(
+        const char* path, const char_t* indent = PUGIXML_TEXT("\t"),
+        unsigned int flags = format_default, xml_encoding encoding = encoding_auto
+    ) const;
+    bool save_file(
+        const wchar_t* path, const char_t* indent = PUGIXML_TEXT("\t"),
+        unsigned int flags = format_default, xml_encoding encoding = encoding_auto
+    ) const;
 
     // Get document element
     xml_node document_element() const;
@@ -1632,8 +1663,8 @@ typedef void (*deallocation_function)(void* ptr);
 
 // Override default memory management functions. All subsequent allocations/deallocations will be
 // performed via supplied functions.
-void PUGIXML_FUNCTION set_memory_management_functions(allocation_function allocate,
-                                                      deallocation_function deallocate);
+void PUGIXML_FUNCTION
+set_memory_management_functions(allocation_function allocate, deallocation_function deallocate);
 
 // Get current memory management functions
 allocation_function PUGIXML_FUNCTION get_memory_allocation_function();

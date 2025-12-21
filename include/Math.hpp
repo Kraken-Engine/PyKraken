@@ -20,8 +20,9 @@ class PolarCoordinate
     PolarCoordinate() = default;
 
     template <typename T>
-    PolarCoordinate(T angle, T radius) :
-        angle(static_cast<double>(angle)), radius(static_cast<double>(radius))
+    PolarCoordinate(T angle, T radius)
+        : angle(static_cast<double>(angle)),
+          radius(static_cast<double>(radius))
     {
     }
 
@@ -43,12 +44,16 @@ class Vec2
     ~Vec2() = default;
 
     template <typename T>
-    explicit Vec2(T value) : x(static_cast<double>(value)), y(static_cast<double>(value))
+    explicit Vec2(T value)
+        : x(static_cast<double>(value)),
+          y(static_cast<double>(value))
     {
     }
 
     template <typename T>
-    Vec2(T x, T y) : x(static_cast<double>(x)), y(static_cast<double>(y))
+    Vec2(T x, T y)
+        : x(static_cast<double>(x)),
+          y(static_cast<double>(y))
     {
     }
 

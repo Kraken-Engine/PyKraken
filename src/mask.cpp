@@ -9,17 +9,17 @@
 
 namespace kn
 {
-Mask::Mask(const Vec2& size, const bool filled) :
-    m_width(static_cast<int>(size.x)),
-    m_height(static_cast<int>(size.y)),
-    m_maskData(m_width * m_height, filled)
+Mask::Mask(const Vec2& size, const bool filled)
+    : m_width(static_cast<int>(size.x)),
+      m_height(static_cast<int>(size.y)),
+      m_maskData(m_width * m_height, filled)
 {
 }
 
-Mask::Mask(const PixelArray& pixelArray, const uint8_t threshold) :
-    m_width(pixelArray.getWidth()),
-    m_height(pixelArray.getHeight()),
-    m_maskData(m_width * m_height, false)
+Mask::Mask(const PixelArray& pixelArray, const uint8_t threshold)
+    : m_width(pixelArray.getWidth()),
+      m_height(pixelArray.getHeight()),
+      m_maskData(m_width * m_height, false)
 {
     SDL_Surface* rawSurface = pixelArray.getSDL();
     if (!rawSurface)
@@ -224,8 +224,10 @@ Rect Mask::getBoundingRect() const
     if (maxX == -1 || maxY == -1)
         return {};  // Empty mask
 
-    return {static_cast<double>(minX), static_cast<double>(minY),
-            static_cast<double>(maxX - minX + 1), static_cast<double>(maxY - minY + 1)};
+    return {
+        static_cast<double>(minX), static_cast<double>(minY), static_cast<double>(maxX - minX + 1),
+        static_cast<double>(maxY - minY + 1)
+    };
 }
 
 bool Mask::collideMask(const Mask& other, const Vec2& offset) const
@@ -327,17 +329,20 @@ non-transparent pixels.
         .def(py::init(), R"doc(
 Create an empty mask with size (0, 0).
         )doc")
-        .def(py::init<const Vec2&, bool>(), py::arg("size"), py::arg("filled") = false,
-             R"doc(
+        .def(
+            py::init<const Vec2&, bool>(), py::arg("size"), py::arg("filled") = false,
+            R"doc(
 Create a mask with specified size.
 
 Args:
     size (Vec2): The size of the mask as (width, height).
     filled (bool): Whether to fill the mask with solid pixels. Defaults to False.
-        )doc")
-        .def(py::init<const PixelArray&, uint8_t>(), py::arg("pixel_array"),
-             py::arg("threshold") = 1,
-             R"doc(
+        )doc"
+        )
+        .def(
+            py::init<const PixelArray&, uint8_t>(), py::arg("pixel_array"),
+            py::arg("threshold") = 1,
+            R"doc(
 Create a mask from a pixel array based on alpha threshold.
 
 Args:
@@ -346,7 +351,8 @@ Args:
 
 Raises:
     RuntimeError: If the pixel array is invalid.
-        )doc")
+        )doc"
+        )
 
         .def_property_readonly("width", &Mask::getWidth, R"doc(
 The width of the mask in pixels.
@@ -406,7 +412,8 @@ Args:
 
 Returns:
     int: The number of overlapping solid pixels.
-        )doc")
+        )doc"
+        )
         .def(
             "get_overlap_mask",
             [](const Mask& self, const Mask& other, const py::object& offsetObj) -> Mask
@@ -433,7 +440,8 @@ Args:
 
 Returns:
     Mask: A new mask containing only the overlapping pixels.
-        )doc")
+        )doc"
+        )
         .def("fill", &Mask::fill, R"doc(
 Fill the entire mask with solid pixels.
         )doc")
@@ -473,7 +481,8 @@ Performs a bitwise OR operation between the masks.
 Args:
     other (Mask): The mask to add.
     offset (Vec2): Position offset for the other mask. Defaults to (0, 0).
-        )doc")
+        )doc"
+        )
         .def(
             "subtract",
             [](Mask& self, const Mask& other, const py::object& offsetObj) -> void
@@ -502,7 +511,8 @@ Removes pixels where the other mask has solid pixels.
 Args:
     other (Mask): The mask to subtract.
     offset (Vec2): Position offset for the other mask. Defaults to (0, 0).
-        )doc")
+        )doc"
+        )
         .def("get_count", &Mask::getCount, R"doc(
 Get the number of solid pixels in the mask.
 
@@ -556,7 +566,8 @@ Args:
 
 Returns:
     bool: True if the masks collide, False otherwise.
-        )doc")
+        )doc"
+        )
         .def(
             "get_collision_points",
             [](const Mask& self, const Mask& other,
@@ -584,7 +595,8 @@ Args:
 
 Returns:
     list[Vec2]: A list of collision points.
-        )doc")
+        )doc"
+        )
         .def("is_empty", &Mask::isEmpty, R"doc(
 Check if the mask contains no solid pixels.
 
@@ -621,7 +633,8 @@ Returns:
 
 Raises:
     RuntimeError: If pixel array creation fails.
-        )doc")
+        )doc"
+        )
         .def("get_rect", &Mask::getRect, R"doc(
 Get the bounding rectangle of the mask starting at (0, 0).
     )doc");

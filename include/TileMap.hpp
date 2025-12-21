@@ -51,8 +51,9 @@ class TileLayer
     const std::string name;
     std::vector<Tile> tiles;
 
-    TileLayer(Type type, bool isVisible, std::string name,
-              const std::shared_ptr<Texture>& tileSetTexture);
+    TileLayer(
+        Type type, bool isVisible, std::string name, const std::shared_ptr<Texture>& tileSetTexture
+    );
     ~TileLayer() = default;
 
     void render() const;
@@ -80,13 +81,15 @@ class TileMap
     ~TileMap() = default;
 
     [[nodiscard]] std::shared_ptr<const TileLayer> getLayer(
-        const std::string& name, TileLayer::Type type = TileLayer::TILE) const;
+        const std::string& name, TileLayer::Type type = TileLayer::TILE
+    ) const;
     [[nodiscard]] const std::vector<std::shared_ptr<const TileLayer>>& getLayers() const;
 
     void render() const;
 
     static std::vector<Tile> getTileCollection(
-        const std::vector<std::shared_ptr<const TileLayer>>& layers);
+        const std::vector<std::shared_ptr<const TileLayer>>& layers
+    );
 
   private:
     std::string m_dirPath;

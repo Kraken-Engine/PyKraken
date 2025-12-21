@@ -9,12 +9,16 @@
 
 namespace kn
 {
-PixelArray::PixelArray(SDL_Surface* sdlSurface) : m_surface(sdlSurface) {}
+PixelArray::PixelArray(SDL_Surface* sdlSurface)
+    : m_surface(sdlSurface)
+{
+}
 
 PixelArray::PixelArray(const Vec2& size)
 {
-    m_surface = SDL_CreateSurface(static_cast<int>(size.x), static_cast<int>(size.y),
-                                  SDL_PIXELFORMAT_RGBA32);
+    m_surface = SDL_CreateSurface(
+        static_cast<int>(size.x), static_cast<int>(size.y), SDL_PIXELFORMAT_RGBA32
+    );
 
     if (!m_surface)
         throw std::runtime_error("PixelArray failed to create: " + std::string(SDL_GetError()));
@@ -24,8 +28,10 @@ PixelArray::PixelArray(const std::string& filePath)
 {
     m_surface = IMG_Load(filePath.c_str());
     if (!m_surface)
-        throw std::runtime_error("Failed to load pixel array from file '" + filePath +
-                                 "': " + std::string(SDL_GetError()));
+        throw std::runtime_error(
+            "Failed to load pixel array from file '" + filePath +
+            "': " + std::string(SDL_GetError())
+        );
 }
 
 PixelArray::~PixelArray()
@@ -43,8 +49,9 @@ void PixelArray::fill(const Color& color) const
     SDL_FillSurfaceRect(m_surface, nullptr, colorMap);
 }
 
-void PixelArray::blit(const PixelArray& other, const Vec2& pos, const Anchor anchor,
-                      const Rect& srcRect) const
+void PixelArray::blit(
+    const PixelArray& other, const Vec2& pos, const Anchor anchor, const Rect& srcRect
+) const
 {
     Rect dstRect = other.getRect();
     switch (anchor)
@@ -79,8 +86,9 @@ void PixelArray::blit(const PixelArray& other, const Vec2& pos, const Anchor anc
     }
 
     const auto dstSDL = static_cast<SDL_Rect>(dstRect);
-    const auto srcSDL =
-        static_cast<SDL_Rect>(srcRect.w == 0.0 && srcRect.h == 0.0 ? this->getRect() : srcRect);
+    const auto srcSDL = static_cast<SDL_Rect>(
+        srcRect.w == 0.0 && srcRect.h == 0.0 ? this->getRect() : srcRect
+    );
 
     if (!SDL_BlitSurface(other.getSDL(), &srcSDL, m_surface, &dstSDL))
         throw std::runtime_error("Failed to blit pixel array: " + std::string(SDL_GetError()));
@@ -89,8 +97,9 @@ void PixelArray::blit(const PixelArray& other, const Vec2& pos, const Anchor anc
 void PixelArray::blit(const PixelArray& other, const Rect& dstRect, const Rect& srcRect) const
 {
     const auto dstSDL = static_cast<SDL_Rect>(dstRect);
-    const auto srcSDL =
-        static_cast<SDL_Rect>(srcRect.w == 0.0 && srcRect.h == 0.0 ? this->getRect() : srcRect);
+    const auto srcSDL = static_cast<SDL_Rect>(
+        srcRect.w == 0.0 && srcRect.h == 0.0 ? this->getRect() : srcRect
+    );
 
     if (!SDL_BlitSurface(other.getSDL(), &srcSDL, m_surface, &dstSDL))
         throw std::runtime_error("Failed to blit pixel array: " + std::string(SDL_GetError()));
@@ -98,16 +107,18 @@ void PixelArray::blit(const PixelArray& other, const Rect& dstRect, const Rect& 
 
 void PixelArray::setColorKey(const Color& color) const
 {
-    SDL_SetSurfaceColorKey(m_surface, true,
-                           SDL_MapSurfaceRGBA(m_surface, color.r, color.g, color.b, color.a));
+    SDL_SetSurfaceColorKey(
+        m_surface, true, SDL_MapSurfaceRGBA(m_surface, color.r, color.g, color.b, color.a)
+    );
 }
 
 Color PixelArray::getColorKey() const
 {
     uint32_t key;
     if (!SDL_GetSurfaceColorKey(m_surface, &key))
-        throw std::runtime_error("Failed to get pixel array color key: " +
-                                 std::string(SDL_GetError()));
+        throw std::runtime_error(
+            "Failed to get pixel array color key: " + std::string(SDL_GetError())
+        );
 
     Color color;
     color.r = static_cast<uint8_t>(key >> 24 & 0xFF);
@@ -189,8 +200,9 @@ std::unique_ptr<PixelArray> PixelArray::copy() const
 {
     SDL_Surface* surfaceCopy = SDL_CreateSurface(m_surface->w, m_surface->h, m_surface->format);
     if (!surfaceCopy)
-        throw std::runtime_error("Failed to create copy pixel array: " +
-                                 std::string(SDL_GetError()));
+        throw std::runtime_error(
+            "Failed to create copy pixel array: " + std::string(SDL_GetError())
+        );
 
     if (!SDL_BlitSurface(m_surface, nullptr, surfaceCopy, nullptr))
         throw std::runtime_error("Failed to blit pixel array copy: " + std::string(SDL_GetError()));
@@ -280,8 +292,8 @@ void PixelArray::scroll(const int dx, const int dy, const ScrollMode scrollMode)
                     break;
             }
 
-            std::memcpy(dstRow + dstX * bytesPerPixel, srcRow + srcX * bytesPerPixel,
-                        bytesPerPixel);
+            std::
+                memcpy(dstRow + dstX * bytesPerPixel, srcRow + srcX * bytesPerPixel, bytesPerPixel);
         }
     }
 }
@@ -404,7 +416,8 @@ Args:
 
 Raises:
     RuntimeError: If the blit operation fails.
-        )doc")
+        )doc"
+        )
         .def(
             "blit",
             [](const PixelArray& self, const PixelArray& other, const Rect& dst,
@@ -429,7 +442,8 @@ Args:
 
 Raises:
     RuntimeError: If the blit operation fails.
-        )doc")
+        )doc"
+        )
         .def("get_at", &PixelArray::getAt, py::arg("coord"), R"doc(
 Get the color of a pixel at the specified coordinates.
 
@@ -467,8 +481,9 @@ Get a rectangle representing the pixel array bounds.
 Returns:
     Rect: A rectangle with position (0, 0) and the pixel array's dimensions.
         )doc")
-        .def("scroll", &PixelArray::scroll, py::arg("dx"), py::arg("dy"), py::arg("scroll_mode"),
-             R"doc(
+        .def(
+            "scroll", &PixelArray::scroll, py::arg("dx"), py::arg("dy"), py::arg("scroll_mode"),
+            R"doc(
 Scroll the pixel array's contents by the specified offset.
 
 Args:
@@ -478,13 +493,15 @@ Args:
         - REPEAT: Wrap pixels around to the opposite edge.
         - ERASE: Fill scrolled areas with transparent pixels.
         - SMEAR: Extend edge pixels into scrolled areas.
-        )doc");
+        )doc"
+        );
 
     auto subPixelArray =
         module.def_submodule("pixel_array", "Functions for manipulating PixelArray objects");
 
-    subPixelArray.def("flip", &flip, py::arg("pixel_array"), py::arg("flip_x"), py::arg("flip_y"),
-                      R"doc(
+    subPixelArray.def(
+        "flip", &flip, py::arg("pixel_array"), py::arg("flip_x"), py::arg("flip_y"),
+        R"doc(
 Flip a pixel array horizontally, vertically, or both.
 
 Args:
@@ -497,7 +514,8 @@ Returns:
 
 Raises:
     RuntimeError: If pixel array creation fails.
-    )doc");
+    )doc"
+    );
 
     subPixelArray.def("scale_to", &scaleTo, py::arg("pixel_array"), py::arg("size"), R"doc(
 Scale a pixel array to a new exact size.
@@ -513,8 +531,9 @@ Raises:
     RuntimeError: If pixel array creation or scaling fails.
     )doc");
 
-    subPixelArray.def("scale_by", py::overload_cast<const PixelArray&, double>(&scaleBy),
-                      py::arg("pixel_array"), py::arg("factor"), R"doc(
+    subPixelArray.def(
+        "scale_by", py::overload_cast<const PixelArray&, double>(&scaleBy), py::arg("pixel_array"),
+        py::arg("factor"), R"doc(
 Scale a pixel array by a given factor.
 
 Args:
@@ -528,7 +547,8 @@ Returns:
 Raises:
     ValueError: If factor is <= 0.
     RuntimeError: If pixel array creation or scaling fails.
-    )doc");
+    )doc"
+    );
 
     subPixelArray.def("rotate", &rotate, py::arg("pixel_array"), py::arg("angle"), R"doc(
 Rotate a pixel array by a given angle.
@@ -545,8 +565,9 @@ Raises:
     RuntimeError: If pixel array rotation fails.
     )doc");
 
-    subPixelArray.def("box_blur", &boxBlur, py::arg("pixel_array"), py::arg("radius"),
-                      py::arg("repeat_edge_pixels") = true, R"doc(
+    subPixelArray.def(
+        "box_blur", &boxBlur, py::arg("pixel_array"), py::arg("radius"),
+        py::arg("repeat_edge_pixels") = true, R"doc(
 Apply a box blur effect to a pixel array.
 
 Box blur creates a uniform blur effect by averaging pixels within a square kernel.
@@ -563,10 +584,12 @@ Returns:
 
 Raises:
     RuntimeError: If pixel array creation fails during the blur process.
-    )doc");
+    )doc"
+    );
 
-    subPixelArray.def("gaussian_blur", &gaussianBlur, py::arg("pixel_array"), py::arg("radius"),
-                      py::arg("repeat_edge_pixels") = true, R"doc(
+    subPixelArray.def(
+        "gaussian_blur", &gaussianBlur, py::arg("pixel_array"), py::arg("radius"),
+        py::arg("repeat_edge_pixels") = true, R"doc(
 Apply a Gaussian blur effect to a pixel array.
 
 Gaussian blur creates a natural, smooth blur effect using a Gaussian distribution
@@ -584,7 +607,8 @@ Returns:
 
 Raises:
     RuntimeError: If pixel array creation fails during the blur process.
-    )doc");
+    )doc"
+    );
 
     subPixelArray.def("invert", &invert, py::arg("pixel_array"), R"doc(
 Invert the colors of a pixel array.
@@ -638,10 +662,10 @@ std::unique_ptr<PixelArray> flip(const PixelArray& pixelArray, const bool flipX,
             const int srcX = flipX ? sdlSurface->w - 1 - x : x;
             const int srcY = flipY ? sdlSurface->h - 1 - y : y;
 
-            const uint8_t* srcPixel =
-                static_cast<uint8_t*>(sdlSurface->pixels) + srcY * sdlSurface->pitch + srcX * bpp;
-            uint8_t* dstPixel =
-                static_cast<uint8_t*>(flipped->pixels) + y * flipped->pitch + x * bpp;
+            const uint8_t* srcPixel = static_cast<uint8_t*>(sdlSurface->pixels) +
+                                      srcY * sdlSurface->pitch + srcX * bpp;
+            uint8_t* dstPixel = static_cast<uint8_t*>(flipped->pixels) + y * flipped->pitch +
+                                x * bpp;
 
             memcpy(dstPixel, srcPixel, bpp);
         }
@@ -698,8 +722,9 @@ std::unique_ptr<PixelArray> rotate(const PixelArray& pixelArray, const double an
     return std::make_unique<PixelArray>(rotated);
 }
 
-std::unique_ptr<PixelArray> boxBlur(const PixelArray& pixelArray, const int radius,
-                                    const bool repeatEdgePixels)
+std::unique_ptr<PixelArray> boxBlur(
+    const PixelArray& pixelArray, const int radius, const bool repeatEdgePixels
+)
 {
     const SDL_Surface* src = pixelArray.getSDL();
     const int width = src->w;
@@ -776,8 +801,9 @@ std::unique_ptr<PixelArray> boxBlur(const PixelArray& pixelArray, const int radi
     return std::make_unique<PixelArray>(result);
 }
 
-std::unique_ptr<PixelArray> gaussianBlur(const PixelArray& pixelArray, const int radius,
-                                         const bool repeatEdgePixels)
+std::unique_ptr<PixelArray> gaussianBlur(
+    const PixelArray& pixelArray, const int radius, const bool repeatEdgePixels
+)
 {
     const SDL_Surface* src = pixelArray.getSDL();
 
@@ -840,9 +866,10 @@ std::unique_ptr<PixelArray> gaussianBlur(const PixelArray& pixelArray, const int
                 fb += static_cast<float>(pb) * kernel[k];
                 fa += static_cast<float>(pa) * kernel[k];
             }
-            tmpPx[y * w + x] =
-                SDL_MapRGBA(tmpDetails, nullptr, static_cast<Uint8>(fr), static_cast<Uint8>(fg),
-                            static_cast<Uint8>(fb), static_cast<Uint8>(fa));
+            tmpPx[y * w + x] = SDL_MapRGBA(
+                tmpDetails, nullptr, static_cast<Uint8>(fr), static_cast<Uint8>(fg),
+                static_cast<Uint8>(fb), static_cast<Uint8>(fa)
+            );
         }
 
     // Vertical pass
@@ -864,9 +891,10 @@ std::unique_ptr<PixelArray> gaussianBlur(const PixelArray& pixelArray, const int
                 fb += static_cast<float>(pb) * kernel[k];
                 fa += static_cast<float>(pa) * kernel[k];
             }
-            dstPx[y * w + x] =
-                SDL_MapRGBA(resDetails, nullptr, static_cast<uint8_t>(fr), static_cast<uint8_t>(fg),
-                            static_cast<uint8_t>(fb), static_cast<uint8_t>(fa));
+            dstPx[y * w + x] = SDL_MapRGBA(
+                resDetails, nullptr, static_cast<uint8_t>(fr), static_cast<uint8_t>(fg),
+                static_cast<uint8_t>(fb), static_cast<uint8_t>(fa)
+            );
         }
 
     SDL_DestroySurface(temp);

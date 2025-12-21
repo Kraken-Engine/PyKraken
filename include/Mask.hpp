@@ -56,8 +56,9 @@ class Mask
 
     [[nodiscard]] bool collideMask(const Mask& other, const Vec2& offset = {}) const;
 
-    [[nodiscard]] std::vector<Vec2> getCollisionPoints(const Mask& other,
-                                                       const Vec2& offset = {}) const;
+    [[nodiscard]] std::vector<Vec2> getCollisionPoints(
+        const Mask& other, const Vec2& offset = {}
+    ) const;
 
     [[nodiscard]] bool isEmpty() const;
 
@@ -65,8 +66,9 @@ class Mask
 
     [[nodiscard]] int getHeight() const;
 
-    [[nodiscard]] std::unique_ptr<PixelArray> getPixelArray(const Color& color = {255, 255, 255,
-                                                                                  255}) const;
+    [[nodiscard]] std::unique_ptr<PixelArray> getPixelArray(
+        const Color& color = {255, 255, 255, 255}
+    ) const;
 
   private:
     int m_width = 0, m_height = 0;
