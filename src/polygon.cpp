@@ -1,16 +1,21 @@
-#include "Math.hpp"
-#include "Rect.hpp"
-
 #include "Polygon.hpp"
+
+#include <pybind11/stl.h>
+
 #include <cmath>
 #include <limits>
-#include <pybind11/stl.h>
+
+#include "Math.hpp"
+#include "Rect.hpp"
 
 namespace kn
 {
 Polygon::Polygon(const std::vector<Vec2>& points) : points(points) {}
 
-Polygon Polygon::copy() const { return Polygon{points}; }
+Polygon Polygon::copy() const
+{
+    return Polygon{points};
+}
 
 double Polygon::getPerimeter() const
 {
@@ -264,5 +269,5 @@ Args:
 
     py::implicitly_convertible<py::sequence, Polygon>();
 }
-} // namespace polygon
-} // namespace kn
+}  // namespace polygon
+}  // namespace kn

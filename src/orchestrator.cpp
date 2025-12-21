@@ -1,11 +1,13 @@
 #include "Orchestrator.hpp"
-#include "Log.hpp"
-#include "Time.hpp"
 
-#include <cmath>
 #include <pybind11/functional.h>
 #include <pybind11/stl.h>
+
+#include <cmath>
 #include <random>
+
+#include "Log.hpp"
+#include "Time.hpp"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -16,7 +18,10 @@ namespace kn
 static std::vector<Orchestrator*> _orchestrators;
 
 // ----- MoveToEffect -----
-void MoveToEffect::start(Transform& transform) { m_startPos = transform.pos; }
+void MoveToEffect::start(Transform& transform)
+{
+    m_startPos = transform.pos;
+}
 
 void MoveToEffect::update(Transform& transform, double t)
 {
@@ -26,7 +31,10 @@ void MoveToEffect::update(Transform& transform, double t)
 }
 
 // ----- ScaleToEffect -----
-void ScaleToEffect::start(Transform& transform) { m_startScale = transform.scale; }
+void ScaleToEffect::start(Transform& transform)
+{
+    m_startScale = transform.scale;
+}
 
 void ScaleToEffect::update(Transform& transform, double t)
 {
@@ -36,7 +44,10 @@ void ScaleToEffect::update(Transform& transform, double t)
 }
 
 // ----- RotateToEffect -----
-void RotateToEffect::start(Transform& transform) { m_startAngle = transform.angle; }
+void RotateToEffect::start(Transform& transform)
+{
+    m_startAngle = transform.angle;
+}
 
 void RotateToEffect::update(Transform& transform, double t)
 {
@@ -59,7 +70,10 @@ void RotateToEffect::update(Transform& transform, double t)
 }
 
 // ----- RotateByEffect -----
-void RotateByEffect::start(Transform& transform) { m_startAngle = transform.angle; }
+void RotateByEffect::start(Transform& transform)
+{
+    m_startAngle = transform.angle;
+}
 
 void RotateByEffect::update(Transform& transform, double t)
 {
@@ -69,7 +83,10 @@ void RotateByEffect::update(Transform& transform, double t)
 }
 
 // ----- ShakeEffect -----
-void ShakeEffect::start(Transform& transform) { m_originalPos = transform.pos; }
+void ShakeEffect::start(Transform& transform)
+{
+    m_originalPos = transform.pos;
+}
 
 void ShakeEffect::update(Transform& transform, double t)
 {
@@ -94,7 +111,10 @@ void ShakeEffect::update(Transform& transform, double t)
 }
 
 // ----- CallEffect -----
-void CallEffect::start([[maybe_unused]] Transform& transform) { m_called = false; }
+void CallEffect::start([[maybe_unused]] Transform& transform)
+{
+    m_called = false;
+}
 
 void CallEffect::update([[maybe_unused]] Transform& transform, [[maybe_unused]] double t)
 {
@@ -106,9 +126,15 @@ void CallEffect::update([[maybe_unused]] Transform& transform, [[maybe_unused]] 
 }
 
 // ----- Orchestrator -----
-Orchestrator::~Orchestrator() { std::erase(_orchestrators, this); }
+Orchestrator::~Orchestrator()
+{
+    std::erase(_orchestrators, this);
+}
 
-void Orchestrator::setTarget(Transform* target) { m_target = target; }
+void Orchestrator::setTarget(Transform* target)
+{
+    m_target = target;
+}
 
 Orchestrator& Orchestrator::addStep(const std::vector<std::shared_ptr<Effect>>& effects)
 {
@@ -173,7 +199,10 @@ void Orchestrator::play()
     m_playing = true;
 }
 
-void Orchestrator::pause() { m_playing = false; }
+void Orchestrator::pause()
+{
+    m_playing = false;
+}
 
 void Orchestrator::resume()
 {
@@ -198,18 +227,30 @@ void Orchestrator::rewind()
     m_stepStarted = false;
 }
 
-bool Orchestrator::isFinalized() const { return m_finalized; }
+bool Orchestrator::isFinalized() const
+{
+    return m_finalized;
+}
 
-bool Orchestrator::isPlaying() const { return m_playing; }
+bool Orchestrator::isPlaying() const
+{
+    return m_playing;
+}
 
 bool Orchestrator::isFinished() const
 {
     return !m_playing && m_currentStep >= m_steps.size() && m_finalized;
 }
 
-void Orchestrator::setLooping(bool loop) { m_looping = loop; }
+void Orchestrator::setLooping(bool loop)
+{
+    m_looping = loop;
+}
 
-bool Orchestrator::isLooping() const { return m_looping; }
+bool Orchestrator::isLooping() const
+{
+    return m_looping;
+}
 
 void Orchestrator::update(double dt)
 {
@@ -612,7 +653,7 @@ Returns:
         {
             auto effect = std::make_shared<CallEffect>();
             effect->callback = callback;
-            effect->duration = 0.0; // Instant
+            effect->duration = 0.0;  // Instant
             return effect;
         },
         py::arg("callback"), R"doc(
@@ -645,5 +686,5 @@ Returns:
     Effect: The wait effect.
         )doc");
 }
-} // namespace orchestrator
-} // namespace kn
+}  // namespace orchestrator
+}  // namespace kn

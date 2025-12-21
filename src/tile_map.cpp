@@ -1,8 +1,3 @@
-#include "Collision.hpp"
-#include "Renderer.hpp"
-#include "Texture.hpp"
-#include "TileMap.hpp"
-
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 #include <pybind11/native_enum.h>
@@ -12,6 +7,11 @@
 #include <cmath>
 #include <optional>
 #include <utility>
+
+#include "Collision.hpp"
+#include "Renderer.hpp"
+#include "Texture.hpp"
+#include "TileMap.hpp"
 
 #ifndef M_PI
 #define M_PI 3.1415926535897932384626433832795
@@ -24,8 +24,8 @@
 namespace kn
 {
 TileLayer::TileLayer(const Type type, const bool isVisible, std::string name,
-                     const std::shared_ptr<Texture>& tileSetTexture)
-    : type(type), isVisible(isVisible), name(std::move(name)), m_tileSetTexture(tileSetTexture)
+                     const std::shared_ptr<Texture>& tileSetTexture) :
+    type(type), isVisible(isVisible), name(std::move(name)), m_tileSetTexture(tileSetTexture)
 {
 }
 
@@ -51,7 +51,7 @@ void TileLayer::render() const
         }
 
         transform.size = tile.dst.getSize();
-        renderer::draw(*m_tileSetTexture, transform, tile.src);
+        renderer::draw(m_tileSetTexture, transform, tile.src);
     }
 }
 
@@ -148,7 +148,8 @@ TileMap::TileMap(const std::string& tmxPath, int borderSize)
     if (texturePath.empty())
         throw std::runtime_error("Failed to find tileset image from TMX file: " + tmxPath);
 
-    const auto tileSetTexture = std::make_shared<Texture>(texturePath);
+    const auto tileSetTexture =
+        std::make_shared<Texture>(texturePath, renderer::getDefaultScaleMode());
 
     std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> surface(
         IMG_Load(texturePath.c_str()), &SDL_DestroySurface);
@@ -262,17 +263,17 @@ TileMap::TileMap(const std::string& tmxPath, int borderSize)
 
                 switch (angle)
                 {
-                case 90:
-                    objectDstRect.setTopLeft({destX, destY});
-                    break;
-                case 180:
-                    objectDstRect.setTopRight({destX, destY});
-                    break;
-                case -90:
-                    objectDstRect.setBottomRight({destX, destY});
-                    break;
-                default:
-                    objectDstRect.setBottomLeft({destX, destY}); // 0 degrees
+                    case 90:
+                        objectDstRect.setTopLeft({destX, destY});
+                        break;
+                    case 180:
+                        objectDstRect.setTopRight({destX, destY});
+                        break;
+                    case -90:
+                        objectDstRect.setBottomRight({destX, destY});
+                        break;
+                    default:
+                        objectDstRect.setBottomLeft({destX, destY});  // 0 degrees
                 }
 
                 const double angleRad = static_cast<double>(angle) * M_PI / 180.0;
@@ -319,8 +320,8 @@ void TileMap::render() const
     }
 }
 
-std::vector<Tile>
-TileMap::getTileCollection(const std::vector<std::shared_ptr<const TileLayer>>& layers)
+std::vector<Tile> TileMap::getTileCollection(
+    const std::vector<std::shared_ptr<const TileLayer>>& layers)
 {
     std::vector<Tile> tiles;
     if (layers.empty())
@@ -520,5 +521,5 @@ Returns:
     list[Tile]: A flat list of tiles from the given layers.
                     )doc");
 }
-} // namespace tile_map
-} // namespace kn
+}  // namespace tile_map
+}  // namespace kn

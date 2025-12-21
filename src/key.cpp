@@ -1,8 +1,9 @@
+#include "Key.hpp"
+
+#include <unordered_map>
+
 #include "Event.hpp"
 #include "_globals.hpp"
-
-#include "Key.hpp"
-#include <unordered_map>
 
 namespace kn::key
 {
@@ -11,11 +12,20 @@ static bool _scancodeReleased[SDL_SCANCODE_COUNT] = {};
 static std::unordered_map<SDL_Keycode, bool> _keycodePressed;
 static std::unordered_map<SDL_Keycode, bool> _keycodeReleased;
 
-bool isPressed(const SDL_Scancode scancode) { return SDL_GetKeyboardState(nullptr)[scancode]; }
+bool isPressed(const SDL_Scancode scancode)
+{
+    return SDL_GetKeyboardState(nullptr)[scancode];
+}
 
-bool isJustPressed(const SDL_Scancode scancode) { return _scancodePressed[scancode]; }
+bool isJustPressed(const SDL_Scancode scancode)
+{
+    return _scancodePressed[scancode];
+}
 
-bool isJustReleased(const SDL_Scancode scancode) { return _scancodeReleased[scancode]; }
+bool isJustReleased(const SDL_Scancode scancode)
+{
+    return _scancodeReleased[scancode];
+}
 
 bool isPressed(Keycode keycode)
 {
@@ -48,53 +58,53 @@ void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
 {
     switch (sdlEvent.type)
     {
-    case SDL_EVENT_KEY_DOWN:
-    case SDL_EVENT_KEY_UP:
-        if (sdlEvent.type == SDL_EVENT_KEY_DOWN && !sdlEvent.key.repeat)
-        {
-            _scancodePressed[sdlEvent.key.scancode] = true;
-            _keycodePressed[sdlEvent.key.key] = true;
-        }
-        else if (sdlEvent.type == SDL_EVENT_KEY_UP)
-        {
-            _scancodeReleased[sdlEvent.key.scancode] = true;
-            _keycodeReleased[sdlEvent.key.key] = true;
-        }
-        e.data["which"] = sdlEvent.key.which;
-        e.data["key"] = static_cast<Keycode>(sdlEvent.key.key);
-        e.data["scan"] = sdlEvent.key.scancode;
-        e.data["repeat"] = sdlEvent.key.repeat;
-        e.data["mod"] = sdlEvent.key.mod;
-        e.data["window_id"] = sdlEvent.key.windowID;
-        break;
-    case SDL_EVENT_TEXT_EDITING:
-        e.data["window_id"] = sdlEvent.edit.windowID;
-        e.data["text"] = sdlEvent.edit.text;
-        e.data["start"] = sdlEvent.edit.start;
-        e.data["length"] = sdlEvent.edit.length;
-        break;
-    case SDL_EVENT_TEXT_INPUT:
-        e.data["window_id"] = sdlEvent.text.windowID;
-        e.data["text"] = sdlEvent.text.text;
-        break;
-    case SDL_EVENT_KEYBOARD_ADDED:
-    case SDL_EVENT_KEYBOARD_REMOVED:
-        e.data["which"] = sdlEvent.kdevice.which;
-        break;
-    case SDL_EVENT_TEXT_EDITING_CANDIDATES:
-        e.data["window_id"] = sdlEvent.edit_candidates.windowID;
-        e.data["candidates"] = std::vector<std::string>(
-            sdlEvent.edit_candidates.candidates,
-            sdlEvent.edit_candidates.candidates + sdlEvent.edit_candidates.num_candidates);
-        e.data["num_candidates"] = sdlEvent.edit_candidates.num_candidates;
-        e.data["selected_candidate"] = sdlEvent.edit_candidates.selected_candidate;
-        e.data["horizontal"] = sdlEvent.edit_candidates.horizontal;
-        e.data["padding1"] = sdlEvent.edit_candidates.padding1;
-        e.data["padding2"] = sdlEvent.edit_candidates.padding2;
-        e.data["padding3"] = sdlEvent.edit_candidates.padding3;
-        break;
-    default:
-        break;
+        case SDL_EVENT_KEY_DOWN:
+        case SDL_EVENT_KEY_UP:
+            if (sdlEvent.type == SDL_EVENT_KEY_DOWN && !sdlEvent.key.repeat)
+            {
+                _scancodePressed[sdlEvent.key.scancode] = true;
+                _keycodePressed[sdlEvent.key.key] = true;
+            }
+            else if (sdlEvent.type == SDL_EVENT_KEY_UP)
+            {
+                _scancodeReleased[sdlEvent.key.scancode] = true;
+                _keycodeReleased[sdlEvent.key.key] = true;
+            }
+            e.data["which"] = sdlEvent.key.which;
+            e.data["key"] = static_cast<Keycode>(sdlEvent.key.key);
+            e.data["scan"] = sdlEvent.key.scancode;
+            e.data["repeat"] = sdlEvent.key.repeat;
+            e.data["mod"] = sdlEvent.key.mod;
+            e.data["window_id"] = sdlEvent.key.windowID;
+            break;
+        case SDL_EVENT_TEXT_EDITING:
+            e.data["window_id"] = sdlEvent.edit.windowID;
+            e.data["text"] = sdlEvent.edit.text;
+            e.data["start"] = sdlEvent.edit.start;
+            e.data["length"] = sdlEvent.edit.length;
+            break;
+        case SDL_EVENT_TEXT_INPUT:
+            e.data["window_id"] = sdlEvent.text.windowID;
+            e.data["text"] = sdlEvent.text.text;
+            break;
+        case SDL_EVENT_KEYBOARD_ADDED:
+        case SDL_EVENT_KEYBOARD_REMOVED:
+            e.data["which"] = sdlEvent.kdevice.which;
+            break;
+        case SDL_EVENT_TEXT_EDITING_CANDIDATES:
+            e.data["window_id"] = sdlEvent.edit_candidates.windowID;
+            e.data["candidates"] = std::vector<std::string>(
+                sdlEvent.edit_candidates.candidates,
+                sdlEvent.edit_candidates.candidates + sdlEvent.edit_candidates.num_candidates);
+            e.data["num_candidates"] = sdlEvent.edit_candidates.num_candidates;
+            e.data["selected_candidate"] = sdlEvent.edit_candidates.selected_candidate;
+            e.data["horizontal"] = sdlEvent.edit_candidates.horizontal;
+            e.data["padding1"] = sdlEvent.edit_candidates.padding1;
+            e.data["padding2"] = sdlEvent.edit_candidates.padding2;
+            e.data["padding3"] = sdlEvent.edit_candidates.padding3;
+            break;
+        default:
+            break;
     }
 }
 
@@ -168,4 +178,4 @@ Returns:
     bool: True if the key was newly released.
         )doc");
 }
-} // namespace kn::key
+}  // namespace kn::key

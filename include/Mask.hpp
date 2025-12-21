@@ -1,7 +1,8 @@
 #pragma once
 
-#include <memory>
 #include <pybind11/pybind11.h>
+
+#include <memory>
 #include <vector>
 
 namespace py = pybind11;
@@ -15,7 +16,7 @@ class Rect;
 
 class Mask
 {
-public:
+  public:
     Mask() = default;
     explicit Mask(const Vec2& size, bool filled = false);
     explicit Mask(const PixelArray& pixelArray, uint8_t threshold = 1);
@@ -67,7 +68,7 @@ public:
     [[nodiscard]] std::unique_ptr<PixelArray> getPixelArray(const Color& color = {255, 255, 255,
                                                                                   255}) const;
 
-private:
+  private:
     int m_width = 0, m_height = 0;
     std::vector<bool> m_maskData;
 };
@@ -75,5 +76,5 @@ private:
 namespace mask
 {
 void _bind(const py::module_& module);
-} // namespace mask
-} // namespace kn
+}  // namespace mask
+}  // namespace kn

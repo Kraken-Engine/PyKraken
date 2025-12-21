@@ -1,14 +1,16 @@
 #include "Font.hpp"
-#include "Log.hpp"
-#include "misc/SpaceGrotesk.h"
-#include "misc/minecraftia.h"
+
+#include <pybind11/native_enum.h>
 
 #include <algorithm>
 #include <cmath>
 #include <mutex>
-#include <pybind11/native_enum.h>
 #include <stdexcept>
 #include <vector>
+
+#include "Log.hpp"
+#include "misc/SpaceGrotesk.h"
+#include "misc/minecraftia.h"
 
 namespace kn
 {
@@ -17,7 +19,7 @@ namespace font
 // Static registry to track all font instances for proper cleanup
 static std::vector<Font*> _fontInstances;
 static std::mutex _fontsMutex;
-} // namespace font
+}  // namespace font
 
 Font::Font(const std::string& fileDir, int ptSize)
 {
@@ -32,7 +34,7 @@ Font::Font(const std::string& fileDir, int ptSize)
     else if (fileDir == "kraken-retro")
     {
         SDL_IOStream* rw = SDL_IOFromMem(Minecraftia_Regular_ttf, Minecraftia_Regular_ttf_len);
-        const int ptSizeFixed = (ptSize + 4) / 8 * 8; // Round to the nearest multiple of 8
+        const int ptSizeFixed = (ptSize + 4) / 8 * 8;  // Round to the nearest multiple of 8
         m_font = TTF_OpenFontIO(rw, true, static_cast<float>(ptSizeFixed));
     }
     else
@@ -72,15 +74,15 @@ void Font::setAlignment(const Align alignment) const
 {
     switch (alignment)
     {
-    case Align::Left:
-        TTF_SetFontWrapAlignment(m_font, TTF_HORIZONTAL_ALIGN_LEFT);
-        break;
-    case Align::Center:
-        TTF_SetFontWrapAlignment(m_font, TTF_HORIZONTAL_ALIGN_CENTER);
-        break;
-    case Align::Right:
-        TTF_SetFontWrapAlignment(m_font, TTF_HORIZONTAL_ALIGN_RIGHT);
-        break;
+        case Align::Left:
+            TTF_SetFontWrapAlignment(m_font, TTF_HORIZONTAL_ALIGN_LEFT);
+            break;
+        case Align::Center:
+            TTF_SetFontWrapAlignment(m_font, TTF_HORIZONTAL_ALIGN_CENTER);
+            break;
+        case Align::Right:
+            TTF_SetFontWrapAlignment(m_font, TTF_HORIZONTAL_ALIGN_RIGHT);
+            break;
     }
 }
 
@@ -89,14 +91,14 @@ Align Font::getAlignment() const
     const TTF_HorizontalAlignment align = TTF_GetFontWrapAlignment(m_font);
     switch (align)
     {
-    case TTF_HORIZONTAL_ALIGN_LEFT:
-        return Align::Left;
-    case TTF_HORIZONTAL_ALIGN_CENTER:
-        return Align::Center;
-    case TTF_HORIZONTAL_ALIGN_RIGHT:
-        return Align::Right;
-    default:
-        return Align::Left;
+        case TTF_HORIZONTAL_ALIGN_LEFT:
+            return Align::Left;
+        case TTF_HORIZONTAL_ALIGN_CENTER:
+            return Align::Center;
+        case TTF_HORIZONTAL_ALIGN_RIGHT:
+            return Align::Right;
+        default:
+            return Align::Left;
     }
 }
 
@@ -104,21 +106,21 @@ void Font::setHinting(const font::Hinting hinting) const
 {
     switch (hinting)
     {
-    case font::Hinting::Normal:
-        TTF_SetFontHinting(m_font, TTF_HINTING_NORMAL);
-        break;
-    case font::Hinting::Light:
-        TTF_SetFontHinting(m_font, TTF_HINTING_LIGHT);
-        break;
-    case font::Hinting::Mono:
-        TTF_SetFontHinting(m_font, TTF_HINTING_MONO);
-        break;
-    case font::Hinting::LightSubpixel:
-        TTF_SetFontHinting(m_font, TTF_HINTING_LIGHT_SUBPIXEL);
-        break;
-    case font::Hinting::None:
-        TTF_SetFontHinting(m_font, TTF_HINTING_NONE);
-        break;
+        case font::Hinting::Normal:
+            TTF_SetFontHinting(m_font, TTF_HINTING_NORMAL);
+            break;
+        case font::Hinting::Light:
+            TTF_SetFontHinting(m_font, TTF_HINTING_LIGHT);
+            break;
+        case font::Hinting::Mono:
+            TTF_SetFontHinting(m_font, TTF_HINTING_MONO);
+            break;
+        case font::Hinting::LightSubpixel:
+            TTF_SetFontHinting(m_font, TTF_HINTING_LIGHT_SUBPIXEL);
+            break;
+        case font::Hinting::None:
+            TTF_SetFontHinting(m_font, TTF_HINTING_NONE);
+            break;
     }
 }
 
@@ -127,18 +129,18 @@ font::Hinting Font::getHinting() const
     const TTF_HintingFlags hinting = TTF_GetFontHinting(m_font);
     switch (hinting)
     {
-    case TTF_HINTING_NORMAL:
-        return font::Hinting::Normal;
-    case TTF_HINTING_LIGHT:
-        return font::Hinting::Light;
-    case TTF_HINTING_MONO:
-        return font::Hinting::Mono;
-    case TTF_HINTING_LIGHT_SUBPIXEL:
-        return font::Hinting::LightSubpixel;
-    case TTF_HINTING_NONE:
-        return font::Hinting::None;
-    default:
-        return font::Hinting::Normal;
+        case TTF_HINTING_NORMAL:
+            return font::Hinting::Normal;
+        case TTF_HINTING_LIGHT:
+            return font::Hinting::Light;
+        case TTF_HINTING_MONO:
+            return font::Hinting::Mono;
+        case TTF_HINTING_LIGHT_SUBPIXEL:
+            return font::Hinting::LightSubpixel;
+        case TTF_HINTING_NONE:
+            return font::Hinting::None;
+        default:
+            return font::Hinting::Normal;
     }
 }
 
@@ -149,7 +151,10 @@ void Font::setPtSize(int pt) const
     TTF_SetFontSize(m_font, static_cast<float>(pt));
 }
 
-int Font::getPtSize() const { return static_cast<int>(TTF_GetFontSize(m_font)); }
+int Font::getPtSize() const
+{
+    return static_cast<int>(TTF_GetFontSize(m_font));
+}
 
 void Font::setBold(const bool on) const
 {
@@ -199,23 +204,50 @@ bool Font::isStrikethrough() const
     return (s & TTF_STYLE_STRIKETHROUGH) != 0;
 }
 
-int Font::getHeight() const { return TTF_GetFontHeight(m_font); }
+int Font::getHeight() const
+{
+    return TTF_GetFontHeight(m_font);
+}
 
-int Font::getAscent() const { return TTF_GetFontAscent(m_font); }
+int Font::getAscent() const
+{
+    return TTF_GetFontAscent(m_font);
+}
 
-int Font::getDescent() const { return TTF_GetFontDescent(m_font); }
+int Font::getDescent() const
+{
+    return TTF_GetFontDescent(m_font);
+}
 
-void Font::setLineSpacing(const int lineSpacing) const { TTF_SetFontLineSkip(m_font, lineSpacing); }
+void Font::setLineSpacing(const int lineSpacing) const
+{
+    TTF_SetFontLineSkip(m_font, lineSpacing);
+}
 
-int Font::getLineSpacing() const { return TTF_GetFontLineSkip(m_font); }
+int Font::getLineSpacing() const
+{
+    return TTF_GetFontLineSkip(m_font);
+}
 
-void Font::setOutline(const int outline) const { TTF_SetFontOutline(m_font, outline); }
+void Font::setOutline(const int outline) const
+{
+    TTF_SetFontOutline(m_font, outline);
+}
 
-int Font::getOutline() const { return TTF_GetFontOutline(m_font); }
+int Font::getOutline() const
+{
+    return TTF_GetFontOutline(m_font);
+}
 
-void Font::setKerning(const bool enabled) const { TTF_SetFontKerning(m_font, enabled); }
+void Font::setKerning(const bool enabled) const
+{
+    TTF_SetFontKerning(m_font, enabled);
+}
 
-bool Font::getKerning() const { return TTF_GetFontKerning(m_font) != 0; }
+bool Font::getKerning() const
+{
+    return TTF_GetFontKerning(m_font) != 0;
+}
 
 /*
 void Font::setCharSpacing(const int charSpacing) const
@@ -364,5 +396,5 @@ Get or set the additional spacing between characters in pixels.
         )doc");
     */
 }
-} // namespace font
-} // namespace kn
+}  // namespace font
+}  // namespace kn

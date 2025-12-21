@@ -33,7 +33,7 @@
 
 constexpr int KRAKEN_MAJOR_VERSION = 1;
 constexpr int KRAKEN_MINOR_VERSION = 4;
-constexpr int KRAKEN_MICRO_VERSION = 0;
+constexpr int KRAKEN_MICRO_VERSION = 2;
 
 constexpr const char* getPlatform();
 constexpr const char* getArchitecture();

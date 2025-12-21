@@ -2,6 +2,7 @@
 
 #include <SDL3/SDL.h>
 #include <pybind11/pybind11.h>
+
 #include <string>
 
 #include "Math.hpp"
@@ -14,6 +15,19 @@ namespace kn
 class PixelArray;
 struct Color;
 
+enum class TextureAccess
+{
+    STATIC = SDL_TEXTUREACCESS_STATIC,
+    TARGET = SDL_TEXTUREACCESS_TARGET,
+};
+
+enum class TextureScaleMode
+{
+    NEAREST = SDL_SCALEMODE_NEAREST,
+    LINEAR = SDL_SCALEMODE_LINEAR,
+    PIXELART = SDL_SCALEMODE_PIXELART,
+};
+
 class Texture
 {
   public:
@@ -23,12 +37,16 @@ class Texture
         bool v = false;
     } flip;
 
-    explicit Texture(SDL_Texture* sdlTexture);
-    explicit Texture(const PixelArray& pixelArray);
-    explicit Texture(const std::string& filePath);
+    Texture(const Vec2& size, TextureScaleMode scaleMode);
+    Texture(const PixelArray& pixelArray, TextureScaleMode scaleMode,
+            TextureAccess access = TextureAccess::STATIC);
+    Texture(const std::string& filePath, TextureScaleMode scaleMode,
+            TextureAccess access = TextureAccess::STATIC);
     ~Texture();
 
-    void loadFromSDL(SDL_Texture* sdlTexture);
+    [[nodiscard]] double getWidth() const;
+
+    [[nodiscard]] double getHeight() const;
 
     [[nodiscard]] Vec2 getSize() const;
 
@@ -52,10 +70,12 @@ class Texture
 
   private:
     SDL_Texture* m_texPtr = nullptr;
+    double m_width = 0.0;
+    double m_height = 0.0;
 };
 
 namespace texture
 {
 void _bind(const py::module_& module);
-} // namespace texture
-} // namespace kn
+}  // namespace texture
+}  // namespace kn

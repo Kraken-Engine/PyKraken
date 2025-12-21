@@ -2,6 +2,7 @@
 
 #include <SDL3/SDL.h>
 #include <pybind11/pybind11.h>
+
 #include <unordered_map>
 
 namespace py = pybind11;
@@ -46,5 +47,5 @@ std::vector<int> getConnectedSlots();
 void _clearStates();
 
 void _handleEvents(const SDL_Event& sdlEvent, const Event& e);
-} // namespace gamepad
-} // namespace kn
+}  // namespace gamepad
+}  // namespace kn

@@ -1,3 +1,10 @@
+#include "Draw.hpp"
+
+#include <gfx/SDL3_gfxPrimitives.h>
+#include <pybind11/stl.h>
+
+#include <set>
+
 #include "Camera.hpp"
 #include "Circle.hpp"
 #include "Color.hpp"
@@ -6,11 +13,6 @@
 #include "Polygon.hpp"
 #include "Rect.hpp"
 #include "Renderer.hpp"
-
-#include "Draw.hpp"
-#include <gfx/SDL3_gfxPrimitives.h>
-#include <pybind11/stl.h>
-#include <set>
 
 static Uint64 packPoint(int x, int y);
 
@@ -42,7 +44,7 @@ void points(const std::vector<Vec2>& points, const Color& color)
     sdlPoints.reserve(points.size());
 
     const Vec2 cameraPos = camera::getActivePos();
-    const Vec2 max = renderer::getResolution() - cameraPos;
+    const Vec2 max = renderer::getTargetResolution() - cameraPos;
     const Vec2 min = -cameraPos;
     for (const Vec2& point : points)
         if (const Vec2 pos = point - cameraPos; min < pos && pos < max)
@@ -72,7 +74,7 @@ void pointsFromNDArray(const py::array_t<double, py::array::c_style | py::array:
     std::vector<SDL_FPoint> sdlPoints;
     sdlPoints.reserve(n);
 
-    const Vec2 res = renderer::getResolution();
+    const Vec2 res = renderer::getTargetResolution();
     const Vec2 cameraPos = camera::getActivePos();
     const Vec2 zero;
     for (size_t i = 0; i < n; ++i)
@@ -492,7 +494,7 @@ Args:
                              Defaults to False (outline). Works with both convex and concave polygons.
     )doc");
 }
-} // namespace kn::draw
+}  // namespace kn::draw
 
 Uint64 packPoint(const int x, const int y)
 {

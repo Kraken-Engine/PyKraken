@@ -1,4 +1,5 @@
 #include "Collision.hpp"
+
 #include "Circle.hpp"
 #include "Line.hpp"
 #include "Math.hpp"
@@ -54,10 +55,10 @@ bool overlap(const Rect& rect, const Line& line)
     };
 
     // Check all four edges
-    return intersects(rx, ry, rx + rw, ry) ||           // top
-           intersects(rx, ry + rh, rx + rw, ry + rh) || // bottom
-           intersects(rx, ry, rx, ry + rh) ||           // left
-           intersects(rx + rw, ry, rx + rw, ry + rh);   // right
+    return intersects(rx, ry, rx + rw, ry) ||            // top
+           intersects(rx, ry + rh, rx + rw, ry + rh) ||  // bottom
+           intersects(rx, ry, rx, ry + rh) ||            // left
+           intersects(rx + rw, ry, rx + rw, ry + rh);    // right
 }
 
 bool overlap(const Rect& rect, const Vec2& point)
@@ -76,7 +77,10 @@ bool overlap(const Circle& a, const Circle& b)
     return distSquared <= (radiusSum * radiusSum);
 }
 
-bool overlap(const Circle& circle, const Rect& rect) { return overlap(rect, circle); }
+bool overlap(const Circle& circle, const Rect& rect)
+{
+    return overlap(rect, circle);
+}
 
 bool overlap(const Circle& circle, const Line& line)
 {
@@ -120,7 +124,7 @@ bool overlap(const Line& a, const Line& b)
 {
     const double denom = (b.by - b.ay) * (a.bx - a.ax) - (b.bx - b.ax) * (a.by - a.ay);
     if (denom == 0.0)
-        return false; // Parallel lines
+        return false;  // Parallel lines
 
     const double ua = ((b.bx - b.ax) * (a.ay - b.ay) - (b.by - b.ay) * (a.ax - b.ax)) / denom;
 
@@ -133,13 +137,25 @@ bool overlap(const Line& a, const Line& b)
     return ub >= 0.0 && ub <= 1.0;
 }
 
-bool overlap(const Line& line, const Rect& rect) { return overlap(rect, line); }
+bool overlap(const Line& line, const Rect& rect)
+{
+    return overlap(rect, line);
+}
 
-bool overlap(const Line& line, const Circle& circle) { return overlap(circle, line); }
+bool overlap(const Line& line, const Circle& circle)
+{
+    return overlap(circle, line);
+}
 
-bool overlap(const Vec2& point, const Rect& rect) { return overlap(rect, point); }
+bool overlap(const Vec2& point, const Rect& rect)
+{
+    return overlap(rect, point);
+}
 
-bool overlap(const Vec2& point, const Circle& circle) { return overlap(circle, point); }
+bool overlap(const Vec2& point, const Circle& circle)
+{
+    return overlap(circle, point);
+}
 
 bool contains(const Rect& outer, const Rect& inner)
 {
@@ -234,7 +250,10 @@ bool overlap(const Polygon& polygon, const Vec2& point)
     return inside;
 }
 
-bool overlap(const Vec2& point, const Polygon& polygon) { return overlap(polygon, point); }
+bool overlap(const Vec2& point, const Polygon& polygon)
+{
+    return overlap(polygon, point);
+}
 
 bool overlap(const Polygon& polygon, const Rect& rect)
 {
@@ -259,7 +278,10 @@ bool overlap(const Polygon& polygon, const Rect& rect)
     return false;
 }
 
-bool overlap(const Rect& rect, const Polygon& polygon) { return overlap(polygon, rect); }
+bool overlap(const Rect& rect, const Polygon& polygon)
+{
+    return overlap(polygon, rect);
+}
 
 void _bind(py::module_& module)
 {
@@ -526,4 +548,4 @@ Returns:
     bool: True if the rectangle and polygon overlap.
                      )doc");
 }
-} // namespace kn::collision
+}  // namespace kn::collision

@@ -1,9 +1,11 @@
 #include "Ease.hpp"
-#include "Time.hpp"
+
+#include <pybind11/functional.h>
 
 #include <cmath>
-#include <pybind11/functional.h>
 #include <utility>
+
+#include "Time.hpp"
 
 #ifndef M_PI
 #define M_PI 3.1415926535897932384626433832795
@@ -15,8 +17,8 @@
 
 namespace kn
 {
-EasingAnimation::EasingAnimation(ease::EasingFunction easeFunc, const double duration)
-    : easingFunc(std::move(easeFunc)), duration(duration)
+EasingAnimation::EasingAnimation(ease::EasingFunction easeFunc, const double duration) :
+    easingFunc(std::move(easeFunc)), duration(duration)
 {
 }
 
@@ -43,7 +45,10 @@ Vec2 EasingAnimation::getCurrentPosition() const
     return math::lerp(startPos, endPos, easedT);
 }
 
-void EasingAnimation::pause() { state = State::PAUSED; }
+void EasingAnimation::pause()
+{
+    state = State::PAUSED;
+}
 
 void EasingAnimation::resume()
 {
@@ -63,15 +68,27 @@ void EasingAnimation::reverse()
     state = State::PLAYING;
 }
 
-bool EasingAnimation::isDone() const { return state == State::DONE; }
+bool EasingAnimation::isDone() const
+{
+    return state == State::DONE;
+}
 
 namespace ease
 {
-double linear(const double t) { return t; }
+double linear(const double t)
+{
+    return t;
+}
 
-double inQuad(const double t) { return t * t; }
+double inQuad(const double t)
+{
+    return t * t;
+}
 
-double outQuad(const double t) { return -(t * (t - 2)); }
+double outQuad(const double t)
+{
+    return -(t * (t - 2));
+}
 
 double inOutQuad(const double t)
 {
@@ -81,7 +98,10 @@ double inOutQuad(const double t)
     return -2 * t * t + 4 * t - 1;
 }
 
-double inCubic(const double t) { return t * t * t; }
+double inCubic(const double t)
+{
+    return t * t * t;
+}
 
 double outCubic(const double t)
 {
@@ -98,7 +118,10 @@ double inOutCubic(const double t)
     return 0.5 * f * f * f + 1;
 }
 
-double inQuart(const double t) { return t * t * t * t; }
+double inQuart(const double t)
+{
+    return t * t * t * t;
+}
 
 double outQuart(const double t)
 {
@@ -115,7 +138,10 @@ double inOutQuart(const double t)
     return -8 * f * f * f * f + 1;
 }
 
-double inQuint(const double t) { return t * t * t * t * t; }
+double inQuint(const double t)
+{
+    return t * t * t * t * t;
+}
 
 double outQuint(const double t)
 {
@@ -132,15 +158,30 @@ double inOutQuint(const double t)
     return 0.5 * f * f * f * f * f + 1;
 }
 
-double inSin(const double t) { return sin((t - 1) * M_PI_2) + 1; }
+double inSin(const double t)
+{
+    return sin((t - 1) * M_PI_2) + 1;
+}
 
-double outSin(const double t) { return sin(t * M_PI_2); }
+double outSin(const double t)
+{
+    return sin(t * M_PI_2);
+}
 
-double inOutSin(const double t) { return 0.5 * (1 - cos(t * M_PI)); }
+double inOutSin(const double t)
+{
+    return 0.5 * (1 - cos(t * M_PI));
+}
 
-double inCirc(const double t) { return 1 - sqrt(1 - t * t); }
+double inCirc(const double t)
+{
+    return 1 - sqrt(1 - t * t);
+}
 
-double outCirc(const double t) { return sqrt((2 - t) * t); }
+double outCirc(const double t)
+{
+    return sqrt((2 - t) * t);
+}
 
 double inOutCirc(const double t)
 {
@@ -150,9 +191,15 @@ double inOutCirc(const double t)
     return 0.5 * (sqrt(-(2 * t - 3) * (2 * t - 1)) + 1);
 }
 
-double inExpo(const double t) { return t == 0.0 ? t : pow(2, 10 * (t - 1)); }
+double inExpo(const double t)
+{
+    return t == 0.0 ? t : pow(2, 10 * (t - 1));
+}
 
-double outExpo(const double t) { return t == 1.0 ? t : 1 - pow(2, -10 * t); }
+double outExpo(const double t)
+{
+    return t == 1.0 ? t : 1 - pow(2, -10 * t);
+}
 
 double inOutExpo(const double t)
 {
@@ -165,9 +212,15 @@ double inOutExpo(const double t)
     return -0.5 * pow(2, -20 * t + 10) + 1;
 }
 
-double inElastic(const double t) { return sin(13 * M_PI_2 * t) * pow(2, 10 * (t - 1)); }
+double inElastic(const double t)
+{
+    return sin(13 * M_PI_2 * t) * pow(2, 10 * (t - 1));
+}
 
-double outElastic(const double t) { return sin(-13 * M_PI_2 * (t + 1)) * pow(2, -10 * t) + 1; }
+double outElastic(const double t)
+{
+    return sin(-13 * M_PI_2 * (t + 1)) * pow(2, -10 * t) + 1;
+}
 
 double inOutElastic(const double t)
 {
@@ -177,7 +230,10 @@ double inOutElastic(const double t)
     return 0.5 * (sin(-13 * M_PI_2 * (2 * t - 1 + 1)) * pow(2, -10 * (2 * t - 1)) + 2);
 }
 
-double inBack(const double t) { return t * t * t - t * sin(t * M_PI); }
+double inBack(const double t)
+{
+    return t * t * t - t * sin(t * M_PI);
+}
 
 double outBack(const double t)
 {
@@ -197,7 +253,10 @@ double inOutBack(const double t)
     return 0.5 * (1 - (f * f * f - f * sin(f * M_PI))) + 0.5;
 }
 
-double inBounce(const double t) { return 1 - outBounce(1 - t); }
+double inBounce(const double t)
+{
+    return 1 - outBounce(1 - t);
+}
 
 double outBounce(const double t)
 {
@@ -548,5 +607,5 @@ Restart the animation from the beginning.
 Reverse the direction of the animation.
     )doc");
 }
-} // namespace ease
-} // namespace kn
+}  // namespace ease
+}  // namespace kn

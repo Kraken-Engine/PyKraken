@@ -2,6 +2,7 @@
 
 #include <SDL3/SDL.h>
 #include <pybind11/pybind11.h>
+
 #include <variant>
 
 #include "_globals.hpp"
@@ -44,5 +45,5 @@ bool isPressed(const std::string& name);
 bool isJustPressed(const std::string& name);
 
 bool isJustReleased(const std::string& name);
-} // namespace input
-} // namespace kn
+}  // namespace input
+}  // namespace kn

@@ -1,6 +1,6 @@
-#include "Math.hpp"
-
 #include "Line.hpp"
+
+#include "Math.hpp"
 
 namespace kn
 {
@@ -119,16 +119,16 @@ Args:
             {
                 switch (i)
                 {
-                case 0:
-                    return self.ax;
-                case 1:
-                    return self.ay;
-                case 2:
-                    return self.bx;
-                case 3:
-                    return self.by;
-                default:
-                    throw py::index_error("Index out of range");
+                    case 0:
+                        return self.ax;
+                    case 1:
+                        return self.ay;
+                    case 2:
+                        return self.bx;
+                    case 3:
+                        return self.by;
+                    default:
+                        throw py::index_error("Index out of range");
                 }
             },
             py::arg("index"))
@@ -146,12 +146,12 @@ Args:
     offset (Vec2 | list[float]): The amount to move.
         )doc");
 }
-} // namespace line
+}  // namespace line
 
 Line::Line() : ax(0.0), ay(0.0), bx(0.0), by(0.0) {}
 
-Line::Line(const double ax, const double ay, const double bx, const double by)
-    : ax(ax), ay(ay), bx(bx), by(by)
+Line::Line(const double ax, const double ay, const double bx, const double by) :
+    ax(ax), ay(ay), bx(bx), by(by)
 {
 }
 
@@ -168,7 +168,10 @@ double Line::getLength() const
     return sqrt(dx * dx + dy * dy);
 }
 
-Vec2 Line::getA() const { return {ax, ay}; }
+Vec2 Line::getA() const
+{
+    return {ax, ay};
+}
 
 void Line::setA(const Vec2& pos)
 {
@@ -176,7 +179,10 @@ void Line::setA(const Vec2& pos)
     ay = pos.y;
 }
 
-Vec2 Line::getB() const { return {bx, by}; }
+Vec2 Line::getB() const
+{
+    return {bx, by};
+}
 
 void Line::setB(const Vec2& pos)
 {
@@ -192,12 +198,18 @@ void Line::move(const Vec2& offset)
     by += offset.y;
 }
 
-Line Line::copy() const { return {ax, ay, bx, by}; }
+Line Line::copy() const
+{
+    return {ax, ay, bx, by};
+}
 
 bool Line::operator==(const Line& other) const
 {
     return ax == other.ax && ay == other.ay && bx == other.bx && by == other.by;
 }
 
-bool Line::operator!=(const Line& other) const { return !(*this == other); }
-} // namespace kn
+bool Line::operator!=(const Line& other) const
+{
+    return !(*this == other);
+}
+}  // namespace kn

@@ -8,6 +8,7 @@ __all__: list[str] = ['layout', 'set', 'unset']
 def layout(count: typing.SupportsInt, mode: pykraken._core.ViewportMode = pykraken._core.ViewportMode.VERTICAL) -> list[pykraken._core.Rect]:
     """
     Layout the screen into multiple viewports.
+    The viewports are created with the current renderer target resolution in mind.
     
     Args:
         count (int): The number of viewports to create (between 2 and 4).

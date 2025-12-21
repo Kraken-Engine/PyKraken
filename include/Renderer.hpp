@@ -1,8 +1,9 @@
 #pragma once
 
 #include <SDL3/SDL.h>
-#include <memory>
 #include <pybind11/pybind11.h>
+
+#include <memory>
 
 #include "Color.hpp"
 #include "Math.hpp"
@@ -15,11 +16,12 @@ namespace kn
 {
 class Texture;
 class PixelArray;
+enum class TextureScaleMode;
 
 namespace renderer
 {
 void _bind(py::module_& module);
-void _init(SDL_Window* window, const Vec2& resolution);
+void _init(SDL_Window* window, int width, int height);
 void _quit();
 SDL_Renderer* _get();
 SDL_GPUDevice* _getGPUDevice();
@@ -27,9 +29,15 @@ SDL_GPUDevice* _getGPUDevice();
 void clear(const Color& color = {});
 void clear(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255);
 void present();
-Vec2 getResolution();
+Vec2 getTargetResolution();
 std::unique_ptr<PixelArray> readPixels(const Rect& src = {});
 
-void draw(const Texture& texture, Transform transform = {}, const Rect& srcRect = {});
-} // namespace renderer
-} // namespace kn
+void setDefaultScaleMode(TextureScaleMode scaleMode);
+TextureScaleMode getDefaultScaleMode();
+
+void setTarget(const std::shared_ptr<Texture>& target);
+
+void draw(const std::shared_ptr<Texture>& texture, Transform transform = {},
+          const Rect& srcRect = {});
+}  // namespace renderer
+}  // namespace kn

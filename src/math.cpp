@@ -1,6 +1,7 @@
 #include "Math.hpp"
 
 #include <SDL3/SDL.h>
+
 #include <algorithm>
 
 #ifndef M_PI
@@ -19,20 +20,35 @@ bool PolarCoordinate::operator==(const PolarCoordinate& other) const
     return angle == other.angle && radius == other.radius;
 }
 
-bool PolarCoordinate::operator!=(const PolarCoordinate& other) const { return !(*this == other); }
+bool PolarCoordinate::operator!=(const PolarCoordinate& other) const
+{
+    return !(*this == other);
+}
 
-Vec2 Vec2::copy() const { return {x, y}; }
+Vec2 Vec2::copy() const
+{
+    return {x, y};
+}
 
 bool Vec2::isZero(const double tolerance) const
 {
     return std::abs(x) < tolerance && std::abs(y) < tolerance;
 }
 
-double Vec2::getLength() const { return std::hypot(x, y); }
+double Vec2::getLength() const
+{
+    return std::hypot(x, y);
+}
 
-double Vec2::getLengthSquared() const { return x * x + y * y; }
+double Vec2::getLengthSquared() const
+{
+    return x * x + y * y;
+}
 
-double Vec2::getAngle() const { return std::atan2(y, x); }
+double Vec2::getAngle() const
+{
+    return std::atan2(y, x);
+}
 
 void Vec2::rotate(const double rad)
 {
@@ -47,7 +63,10 @@ void Vec2::rotate(const double rad)
     y = newY;
 }
 
-PolarCoordinate Vec2::toPolar() const { return {getAngle(), getLength()}; }
+PolarCoordinate Vec2::toPolar() const
+{
+    return {getAngle(), getLength()};
+}
 
 void Vec2::scaleToLength(const double scalar)
 {
@@ -75,9 +94,15 @@ Vec2 Vec2::project(const Vec2& other) const
     return other * math::dot(*this, other) / lenSq;
 }
 
-Vec2 Vec2::reject(const Vec2& other) const { return *this - project(other); }
+Vec2 Vec2::reject(const Vec2& other) const
+{
+    return *this - project(other);
+}
 
-Vec2 Vec2::reflect(const Vec2& other) const { return *this - project(other) * 2.0; }
+Vec2 Vec2::reflect(const Vec2& other) const
+{
+    return *this - project(other) * 2.0;
+}
 
 void Vec2::normalize()
 {
@@ -89,19 +114,37 @@ void Vec2::normalize()
     y /= length;
 }
 
-double Vec2::distanceTo(const Vec2& other) const { return (other - *this).getLength(); }
+double Vec2::distanceTo(const Vec2& other) const
+{
+    return (other - *this).getLength();
+}
 
 double Vec2::distanceSquaredTo(const Vec2& other) const
 {
     return (other - *this).getLengthSquared();
 }
 
-Vec2 Vec2::operator-() const { return {-x, -y}; }
+Vec2 Vec2::operator-() const
+{
+    return {-x, -y};
+}
 
-Vec2 Vec2::operator+(const Vec2& other) const { return {x + other.x, y + other.y}; }
-Vec2 Vec2::operator-(const Vec2& other) const { return {x - other.x, y - other.y}; }
-Vec2 Vec2::operator*(const double scalar) const { return {x * scalar, y * scalar}; }
-Vec2 Vec2::operator/(const double scalar) const { return {x / scalar, y / scalar}; }
+Vec2 Vec2::operator+(const Vec2& other) const
+{
+    return {x + other.x, y + other.y};
+}
+Vec2 Vec2::operator-(const Vec2& other) const
+{
+    return {x - other.x, y - other.y};
+}
+Vec2 Vec2::operator*(const double scalar) const
+{
+    return {x * scalar, y * scalar};
+}
+Vec2 Vec2::operator/(const double scalar) const
+{
+    return {x / scalar, y / scalar};
+}
 
 Vec2& Vec2::operator+=(const Vec2& other)
 {
@@ -131,17 +174,44 @@ Vec2& Vec2::operator/=(const double scalar)
     return *this;
 }
 
-Vec2 operator*(const double lhs, const Vec2& rhs) { return rhs * lhs; }
+Vec2 operator*(const double lhs, const Vec2& rhs)
+{
+    return rhs * lhs;
+}
 
-bool Vec2::operator==(const Vec2& other) const { return (*this - other).isZero(); }
-bool Vec2::operator!=(const Vec2& other) const { return !(*this == other); }
-bool Vec2::operator<(const Vec2& other) const { return x < other.x && y < other.y; }
-bool Vec2::operator>(const Vec2& other) const { return x > other.x && y > other.y; }
-bool Vec2::operator<=(const Vec2& other) const { return !(*this > other); }
-bool Vec2::operator>=(const Vec2& other) const { return !(*this < other); }
+bool Vec2::operator==(const Vec2& other) const
+{
+    return (*this - other).isZero();
+}
+bool Vec2::operator!=(const Vec2& other) const
+{
+    return !(*this == other);
+}
+bool Vec2::operator<(const Vec2& other) const
+{
+    return x < other.x && y < other.y;
+}
+bool Vec2::operator>(const Vec2& other) const
+{
+    return x > other.x && y > other.y;
+}
+bool Vec2::operator<=(const Vec2& other) const
+{
+    return !(*this > other);
+}
+bool Vec2::operator>=(const Vec2& other) const
+{
+    return !(*this < other);
+}
 
-Vec2::operator SDL_Point() const { return {static_cast<int>(x), static_cast<int>(y)}; }
-Vec2::operator SDL_FPoint() const { return {static_cast<float>(x), static_cast<float>(y)}; }
+Vec2::operator SDL_Point() const
+{
+    return {static_cast<int>(x), static_cast<int>(y)};
+}
+Vec2::operator SDL_FPoint() const
+{
+    return {static_cast<float>(x), static_cast<float>(y)};
+}
 
 namespace math
 {
@@ -162,7 +232,10 @@ Vec2 fromPolar(const double rad, const double radius)
     return {radius * std::cos(rad), radius * std::sin(rad)};
 }
 
-Vec2 fromPolar(const PolarCoordinate& polar) { return fromPolar(polar.angle, polar.radius); }
+Vec2 fromPolar(const PolarCoordinate& polar)
+{
+    return fromPolar(polar.angle, polar.radius);
+}
 
 Vec2 normalize(Vec2 vec)
 {
@@ -187,7 +260,10 @@ Vec2 lerp(const Vec2& a, const Vec2& b, const double t)
     return {lerp(a.x, b.x, t), lerp(a.y, b.y, t)};
 }
 
-double lerp(const double a, const double b, const double t) { return a + (b - a) * t; }
+double lerp(const double a, const double b, const double t)
+{
+    return a + (b - a) * t;
+}
 
 double remap(const double in_min, const double in_max, const double out_min, const double out_max,
              const double value)
@@ -199,13 +275,25 @@ double remap(const double in_min, const double in_max, const double out_min, con
     return out_min + scale * (out_max - out_min);
 }
 
-double toDegrees(const double angle) { return angle * (180.0 / M_PI); }
+double toDegrees(const double angle)
+{
+    return angle * (180.0 / M_PI);
+}
 
-double toRadians(const double angle) { return angle * (M_PI / 180.0); }
+double toRadians(const double angle)
+{
+    return angle * (M_PI / 180.0);
+}
 
-double dot(const Vec2& a, const Vec2& b) { return a.x * b.x + a.y * b.y; }
+double dot(const Vec2& a, const Vec2& b)
+{
+    return a.x * b.x + a.y * b.y;
+}
 
-double cross(const Vec2& a, const Vec2& b) { return a.x * b.y - a.y * b.x; }
+double cross(const Vec2& a, const Vec2& b)
+{
+    return a.x * b.y - a.y * b.x;
+}
 
 double angleBetween(const Vec2& a, const Vec2& b)
 {
@@ -261,10 +349,8 @@ Attributes:
                      {
                          const auto pos = posObj.is_none() ? Vec2{} : posObj.cast<Vec2>();
                          const auto size = sizeObj.is_none() ? Vec2{} : sizeObj.cast<Vec2>();
-                         const auto scale =
-                             scaleObj.is_none() ? Vec2{1.0} : scaleObj.cast<Vec2>();
-                         const auto pivot =
-                             pivotObj.is_none() ? Vec2{0.5} : pivotObj.cast<Vec2>();
+                         const auto scale = scaleObj.is_none() ? Vec2{1.0} : scaleObj.cast<Vec2>();
+                         const auto pivot = pivotObj.is_none() ? Vec2{0.5} : pivotObj.cast<Vec2>();
                          return {pos, size, angle, scale, anchor, pivot};
                      }
                      catch (const py::cast_error&)
@@ -847,5 +933,5 @@ Returns:
     Vec2: A new rotated vector.
         )doc");
 }
-} // namespace math
-} // namespace kn
+}  // namespace math
+}  // namespace kn

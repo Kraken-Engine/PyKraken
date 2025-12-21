@@ -2,6 +2,7 @@
 
 #include <SDL3_ttf/SDL_ttf.h>
 #include <pybind11/pybind11.h>
+
 #include <string>
 
 #include "Color.hpp"
@@ -20,8 +21,8 @@ namespace text
 void _bind(const py::module_& module);
 void _init();
 void _quit();
-void _cleanupTexts(); // Clean up all text objects before text engine is destroyed
-} // namespace text
+void _cleanupTexts();  // Clean up all text objects before text engine is destroyed
+}  // namespace text
 
 class Text
 {
@@ -53,6 +54,6 @@ class Text
   private:
     TTF_Text* m_text = nullptr;
 
-    friend void text::_cleanupTexts(); // Allow text::_cleanupTexts to access private members
+    friend void text::_cleanupTexts();  // Allow text::_cleanupTexts to access private members
 };
-} // namespace kn
+}  // namespace kn

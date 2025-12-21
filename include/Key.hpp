@@ -29,5 +29,5 @@ bool isPressed(Keycode keycode);
 bool isJustPressed(Keycode keycode);
 
 bool isJustReleased(Keycode keycode);
-} // namespace key
-} // namespace kn
+}  // namespace key
+}  // namespace kn

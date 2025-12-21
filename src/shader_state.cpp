@@ -1,8 +1,8 @@
-#include "Renderer.hpp"
-#include "ShaderState.hpp"
-
 #include <algorithm>
 #include <vector>
+
+#include "Renderer.hpp"
+#include "ShaderState.hpp"
 
 namespace kn
 {
@@ -60,9 +60,9 @@ ShaderState::ShaderState(const std::string& fragmentFilePath, const Uint32 unifo
     shaderInfo.entrypoint = entrypoint;
     shaderInfo.format = shaderFormat;
     shaderInfo.stage = SDL_GPU_SHADERSTAGE_FRAGMENT;
-    shaderInfo.num_samplers = 1;         // Not usable yet for more than 1 sampler
-    shaderInfo.num_storage_textures = 0; // Not usable yet
-    shaderInfo.num_storage_buffers = 0;  // Not usable yet
+    shaderInfo.num_samplers = 1;          // Not usable yet for more than 1 sampler
+    shaderInfo.num_storage_textures = 0;  // Not usable yet
+    shaderInfo.num_storage_buffers = 0;   // Not usable yet
     shaderInfo.num_uniform_buffers = uniformBufferCount;
 
     m_fragShader = SDL_CreateGPUShader(renderer::_getGPUDevice(), &shaderInfo);
@@ -193,5 +193,5 @@ Args:
     data (buffer): Buffer or bytes object containing the uniform data to upload.
             )doc");
 }
-} // namespace shader_state
-} // namespace kn
+}  // namespace shader_state
+}  // namespace kn

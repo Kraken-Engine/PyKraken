@@ -1,15 +1,16 @@
 #include "Text.hpp"
-#include "Camera.hpp"
-#include "Font.hpp"
-#include "Log.hpp"
-#include "Rect.hpp"
-#include "Renderer.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <mutex>
 #include <stdexcept>
 #include <vector>
+
+#include "Camera.hpp"
+#include "Font.hpp"
+#include "Log.hpp"
+#include "Rect.hpp"
+#include "Renderer.hpp"
 
 namespace kn
 {
@@ -85,37 +86,37 @@ void Text::draw(Vec2 pos, const Anchor anchor) const
 
     switch (anchor)
     {
-    case Anchor::TopLeft:
-        // no offset
-        break;
-    case Anchor::TopMid:
-        pos.x -= textW / 2.0;
-        break;
-    case Anchor::TopRight:
-        pos.x -= textW;
-        break;
-    case Anchor::MidLeft:
-        pos.y -= textH / 2.0;
-        break;
-    case Anchor::Center:
-        pos.x -= textW / 2.0;
-        pos.y -= textH / 2.0;
-        break;
-    case Anchor::MidRight:
-        pos.x -= textW;
-        pos.y -= textH / 2.0;
-        break;
-    case Anchor::BottomLeft:
-        pos.y -= textH;
-        break;
-    case Anchor::BottomMid:
-        pos.x -= textW / 2.0;
-        pos.y -= textH;
-        break;
-    case Anchor::BottomRight:
-        pos.x -= textW;
-        pos.y -= textH;
-        break;
+        case Anchor::TopLeft:
+            // no offset
+            break;
+        case Anchor::TopMid:
+            pos.x -= textW / 2.0;
+            break;
+        case Anchor::TopRight:
+            pos.x -= textW;
+            break;
+        case Anchor::MidLeft:
+            pos.y -= textH / 2.0;
+            break;
+        case Anchor::Center:
+            pos.x -= textW / 2.0;
+            pos.y -= textH / 2.0;
+            break;
+        case Anchor::MidRight:
+            pos.x -= textW;
+            pos.y -= textH / 2.0;
+            break;
+        case Anchor::BottomLeft:
+            pos.y -= textH;
+            break;
+        case Anchor::BottomMid:
+            pos.x -= textW / 2.0;
+            pos.y -= textH;
+            break;
+        case Anchor::BottomRight:
+            pos.x -= textW;
+            pos.y -= textH;
+            break;
     }
 
     const int drawX = static_cast<int>(std::round(pos.x));
@@ -397,5 +398,5 @@ Returns:
     Rect: A rectangle with x=0, y=0, and width/height of the text.
     )doc");
 }
-} // namespace text
-} // namespace kn
+}  // namespace text
+}  // namespace kn

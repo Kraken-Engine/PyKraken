@@ -2,6 +2,7 @@
 
 #include <SDL3_ttf/SDL_ttf.h>
 #include <pybind11/pybind11.h>
+
 #include <string>
 
 #include "Color.hpp"
@@ -26,9 +27,9 @@ enum class Hinting
 };
 
 void _bind(const py::module_& module);
-void _init(); // Initialize TTF library
-void _quit(); // Clean up all fonts and shut down TTF
-} // namespace font
+void _init();  // Initialize TTF library
+void _quit();  // Clean up all fonts and shut down TTF
+}  // namespace font
 
 class Font
 {
@@ -73,11 +74,14 @@ class Font
     int getCharSpacing() const;
     */
 
-    TTF_Font* _get() const { return m_font; }
+    TTF_Font* _get() const
+    {
+        return m_font;
+    }
 
   private:
     TTF_Font* m_font = nullptr;
 
-    friend void font::_quit(); // Allow font::_quit to access private members for cleanup
+    friend void font::_quit();  // Allow font::_quit to access private members for cleanup
 };
-} // namespace kn
+}  // namespace kn

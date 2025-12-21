@@ -1,9 +1,10 @@
 #include "Viewport.hpp"
-#include "Rect.hpp"
-#include "Renderer.hpp"
 
 #include <pybind11/native_enum.h>
 #include <pybind11/stl.h>
+
+#include "Rect.hpp"
+#include "Renderer.hpp"
 
 namespace kn
 {
@@ -14,50 +15,50 @@ std::vector<Rect> layout(const uint8_t count, const ViewportMode mode)
     if (count > 4 || count < 2)
         throw std::runtime_error("'count' must be between 2 and 4");
 
-    const Vec2 rRes = renderer::getResolution();
+    const Vec2 rRes = renderer::getTargetResolution();
     std::vector<Rect> viewports;
     viewports.reserve(count);
 
     switch (count)
     {
-    case 4:
-    {
-        const Vec2 vpSize = rRes * 0.5;
-        viewports.push_back({0.0, 0.0, vpSize});
-        viewports.push_back({vpSize.x, 0.0, vpSize});
-        viewports.push_back({0.0, vpSize.y, vpSize});
-        viewports.push_back({vpSize, vpSize});
-        break;
-    }
-    case 3:
-    {
-        const Vec2 vpSize = rRes * 0.5;
-        viewports.push_back({0.0, 0.0, vpSize});
-        viewports.push_back({vpSize.x, 0.0, vpSize});
-        viewports.push_back({0.0, vpSize.y, {rRes.x, vpSize.y}});
-        break;
-    }
-    case 2:
-    {
-        switch (mode)
+        case 4:
         {
-        case ViewportMode::HORIZONTAL:
-        {
-            const Vec2 vpSize{rRes.x, rRes.y * 0.5};
-            viewports.push_back({0.0, 0.0, vpSize});
-            viewports.push_back({0.0, vpSize.y, vpSize});
-            break;
-        }
-        case ViewportMode::VERTICAL:
-        {
-            const Vec2 vpSize{rRes.x * 0.5, rRes.y};
+            const Vec2 vpSize = rRes * 0.5;
             viewports.push_back({0.0, 0.0, vpSize});
             viewports.push_back({vpSize.x, 0.0, vpSize});
+            viewports.push_back({0.0, vpSize.y, vpSize});
+            viewports.push_back({vpSize, vpSize});
             break;
         }
+        case 3:
+        {
+            const Vec2 vpSize = rRes * 0.5;
+            viewports.push_back({0.0, 0.0, vpSize});
+            viewports.push_back({vpSize.x, 0.0, vpSize});
+            viewports.push_back({0.0, vpSize.y, {rRes.x, vpSize.y}});
+            break;
         }
-        break;
-    }
+        case 2:
+        {
+            switch (mode)
+            {
+                case ViewportMode::HORIZONTAL:
+                {
+                    const Vec2 vpSize{rRes.x, rRes.y * 0.5};
+                    viewports.push_back({0.0, 0.0, vpSize});
+                    viewports.push_back({0.0, vpSize.y, vpSize});
+                    break;
+                }
+                case ViewportMode::VERTICAL:
+                {
+                    const Vec2 vpSize{rRes.x * 0.5, rRes.y};
+                    viewports.push_back({0.0, 0.0, vpSize});
+                    viewports.push_back({vpSize.x, 0.0, vpSize});
+                    break;
+                }
+            }
+            break;
+        }
     }
 
     return viewports;
@@ -91,6 +92,7 @@ void _bind(py::module_& module)
     subViewport.def("layout", &layout, py::arg("count"), py::arg("mode") = ViewportMode::VERTICAL,
                     R"doc(
 Layout the screen into multiple viewports.
+The viewports are created with the current renderer target resolution in mind.
 
 Args:
     count (int): The number of viewports to create (between 2 and 4).
@@ -112,5 +114,5 @@ Args:
 Unset the current viewport, reverting to the full rendering area.
                     )doc");
 }
-} // namespace viewport
-} // namespace kn
+}  // namespace viewport
+}  // namespace kn

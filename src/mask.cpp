@@ -1,22 +1,25 @@
+#include "Mask.hpp"
+
+#include <pybind11/stl.h>
+
 #include "Color.hpp"
 #include "Math.hpp"
 #include "PixelArray.hpp"
 #include "Rect.hpp"
 
-#include "Mask.hpp"
-#include <pybind11/stl.h>
-
 namespace kn
 {
-Mask::Mask(const Vec2& size, const bool filled)
-    : m_width(static_cast<int>(size.x)), m_height(static_cast<int>(size.y)),
-      m_maskData(m_width * m_height, filled)
+Mask::Mask(const Vec2& size, const bool filled) :
+    m_width(static_cast<int>(size.x)),
+    m_height(static_cast<int>(size.y)),
+    m_maskData(m_width * m_height, filled)
 {
 }
 
-Mask::Mask(const PixelArray& pixelArray, const uint8_t threshold)
-    : m_width(pixelArray.getWidth()), m_height(pixelArray.getHeight()),
-      m_maskData(m_width * m_height, false)
+Mask::Mask(const PixelArray& pixelArray, const uint8_t threshold) :
+    m_width(pixelArray.getWidth()),
+    m_height(pixelArray.getHeight()),
+    m_maskData(m_width * m_height, false)
 {
     SDL_Surface* rawSurface = pixelArray.getSDL();
     if (!rawSurface)
@@ -31,9 +34,15 @@ Mask::Mask(const PixelArray& pixelArray, const uint8_t threshold)
         }
 }
 
-Vec2 Mask::getSize() const { return {m_width, m_height}; }
+Vec2 Mask::getSize() const
+{
+    return {m_width, m_height};
+}
 
-Rect Mask::getRect() const { return {0, 0, m_width, m_height}; }
+Rect Mask::getRect() const
+{
+    return {0, 0, m_width, m_height};
+}
 
 bool Mask::getAt(const Vec2& pos) const
 {
@@ -94,11 +103,20 @@ Mask Mask::getOverlapMask(const Mask& other, const Vec2& offset) const
     return overlapMask;
 }
 
-void Mask::fill() { std::fill(m_maskData.begin(), m_maskData.end(), true); }
+void Mask::fill()
+{
+    std::fill(m_maskData.begin(), m_maskData.end(), true);
+}
 
-void Mask::clear() { std::fill(m_maskData.begin(), m_maskData.end(), false); }
+void Mask::clear()
+{
+    std::fill(m_maskData.begin(), m_maskData.end(), false);
+}
 
-void Mask::invert() { m_maskData.flip(); }
+void Mask::invert()
+{
+    m_maskData.flip();
+}
 
 void Mask::add(const Mask& other, const Vec2& offset)
 {
@@ -132,7 +150,10 @@ void Mask::subtract(const Mask& other, const Vec2& offset)
         }
 }
 
-int Mask::getCount() const { return static_cast<int>(std::ranges::count(m_maskData, true)); }
+int Mask::getCount() const
+{
+    return static_cast<int>(std::ranges::count(m_maskData, true));
+}
 
 Vec2 Mask::getCenterOfMass() const
 {
@@ -187,7 +208,7 @@ Rect Mask::getBoundingRect() const
     for (int y = 0; y < m_height; ++y)
         for (int x = 0; x < m_width; ++x)
         {
-            if (!m_maskData[y * m_width + x]) // if pixel is opaque
+            if (!m_maskData[y * m_width + x])  // if pixel is opaque
                 continue;
 
             if (x < minX)
@@ -201,7 +222,7 @@ Rect Mask::getBoundingRect() const
         }
 
     if (maxX == -1 || maxY == -1)
-        return {}; // Empty mask
+        return {};  // Empty mask
 
     return {static_cast<double>(minX), static_cast<double>(minY),
             static_cast<double>(maxX - minX + 1), static_cast<double>(maxY - minY + 1)};
@@ -218,7 +239,7 @@ bool Mask::collideMask(const Mask& other, const Vec2& offset) const
     const int yEnd = std::min(m_height, other.m_height - yOffset);
 
     if (xStart >= xEnd || yStart >= yEnd)
-        return false; // No overlap
+        return false;  // No overlap
 
     for (int y = yStart; y < yEnd; ++y)
         for (int x = xStart; x < xEnd; ++x)
@@ -240,7 +261,7 @@ std::vector<Vec2> Mask::getCollisionPoints(const Mask& other, const Vec2& offset
     const int yEnd = std::min(m_height, other.m_height - yOffset);
 
     if (xStart >= xEnd || yStart >= yEnd)
-        return collisionPoints; // No overlap
+        return collisionPoints;  // No overlap
 
     for (int y = yStart; y < yEnd; ++y)
         for (int x = xStart; x < xEnd; ++x)
@@ -255,9 +276,15 @@ bool Mask::isEmpty() const
     return std::ranges::none_of(m_maskData, [](const bool v) { return v; });
 }
 
-int Mask::getWidth() const { return m_width; }
+int Mask::getWidth() const
+{
+    return m_width;
+}
 
-int Mask::getHeight() const { return m_height; }
+int Mask::getHeight() const
+{
+    return m_height;
+}
 
 std::unique_ptr<PixelArray> Mask::getPixelArray(const Color& color) const
 {
@@ -599,5 +626,5 @@ Raises:
 Get the bounding rectangle of the mask starting at (0, 0).
     )doc");
 }
-} // namespace mask
-} // namespace kn
+}  // namespace mask
+}  // namespace kn

@@ -27,12 +27,13 @@ Andreas Schiffler -- aschiffler at ferzkopp dot net
 
 */
 
+#include "gfx/SDL3_gfxPrimitives.h"
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "gfx/SDL3_gfxPrimitives.h"
 #include "gfx/SDL3_gfxPrimitives_font.h"
 #include "gfx/SDL3_rotozoom.h"
 
@@ -47,7 +48,10 @@ Andreas Schiffler -- aschiffler at ferzkopp dot net
 
 \returns Returns true on success, false on failure.
 */
-bool pixel(SDL_Renderer* renderer, Sint16 x, Sint16 y) { return SDL_RenderPoint(renderer, x, y); }
+bool pixel(SDL_Renderer* renderer, Sint16 x, Sint16 y)
+{
+    return SDL_RenderPoint(renderer, x, y);
+}
 
 /*!
 \brief Draw pixel with blending enabled if a<255.
@@ -1018,7 +1022,6 @@ bool _aalineRGBA(SDL_Renderer* renderer, Sint16 x1, Sint16 y1, Sint16 x2, Sint16
      */
     if (dy > dx)
     {
-
         /*
          * y-major.  Calculate 16-bit fixed point fractional part of a pixel that
          * X advances every time Y advances 1 pixel, truncating the result so that
@@ -1059,7 +1062,6 @@ bool _aalineRGBA(SDL_Renderer* renderer, Sint16 x1, Sint16 y1, Sint16 x2, Sint16
     }
     else
     {
-
         /*
          * x-major line.  Calculate 16-bit fixed-point fractional part of a pixel
          * that Y advances each time X advances 1 pixel, truncating the result so
@@ -1076,7 +1078,6 @@ bool _aalineRGBA(SDL_Renderer* renderer, Sint16 x1, Sint16 y1, Sint16 x2, Sint16
         y0p1 = yy0 + 1;
         while (--dx)
         {
-
             erracctmp = erracc;
             erracc += erradj;
             if (erracc <= erracctmp)
@@ -1312,22 +1313,22 @@ bool arcRGBA(SDL_Renderer* renderer, Sint16 x, Sint16 y, Sint16 rad, Sint16 star
             dstart = (double)start;
             switch (oct)
             {
-            case 0:
-            case 3:
-                temp = sin(dstart * M_PI / 180.);
-                break;
-            case 1:
-            case 6:
-                temp = cos(dstart * M_PI / 180.);
-                break;
-            case 2:
-            case 5:
-                temp = -cos(dstart * M_PI / 180.);
-                break;
-            case 4:
-            case 7:
-                temp = -sin(dstart * M_PI / 180.);
-                break;
+                case 0:
+                case 3:
+                    temp = sin(dstart * M_PI / 180.);
+                    break;
+                case 1:
+                case 6:
+                    temp = cos(dstart * M_PI / 180.);
+                    break;
+                case 2:
+                case 5:
+                    temp = -cos(dstart * M_PI / 180.);
+                    break;
+                case 4:
+                case 7:
+                    temp = -sin(dstart * M_PI / 180.);
+                    break;
             }
             temp *= rad;
             stopval_start = (int)temp;
@@ -1351,22 +1352,22 @@ bool arcRGBA(SDL_Renderer* renderer, Sint16 x, Sint16 y, Sint16 rad, Sint16 star
             dend = (double)end;
             switch (oct)
             {
-            case 0:
-            case 3:
-                temp = sin(dend * M_PI / 180);
-                break;
-            case 1:
-            case 6:
-                temp = cos(dend * M_PI / 180);
-                break;
-            case 2:
-            case 5:
-                temp = -cos(dend * M_PI / 180);
-                break;
-            case 4:
-            case 7:
-                temp = -sin(dend * M_PI / 180);
-                break;
+                case 0:
+                case 3:
+                    temp = sin(dend * M_PI / 180);
+                    break;
+                case 1:
+                case 6:
+                    temp = cos(dend * M_PI / 180);
+                    break;
+                case 2:
+                case 5:
+                    temp = -cos(dend * M_PI / 180);
+                    break;
+                case 4:
+                case 7:
+                    temp = -sin(dend * M_PI / 180);
+                    break;
             }
             temp *= rad;
             stopval_end = (int)temp;
@@ -1860,7 +1861,10 @@ bool filledCircleRGBA(SDL_Renderer* renderer, Sint16 x, Sint16 y, Sint16 rad, Ui
 /* Detect 64bit and use intrinsic version */
 #ifdef _M_X64
 #include <emmintrin.h>
-static __inline long lrint(float f) { return _mm_cvtss_si32(_mm_load_ss(&f)); }
+static __inline long lrint(float f)
+{
+    return _mm_cvtss_si32(_mm_load_ss(&f));
+}
 #elif defined(_M_IX86)
 __inline long int lrint(double flt)
 {
@@ -1879,10 +1883,10 @@ __inline long int lrint(double flt)
 #pragma warning(disable : 4716)
 __declspec(naked) long int lrint(double flt)
 {
-    __emit(0xEC410B10); // fmdrr  d0, r0, r1
-    __emit(0xEEBD0B40); // ftosid s0, d0
-    __emit(0xEE100A10); // fmrs   r0, s0
-    __emit(0xE12FFF1E); // bx     lr
+    __emit(0xEC410B10);  // fmdrr  d0, r0, r1
+    __emit(0xEEBD0B40);  // ftosid s0, d0
+    __emit(0xEE100A10);  // fmrs   r0, s0
+    __emit(0xE12FFF1E);  // bx     lr
 }
 #pragma warning(pop)
 #else
@@ -3649,18 +3653,18 @@ bool stringRGBA(SDL_Renderer* renderer, Sint16 x, Sint16 y, const char* s, Uint8
         result &= characterRGBA(renderer, curx, cury, *curchar, r, g, b, a);
         switch (charRotation)
         {
-        case 0:
-            curx += charWidthLocal;
-            break;
-        case 2:
-            curx -= charWidthLocal;
-            break;
-        case 1:
-            cury += charHeightLocal;
-            break;
-        case 3:
-            cury -= charHeightLocal;
-            break;
+            case 0:
+                curx += charWidthLocal;
+                break;
+            case 2:
+                curx -= charWidthLocal;
+                break;
+            case 1:
+                cury += charHeightLocal;
+                break;
+            case 3:
+                cury -= charHeightLocal;
+                break;
         }
         curchar++;
     }

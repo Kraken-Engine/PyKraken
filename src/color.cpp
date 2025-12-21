@@ -5,7 +5,10 @@
 
 namespace kn
 {
-void Color::fromHex(const std::string_view hex) { *this = color::fromHex(hex); }
+void Color::fromHex(const std::string_view hex)
+{
+    *this = color::fromHex(hex);
+}
 
 std::string Color::toHex() const
 {
@@ -17,7 +20,10 @@ std::string Color::toHex() const
     return "#" + ss.str();
 }
 
-void Color::fromHSV(const color::HSV& hsv) { *this = color::fromHSV(hsv); }
+void Color::fromHSV(const color::HSV& hsv)
+{
+    *this = color::fromHSV(hsv);
+}
 
 color::HSV Color::toHSV() const
 {
@@ -34,7 +40,7 @@ color::HSV Color::toHSV() const
 
     if (delta < 0.00001f)
     {
-        h = 0; // Undefined hue
+        h = 0;  // Undefined hue
         s = 0;
     }
     else
@@ -48,13 +54,16 @@ color::HSV Color::toHSV() const
         else
             h = (rNorm - gNorm) / delta + 4.0;
 
-        h *= 60.0; // Convert to degrees
+        h *= 60.0;  // Convert to degrees
     }
 
     return {h, s, v, a / 255.0};
 }
 
-Color::operator SDL_Color() const { return {r, g, b, a}; }
+Color::operator SDL_Color() const
+{
+    return {r, g, b, a};
+}
 
 Color::operator SDL_FColor() const
 {
@@ -73,9 +82,15 @@ bool Color::operator==(const Color& other) const
     return r == other.r && g == other.g && b == other.b && a == other.a;
 }
 
-bool Color::operator!=(const Color& other) const { return !(*this == other); }
+bool Color::operator!=(const Color& other) const
+{
+    return !(*this == other);
+}
 
-Color Color::operator-() const { return color::invert(*this); }
+Color Color::operator-() const
+{
+    return color::invert(*this);
+}
 
 Color Color::operator*(const double scalar) const
 {
@@ -537,5 +552,5 @@ Example:
     subColor.attr("OLIVE") = OLIVE;
     subColor.attr("MAROON") = MAROON;
 }
-} // namespace color
-} // namespace kn
+}  // namespace color
+}  // namespace kn

@@ -7,4 +7,4 @@ namespace py = pybind11;
 namespace kn::constants
 {
 void _bind(const py::module_& module);
-} // namespace kn::constants
+}  // namespace kn::constants

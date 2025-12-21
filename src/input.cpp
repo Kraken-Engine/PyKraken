@@ -1,19 +1,23 @@
+#include "Input.hpp"
+
+#include <pybind11/stl.h>
+
+#include <algorithm>
+#include <unordered_map>
+
 #include "Gamepad.hpp"
 #include "Key.hpp"
 #include "Math.hpp"
 #include "Mouse.hpp"
 
-#include "Input.hpp"
-#include <algorithm>
-#include <pybind11/stl.h>
-#include <unordered_map>
-
-template <class... Ts> struct overloaded : Ts...
+template <class... Ts>
+struct overloaded : Ts...
 {
     using Ts::operator()...;
 };
 
-template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+template <class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
 
 namespace kn
 {
@@ -23,13 +27,13 @@ InputAction::InputAction(const Keycode key) : data(key) {}
 
 InputAction::InputAction(const MouseButton mButton) : data(mButton) {}
 
-InputAction::InputAction(const SDL_GamepadButton cButton, const int slot)
-    : data(cButton), padSlot(slot)
+InputAction::InputAction(const SDL_GamepadButton cButton, const int slot) :
+    data(cButton), padSlot(slot)
 {
 }
 
-InputAction::InputAction(const SDL_GamepadAxis axis, const bool isPositive, const int slot)
-    : data(std::make_pair(axis, isPositive)), padSlot(slot)
+InputAction::InputAction(const SDL_GamepadAxis axis, const bool isPositive, const int slot) :
+    data(std::make_pair(axis, isPositive)), padSlot(slot)
 {
 }
 
@@ -45,7 +49,10 @@ void bind(const std::string& name, const std::vector<InputAction>& actions)
     _inputBindings[name] = actions;
 }
 
-void unbind(const std::string& name) { _inputBindings.erase(name); }
+void unbind(const std::string& name)
+{
+    _inputBindings.erase(name);
+}
 
 Vec2 getDirection(const std::string& up, const std::string& right, const std::string& down,
                   const std::string& left)
@@ -368,5 +375,5 @@ Returns:
     bool: True if released this frame only.
         )doc");
 }
-} // namespace input
-} // namespace kn
+}  // namespace input
+}  // namespace kn

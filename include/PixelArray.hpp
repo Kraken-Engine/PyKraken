@@ -1,8 +1,9 @@
 #pragma once
 
 #include <SDL3/SDL.h>
-#include <memory>
 #include <pybind11/pybind11.h>
+
+#include <memory>
 #include <string>
 
 #include "Rect.hpp"
@@ -91,5 +92,5 @@ std::unique_ptr<PixelArray> gaussianBlur(const PixelArray& pixelArray, int radiu
 std::unique_ptr<PixelArray> invert(const PixelArray& pixelArray);
 
 std::unique_ptr<PixelArray> grayscale(const PixelArray& pixelArray);
-} // namespace pixel_array
-} // namespace kn
+}  // namespace pixel_array
+}  // namespace kn

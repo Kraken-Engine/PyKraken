@@ -1,6 +1,6 @@
-#include "Math.hpp"
-
 #include "Camera.hpp"
+
+#include "Math.hpp"
 
 namespace kn
 {
@@ -18,7 +18,10 @@ void Camera::setPos(const Vec2& newPos)
         _cameraPos = newPos;
 }
 
-Vec2 Camera::getPos() const { return pos; }
+Vec2 Camera::getPos() const
+{
+    return pos;
+}
 
 void Camera::set()
 {
@@ -28,7 +31,10 @@ void Camera::set()
 
 namespace camera
 {
-Vec2 getActivePos() { return _cameraPos; }
+Vec2 getActivePos()
+{
+    return _cameraPos;
+}
 
 void _bind(const py::module_& module)
 {
@@ -72,5 +78,5 @@ Set this camera as the active one for rendering.
 Only one camera can be active at a time.
         )doc");
 }
-} // namespace camera
-} // namespace kn
+}  // namespace camera
+}  // namespace kn

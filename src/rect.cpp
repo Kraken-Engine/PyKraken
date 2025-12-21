@@ -5,7 +5,10 @@ namespace kn
 
 Rect::Rect(const Vec2& pos, const Vec2& size) : x(pos.x), y(pos.y), w(size.x), h(size.y) {}
 
-Rect Rect::copy() const { return {x, y, w, h}; }
+Rect Rect::copy() const
+{
+    return {x, y, w, h};
+}
 
 void Rect::move(const Vec2& offset)
 {
@@ -55,7 +58,10 @@ void Rect::clamp(const Vec2& min, const Vec2& max)
     y = std::max(minY, std::min(y, maxYPos));
 }
 
-void Rect::clamp(const Rect& other) { clamp(other.getTopLeft(), other.getBottomRight()); }
+void Rect::clamp(const Rect& other)
+{
+    clamp(other.getTopLeft(), other.getBottomRight());
+}
 
 void Rect::scaleBy(const double factor)
 {
@@ -97,7 +103,10 @@ bool Rect::operator==(const Rect& other) const
     return x == other.x && y == other.y && w == other.w && h == other.h;
 }
 
-bool Rect::operator!=(const Rect& other) const { return !(*this == other); }
+bool Rect::operator!=(const Rect& other) const
+{
+    return !(*this == other);
+}
 
 Rect::operator SDL_Rect() const
 {
@@ -115,10 +124,22 @@ void Rect::setSize(const Vec2& size)
     w = size.x;
     h = size.y;
 }
-void Rect::setLeft(const double left) { this->x = left; }
-void Rect::setRight(const double right) { this->x = right - w; }
-void Rect::setTop(const double top) { this->y = top; }
-void Rect::setBottom(const double bottom) { this->y = bottom - h; }
+void Rect::setLeft(const double left)
+{
+    this->x = left;
+}
+void Rect::setRight(const double right)
+{
+    this->x = right - w;
+}
+void Rect::setTop(const double top)
+{
+    this->y = top;
+}
+void Rect::setBottom(const double bottom)
+{
+    this->y = bottom - h;
+}
 void Rect::setTopLeft(const Vec2& topLeft)
 {
     x = topLeft.x;
@@ -165,20 +186,62 @@ void Rect::setBottomRight(const Vec2& bottomRight)
     y = bottomRight.y - h;
 }
 
-Vec2 Rect::getSize() const { return {w, h}; }
-double Rect::getLeft() const { return x; }
-double Rect::getRight() const { return x + w; }
-double Rect::getTop() const { return y; }
-double Rect::getBottom() const { return y + h; }
-Vec2 Rect::getTopLeft() const { return {x, y}; }
-Vec2 Rect::getTopMid() const { return {x + w / 2.0, y}; }
-Vec2 Rect::getTopRight() const { return {x + w, y}; }
-Vec2 Rect::getMidLeft() const { return {x, y + h / 2.0}; }
-Vec2 Rect::getCenter() const { return {x + w / 2.0, y + h / 2.0}; }
-Vec2 Rect::getMidRight() const { return {x + w, y + h / 2.0}; }
-Vec2 Rect::getBottomLeft() const { return {x, y + h}; }
-Vec2 Rect::getBottomMid() const { return {x + w / 2.0, y + h}; }
-Vec2 Rect::getBottomRight() const { return {x + w, y + h}; }
+Vec2 Rect::getSize() const
+{
+    return {w, h};
+}
+double Rect::getLeft() const
+{
+    return x;
+}
+double Rect::getRight() const
+{
+    return x + w;
+}
+double Rect::getTop() const
+{
+    return y;
+}
+double Rect::getBottom() const
+{
+    return y + h;
+}
+Vec2 Rect::getTopLeft() const
+{
+    return {x, y};
+}
+Vec2 Rect::getTopMid() const
+{
+    return {x + w / 2.0, y};
+}
+Vec2 Rect::getTopRight() const
+{
+    return {x + w, y};
+}
+Vec2 Rect::getMidLeft() const
+{
+    return {x, y + h / 2.0};
+}
+Vec2 Rect::getCenter() const
+{
+    return {x + w / 2.0, y + h / 2.0};
+}
+Vec2 Rect::getMidRight() const
+{
+    return {x + w, y + h / 2.0};
+}
+Vec2 Rect::getBottomLeft() const
+{
+    return {x, y + h};
+}
+Vec2 Rect::getBottomMid() const
+{
+    return {x + w / 2.0, y + h};
+}
+Vec2 Rect::getBottomRight() const
+{
+    return {x + w, y + h};
+}
 
 namespace rect
 {
@@ -271,17 +334,17 @@ Args:
     pos (Vec2): The position as a Vec2 (x, y).
     size (Vec2): The size as a Vec2 (width, height).
         )doc")
-        .def(py::init(
-                 [](const py::sequence& s) -> Rect
-                 {
-                     if (s.size() != 4)
-                         throw std::runtime_error(
-                             "Rect((x, y, w, h)) expects a 4-element sequence");
+        .def(
+            py::init(
+                [](const py::sequence& s) -> Rect
+                {
+                    if (s.size() != 4)
+                        throw std::runtime_error("Rect((x, y, w, h)) expects a 4-element sequence");
 
-                     return {s[0].cast<double>(), s[1].cast<double>(), s[2].cast<double>(),
-                             s[3].cast<double>()};
-                 }),
-             R"doc(
+                    return {s[0].cast<double>(), s[1].cast<double>(), s[2].cast<double>(),
+                            s[3].cast<double>()};
+                }),
+            R"doc(
 Create a Rect from a sequence of four elements.
 
 Args:
@@ -451,16 +514,16 @@ Raises:
             {
                 switch (i)
                 {
-                case 0:
-                    return rect.x;
-                case 1:
-                    return rect.y;
-                case 2:
-                    return rect.w;
-                case 3:
-                    return rect.h;
-                default:
-                    throw py::index_error("Index out of range");
+                    case 0:
+                        return rect.x;
+                    case 1:
+                        return rect.y;
+                    case 2:
+                        return rect.w;
+                    case 3:
+                        return rect.h;
+                    default:
+                        throw py::index_error("Index out of range");
                 }
             },
             py::arg("index"));
@@ -549,5 +612,5 @@ Raises:
     ValueError: If width or height is <= 0.
     )doc");
 }
-} // namespace rect
-} // namespace kn
+}  // namespace rect
+}  // namespace kn

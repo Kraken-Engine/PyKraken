@@ -1,11 +1,12 @@
 #define MINIAUDIO_IMPLEMENTATION
 
 #include "Mixer.hpp"
-#include "Log.hpp"
 
 #include <algorithm>
 #include <atomic>
 #include <stdexcept>
+
+#include "Log.hpp"
 
 const char* getBackendName(ma_backend backend);
 
@@ -110,7 +111,10 @@ void Audio::setVolume(const float volume)
         ma_sound_set_volume(&v->snd, volume);
 }
 
-float Audio::getVolume() const { return m_volume; }
+float Audio::getVolume() const
+{
+    return m_volume;
+}
 
 void Audio::cleanup()
 {
@@ -220,11 +224,20 @@ void AudioStream::stop(const int fadeOutMs)
     ma_sound_set_stop_time_in_pcm_frames(&m_snd, now + frames);
 }
 
-void AudioStream::pause() { ma_sound_stop(&m_snd); }
+void AudioStream::pause()
+{
+    ma_sound_stop(&m_snd);
+}
 
-void AudioStream::resume() { ma_sound_start(&m_snd); }
+void AudioStream::resume()
+{
+    ma_sound_start(&m_snd);
+}
 
-void AudioStream::rewind() { ma_sound_seek_to_pcm_frame(&m_snd, 0); }
+void AudioStream::rewind()
+{
+    ma_sound_seek_to_pcm_frame(&m_snd, 0);
+}
 
 void AudioStream::seek(float timeSeconds)
 {
@@ -257,7 +270,10 @@ void AudioStream::setVolume(const float volume)
     ma_sound_set_volume(&m_snd, volume);
 }
 
-float AudioStream::getVolume() const { return m_volume; }
+float AudioStream::getVolume() const
+{
+    return m_volume;
+}
 
 void AudioStream::setLooping(const bool loop)
 {
@@ -372,7 +388,7 @@ void _tick()
             }
             else
             {
-                it = _audioInstances.erase(it); // drop expired
+                it = _audioInstances.erase(it);  // drop expired
             }
         }
 
@@ -380,7 +396,7 @@ void _tick()
             _audioInstances.shrink_to_fit();
     }
     for (const auto& a : work)
-        a->cleanup(); // no global lock held; lifetime pinned
+        a->cleanup();  // no global lock held; lifetime pinned
 }
 
 void _bind(const py::module_& module)
@@ -533,38 +549,38 @@ Args:
     loop (bool): True to enable looping, False to disable.
         )doc");
 }
-} // namespace mixer
-} // namespace kn
+}  // namespace mixer
+}  // namespace kn
 
 const char* getBackendName(ma_backend backend)
 {
     switch (backend)
     {
-    case ma_backend_wasapi:
-        return "WASAPI";
-    case ma_backend_dsound:
-        return "DirectSound";
-    case ma_backend_winmm:
-        return "WinMM";
-    case ma_backend_coreaudio:
-        return "CoreAudio";
-    case ma_backend_alsa:
-        return "ALSA";
-    case ma_backend_pulseaudio:
-        return "PulseAudio";
-    case ma_backend_jack:
-        return "JACK";
-    case ma_backend_oss:
-        return "OSS";
-    case ma_backend_aaudio:
-        return "AAudio";
-    case ma_backend_opensl:
-        return "OpenSL ES";
-    case ma_backend_webaudio:
-        return "WebAudio";
-    case ma_backend_null:
-        return "Null";
-    default:
-        return "Unknown";
+        case ma_backend_wasapi:
+            return "WASAPI";
+        case ma_backend_dsound:
+            return "DirectSound";
+        case ma_backend_winmm:
+            return "WinMM";
+        case ma_backend_coreaudio:
+            return "CoreAudio";
+        case ma_backend_alsa:
+            return "ALSA";
+        case ma_backend_pulseaudio:
+            return "PulseAudio";
+        case ma_backend_jack:
+            return "JACK";
+        case ma_backend_oss:
+            return "OSS";
+        case ma_backend_aaudio:
+            return "AAudio";
+        case ma_backend_opensl:
+            return "OpenSL ES";
+        case ma_backend_webaudio:
+            return "WebAudio";
+        case ma_backend_null:
+            return "Null";
+        default:
+            return "Unknown";
     }
 }

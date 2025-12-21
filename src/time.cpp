@@ -1,6 +1,7 @@
 #include "Time.hpp"
 
 #include <SDL3/SDL.h>
+
 #include <algorithm>
 #include <limits>
 
@@ -24,7 +25,7 @@ void Timer::start()
     m_startTime = std::chrono::steady_clock::now();
     m_started = true;
     m_paused = false;
-    m_elapsedPausedTime = 0.0; // Reset accumulated pause time when starting
+    m_elapsedPausedTime = 0.0;  // Reset accumulated pause time when starting
 }
 
 void Timer::pause()
@@ -138,7 +139,10 @@ double Timer::progress() const
 
 namespace time
 {
-double getDelta() { return _delta; }
+double getDelta()
+{
+    return _delta;
+}
 
 void setMaxDelta(const double maxDelta)
 {
@@ -147,13 +151,25 @@ void setMaxDelta(const double maxDelta)
     _maxDelta = maxDelta;
 }
 
-double getFPS() { return _fps; }
+double getFPS()
+{
+    return _fps;
+}
 
-void setTarget(const uint16_t frameRate) { _frameTarget = frameRate; }
+void setTarget(const uint16_t frameRate)
+{
+    _frameTarget = frameRate;
+}
 
-double getElapsed() { return static_cast<double>(SDL_GetTicksNS()) / SDL_NS_PER_SECOND; }
+double getElapsed()
+{
+    return static_cast<double>(SDL_GetTicksNS()) / SDL_NS_PER_SECOND;
+}
 
-void delay(const uint64_t ms) { SDL_Delay(ms); }
+void delay(const uint64_t ms)
+{
+    SDL_Delay(ms);
+}
 
 void setScale(double scale)
 {
@@ -162,7 +178,10 @@ void setScale(double scale)
     _scale = scale;
 }
 
-double getScale() { return _scale; }
+double getScale()
+{
+    return _scale;
+}
 
 void _tick()
 {
@@ -344,5 +363,5 @@ Stops the timer and resets it back to its initial, unstarted state.
 The timer can be started again with `start()` after being reset.
     )doc");
 }
-} // namespace time
-} // namespace kn
+}  // namespace time
+}  // namespace kn

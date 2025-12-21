@@ -35,5 +35,5 @@ void rects(const std::vector<Rect>& rects, const Color& color, int thickness = 0
 
 void polygon(const Polygon& polygon, const Color& color, bool filled = false);
 // void drawPolygons(const std::vector<Polygon>& polygons, const Color& color, bool filled = false);
-} // namespace draw
-} // namespace kn
+}  // namespace draw
+}  // namespace kn

@@ -1,7 +1,8 @@
 #pragma once
 
-#include <memory>
 #include <pybind11/pybind11.h>
+
+#include <memory>
 #include <unordered_map>
 #include <vector>
 
@@ -16,7 +17,7 @@ namespace animation_controller
 void _bind(const py::module_& module);
 
 void _tick();
-} // namespace animation_controller
+}  // namespace animation_controller
 
 struct Animation
 {
@@ -37,15 +38,13 @@ class AnimationController
     AnimationController();
     ~AnimationController();
 
-    void loadSpriteSheet(const std::string& filePath, const Vec2& frameSize,
-                         const std::vector<SheetStrip>& strips);
+    void loadSpriteSheet(const Vec2& frameSize, const std::vector<SheetStrip>& strips);
 
     void set(const std::string& name);
     void play(const std::string& name);
     void playFrom(int frameIndex);
 
     [[nodiscard]] const Rect& getCurrentClip() const;
-    [[nodiscard]] std::shared_ptr<Texture> getTexture() const;
     [[nodiscard]] int getFrameIndex() const;
     [[nodiscard]] double getProgress() const;
 
@@ -64,7 +63,6 @@ class AnimationController
     void resume();
 
   private:
-    std::shared_ptr<Texture> m_texture = nullptr;
     double m_playbackSpeed = 1.0;
     double m_index = 0.0;
     double m_prevIndex = 0.0;
@@ -77,4 +75,4 @@ class AnimationController
 
     friend void animation_controller::_tick();
 };
-} // namespace kn
+}  // namespace kn

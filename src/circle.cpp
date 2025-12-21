@@ -1,7 +1,7 @@
+#include "Circle.hpp"
+
 #include "Line.hpp"
 #include "Rect.hpp"
-
-#include "Circle.hpp"
 
 #ifndef M_PI
 #define M_PI 3.1415926535897932384626433832795
@@ -11,9 +11,15 @@ namespace kn
 {
 Circle::Circle(const Vec2& center, const double radius) : pos(center), radius(radius) {}
 
-double Circle::getArea() const { return M_PI * radius * radius; }
+double Circle::getArea() const
+{
+    return M_PI * radius * radius;
+}
 
-double Circle::getCircumference() const { return 2 * M_PI * radius; }
+double Circle::getCircumference() const
+{
+    return 2 * M_PI * radius;
+}
 
 Rect Circle::asRect() const
 {
@@ -23,14 +29,20 @@ Rect Circle::asRect() const
     return rect;
 }
 
-Circle Circle::copy() const { return {pos, radius}; }
+Circle Circle::copy() const
+{
+    return {pos, radius};
+}
 
 bool Circle::operator==(const Circle& other) const
 {
     return pos == other.pos && radius == other.radius;
 }
 
-bool Circle::operator!=(const Circle& other) const { return !(*this == other); }
+bool Circle::operator!=(const Circle& other) const
+{
+    return !(*this == other);
+}
 
 namespace circle
 {
@@ -115,14 +127,14 @@ Return a copy of the circle.
             {
                 switch (i)
                 {
-                case 0:
-                    return circle.pos.x;
-                case 1:
-                    return circle.pos.y;
-                case 2:
-                    return circle.radius;
-                default:
-                    throw py::index_error("Index out of range");
+                    case 0:
+                        return circle.pos.x;
+                    case 1:
+                        return circle.pos.y;
+                    case 2:
+                        return circle.radius;
+                    default:
+                        throw py::index_error("Index out of range");
                 }
             },
             py::arg("index"))
@@ -135,5 +147,5 @@ Return a copy of the circle.
 
     py::implicitly_convertible<py::sequence, Circle>();
 }
-} // namespace circle
-} // namespace kn
+}  // namespace circle
+}  // namespace kn

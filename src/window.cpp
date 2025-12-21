@@ -1,3 +1,10 @@
+#include "Window.hpp"
+
+#include <SDL3/SDL.h>
+#include <SDL3_image/SDL_image.h>
+
+#include <stdexcept>
+
 #include "AnimationController.hpp"
 #include "Font.hpp"
 #include "Log.hpp"
@@ -8,12 +15,6 @@
 #include "ShaderState.hpp"
 #include "Text.hpp"
 #include "Time.hpp"
-
-#include <SDL3/SDL.h>
-#include <SDL3_image/SDL_image.h>
-#include <stdexcept>
-
-#include "Window.hpp"
 #include "misc/kraken_icon.h"
 
 namespace kn
@@ -24,9 +25,12 @@ static SDL_Window* _window = nullptr;
 static bool _isOpen = false;
 static int _scale = 1;
 
-SDL_Window* _get() { return _window; }
+SDL_Window* _get()
+{
+    return _window;
+}
 
-void create(const std::string& title, const Vec2& res, const bool scaled)
+void create(const std::string& title, const Vec2& size)
 {
     if (_window)
         throw std::runtime_error("Window already created");
@@ -36,54 +40,11 @@ void create(const std::string& title, const Vec2& res, const bool scaled)
     if (title.size() > 255)
         throw std::invalid_argument("Title cannot exceed 255 characters");
 
-    if (res.x <= 0 || res.y <= 0)
-        throw std::invalid_argument("Window resolution values must be greater than 0");
+    if (size.x <= 0 || size.y <= 0)
+        throw std::invalid_argument("Window size values must be greater than 0");
 
-    int winW;
-    int winH;
-    if (scaled)
-    {
-        const SDL_DisplayID primaryDisplay = SDL_GetPrimaryDisplay();
-        if (primaryDisplay == 0)
-        {
-            log::warn("Failed to get primary display for scaling, falling back to non-scaled mode");
-            winW = static_cast<int>(res.x);
-            winH = static_cast<int>(res.y);
-            _scale = 1;
-        }
-        else
-        {
-            SDL_Rect usableBounds;
-            if (!SDL_GetDisplayUsableBounds(primaryDisplay, &usableBounds))
-            {
-                log::warn("Failed to get usable display bounds for scaling, falling back to "
-                          "non-scaled mode");
-                winW = static_cast<int>(res.x);
-                winH = static_cast<int>(res.y);
-                _scale = 1;
-            }
-            else
-            {
-                // Calculate scale factors for both dimensions
-                const double scaleX = usableBounds.w / res.x;
-                const double scaleY = usableBounds.h / res.y;
-
-                // Use the smaller scale to maintain an aspect ratio
-                const double minScale = scaleX < scaleY ? scaleX : scaleY;
-                _scale = static_cast<int>(std::floor(minScale));
-                if (_scale < 1)
-                    _scale = 1;
-
-                winW = static_cast<int>(res.x * _scale);
-                winH = static_cast<int>(res.y * _scale);
-            }
-        }
-    }
-    else
-    {
-        winW = static_cast<int>(res.x);
-        winH = static_cast<int>(res.y);
-    }
+    auto winW = static_cast<int>(size.x);
+    auto winH = static_cast<int>(size.y);
 
     _window = SDL_CreateWindow(title.c_str(), winW, winH, SDL_WINDOW_RESIZABLE);
     if (!_window)
@@ -102,7 +63,7 @@ void create(const std::string& title, const Vec2& res, const bool scaled)
 
     _isOpen = true;
 
-    renderer::_init(_window, res);
+    renderer::_init(_window, winW, winH);
 
     log::info("SDL version: {}.{}.{}", SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_MICRO_VERSION);
     log::info("SDL_image version: {}.{}.{}", SDL_IMAGE_MAJOR_VERSION, SDL_IMAGE_MINOR_VERSION,
@@ -122,7 +83,10 @@ bool isOpen()
     return _isOpen;
 }
 
-void close() { _isOpen = false; }
+void close()
+{
+    _isOpen = false;
+}
 
 Vec2 getSize()
 {
@@ -229,14 +193,12 @@ void _bind(py::module_& module)
 {
     auto subWindow = module.def_submodule("window", "Window related functions");
 
-    subWindow.def("create", &create, py::arg("title"), py::arg("resolution"),
-                  py::arg("scaled") = false, R"doc(
+    subWindow.def("create", &create, py::arg("title"), py::arg("size"), R"doc(
 Create a window with the requested title and resolution.
 
 Args:
     title (str): Non-empty title no longer than 255 characters.
-    resolution (Vec2): Target renderer resolution as (width, height).
-    scaled (bool): When True, stretches to usable display bounds while maintaining aspect.
+    size (Vec2): The window size (width, height), both values must be positive.
 
 Raises:
     RuntimeError: If a window already exists or SDL window creation fails.
@@ -339,5 +301,5 @@ Raises:
     RuntimeError: If the window is not initialized or the screenshot cannot be saved.
 )doc");
 }
-} // namespace window
-} // namespace kn
+}  // namespace window
+}  // namespace kn

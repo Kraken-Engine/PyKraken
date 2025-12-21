@@ -1,11 +1,11 @@
+#include <SDL3_image/SDL_image.h>
+#include <gfx/SDL3_rotozoom.h>
+#include <pybind11/native_enum.h>
+
 #include "Color.hpp"
 #include "Math.hpp"
 #include "PixelArray.hpp"
 #include "Rect.hpp"
-
-#include <SDL3_image/SDL_image.h>
-#include <gfx/SDL3_rotozoom.h>
-#include <pybind11/native_enum.h>
 
 namespace kn
 {
@@ -49,33 +49,33 @@ void PixelArray::blit(const PixelArray& other, const Vec2& pos, const Anchor anc
     Rect dstRect = other.getRect();
     switch (anchor)
     {
-    case Anchor::TopLeft:
-        dstRect.setTopLeft(pos);
-        break;
-    case Anchor::TopMid:
-        dstRect.setTopMid(pos);
-        break;
-    case Anchor::TopRight:
-        dstRect.setTopRight(pos);
-        break;
-    case Anchor::MidLeft:
-        dstRect.setMidLeft(pos);
-        break;
-    case Anchor::Center:
-        dstRect.setCenter(pos);
-        break;
-    case Anchor::MidRight:
-        dstRect.setMidRight(pos);
-        break;
-    case Anchor::BottomLeft:
-        dstRect.setBottomLeft(pos);
-        break;
-    case Anchor::BottomMid:
-        dstRect.setBottomMid(pos);
-        break;
-    case Anchor::BottomRight:
-        dstRect.setBottomRight(pos);
-        break;
+        case Anchor::TopLeft:
+            dstRect.setTopLeft(pos);
+            break;
+        case Anchor::TopMid:
+            dstRect.setTopMid(pos);
+            break;
+        case Anchor::TopRight:
+            dstRect.setTopRight(pos);
+            break;
+        case Anchor::MidLeft:
+            dstRect.setMidLeft(pos);
+            break;
+        case Anchor::Center:
+            dstRect.setCenter(pos);
+            break;
+        case Anchor::MidRight:
+            dstRect.setMidRight(pos);
+            break;
+        case Anchor::BottomLeft:
+            dstRect.setBottomLeft(pos);
+            break;
+        case Anchor::BottomMid:
+            dstRect.setBottomMid(pos);
+            break;
+        case Anchor::BottomRight:
+            dstRect.setBottomRight(pos);
+            break;
     }
 
     const auto dstSDL = static_cast<SDL_Rect>(dstRect);
@@ -118,7 +118,10 @@ Color PixelArray::getColorKey() const
     return color;
 }
 
-void PixelArray::setAlpha(const uint8_t alpha) const { SDL_SetSurfaceAlphaMod(m_surface, alpha); }
+void PixelArray::setAlpha(const uint8_t alpha) const
+{
+    SDL_SetSurfaceAlphaMod(m_surface, alpha);
+}
 
 int PixelArray::getAlpha() const
 {
@@ -162,13 +165,25 @@ void PixelArray::setAt(const Vec2& coord, const Color& color) const
     *reinterpret_cast<uint32_t*>(pixels + y * pitch + x * sizeof(uint32_t)) = pixel;
 }
 
-int PixelArray::getWidth() const { return m_surface->w; }
+int PixelArray::getWidth() const
+{
+    return m_surface->w;
+}
 
-int PixelArray::getHeight() const { return m_surface->h; }
+int PixelArray::getHeight() const
+{
+    return m_surface->h;
+}
 
-Vec2 PixelArray::getSize() const { return {m_surface->w, m_surface->h}; }
+Vec2 PixelArray::getSize() const
+{
+    return {m_surface->w, m_surface->h};
+}
 
-Rect PixelArray::getRect() const { return {0, 0, m_surface->w, m_surface->h}; }
+Rect PixelArray::getRect() const
+{
+    return {0, 0, m_surface->w, m_surface->h};
+}
 
 std::unique_ptr<PixelArray> PixelArray::copy() const
 {
@@ -219,22 +234,22 @@ void PixelArray::scroll(const int dx, const int dy, const ScrollMode scrollMode)
         // Handle Y boundary based on scroll mode
         switch (scrollMode)
         {
-        case ScrollMode::REPEAT:
-            srcY = (srcY % height + height) % height;
-            break;
+            case ScrollMode::REPEAT:
+                srcY = (srcY % height + height) % height;
+                break;
 
-        case ScrollMode::ERASE:
-            if (srcY < 0 || srcY >= height)
-            {
-                // Erase entire row
-                std::memset(pixels + dstY * pitch, 0, width * bytesPerPixel);
-                continue;
-            }
-            break;
+            case ScrollMode::ERASE:
+                if (srcY < 0 || srcY >= height)
+                {
+                    // Erase entire row
+                    std::memset(pixels + dstY * pitch, 0, width * bytesPerPixel);
+                    continue;
+                }
+                break;
 
-        case ScrollMode::SMEAR:
-            srcY = std::max(0, std::min(height - 1, srcY));
-            break;
+            case ScrollMode::SMEAR:
+                srcY = std::max(0, std::min(height - 1, srcY));
+                break;
         }
 
         // Process row with optimized X handling
@@ -248,21 +263,21 @@ void PixelArray::scroll(const int dx, const int dy, const ScrollMode scrollMode)
             // Handle X boundary based on scroll mode
             switch (scrollMode)
             {
-            case ScrollMode::REPEAT:
-                srcX = (srcX % width + width) % width;
-                break;
+                case ScrollMode::REPEAT:
+                    srcX = (srcX % width + width) % width;
+                    break;
 
-            case ScrollMode::ERASE:
-                if (srcX < 0 || srcX >= width)
-                {
-                    std::memset(dstRow + dstX * bytesPerPixel, 0, bytesPerPixel);
-                    continue;
-                }
-                break;
+                case ScrollMode::ERASE:
+                    if (srcX < 0 || srcX >= width)
+                    {
+                        std::memset(dstRow + dstX * bytesPerPixel, 0, bytesPerPixel);
+                        continue;
+                    }
+                    break;
 
-            case ScrollMode::SMEAR:
-                srcX = std::max(0, std::min(width - 1, srcX));
-                break;
+                case ScrollMode::SMEAR:
+                    srcX = std::max(0, std::min(width - 1, srcX));
+                    break;
             }
 
             std::memcpy(dstRow + dstX * bytesPerPixel, srcRow + srcX * bytesPerPixel,
@@ -271,7 +286,10 @@ void PixelArray::scroll(const int dx, const int dy, const ScrollMode scrollMode)
     }
 }
 
-SDL_Surface* PixelArray::getSDL() const { return m_surface; }
+SDL_Surface* PixelArray::getSDL() const
+{
+    return m_surface;
+}
 
 namespace pixel_array
 {
@@ -362,7 +380,7 @@ Args:
         .def(
             "blit",
             [](const PixelArray& self, const PixelArray& other, const Vec2& pos,
-               const Anchor anchor, const py::object& srcObj)
+               const Anchor anchor, const py::object& srcObj) -> void
             {
                 try
                 {
@@ -673,7 +691,7 @@ std::unique_ptr<PixelArray> rotate(const PixelArray& pixelArray, const double an
 {
     SDL_Surface* sdlSurface = pixelArray.getSDL();
     SDL_Surface* rotated =
-        rotozoomSurface(sdlSurface, angle, 1.0, SMOOTHING_OFF); // rotate, don't scale
+        rotozoomSurface(sdlSurface, angle, 1.0, SMOOTHING_OFF);  // rotate, don't scale
     if (!rotated)
         throw std::runtime_error("Failed to rotate pixel array.");
 
@@ -912,5 +930,5 @@ std::unique_ptr<PixelArray> grayscale(const PixelArray& pixelArray)
 
     return std::make_unique<PixelArray>(result);
 }
-} // namespace pixel_array
-} // namespace kn
+}  // namespace pixel_array
+}  // namespace kn

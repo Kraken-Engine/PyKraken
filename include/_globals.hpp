@@ -200,4 +200,4 @@ enum class Keycode : SDL_Keycode
     K_CALL = SDLK_CALL,
     K_ENDCALL = SDLK_ENDCALL,
 };
-} // namespace kn
+}  // namespace kn
