@@ -1,9 +1,10 @@
 #pragma once
 
-#include "Math.hpp"
+#include <pybind11/pybind11.h>
 
 #include <functional>
-#include <pybind11/pybind11.h>
+
+#include "Math.hpp"
 
 namespace py = pybind11;
 
@@ -76,7 +77,7 @@ double inBounce(double t);
 double outBounce(double t);
 
 double inOutBounce(double t);
-} // namespace ease
+}  // namespace ease
 
 class EasingAnimation
 {
@@ -116,4 +117,4 @@ class EasingAnimation
 
     [[nodiscard]] Vec2 getCurrentPosition() const;
 };
-} // namespace kn
+}  // namespace kn

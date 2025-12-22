@@ -2,6 +2,7 @@
 
 #include <SDL3/SDL.h>
 #include <pybind11/pybind11.h>
+
 #include <string_view>
 
 namespace py = pybind11;
@@ -30,7 +31,7 @@ Color lerp(const Color& a, const Color& b, double t);
 Color invert(const Color& color);
 
 Color grayscale(const Color& color);
-} // namespace color
+}  // namespace color
 
 struct Color
 {
@@ -81,4 +82,4 @@ constexpr Color NAVY = {0, 0, 128};
 constexpr Color TEAL = {0, 128, 128};
 constexpr Color OLIVE = {128, 128, 0};
 constexpr Color MAROON = {128, 0, 0};
-} // namespace kn
+}  // namespace kn

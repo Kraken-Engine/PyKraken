@@ -1,8 +1,9 @@
 #pragma once
 
+#include <pybind11/pybind11.h>
+
 #include <memory>
 #include <optional>
-#include <pybind11/pybind11.h>
 
 #include "Math.hpp"
 #include "Renderer.hpp"
@@ -51,5 +52,5 @@ class Sprite
 namespace sprite
 {
 void _bind(py::module_& module);
-} // namespace sprite
-} // namespace kn
+}  // namespace sprite
+}  // namespace kn

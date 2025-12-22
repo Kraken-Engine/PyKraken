@@ -1,8 +1,9 @@
-#include "_globals.hpp"
-
 #include "Constants.hpp"
+
 #include <SDL3/SDL.h>
 #include <pybind11/native_enum.h>
+
+#include "_globals.hpp"
 
 namespace kn::constants
 {
@@ -554,4 +555,4 @@ void _bind(const py::module_& module)
         .export_values()
         .finalize();
 }
-} // namespace kn::constants
+}  // namespace kn::constants

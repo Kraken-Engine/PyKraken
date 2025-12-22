@@ -1,6 +1,7 @@
 #include "Math.hpp"
 
 #include <SDL3/SDL.h>
+
 #include <algorithm>
 
 #ifndef M_PI
@@ -19,20 +20,35 @@ bool PolarCoordinate::operator==(const PolarCoordinate& other) const
     return angle == other.angle && radius == other.radius;
 }
 
-bool PolarCoordinate::operator!=(const PolarCoordinate& other) const { return !(*this == other); }
+bool PolarCoordinate::operator!=(const PolarCoordinate& other) const
+{
+    return !(*this == other);
+}
 
-Vec2 Vec2::copy() const { return {x, y}; }
+Vec2 Vec2::copy() const
+{
+    return {x, y};
+}
 
 bool Vec2::isZero(const double tolerance) const
 {
     return std::abs(x) < tolerance && std::abs(y) < tolerance;
 }
 
-double Vec2::getLength() const { return std::hypot(x, y); }
+double Vec2::getLength() const
+{
+    return std::hypot(x, y);
+}
 
-double Vec2::getLengthSquared() const { return x * x + y * y; }
+double Vec2::getLengthSquared() const
+{
+    return x * x + y * y;
+}
 
-double Vec2::getAngle() const { return std::atan2(y, x); }
+double Vec2::getAngle() const
+{
+    return std::atan2(y, x);
+}
 
 void Vec2::rotate(const double rad)
 {
@@ -47,7 +63,10 @@ void Vec2::rotate(const double rad)
     y = newY;
 }
 
-PolarCoordinate Vec2::toPolar() const { return {getAngle(), getLength()}; }
+PolarCoordinate Vec2::toPolar() const
+{
+    return {getAngle(), getLength()};
+}
 
 void Vec2::scaleToLength(const double scalar)
 {
@@ -75,9 +94,15 @@ Vec2 Vec2::project(const Vec2& other) const
     return other * math::dot(*this, other) / lenSq;
 }
 
-Vec2 Vec2::reject(const Vec2& other) const { return *this - project(other); }
+Vec2 Vec2::reject(const Vec2& other) const
+{
+    return *this - project(other);
+}
 
-Vec2 Vec2::reflect(const Vec2& other) const { return *this - project(other) * 2.0; }
+Vec2 Vec2::reflect(const Vec2& other) const
+{
+    return *this - project(other) * 2.0;
+}
 
 void Vec2::normalize()
 {
@@ -89,19 +114,37 @@ void Vec2::normalize()
     y /= length;
 }
 
-double Vec2::distanceTo(const Vec2& other) const { return (other - *this).getLength(); }
+double Vec2::distanceTo(const Vec2& other) const
+{
+    return (other - *this).getLength();
+}
 
 double Vec2::distanceSquaredTo(const Vec2& other) const
 {
     return (other - *this).getLengthSquared();
 }
 
-Vec2 Vec2::operator-() const { return {-x, -y}; }
+Vec2 Vec2::operator-() const
+{
+    return {-x, -y};
+}
 
-Vec2 Vec2::operator+(const Vec2& other) const { return {x + other.x, y + other.y}; }
-Vec2 Vec2::operator-(const Vec2& other) const { return {x - other.x, y - other.y}; }
-Vec2 Vec2::operator*(const double scalar) const { return {x * scalar, y * scalar}; }
-Vec2 Vec2::operator/(const double scalar) const { return {x / scalar, y / scalar}; }
+Vec2 Vec2::operator+(const Vec2& other) const
+{
+    return {x + other.x, y + other.y};
+}
+Vec2 Vec2::operator-(const Vec2& other) const
+{
+    return {x - other.x, y - other.y};
+}
+Vec2 Vec2::operator*(const double scalar) const
+{
+    return {x * scalar, y * scalar};
+}
+Vec2 Vec2::operator/(const double scalar) const
+{
+    return {x / scalar, y / scalar};
+}
 
 Vec2& Vec2::operator+=(const Vec2& other)
 {
@@ -131,17 +174,44 @@ Vec2& Vec2::operator/=(const double scalar)
     return *this;
 }
 
-Vec2 operator*(const double lhs, const Vec2& rhs) { return rhs * lhs; }
+Vec2 operator*(const double lhs, const Vec2& rhs)
+{
+    return rhs * lhs;
+}
 
-bool Vec2::operator==(const Vec2& other) const { return (*this - other).isZero(); }
-bool Vec2::operator!=(const Vec2& other) const { return !(*this == other); }
-bool Vec2::operator<(const Vec2& other) const { return x < other.x && y < other.y; }
-bool Vec2::operator>(const Vec2& other) const { return x > other.x && y > other.y; }
-bool Vec2::operator<=(const Vec2& other) const { return !(*this > other); }
-bool Vec2::operator>=(const Vec2& other) const { return !(*this < other); }
+bool Vec2::operator==(const Vec2& other) const
+{
+    return (*this - other).isZero();
+}
+bool Vec2::operator!=(const Vec2& other) const
+{
+    return !(*this == other);
+}
+bool Vec2::operator<(const Vec2& other) const
+{
+    return x < other.x && y < other.y;
+}
+bool Vec2::operator>(const Vec2& other) const
+{
+    return x > other.x && y > other.y;
+}
+bool Vec2::operator<=(const Vec2& other) const
+{
+    return !(*this > other);
+}
+bool Vec2::operator>=(const Vec2& other) const
+{
+    return !(*this < other);
+}
 
-Vec2::operator SDL_Point() const { return {static_cast<int>(x), static_cast<int>(y)}; }
-Vec2::operator SDL_FPoint() const { return {static_cast<float>(x), static_cast<float>(y)}; }
+Vec2::operator SDL_Point() const
+{
+    return {static_cast<int>(x), static_cast<int>(y)};
+}
+Vec2::operator SDL_FPoint() const
+{
+    return {static_cast<float>(x), static_cast<float>(y)};
+}
 
 namespace math
 {
@@ -162,7 +232,10 @@ Vec2 fromPolar(const double rad, const double radius)
     return {radius * std::cos(rad), radius * std::sin(rad)};
 }
 
-Vec2 fromPolar(const PolarCoordinate& polar) { return fromPolar(polar.angle, polar.radius); }
+Vec2 fromPolar(const PolarCoordinate& polar)
+{
+    return fromPolar(polar.angle, polar.radius);
+}
 
 Vec2 normalize(Vec2 vec)
 {
@@ -187,10 +260,15 @@ Vec2 lerp(const Vec2& a, const Vec2& b, const double t)
     return {lerp(a.x, b.x, t), lerp(a.y, b.y, t)};
 }
 
-double lerp(const double a, const double b, const double t) { return a + (b - a) * t; }
+double lerp(const double a, const double b, const double t)
+{
+    return a + (b - a) * t;
+}
 
-double remap(const double in_min, const double in_max, const double out_min, const double out_max,
-             const double value)
+double remap(
+    const double in_min, const double in_max, const double out_min, const double out_max,
+    const double value
+)
 {
     if (in_min == in_max)
         throw std::invalid_argument("in_min and in_max must not be equal");
@@ -199,13 +277,25 @@ double remap(const double in_min, const double in_max, const double out_min, con
     return out_min + scale * (out_max - out_min);
 }
 
-double toDegrees(const double angle) { return angle * (180.0 / M_PI); }
+double toDegrees(const double angle)
+{
+    return angle * (180.0 / M_PI);
+}
 
-double toRadians(const double angle) { return angle * (M_PI / 180.0); }
+double toRadians(const double angle)
+{
+    return angle * (M_PI / 180.0);
+}
 
-double dot(const Vec2& a, const Vec2& b) { return a.x * b.x + a.y * b.y; }
+double dot(const Vec2& a, const Vec2& b)
+{
+    return a.x * b.x + a.y * b.y;
+}
 
-double cross(const Vec2& a, const Vec2& b) { return a.x * b.y - a.y * b.x; }
+double cross(const Vec2& a, const Vec2& b)
+{
+    return a.x * b.y - a.y * b.x;
+}
 
 double angleBetween(const Vec2& a, const Vec2& b)
 {
@@ -252,32 +342,33 @@ Attributes:
     anchor (Anchor): Anchor point for positioning.
     pivot (Vec2): Normalized pivot point for rotation.
     )doc")
-        .def(py::init(
-                 [](const py::object& posObj, const py::object& sizeObj, double angle,
-                    const py::object& scaleObj, Anchor anchor,
-                    const py::object& pivotObj) -> Transform
-                 {
-                     try
-                     {
-                         const auto pos = posObj.is_none() ? Vec2{} : posObj.cast<Vec2>();
-                         const auto size = sizeObj.is_none() ? Vec2{} : sizeObj.cast<Vec2>();
-                         const auto scale =
-                             scaleObj.is_none() ? Vec2{1.0} : scaleObj.cast<Vec2>();
-                         const auto pivot =
-                             pivotObj.is_none() ? Vec2{0.5} : pivotObj.cast<Vec2>();
-                         return {pos, size, angle, scale, anchor, pivot};
-                     }
-                     catch (const py::cast_error&)
-                     {
-                         throw py::type_error(
-                             "Invalid type for Transform arguments, expected Vec2 for pos, size, "
-                             "scale, and pivot");
-                     }
-                 }),
-             py::arg("pos") = py::none(), py::arg("size") = py::none(), py::arg("angle") = 0.0,
-             py::arg("scale") = py::none(), py::arg("anchor") = Anchor::TopLeft,
-             py::arg("pivot") = py::none(),
-             R"doc(
+        .def(
+            py::init(
+                [](const py::object& posObj, const py::object& sizeObj, double angle,
+                   const py::object& scaleObj, Anchor anchor,
+                   const py::object& pivotObj) -> Transform
+                {
+                    try
+                    {
+                        const auto pos = posObj.is_none() ? Vec2{} : posObj.cast<Vec2>();
+                        const auto size = sizeObj.is_none() ? Vec2{} : sizeObj.cast<Vec2>();
+                        const auto scale = scaleObj.is_none() ? Vec2{1.0} : scaleObj.cast<Vec2>();
+                        const auto pivot = pivotObj.is_none() ? Vec2{0.5} : pivotObj.cast<Vec2>();
+                        return {pos, size, angle, scale, anchor, pivot};
+                    }
+                    catch (const py::cast_error&)
+                    {
+                        throw py::type_error(
+                            "Invalid type for Transform arguments, expected Vec2 for pos, size, "
+                            "scale, and pivot"
+                        );
+                    }
+                }
+            ),
+            py::arg("pos") = py::none(), py::arg("size") = py::none(), py::arg("angle") = 0.0,
+            py::arg("scale") = py::none(), py::arg("anchor") = Anchor::TopLeft,
+            py::arg("pivot") = py::none(),
+            R"doc(
 Initialize a Transform with optional keyword arguments.
 
 Args:
@@ -287,7 +378,8 @@ Args:
     scale (Vec2): Scale multiplier. Defaults to (1, 1).
     anchor (Anchor): Anchor point for positioning. Defaults to TOP_LEFT.
     pivot (Vec2): Normalized rotation pivot. Defaults to (0.5, 0.5) for center.
-        )doc")
+        )doc"
+        )
         .def_readwrite("pos", &Transform::pos, R"doc(
 The position component as a Vec2.
         )doc")
@@ -328,14 +420,16 @@ Args:
     angle (float): Angle in radians.
     radius (float): Distance from the origin.
         )doc")
-        .def(py::init(
-                 [](const py::sequence& s) -> PolarCoordinate
-                 {
-                     if (s.size() != 2)
-                         throw std::runtime_error("PolarCoordinate expects a 2-element sequence");
-                     return {s[0].cast<double>(), s[1].cast<double>()};
-                 }),
-             R"doc(
+        .def(
+            py::init(
+                [](const py::sequence& s) -> PolarCoordinate
+                {
+                    if (s.size() != 2)
+                        throw std::runtime_error("PolarCoordinate expects a 2-element sequence");
+                    return {s[0].cast<double>(), s[1].cast<double>()};
+                }
+            ),
+            R"doc(
 Initialize a PolarCoordinate from a two-item sequence.
 
 Args:
@@ -343,7 +437,8 @@ Args:
 
 Raises:
     RuntimeError: If the sequence does not contain exactly two elements.
-        )doc")
+        )doc"
+        )
 
         // Properties
         .def_readwrite("angle", &PolarCoordinate::angle, R"doc(
@@ -364,17 +459,22 @@ Returns:
         // Dunder methods
         .def("__eq__", &PolarCoordinate::operator==)
         .def("__ne__", &PolarCoordinate::operator!=)
-        .def("__str__", [](const PolarCoordinate& p) -> std::string
-             { return "(" + std::to_string(p.angle) + ", " + std::to_string(p.radius) + ")"; })
-        .def("__repr__",
-             [](const PolarCoordinate& p) -> std::string
-             {
-                 return "PolarCoordinate(" + std::to_string(p.angle) + ", " +
-                        std::to_string(p.radius) + ")";
-             })
+        .def(
+            "__str__", [](const PolarCoordinate& p) -> std::string
+            { return "(" + std::to_string(p.angle) + ", " + std::to_string(p.radius) + ")"; }
+        )
+        .def(
+            "__repr__",
+            [](const PolarCoordinate& p) -> std::string
+            {
+                return "PolarCoordinate(" + std::to_string(p.angle) + ", " +
+                       std::to_string(p.radius) + ")";
+            }
+        )
         .def(
             "__iter__", [](const PolarCoordinate& p) -> py::iterator
-            { return py::make_iterator(&p.angle, &p.angle + 2); }, py::keep_alive<0, 1>())
+            { return py::make_iterator(&p.angle, &p.angle + 2); }, py::keep_alive<0, 1>()
+        )
         .def(
             "__getitem__",
             [](const PolarCoordinate& p, const size_t i) -> double
@@ -385,7 +485,8 @@ Returns:
                     return p.radius;
                 throw py::index_error("Index out of range");
             },
-            py::arg("index"))
+            py::arg("index")
+        )
         .def(
             "__setitem__",
             [](PolarCoordinate& p, const size_t i, const double value) -> void
@@ -397,15 +498,18 @@ Returns:
                 else
                     throw py::index_error("Index out of range");
             },
-            py::arg("index"), py::arg("value"))
+            py::arg("index"), py::arg("value")
+        )
         .def("__len__", [](const PolarCoordinate&) -> int { return 2; })
-        .def("__hash__",
-             [](const PolarCoordinate& p) -> size_t
-             {
-                 const size_t ha = std::hash<double>{}(p.angle);
-                 const size_t hr = std::hash<double>{}(p.radius);
-                 return ha ^ hr << 1;
-             });
+        .def(
+            "__hash__",
+            [](const PolarCoordinate& p) -> size_t
+            {
+                const size_t ha = std::hash<double>{}(p.angle);
+                const size_t hr = std::hash<double>{}(p.radius);
+                return ha ^ hr << 1;
+            }
+        );
     py::implicitly_convertible<py::sequence, PolarCoordinate>();
 
     // -------------- Vec2 ----------------
@@ -427,14 +531,16 @@ Args:
     x (float): Horizontal component.
     y (float): Vertical component.
         )doc")
-        .def(py::init(
-                 [](const py::sequence& s) -> Vec2
-                 {
-                     if (s.size() != 2)
-                         throw std::runtime_error("Vec2 requires a 2-element sequence");
-                     return {s[0].cast<double>(), s[1].cast<double>()};
-                 }),
-             R"doc(
+        .def(
+            py::init(
+                [](const py::sequence& s) -> Vec2
+                {
+                    if (s.size() != 2)
+                        throw std::runtime_error("Vec2 requires a 2-element sequence");
+                    return {s[0].cast<double>(), s[1].cast<double>()};
+                }
+            ),
+            R"doc(
 Initialize a Vec2 from a two-item sequence.
 
 Args:
@@ -442,7 +548,8 @@ Args:
 
 Raises:
     RuntimeError: If the sequence does not contain exactly two elements.
-        )doc")
+        )doc"
+        )
 
         // Properties
         .def_readwrite("x", &Vec2::x, R"doc(
@@ -476,7 +583,8 @@ Return a Vec2 with both components set to x.
 
 Returns:
     Vec2: Vector composed of (x, x).
-        )doc")
+        )doc"
+        )
         .def_property(
             "xy", [](const Vec2& self) -> Vec2 { return {self.x, self.y}; },
             [](Vec2& self, const double lhs, const double rhs)
@@ -489,7 +597,8 @@ Access or assign the (x, y) components as a Vec2.
 
 Returns:
     Vec2: Current (x, y) components.
-        )doc")
+        )doc"
+        )
         .def_property(
             "yx", [](const Vec2& self) -> Vec2 { return {self.y, self.x}; },
             [](Vec2& self, const double lhs, const double rhs)
@@ -502,7 +611,8 @@ Access or assign the (y, x) components as a Vec2.
 
 Returns:
     Vec2: Current (y, x) components.
-        )doc")
+        )doc"
+        )
         .def_property_readonly(
             "yy", [](const Vec2& self) -> Vec2 { return {self.y, self.y}; },
             R"doc(
@@ -510,7 +620,8 @@ Return a Vec2 with both components set to y.
 
 Returns:
     Vec2: Vector composed of (y, y).
-        )doc")
+        )doc"
+        )
 
         // Methods
         .def("copy", &Vec2::copy, R"doc(
@@ -596,13 +707,18 @@ Returns:
         )doc")
 
         // Dunder methods
-        .def("__str__", [](const Vec2& v) -> std::string
-             { return "<" + std::to_string(v.x) + ", " + std::to_string(v.y) + ">"; })
-        .def("__repr__", [](const Vec2& v) -> std::string
-             { return "Vec2(" + std::to_string(v.x) + ", " + std::to_string(v.y) + ")"; })
+        .def(
+            "__str__", [](const Vec2& v) -> std::string
+            { return "<" + std::to_string(v.x) + ", " + std::to_string(v.y) + ">"; }
+        )
+        .def(
+            "__repr__", [](const Vec2& v) -> std::string
+            { return "Vec2(" + std::to_string(v.x) + ", " + std::to_string(v.y) + ")"; }
+        )
         .def(
             "__iter__", [](const Vec2& v) -> py::iterator
-            { return py::make_iterator(&v.x, &v.x + 2); }, py::keep_alive<0, 1>())
+            { return py::make_iterator(&v.x, &v.x + 2); }, py::keep_alive<0, 1>()
+        )
         .def(
             "__getitem__",
             [](const Vec2& v, const size_t i) -> double
@@ -614,7 +730,8 @@ Returns:
 
                 throw py::index_error("Index out of range");
             },
-            py::arg("index"))
+            py::arg("index")
+        )
         .def(
             "__setitem__",
             [](Vec2& v, const size_t i, const double value) -> void
@@ -626,18 +743,22 @@ Returns:
                 else
                     throw py::index_error("Index out of range");
             },
-            py::arg("index"), py::arg("value"))
+            py::arg("index"), py::arg("value")
+        )
         .def("__len__", [](const Vec2&) -> int { return 2; })
 
         // Arithmetic dunder methods
         .def("__add__", &Vec2::operator+, py::arg("other"))
         .def("__radd__", &Vec2::operator+, py::arg("other"))
         .def("__iadd__", &Vec2::operator+=, py::arg("other"))
-        .def("__sub__", py::overload_cast<const Vec2&>(&Vec2::operator-, py::const_),
-             py::arg("other"))
+        .def(
+            "__sub__", py::overload_cast<const Vec2&>(&Vec2::operator-, py::const_),
+            py::arg("other")
+        )
         .def(
             "__rsub__", [](const Vec2& self, const Vec2& other) -> Vec2 { return other - self; },
-            py::arg("other"))
+            py::arg("other")
+        )
         .def("__isub__", &Vec2::operator-=, py::arg("other"))
         .def("__neg__", py::overload_cast<>(&Vec2::operator-, py::const_))
         .def("__bool__", [](const Vec2& v) -> bool { return !v.isZero(); })
@@ -645,18 +766,20 @@ Returns:
         .def("__itruediv__", &Vec2::operator/=, py::arg("scalar"))
         .def("__mul__", &Vec2::operator*, py::arg("scalar"))
         .def(
-            "__rmul__", [](const Vec2& self, const double s) { return self * s; },
-            py::arg("scalar"))
+            "__rmul__", [](const Vec2& self, const double s) { return self * s; }, py::arg("scalar")
+        )
         .def("__imul__", &Vec2::operator*=, py::arg("scalar"))
 
         // Hash and comparison dunder methods
-        .def("__hash__",
-             [](const Vec2& v) -> size_t
-             {
-                 const std::size_t hx = std::hash<double>{}(v.x);
-                 const std::size_t hy = std::hash<double>{}(v.y);
-                 return hx ^ hy << 1;
-             })
+        .def(
+            "__hash__",
+            [](const Vec2& v) -> size_t
+            {
+                const std::size_t hx = std::hash<double>{}(v.x);
+                const std::size_t hy = std::hash<double>{}(v.y);
+                return hx ^ hy << 1;
+            }
+        )
         .def("__eq__", &Vec2::operator==, py::arg("other"))
         .def("__ne__", &Vec2::operator!=, py::arg("other"))
         .def("__lt__", &Vec2::operator<, py::arg("other"))
@@ -678,8 +801,9 @@ Returns:
     Vec2: A new vector scaled to the specified length.
         )doc");
 
-    subMath.def("from_polar", py::overload_cast<double, double>(&fromPolar), py::arg("angle"),
-                py::arg("radius"), R"doc(
+    subMath.def(
+        "from_polar", py::overload_cast<double, double>(&fromPolar), py::arg("angle"),
+        py::arg("radius"), R"doc(
 Convert polar coordinates to a Cartesian vector.
 
 Args:
@@ -688,10 +812,12 @@ Args:
 
 Returns:
     Vec2: The equivalent Cartesian vector.
-        )doc");
+        )doc"
+    );
 
-    subMath.def("from_polar", py::overload_cast<const PolarCoordinate&>(&fromPolar),
-                py::arg("polar"), R"doc(
+    subMath.def(
+        "from_polar", py::overload_cast<const PolarCoordinate&>(&fromPolar), py::arg("polar"),
+        R"doc(
 Convert a PolarCoordinate object to a Cartesian vector.
 
 Args:
@@ -699,7 +825,8 @@ Args:
 
 Returns:
     Vec2: The equivalent Cartesian vector.
-        )doc");
+        )doc"
+    );
 
     subMath.def("normalize", &normalize, py::arg("vec"), R"doc(
 Normalize a vector to unit length.
@@ -711,8 +838,9 @@ Returns:
     Vec2: A new normalized vector.
         )doc");
 
-    subMath.def("clamp", &clampVec, py::arg("vec"), py::arg("min_vec"), py::arg("max_vec"),
-                R"doc(
+    subMath.def(
+        "clamp", &clampVec, py::arg("vec"), py::arg("min_vec"), py::arg("max_vec"),
+        R"doc(
 Clamp a vector between two boundary vectors.
 
 Args:
@@ -722,7 +850,8 @@ Args:
 
 Returns:
     Vec2: A new vector with components clamped between min and max.
-        )doc");
+        )doc"
+    );
 
     subMath.def(
         "clamp", [](const double value, const double min_val, const double max_val) -> double
@@ -737,10 +866,12 @@ Args:
 
 Returns:
     float: The clamped value.
-        )doc");
+        )doc"
+    );
 
-    subMath.def("lerp", py::overload_cast<const Vec2&, const Vec2&, double>(&lerp), py::arg("a"),
-                py::arg("b"), py::arg("t"), R"doc(
+    subMath.def(
+        "lerp", py::overload_cast<const Vec2&, const Vec2&, double>(&lerp), py::arg("a"),
+        py::arg("b"), py::arg("t"), R"doc(
 Linearly interpolate between two Vec2s.
 
 Args:
@@ -750,10 +881,12 @@ Args:
 
 Returns:
     Vec2: The interpolated vector.
-        )doc");
+        )doc"
+    );
 
-    subMath.def("lerp", py::overload_cast<double, double, double>(&lerp), py::arg("a"),
-                py::arg("b"), py::arg("t"), R"doc(
+    subMath.def(
+        "lerp", py::overload_cast<double, double, double>(&lerp), py::arg("a"), py::arg("b"),
+        py::arg("t"), R"doc(
 Linearly interpolate between two values.
 
 Args:
@@ -763,10 +896,12 @@ Args:
 
 Returns:
     float: The interpolated value.
-        )doc");
+        )doc"
+    );
 
-    subMath.def("remap", &remap, py::arg("in_min"), py::arg("in_max"), py::arg("out_min"),
-                py::arg("out_max"), py::arg("value"), R"doc(
+    subMath.def(
+        "remap", &remap, py::arg("in_min"), py::arg("in_max"), py::arg("out_min"),
+        py::arg("out_max"), py::arg("value"), R"doc(
 Remap a value from one range to another.
 
 Args:
@@ -781,7 +916,8 @@ Returns:
 
 Raises:
     ValueError: If in_min equals in_max.
-        )doc");
+        )doc"
+    );
 
     subMath.def("to_deg", &toDegrees, py::arg("radians"), R"doc(
 Convert radians to degrees.
@@ -847,5 +983,5 @@ Returns:
     Vec2: A new rotated vector.
         )doc");
 }
-} // namespace math
-} // namespace kn
+}  // namespace math
+}  // namespace kn

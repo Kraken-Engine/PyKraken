@@ -11,14 +11,13 @@ def close() -> None:
     Marks the window as closed, typically used to signal the main loop to exit.
     This doesn't destroy the window immediately but sets the close flag.
     """
-def create(title: str, resolution: pykraken._core.Vec2, scaled: bool = False) -> None:
+def create(title: str, size: pykraken._core.Vec2) -> None:
     """
     Create a window with the requested title and resolution.
     
     Args:
         title (str): Non-empty title no longer than 255 characters.
-        resolution (Vec2): Target renderer resolution as (width, height).
-        scaled (bool): When True, stretches to usable display bounds while maintaining aspect.
+        size (Vec2): The window size (width, height), both values must be positive.
     
     Raises:
         RuntimeError: If a window already exists or SDL window creation fails.

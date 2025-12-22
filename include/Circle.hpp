@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Math.hpp"
 #include <pybind11/pybind11.h>
+
+#include "Math.hpp"
 
 namespace py = pybind11;
 
@@ -35,5 +36,5 @@ class Circle
 namespace circle
 {
 void _bind(const py::module_& module);
-} // namespace circle
-} // namespace kn
+}  // namespace circle
+}  // namespace kn

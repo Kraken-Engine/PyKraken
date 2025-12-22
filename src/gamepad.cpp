@@ -1,9 +1,11 @@
+#include "Gamepad.hpp"
+
+#include <pybind11/stl.h>
+
+#include <ranges>
+
 #include "Event.hpp"
 #include "Math.hpp"
-
-#include "Gamepad.hpp"
-#include <pybind11/stl.h>
-#include <ranges>
 
 namespace kn::gamepad
 {
@@ -54,8 +56,9 @@ Vec2 getLeftStick(const int slot)
     const SDL_JoystickID id = _gamepadSlots.at(slot).value();
     const GamepadState& state = _connectedPads.at(id);
 
-    Vec2 axes = {SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_LEFTX),
-                 SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_LEFTY)};
+    Vec2 axes =
+        {SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_LEFTX),
+         SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_LEFTY)};
     axes /= SDL_MAX_SINT16;
     if (axes.getLength() > state.deadZone)
         return axes;
@@ -71,8 +74,9 @@ Vec2 getRightStick(const int slot)
     const SDL_JoystickID id = _gamepadSlots.at(slot).value();
     const GamepadState& state = _connectedPads.at(id);
 
-    Vec2 axes = {SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_RIGHTX),
-                 SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_RIGHTY)};
+    Vec2 axes =
+        {SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_RIGHTX),
+         SDL_GetGamepadAxis(state.pad, SDL_GAMEPAD_AXIS_RIGHTY)};
     axes /= SDL_MAX_SINT16;
     if (axes.getLength() > state.deadZone)
         return axes;
@@ -152,93 +156,93 @@ void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
 {
     switch (sdlEvent.type)
     {
-    case SDL_EVENT_GAMEPAD_AXIS_MOTION:
-    {
-        const SDL_JoystickID id = sdlEvent.gaxis.which;
-        if (!_connectedPads.contains(id))
-            return;
-
-        e.data["which"] = id;
-        e.data["axis"] = sdlEvent.gaxis.axis;
-        e.data["value"] = sdlEvent.gaxis.value;
-        break;
-    }
-    case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
-    case SDL_EVENT_GAMEPAD_BUTTON_UP:
-    {
-        const SDL_JoystickID id = sdlEvent.gbutton.which;
-        if (!_connectedPads.contains(id))
-            return;
-
-        GamepadState& state = _connectedPads.at(id);
-        const auto button = static_cast<SDL_GamepadButton>(sdlEvent.gbutton.button);
-
-        if (sdlEvent.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
-            state.justPressed[button] = true;
-        else
-            state.justReleased[button] = true;
-
-        e.data["which"] = id;
-        e.data["button"] = button;
-        break;
-    }
-    case SDL_EVENT_GAMEPAD_ADDED:
-        if (SDL_Gamepad* pad = SDL_OpenGamepad(sdlEvent.gdevice.which))
+        case SDL_EVENT_GAMEPAD_AXIS_MOTION:
         {
-            SDL_JoystickID id = SDL_GetGamepadID(pad);
+            const SDL_JoystickID id = sdlEvent.gaxis.which;
+            if (!_connectedPads.contains(id))
+                return;
 
-            for (int i = 0; i < MAX_GAMEPADS; ++i)
+            e.data["which"] = id;
+            e.data["axis"] = sdlEvent.gaxis.axis;
+            e.data["value"] = sdlEvent.gaxis.value;
+            break;
+        }
+        case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+        case SDL_EVENT_GAMEPAD_BUTTON_UP:
+        {
+            const SDL_JoystickID id = sdlEvent.gbutton.which;
+            if (!_connectedPads.contains(id))
+                return;
+
+            GamepadState& state = _connectedPads.at(id);
+            const auto button = static_cast<SDL_GamepadButton>(sdlEvent.gbutton.button);
+
+            if (sdlEvent.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
+                state.justPressed[button] = true;
+            else
+                state.justReleased[button] = true;
+
+            e.data["which"] = id;
+            e.data["button"] = button;
+            break;
+        }
+        case SDL_EVENT_GAMEPAD_ADDED:
+            if (SDL_Gamepad* pad = SDL_OpenGamepad(sdlEvent.gdevice.which))
             {
-                if (!_gamepadSlots.at(i).has_value())
+                SDL_JoystickID id = SDL_GetGamepadID(pad);
+
+                for (int i = 0; i < MAX_GAMEPADS; ++i)
                 {
-                    _gamepadSlots[i] = id;
-                    _connectedPads[id].pad = pad;
+                    if (!_gamepadSlots.at(i).has_value())
+                    {
+                        _gamepadSlots[i] = id;
+                        _connectedPads[id].pad = pad;
+                        break;
+                    }
+                }
+                e.data["which"] = id;
+            }
+            break;
+        case SDL_EVENT_GAMEPAD_REMOVED:
+        {
+            const SDL_JoystickID id = sdlEvent.gdevice.which;
+            SDL_CloseGamepad(_connectedPads.at(id).pad);
+            _connectedPads.erase(id);
+
+            for (auto& slot : _gamepadSlots)
+            {
+                if (slot.has_value() && slot.value() == id)
+                {
+                    slot.reset();
                     break;
                 }
             }
             e.data["which"] = id;
+            break;
         }
-        break;
-    case SDL_EVENT_GAMEPAD_REMOVED:
-    {
-        const SDL_JoystickID id = sdlEvent.gdevice.which;
-        SDL_CloseGamepad(_connectedPads.at(id).pad);
-        _connectedPads.erase(id);
-
-        for (auto& slot : _gamepadSlots)
-        {
-            if (slot.has_value() && slot.value() == id)
-            {
-                slot.reset();
-                break;
-            }
-        }
-        e.data["which"] = id;
-        break;
-    }
-    case SDL_EVENT_GAMEPAD_REMAPPED:
-    case SDL_EVENT_GAMEPAD_UPDATE_COMPLETE:
-    case SDL_EVENT_GAMEPAD_STEAM_HANDLE_UPDATED:
-        e.data["which"] = sdlEvent.gdevice.which;
-        break;
-    case SDL_EVENT_GAMEPAD_TOUCHPAD_DOWN:
-    case SDL_EVENT_GAMEPAD_TOUCHPAD_MOTION:
-    case SDL_EVENT_GAMEPAD_TOUCHPAD_UP:
-        e.data["which"] = sdlEvent.gtouchpad.which;
-        e.data["touchpad"] = sdlEvent.gtouchpad.touchpad;
-        e.data["finger"] = sdlEvent.gtouchpad.finger;
-        e.data["x"] = sdlEvent.gtouchpad.x;
-        e.data["y"] = sdlEvent.gtouchpad.y;
-        e.data["pressure"] = sdlEvent.gtouchpad.pressure;
-        break;
-    case SDL_EVENT_GAMEPAD_SENSOR_UPDATE:
-        e.data["which"] = sdlEvent.gsensor.which;
-        e.data["sensor"] = sdlEvent.gsensor.sensor;
-        e.data["data"] = std::vector<float>{sdlEvent.gsensor.data, sdlEvent.gsensor.data + 3};
-        e.data["timestamp"] = sdlEvent.gsensor.sensor_timestamp;
-        break;
-    default:
-        break;
+        case SDL_EVENT_GAMEPAD_REMAPPED:
+        case SDL_EVENT_GAMEPAD_UPDATE_COMPLETE:
+        case SDL_EVENT_GAMEPAD_STEAM_HANDLE_UPDATED:
+            e.data["which"] = sdlEvent.gdevice.which;
+            break;
+        case SDL_EVENT_GAMEPAD_TOUCHPAD_DOWN:
+        case SDL_EVENT_GAMEPAD_TOUCHPAD_MOTION:
+        case SDL_EVENT_GAMEPAD_TOUCHPAD_UP:
+            e.data["which"] = sdlEvent.gtouchpad.which;
+            e.data["touchpad"] = sdlEvent.gtouchpad.touchpad;
+            e.data["finger"] = sdlEvent.gtouchpad.finger;
+            e.data["x"] = sdlEvent.gtouchpad.x;
+            e.data["y"] = sdlEvent.gtouchpad.y;
+            e.data["pressure"] = sdlEvent.gtouchpad.pressure;
+            break;
+        case SDL_EVENT_GAMEPAD_SENSOR_UPDATE:
+            e.data["which"] = sdlEvent.gsensor.which;
+            e.data["sensor"] = sdlEvent.gsensor.sensor;
+            e.data["data"] = std::vector<float>{sdlEvent.gsensor.data, sdlEvent.gsensor.data + 3};
+            e.data["timestamp"] = sdlEvent.gsensor.sensor_timestamp;
+            break;
+        default:
+            break;
     }
 }
 
@@ -248,7 +252,7 @@ bool verifySlot(const int slot)
         throw std::out_of_range("Gamepad slot out of range");
 
     if (!_gamepadSlots.at(slot).has_value())
-        return false; // No gamepad connected in this slot
+        return false;  // No gamepad connected in this slot
 
     return true;
 }
@@ -268,8 +272,9 @@ Returns:
     bool: True if the button is pressed.
     )doc");
 
-    subGamepad.def("is_just_pressed", &isJustPressed, py::arg("button"), py::arg("slot") = 0,
-                   R"doc(
+    subGamepad.def(
+        "is_just_pressed", &isJustPressed, py::arg("button"), py::arg("slot") = 0,
+        R"doc(
 Check if a gamepad button was pressed during this frame.
 
 Args:
@@ -278,10 +283,12 @@ Args:
 
 Returns:
     bool: True if the button was just pressed.
-    )doc");
+    )doc"
+    );
 
-    subGamepad.def("is_just_released", &isJustReleased, py::arg("button"), py::arg("slot") = 0,
-                   R"doc(
+    subGamepad.def(
+        "is_just_released", &isJustReleased, py::arg("button"), py::arg("slot") = 0,
+        R"doc(
 Check if a gamepad button was released during this frame.
 
 Args:
@@ -290,7 +297,8 @@ Args:
 
 Returns:
     bool: True if the button was just released.
-    )doc");
+    )doc"
+    );
 
     subGamepad.def("get_left_stick", &getLeftStick, py::arg("slot") = 0, R"doc(
 Get the left analog stick position.
@@ -357,4 +365,4 @@ Returns:
     list[int]: A list of slot IDs with active gamepads.
     )doc");
 }
-} // namespace kn::gamepad
+}  // namespace kn::gamepad

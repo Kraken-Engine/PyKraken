@@ -1,12 +1,17 @@
 #include "Sprite.hpp"
+
 #include "Time.hpp"
 
 namespace kn
 {
-Sprite::Sprite(std::shared_ptr<Texture> texture) : texture(std::move(texture)) {}
+Sprite::Sprite(std::shared_ptr<Texture> texture)
+    : texture(std::move(texture))
+{
+}
 
 Sprite::Sprite(std::shared_ptr<Texture> texture, const Transform& transform)
-    : transform(transform), texture(std::move(texture))
+    : transform(transform),
+      texture(std::move(texture))
 {
 }
 
@@ -15,18 +20,24 @@ void Sprite::draw() const
     if (!visible || !texture)
         return;
 
-    renderer::draw(*texture, transform, clip.value_or(Rect{}));
+    renderer::draw(texture, transform, clip.value_or(Rect{}));
 }
 
-void Sprite::move() { transform.pos += velocity * time::getDelta(); }
+void Sprite::move()
+{
+    transform.pos += velocity * time::getDelta();
+}
 
 // Trampoline class to allow Python inheritance from abstract Sprite class
 class PySprite : public Sprite, public py::trampoline_self_life_support
 {
   public:
-    using Sprite::Sprite; // Inherit constructors
+    using Sprite::Sprite;  // Inherit constructors
 
-    void update() override { PYBIND11_OVERRIDE_PURE(void, Sprite, update); }
+    void update() override
+    {
+        PYBIND11_OVERRIDE_PURE(void, Sprite, update);
+    }
 };
 
 namespace sprite
@@ -51,22 +62,26 @@ void _bind(py::module_& module)
             move(): Apply frame-independent velocity to position.
     )doc")
         .def(py::init<>(), "Create a sprite with no texture yet.")
-        .def(py::init<std::shared_ptr<Texture>>(), py::arg("texture"),
-             R"doc(
+        .def(
+            py::init<std::shared_ptr<Texture>>(), py::arg("texture"),
+            R"doc(
              Create a sprite with a texture.
 
              Args:
                  texture (Texture): The sprite's texture.
-             )doc")
-        .def(py::init<std::shared_ptr<Texture>, const Transform&>(), py::arg("texture"),
-             py::arg("transform"),
-             R"doc(
+             )doc"
+        )
+        .def(
+            py::init<std::shared_ptr<Texture>, const Transform&>(), py::arg("texture"),
+            py::arg("transform"),
+            R"doc(
              Create a sprite with a texture and transform.
 
                 Args:
                     texture (Texture): The sprite's texture.
                     transform (Transform): The sprite's initial transform.
-             )doc")
+             )doc"
+        )
 
         .def_readwrite("transform", &Sprite::transform, "The sprite's transform.")
         .def_readwrite("velocity", &Sprite::velocity, "The sprite's velocity.")
@@ -97,11 +112,12 @@ void _bind(py::module_& module)
                     throw py::type_error("clip must be a Rect or None");
                 }
             },
-            "Source rectangle for texture sampling (None = full texture).")
+            "Source rectangle for texture sampling (None = full texture)."
+        )
 
         .def("draw", &Sprite::draw, "Draw the sprite to the screen with its current transform.")
         .def("update", &Sprite::update, "Update the sprite state (must be overridden).")
         .def("move", &Sprite::move, "Apply frame-independent velocity to position.");
 }
-} // namespace sprite
-} // namespace kn
+}  // namespace sprite
+}  // namespace kn

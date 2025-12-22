@@ -1,11 +1,12 @@
 #pragma once
 
+#include <pybind11/pybind11.h>
+
 #include <algorithm>
 #include <cmath>
 #include <memory>
 #include <optional>
 #include <pugixml/pugixml.hpp>
-#include <pybind11/pybind11.h>
 #include <string>
 #include <vector>
 
@@ -50,8 +51,9 @@ class TileLayer
     const std::string name;
     std::vector<Tile> tiles;
 
-    TileLayer(Type type, bool isVisible, std::string name,
-          const std::shared_ptr<Texture>& tileSetTexture);
+    TileLayer(
+        Type type, bool isVisible, std::string name, const std::shared_ptr<Texture>& tileSetTexture
+    );
     ~TileLayer() = default;
 
     void render() const;
@@ -61,7 +63,8 @@ class TileLayer
   private:
     friend class TileMap;
     void buildTileGrid(int mapWidth, int mapHeight, int tileWidth, int tileHeight);
-    template <typename Fn> bool forEachTileInArea(const Rect& area, Fn&& fn) const;
+    template <typename Fn>
+    bool forEachTileInArea(const Rect& area, Fn&& fn) const;
 
     std::shared_ptr<Texture> m_tileSetTexture;
     int m_gridWidth = 0;
@@ -77,14 +80,16 @@ class TileMap
     explicit TileMap(const std::string& tmxPath, int borderSize = 0);
     ~TileMap() = default;
 
-    [[nodiscard]] std::shared_ptr<const TileLayer> getLayer(const std::string& name,
-                                                        TileLayer::Type type = TileLayer::TILE) const;
+    [[nodiscard]] std::shared_ptr<const TileLayer> getLayer(
+        const std::string& name, TileLayer::Type type = TileLayer::TILE
+    ) const;
     [[nodiscard]] const std::vector<std::shared_ptr<const TileLayer>>& getLayers() const;
 
     void render() const;
 
-    static std::vector<Tile>
-    getTileCollection(const std::vector<std::shared_ptr<const TileLayer>>& layers);
+    static std::vector<Tile> getTileCollection(
+        const std::vector<std::shared_ptr<const TileLayer>>& layers
+    );
 
   private:
     std::string m_dirPath;
@@ -94,7 +99,8 @@ class TileMap
     static Rect getFittedRect(SDL_Surface* surface, const Rect& srcRect, const Vec2& position);
 };
 
-template <typename Fn> bool TileLayer::forEachTileInArea(const Rect& area, Fn&& fn) const
+template <typename Fn>
+bool TileLayer::forEachTileInArea(const Rect& area, Fn&& fn) const
 {
     if (type != TILE || m_tileIndices.empty() || m_gridWidth <= 0 || m_gridHeight <= 0 ||
         m_tileWidth <= 0 || m_tileHeight <= 0)
@@ -140,4 +146,4 @@ template <typename Fn> bool TileLayer::forEachTileInArea(const Rect& area, Fn&& 
 
     return true;
 }
-} // namespace kn
+}  // namespace kn

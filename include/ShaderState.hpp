@@ -2,6 +2,7 @@
 
 #include <SDL3/SDL.h>
 #include <pybind11/pybind11.h>
+
 #include <string>
 
 namespace py = pybind11;
@@ -12,7 +13,7 @@ namespace shader_state
 {
 void _bind(py::module_& module);
 void _quit();
-} // namespace shader_state
+}  // namespace shader_state
 
 class ShaderState
 {
@@ -32,4 +33,4 @@ class ShaderState
     // Allow shader_state namespace to access private members for cleanup
     friend void shader_state::_quit();
 };
-} // namespace kn
+}  // namespace kn

@@ -1,7 +1,7 @@
+#include "Circle.hpp"
+
 #include "Line.hpp"
 #include "Rect.hpp"
-
-#include "Circle.hpp"
 
 #ifndef M_PI
 #define M_PI 3.1415926535897932384626433832795
@@ -9,11 +9,21 @@
 
 namespace kn
 {
-Circle::Circle(const Vec2& center, const double radius) : pos(center), radius(radius) {}
+Circle::Circle(const Vec2& center, const double radius)
+    : pos(center),
+      radius(radius)
+{
+}
 
-double Circle::getArea() const { return M_PI * radius * radius; }
+double Circle::getArea() const
+{
+    return M_PI * radius * radius;
+}
 
-double Circle::getCircumference() const { return 2 * M_PI * radius; }
+double Circle::getCircumference() const
+{
+    return 2 * M_PI * radius;
+}
 
 Rect Circle::asRect() const
 {
@@ -23,14 +33,20 @@ Rect Circle::asRect() const
     return rect;
 }
 
-Circle Circle::copy() const { return {pos, radius}; }
+Circle Circle::copy() const
+{
+    return {pos, radius};
+}
 
 bool Circle::operator==(const Circle& other) const
 {
     return pos == other.pos && radius == other.radius;
 }
 
-bool Circle::operator!=(const Circle& other) const { return !(*this == other); }
+bool Circle::operator!=(const Circle& other) const
+{
+    return !(*this == other);
+}
 
 namespace circle
 {
@@ -50,28 +66,31 @@ Args:
     radius (float): Radius of the circle.
         )doc")
 
-        .def(py::init(
-                 [](const py::sequence& prSeq) -> Circle
-                 {
-                     if (prSeq.size() != 2)
-                         throw std::invalid_argument("Circle expects a 2-element sequence");
+        .def(
+            py::init(
+                [](const py::sequence& prSeq) -> Circle
+                {
+                    if (prSeq.size() != 2)
+                        throw std::invalid_argument("Circle expects a 2-element sequence");
 
-                     if (!py::isinstance<py::sequence>(prSeq[0]))
-                         throw std::invalid_argument("Position must be a sequence");
-                     if (!py::isinstance<double>(prSeq[1]))
-                         throw std::invalid_argument("Radius must be an int or float");
+                    if (!py::isinstance<py::sequence>(prSeq[0]))
+                        throw std::invalid_argument("Position must be a sequence");
+                    if (!py::isinstance<double>(prSeq[1]))
+                        throw std::invalid_argument("Radius must be an int or float");
 
-                     const auto posSeq = prSeq[0].cast<py::sequence>();
-                     auto radius = prSeq[1].cast<double>();
+                    const auto posSeq = prSeq[0].cast<py::sequence>();
+                    auto radius = prSeq[1].cast<double>();
 
-                     if (posSeq.size() != 2)
-                         throw std::invalid_argument("Position must be a 2-element sequence");
+                    if (posSeq.size() != 2)
+                        throw std::invalid_argument("Position must be a 2-element sequence");
 
-                     return {{posSeq[0].cast<double>(), posSeq[1].cast<double>()}, radius};
-                 }),
-             R"doc(
+                    return {{posSeq[0].cast<double>(), posSeq[1].cast<double>()}, radius};
+                }
+            ),
+            R"doc(
 Create a circle from a nested sequence: ([x, y], radius).
-        )doc")
+        )doc"
+        )
 
         .def_readwrite("pos", &Circle::pos, R"doc(
 The center position of the circle as a Vec2.
@@ -107,7 +126,8 @@ Return a copy of the circle.
                 data[2] = circle.radius;
                 return py::make_iterator(data, data + 3);
             },
-            py::keep_alive<0, 1>())
+            py::keep_alive<0, 1>()
+        )
 
         .def(
             "__getitem__",
@@ -115,17 +135,18 @@ Return a copy of the circle.
             {
                 switch (i)
                 {
-                case 0:
-                    return circle.pos.x;
-                case 1:
-                    return circle.pos.y;
-                case 2:
-                    return circle.radius;
-                default:
-                    throw py::index_error("Index out of range");
+                    case 0:
+                        return circle.pos.x;
+                    case 1:
+                        return circle.pos.y;
+                    case 2:
+                        return circle.radius;
+                    default:
+                        throw py::index_error("Index out of range");
                 }
             },
-            py::arg("index"))
+            py::arg("index")
+        )
 
         .def("__len__", [](const Circle&) -> int { return 3; })
 
@@ -135,5 +156,5 @@ Return a copy of the circle.
 
     py::implicitly_convertible<py::sequence, Circle>();
 }
-} // namespace circle
-} // namespace kn
+}  // namespace circle
+}  // namespace kn

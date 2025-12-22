@@ -1,6 +1,7 @@
 #pragma once
 
 #include <pybind11/pybind11.h>
+
 #include <vector>
 
 namespace py = pybind11;
@@ -11,7 +12,7 @@ class Vec2;
 
 class Polygon
 {
-public:
+  public:
     std::vector<Vec2> points;
 
     Polygon() = default;
@@ -34,5 +35,5 @@ public:
 namespace polygon
 {
 void _bind(const py::module_& module);
-} // namespace polygon
-} // namespace kn
+}  // namespace polygon
+}  // namespace kn

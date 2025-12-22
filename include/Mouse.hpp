@@ -41,5 +41,5 @@ bool isHidden();
 void _clearStates();
 
 void _handleEvents(const SDL_Event& sdlEvent, const Event& e);
-} // namespace mouse
-} // namespace kn
+}  // namespace mouse
+}  // namespace kn

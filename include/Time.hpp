@@ -1,7 +1,8 @@
 #pragma once
 
-#include <chrono>
 #include <pybind11/pybind11.h>
+
+#include <chrono>
 
 namespace py = pybind11;
 
@@ -9,7 +10,7 @@ namespace kn
 {
 class Timer
 {
-public:
+  public:
     explicit Timer(double duration);
     ~Timer() = default;
 
@@ -29,7 +30,7 @@ public:
 
     [[nodiscard]] double progress() const;
 
-private:
+  private:
     double m_duration;
     bool m_started = false;
     bool m_paused = false;
@@ -60,5 +61,5 @@ void setScale(double scale);
 double getScale();
 
 void _tick();
-} // namespace time
-} // namespace kn
+}  // namespace time
+}  // namespace kn

@@ -16,7 +16,9 @@ command = [
     "-o", "src",
     "--enum-class-locations", "Anchor:pykraken._core",
     "--enum-class-locations", "Type:pykraken._core.TileLayer",
-    "--enum-class-locations", "ViewportMode:pykraken._core"
+    "--enum-class-locations", "ViewportMode:pykraken._core",
+    "--enum-class-locations", "TextureAccess:pykraken._core",
+    "--enum-class-locations", "TextureScaleMode:pykraken._core",
 ]
 
 print(f"Running command in: {root_dir}")

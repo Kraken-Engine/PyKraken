@@ -16,7 +16,7 @@ void _quit();
 
 SDL_Window* _get();
 
-void create(const std::string& title, const Vec2& res, bool scaled);
+void create(const std::string& title, const Vec2& size);
 
 bool isOpen();
 
@@ -37,5 +37,5 @@ std::string getTitle();
 void setIcon(const std::string& path);
 
 void saveScreenshot(const std::string& filePath);
-} // namespace window
-} // namespace kn
+}  // namespace window
+}  // namespace kn

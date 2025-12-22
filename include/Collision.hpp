@@ -40,5 +40,5 @@ bool contains(const Circle& circle, const Rect& rect);
 bool contains(const Circle& circle, const Line& line);
 
 void _bind(py::module_& module);
-} // namespace collision
-} // namespace kn
+}  // namespace collision
+}  // namespace kn

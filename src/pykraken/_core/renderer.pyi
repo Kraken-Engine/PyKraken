@@ -4,7 +4,7 @@ Functions for rendering graphics
 from __future__ import annotations
 import pykraken._core
 import typing
-__all__: list[str] = ['clear', 'draw', 'get_res', 'present', 'read_pixels']
+__all__: list[str] = ['clear', 'draw', 'get_default_scale_mode', 'get_target_resolution', 'present', 'read_pixels', 'set_default_scale_mode', 'set_target']
 @typing.overload
 def clear(color: typing.Any = None) -> None:
     """
@@ -40,12 +40,20 @@ def draw(texture: pykraken._core.Texture, transform: typing.Any = None, src: typ
         TypeError: If arguments are not of expected types.
         RuntimeError: If renderer is not initialized.
     """
-def get_res() -> pykraken._core.Vec2:
+def get_default_scale_mode() -> pykraken._core.TextureScaleMode:
     """
-    Get the resolution of the renderer.
+    Get the current default TextureScaleMode for new textures.
     
     Returns:
-        Vec2: The current rendering resolution as (width, height).
+        TextureScaleMode: The current default scaling/filtering mode.
+    """
+def get_target_resolution() -> pykraken._core.Vec2:
+    """
+    Get the resolution of the current render target.
+    If no target is set, returns the logical presentation resolution.
+    
+    Returns:
+        Vec2: The width and height of the render target.
     """
 def present() -> None:
     """
@@ -64,4 +72,21 @@ def read_pixels(src: typing.Any = None) -> pykraken._core.PixelArray:
         PixelArray: An array containing the pixel data.
     Raises:
         RuntimeError: If reading pixels fails.
+    """
+def set_default_scale_mode(scale_mode: pykraken._core.TextureScaleMode) -> None:
+    """
+    Set the default TextureScaleMode for new textures.
+    
+    Args:
+        scale_mode (TextureScaleMode): The default scaling/filtering mode to use for new textures.
+    """
+def set_target(target: pykraken._core.Texture) -> None:
+    """
+    Set the current render target to the provided Texture, or unset if None.
+    
+    Args:
+        target (Texture, optional): Texture created with TextureAccess.TARGET, or None to unset.
+    
+    Raises:
+        RuntimeError: If the renderer is not initialized or the texture is not a TARGET texture.
     """

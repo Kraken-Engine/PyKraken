@@ -1,8 +1,8 @@
-#include "Renderer.hpp"
-#include "ShaderState.hpp"
-
 #include <algorithm>
 #include <vector>
+
+#include "Renderer.hpp"
+#include "ShaderState.hpp"
 
 namespace kn
 {
@@ -20,8 +20,9 @@ ShaderState::ShaderState(const std::string& fragmentFilePath, const Uint32 unifo
     SDL_GPUShaderFormat formats = SDL_GetGPUShaderFormats(renderer::_getGPUDevice());
     if (formats == SDL_GPU_SHADERFORMAT_INVALID)
     {
-        throw std::runtime_error("Couldn't get supported shader formats: " +
-                                 std::string(SDL_GetError()));
+        throw std::runtime_error(
+            "Couldn't get supported shader formats: " + std::string(SDL_GetError())
+        );
     }
 
     SDL_GPUShaderFormat shaderFormat = SDL_GPU_SHADERFORMAT_INVALID;
@@ -43,8 +44,9 @@ ShaderState::ShaderState(const std::string& fragmentFilePath, const Uint32 unifo
     }
     else
     {
-        throw std::runtime_error("Unknown shader extension " + std::string(ext) +
-                                 " or unsupported format");
+        throw std::runtime_error(
+            "Unknown shader extension " + std::string(ext) + " or unsupported format"
+        );
     }
 
     size_t codeSize;
@@ -60,9 +62,9 @@ ShaderState::ShaderState(const std::string& fragmentFilePath, const Uint32 unifo
     shaderInfo.entrypoint = entrypoint;
     shaderInfo.format = shaderFormat;
     shaderInfo.stage = SDL_GPU_SHADERSTAGE_FRAGMENT;
-    shaderInfo.num_samplers = 1;         // Not usable yet for more than 1 sampler
-    shaderInfo.num_storage_textures = 0; // Not usable yet
-    shaderInfo.num_storage_buffers = 0;  // Not usable yet
+    shaderInfo.num_samplers = 1;          // Not usable yet for more than 1 sampler
+    shaderInfo.num_storage_textures = 0;  // Not usable yet
+    shaderInfo.num_storage_buffers = 0;   // Not usable yet
     shaderInfo.num_uniform_buffers = uniformBufferCount;
 
     m_fragShader = SDL_CreateGPUShader(renderer::_getGPUDevice(), &shaderInfo);
@@ -155,16 +157,19 @@ void _quit()
 
 void _bind(py::module_& module)
 {
-    py::classh<ShaderState>(module, "ShaderState",
-                            "Encapsulates a GPU shader and its associated render state.")
-        .def(py::init<const std::string&, Uint32>(), py::arg("fragment_file_path"),
-             py::arg("uniform_buffer_count") = 0, R"doc(
+    py::classh<ShaderState>(
+        module, "ShaderState", "Encapsulates a GPU shader and its associated render state."
+    )
+        .def(
+            py::init<const std::string&, Uint32>(), py::arg("fragment_file_path"),
+            py::arg("uniform_buffer_count") = 0, R"doc(
 Create a ShaderState from the specified fragment shader file.
 
 Args:
     fragment_file_path (str): Path to the fragment shader file.
     uniform_buffer_count (int, optional): Number of uniform buffers used by the shader. Default is 0.
-            )doc")
+            )doc"
+        )
 
         .def("bind", &ShaderState::bind, R"doc(
 Binds this shader state to the current render pass, making it active for subsequent draw calls.
@@ -191,7 +196,8 @@ Set uniform data for the fragment shader at the specified binding point.
 Args:
     binding (int): Uniform buffer binding index.
     data (buffer): Buffer or bytes object containing the uniform data to upload.
-            )doc");
+            )doc"
+        );
 }
-} // namespace shader_state
-} // namespace kn
+}  // namespace shader_state
+}  // namespace kn

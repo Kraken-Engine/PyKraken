@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Math.hpp"
 #include <pybind11/pybind11.h>
+
+#include "Math.hpp"
 
 namespace py = pybind11;
 
@@ -30,5 +31,5 @@ namespace camera
 void _bind(const py::module_& module);
 
 Vec2 getActivePos();
-} // namespace camera
-} // namespace kn
+}  // namespace camera
+}  // namespace kn

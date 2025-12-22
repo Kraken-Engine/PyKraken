@@ -47,4 +47,4 @@ Args:
     message (str): The message to log.
         )doc");
 }
-} // namespace kn::log
+}  // namespace kn::log

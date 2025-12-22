@@ -1,8 +1,9 @@
 #pragma once
 
+#include <pybind11/pybind11.h>
+
 #include <functional>
 #include <memory>
-#include <pybind11/pybind11.h>
 #include <vector>
 
 #include "Math.hpp"
@@ -15,7 +16,7 @@ namespace orchestrator
 {
 void _bind(py::module_& module);
 void _tick();
-} // namespace orchestrator
+}  // namespace orchestrator
 
 /**
  * @brief Base class for timeline effects.
@@ -24,7 +25,7 @@ class Effect
 {
   public:
     double duration = 0.0;
-    std::function<double(double)> easing = [](double t) { return t; }; // Linear by default
+    std::function<double(double)> easing = [](double t) { return t; };  // Linear by default
 
     virtual ~Effect() = default;
 
@@ -176,4 +177,4 @@ class Orchestrator
 
     friend void orchestrator::_tick();
 };
-} // namespace kn
+}  // namespace kn

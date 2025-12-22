@@ -1,11 +1,13 @@
 #include "Orchestrator.hpp"
-#include "Log.hpp"
-#include "Time.hpp"
 
-#include <cmath>
 #include <pybind11/functional.h>
 #include <pybind11/stl.h>
+
+#include <cmath>
 #include <random>
+
+#include "Log.hpp"
+#include "Time.hpp"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -16,7 +18,10 @@ namespace kn
 static std::vector<Orchestrator*> _orchestrators;
 
 // ----- MoveToEffect -----
-void MoveToEffect::start(Transform& transform) { m_startPos = transform.pos; }
+void MoveToEffect::start(Transform& transform)
+{
+    m_startPos = transform.pos;
+}
 
 void MoveToEffect::update(Transform& transform, double t)
 {
@@ -26,7 +31,10 @@ void MoveToEffect::update(Transform& transform, double t)
 }
 
 // ----- ScaleToEffect -----
-void ScaleToEffect::start(Transform& transform) { m_startScale = transform.scale; }
+void ScaleToEffect::start(Transform& transform)
+{
+    m_startScale = transform.scale;
+}
 
 void ScaleToEffect::update(Transform& transform, double t)
 {
@@ -36,7 +44,10 @@ void ScaleToEffect::update(Transform& transform, double t)
 }
 
 // ----- RotateToEffect -----
-void RotateToEffect::start(Transform& transform) { m_startAngle = transform.angle; }
+void RotateToEffect::start(Transform& transform)
+{
+    m_startAngle = transform.angle;
+}
 
 void RotateToEffect::update(Transform& transform, double t)
 {
@@ -59,7 +70,10 @@ void RotateToEffect::update(Transform& transform, double t)
 }
 
 // ----- RotateByEffect -----
-void RotateByEffect::start(Transform& transform) { m_startAngle = transform.angle; }
+void RotateByEffect::start(Transform& transform)
+{
+    m_startAngle = transform.angle;
+}
 
 void RotateByEffect::update(Transform& transform, double t)
 {
@@ -69,7 +83,10 @@ void RotateByEffect::update(Transform& transform, double t)
 }
 
 // ----- ShakeEffect -----
-void ShakeEffect::start(Transform& transform) { m_originalPos = transform.pos; }
+void ShakeEffect::start(Transform& transform)
+{
+    m_originalPos = transform.pos;
+}
 
 void ShakeEffect::update(Transform& transform, double t)
 {
@@ -87,14 +104,18 @@ void ShakeEffect::update(Transform& transform, double t)
     static std::mt19937 rng(std::random_device{}());
     static std::uniform_real_distribution<double> dist(-1.0, 1.0);
 
-    const Vec2 phase = {std::sin(time * frequency * 2.0 * M_PI + dist(rng) * 0.5),
-                        std::sin(time * frequency * 2.0 * M_PI * 1.1 + dist(rng) * 0.5)};
+    const Vec2 phase =
+        {std::sin(time * frequency * 2.0 * M_PI + dist(rng) * 0.5),
+         std::sin(time * frequency * 2.0 * M_PI * 1.1 + dist(rng) * 0.5)};
 
     transform.pos = m_originalPos + amplitude * decay * phase;
 }
 
 // ----- CallEffect -----
-void CallEffect::start([[maybe_unused]] Transform& transform) { m_called = false; }
+void CallEffect::start([[maybe_unused]] Transform& transform)
+{
+    m_called = false;
+}
 
 void CallEffect::update([[maybe_unused]] Transform& transform, [[maybe_unused]] double t)
 {
@@ -106,9 +127,15 @@ void CallEffect::update([[maybe_unused]] Transform& transform, [[maybe_unused]] 
 }
 
 // ----- Orchestrator -----
-Orchestrator::~Orchestrator() { std::erase(_orchestrators, this); }
+Orchestrator::~Orchestrator()
+{
+    std::erase(_orchestrators, this);
+}
 
-void Orchestrator::setTarget(Transform* target) { m_target = target; }
+void Orchestrator::setTarget(Transform* target)
+{
+    m_target = target;
+}
 
 Orchestrator& Orchestrator::addStep(const std::vector<std::shared_ptr<Effect>>& effects)
 {
@@ -173,7 +200,10 @@ void Orchestrator::play()
     m_playing = true;
 }
 
-void Orchestrator::pause() { m_playing = false; }
+void Orchestrator::pause()
+{
+    m_playing = false;
+}
 
 void Orchestrator::resume()
 {
@@ -198,18 +228,30 @@ void Orchestrator::rewind()
     m_stepStarted = false;
 }
 
-bool Orchestrator::isFinalized() const { return m_finalized; }
+bool Orchestrator::isFinalized() const
+{
+    return m_finalized;
+}
 
-bool Orchestrator::isPlaying() const { return m_playing; }
+bool Orchestrator::isPlaying() const
+{
+    return m_playing;
+}
 
 bool Orchestrator::isFinished() const
 {
     return !m_playing && m_currentStep >= m_steps.size() && m_finalized;
 }
 
-void Orchestrator::setLooping(bool loop) { m_looping = loop; }
+void Orchestrator::setLooping(bool loop)
+{
+    m_looping = loop;
+}
 
-bool Orchestrator::isLooping() const { return m_looping; }
+bool Orchestrator::isLooping() const
+{
+    return m_looping;
+}
 
 void Orchestrator::update(double dt)
 {
@@ -244,8 +286,9 @@ void Orchestrator::update(double dt)
     m_stepTime += dt;
     for (auto& effect : step.effects)
     {
-        const double effectProgress =
-            effect->duration > 0.0 ? std::min(m_stepTime / effect->duration, 1.0) : 1.0;
+        const double effectProgress = effect->duration > 0.0
+                                          ? std::min(m_stepTime / effect->duration, 1.0)
+                                          : 1.0;
         effect->update(*m_target, effectProgress);
     }
 
@@ -297,47 +340,52 @@ Methods:
     stop(): Stop the animation and reset to the beginning.
     rewind(): Reset the animation to the beginning without stopping.
     )doc")
-        .def(py::init(
-                 [](const py::object& target) -> Orchestrator
-                 {
-                     Orchestrator orch;
+        .def(
+            py::init(
+                [](const py::object& target) -> Orchestrator
+                {
+                    Orchestrator orch;
 
-                     if (target.is_none())
-                         throw py::type_error(
-                             "target must be a Transform or an object with a 'transform' "
-                             "attribute, not None");
+                    if (target.is_none())
+                        throw py::type_error(
+                            "target must be a Transform or an object with a 'transform' "
+                            "attribute, not None"
+                        );
 
-                     // Try to get transform attribute first (for Sprite-like objects)
-                     if (py::hasattr(target, "transform"))
-                     {
-                         auto transformAttr = target.attr("transform");
-                         auto* transform = transformAttr.cast<Transform*>();
-                         orch.setTarget(transform);
-                     }
-                     else
-                     {
-                         // Try direct Transform cast
-                         try
-                         {
-                             auto* transform = target.cast<Transform*>();
-                             orch.setTarget(transform);
-                         }
-                         catch (const py::cast_error&)
-                         {
-                             throw py::type_error(
-                                 "target must be a Transform or an object with a 'transform' "
-                                 "attribute");
-                         }
-                     }
-                     return orch;
-                 }),
-             py::arg("target"),
-             R"doc(
+                    // Try to get transform attribute first (for Sprite-like objects)
+                    if (py::hasattr(target, "transform"))
+                    {
+                        auto transformAttr = target.attr("transform");
+                        auto* transform = transformAttr.cast<Transform*>();
+                        orch.setTarget(transform);
+                    }
+                    else
+                    {
+                        // Try direct Transform cast
+                        try
+                        {
+                            auto* transform = target.cast<Transform*>();
+                            orch.setTarget(transform);
+                        }
+                        catch (const py::cast_error&)
+                        {
+                            throw py::type_error(
+                                "target must be a Transform or an object with a 'transform' "
+                                "attribute"
+                            );
+                        }
+                    }
+                    return orch;
+                }
+            ),
+            py::arg("target"),
+            R"doc(
 Create an Orchestrator for animating transforms.
 
 Args:
     target: Either a Transform object or an object with a 'transform' attribute (like Sprite).
-             )doc")
+             )doc"
+        )
         .def(
             "parallel",
             [](Orchestrator& self, const py::args& effects) -> Orchestrator&
@@ -364,7 +412,8 @@ Args:
 
 Returns:
     Orchestrator: Self for method chaining.
-             )doc")
+             )doc"
+        )
         .def(
             "then", [](Orchestrator& self, const std::shared_ptr<Effect>& effect) -> Orchestrator&
             { return self.addStep(effect); }, py::arg("effect"), R"doc(
@@ -375,7 +424,8 @@ Args:
 
 Returns:
     Orchestrator: Self for method chaining.
-             )doc")
+             )doc"
+        )
         .def("finalize", &Orchestrator::finalize, R"doc(
 Finalize the orchestrator, preventing further edits.
 
@@ -454,7 +504,8 @@ Args:
 
 Returns:
     Effect: The move-to effect.
-        )doc");
+        )doc"
+    );
 
     module.def(
         "_fx_scale_to",
@@ -507,7 +558,8 @@ Args:
 
 Returns:
     Effect: The scale-to effect.
-        )doc");
+        )doc"
+    );
 
     module.def(
         "_fx_rotate_to",
@@ -544,7 +596,8 @@ Args:
 
 Returns:
     Effect: The rotate-to effect.
-        )doc");
+        )doc"
+    );
 
     module.def(
         "_fx_rotate_by",
@@ -581,7 +634,8 @@ Args:
 
 Returns:
     Effect: The rotate-by effect.
-        )doc");
+        )doc"
+    );
 
     module.def(
         "_fx_shake",
@@ -604,7 +658,8 @@ Args:
 
 Returns:
     Effect: The shake effect.
-        )doc");
+        )doc"
+    );
 
     module.def(
         "_fx_call",
@@ -612,7 +667,7 @@ Returns:
         {
             auto effect = std::make_shared<CallEffect>();
             effect->callback = callback;
-            effect->duration = 0.0; // Instant
+            effect->duration = 0.0;  // Instant
             return effect;
         },
         py::arg("callback"), R"doc(
@@ -623,7 +678,8 @@ Args:
 
 Returns:
     Effect: The call effect.
-        )doc");
+        )doc"
+    );
 
     module.def(
         "_fx_wait",
@@ -643,7 +699,8 @@ Args:
 
 Returns:
     Effect: The wait effect.
-        )doc");
+        )doc"
+    );
 }
-} // namespace orchestrator
-} // namespace kn
+}  // namespace orchestrator
+}  // namespace kn

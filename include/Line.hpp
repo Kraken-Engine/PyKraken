@@ -10,7 +10,7 @@ class Vec2;
 
 class Line
 {
-public:
+  public:
     double ax, ay, bx, by;
 
     Line();
@@ -40,5 +40,5 @@ namespace line
 void _bind(py::module_& module);
 
 Line move(const Line& line, const Vec2& offset);
-} // namespace line
-} // namespace kn
+}  // namespace line
+}  // namespace kn

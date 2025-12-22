@@ -1,3 +1,10 @@
+#include "Draw.hpp"
+
+#include <gfx/SDL3_gfxPrimitives.h>
+#include <pybind11/stl.h>
+
+#include <set>
+
 #include "Camera.hpp"
 #include "Circle.hpp"
 #include "Color.hpp"
@@ -6,11 +13,6 @@
 #include "Polygon.hpp"
 #include "Rect.hpp"
 #include "Renderer.hpp"
-
-#include "Draw.hpp"
-#include <gfx/SDL3_gfxPrimitives.h>
-#include <pybind11/stl.h>
-#include <set>
 
 static Uint64 packPoint(int x, int y);
 
@@ -42,7 +44,7 @@ void points(const std::vector<Vec2>& points, const Color& color)
     sdlPoints.reserve(points.size());
 
     const Vec2 cameraPos = camera::getActivePos();
-    const Vec2 max = renderer::getResolution() - cameraPos;
+    const Vec2 max = renderer::getTargetResolution() - cameraPos;
     const Vec2 min = -cameraPos;
     for (const Vec2& point : points)
         if (const Vec2 pos = point - cameraPos; min < pos && pos < max)
@@ -53,8 +55,9 @@ void points(const std::vector<Vec2>& points, const Color& color)
 }
 
 // Accept a NumPy ndarray with shape (N,2) and dtype float64 for the fastest path.
-void pointsFromNDArray(const py::array_t<double, py::array::c_style | py::array::forcecast>& arr,
-                       const Color& color)
+void pointsFromNDArray(
+    const py::array_t<double, py::array::c_style | py::array::forcecast>& arr, const Color& color
+)
 {
     const auto info = arr.request();
     if (info.ndim != 2 || info.shape[1] != 2)
@@ -72,7 +75,7 @@ void pointsFromNDArray(const py::array_t<double, py::array::c_style | py::array:
     std::vector<SDL_FPoint> sdlPoints;
     sdlPoints.reserve(n);
 
-    const Vec2 res = renderer::getResolution();
+    const Vec2 res = renderer::getTargetResolution();
     const Vec2 cameraPos = camera::getActivePos();
     const Vec2 zero;
     for (size_t i = 0; i < n; ++i)
@@ -98,8 +101,9 @@ void circle(const Circle& circle, const Color& color, const int thickness)
     if (thickness == 1)
         _circleThin(rend, circle.pos - camera::getActivePos(), static_cast<int>(circle.radius));
     else
-        _circle(rend, circle.pos - camera::getActivePos(), static_cast<int>(circle.radius),
-                thickness);
+        _circle(
+            rend, circle.pos - camera::getActivePos(), static_cast<int>(circle.radius), thickness
+        );
 }
 
 void ellipse(const Rect& bounds, const Color& color, const bool filled)
@@ -112,18 +116,21 @@ void ellipse(const Rect& bounds, const Color& color, const bool filled)
 
     const Vec2 cameraPos = camera::getActivePos();
     const auto sdlRect = static_cast<SDL_FRect>(
-        Rect(bounds.x - cameraPos.x, bounds.y - cameraPos.y, bounds.w, bounds.h));
+        Rect(bounds.x - cameraPos.x, bounds.y - cameraPos.y, bounds.w, bounds.h)
+    );
 
     if (filled)
-        filledEllipseRGBA(rend, static_cast<Sint16>(sdlRect.x + sdlRect.w / 2),
-                          static_cast<Sint16>(sdlRect.y + sdlRect.h / 2),
-                          static_cast<Sint16>(sdlRect.w / 2), static_cast<Sint16>(sdlRect.h / 2),
-                          color.r, color.g, color.b, color.a);
+        filledEllipseRGBA(
+            rend, static_cast<Sint16>(sdlRect.x + sdlRect.w / 2),
+            static_cast<Sint16>(sdlRect.y + sdlRect.h / 2), static_cast<Sint16>(sdlRect.w / 2),
+            static_cast<Sint16>(sdlRect.h / 2), color.r, color.g, color.b, color.a
+        );
     else
-        ellipseRGBA(rend, static_cast<Sint16>(sdlRect.x + sdlRect.w / 2),
-                    static_cast<Sint16>(sdlRect.y + sdlRect.h / 2),
-                    static_cast<Sint16>(sdlRect.w / 2), static_cast<Sint16>(sdlRect.h / 2), color.r,
-                    color.g, color.b, color.a);
+        ellipseRGBA(
+            rend, static_cast<Sint16>(sdlRect.x + sdlRect.w / 2),
+            static_cast<Sint16>(sdlRect.y + sdlRect.h / 2), static_cast<Sint16>(sdlRect.w / 2),
+            static_cast<Sint16>(sdlRect.h / 2), color.r, color.g, color.b, color.a
+        );
 }
 
 void line(const Line& line, const Color& color, const int thickness)
@@ -137,8 +144,9 @@ void line(const Line& line, const Color& color, const int thickness)
     if (thickness <= 1)
         lineRGBA(renderer::_get(), x1, y1, x2, y2, color.r, color.g, color.b, color.a);
     else
-        thickLineRGBA(renderer::_get(), x1, y1, x2, y2, thickness, color.r, color.g, color.b,
-                      color.a);
+        thickLineRGBA(
+            renderer::_get(), x1, y1, x2, y2, thickness, color.r, color.g, color.b, color.a
+        );
 }
 
 void rect(Rect rect, const Color& color, const int thickness)
@@ -254,11 +262,15 @@ void polygon(const Polygon& polygon, const Color& color, const bool filled)
     }
 
     if (filled)
-        filledPolygonRGBA(renderer::_get(), vx.data(), vy.data(), static_cast<int>(size), color.r,
-                          color.g, color.b, color.a);
+        filledPolygonRGBA(
+            renderer::_get(), vx.data(), vy.data(), static_cast<int>(size), color.r, color.g,
+            color.b, color.a
+        );
     else
-        polygonRGBA(renderer::_get(), vx.data(), vy.data(), static_cast<int>(size), color.r,
-                    color.g, color.b, color.a);
+        polygonRGBA(
+            renderer::_get(), vx.data(), vy.data(), static_cast<int>(size), color.r, color.g,
+            color.b, color.a
+        );
 }
 
 void _circleThin(SDL_Renderer* renderer, const Vec2& center, const int radius)
@@ -274,7 +286,8 @@ void _circleThin(SDL_Renderer* renderer, const Vec2& center, const int radius)
     auto emit = [&](const int dx, const int dy)
     {
         pointSet.insert(
-            packPoint(static_cast<int>(center.x) + dx, static_cast<int>(center.y) + dy));
+            packPoint(static_cast<int>(center.x) + dx, static_cast<int>(center.y) + dy)
+        );
     };
 
     while (x <= y)
@@ -318,8 +331,10 @@ void _circle(SDL_Renderer* renderer, const Vec2& center, const int radius, const
 
     auto hLine = [&](const int x1, const int y, const int x2)
     {
-        SDL_RenderLine(renderer, static_cast<float>(x1), static_cast<float>(y),
-                       static_cast<float>(x2), static_cast<float>(y));
+        SDL_RenderLine(
+            renderer, static_cast<float>(x1), static_cast<float>(y), static_cast<float>(x2),
+            static_cast<float>(y)
+        );
     };
 
     auto drawCircleSpan = [&](const int r, std::unordered_map<int, std::pair<int, int>>& bounds)
@@ -412,8 +427,9 @@ Raises:
     RuntimeError: If point rendering fails.
     )doc");
 
-    subDraw.def("points_from_ndarray", &pointsFromNDArray, py::arg("points"), py::arg("color"),
-                R"doc(
+    subDraw.def(
+        "points_from_ndarray", &pointsFromNDArray, py::arg("points"), py::arg("color"),
+        R"doc(
 Batch draw points from a NumPy array.
 
 This fast path accepts a contiguous NumPy array of shape (N,2) (dtype float64) and
@@ -427,10 +443,12 @@ Args:
 Raises:
     ValueError: If the array shape is not (N,2).
     RuntimeError: If point rendering fails.
-    )doc");
+    )doc"
+    );
 
-    subDraw.def("circle", &circle, py::arg("circle"), py::arg("color"), py::arg("thickness") = 0,
-                R"doc(
+    subDraw.def(
+        "circle", &circle, py::arg("circle"), py::arg("color"), py::arg("thickness") = 0,
+        R"doc(
 Draw a circle to the renderer.
 
 Args:
@@ -438,10 +456,12 @@ Args:
     color (Color): The color of the circle.
     thickness (int, optional): The line thickness. If 0 or >= radius, draws filled circle.
                               Defaults to 0 (filled).
-    )doc");
+    )doc"
+    );
 
-    subDraw.def("ellipse", &ellipse, py::arg("bounds"), py::arg("color"), py::arg("filled") = false,
-                R"doc(
+    subDraw.def(
+        "ellipse", &ellipse, py::arg("bounds"), py::arg("color"), py::arg("filled") = false,
+        R"doc(
 Draw an ellipse to the renderer.
 
 Args:
@@ -449,40 +469,48 @@ Args:
     color (Color): The color of the ellipse.
     filled (bool, optional): Whether to draw a filled ellipse or just the outline.
                              Defaults to False (outline).
-    )doc");
+    )doc"
+    );
 
-    subDraw.def("line", &line, py::arg("line"), py::arg("color"), py::arg("thickness") = 1,
-                R"doc(
+    subDraw.def(
+        "line", &line, py::arg("line"), py::arg("color"), py::arg("thickness") = 1,
+        R"doc(
 Draw a line to the renderer.
 
 Args:
     line (Line): The line to draw.
     color (Color): The color of the line.
     thickness (int, optional): The line thickness in pixels. Defaults to 1.
-    )doc");
+    )doc"
+    );
 
-    subDraw.def("rect", &rect, py::arg("rect"), py::arg("color"), py::arg("thickness") = 0,
-                R"doc(
+    subDraw.def(
+        "rect", &rect, py::arg("rect"), py::arg("color"), py::arg("thickness") = 0,
+        R"doc(
 Draw a rectangle to the renderer.
 
 Args:
     rect (Rect): The rectangle to draw.
     color (Color): The color of the rectangle.
     thickness (int, optional): The border thickness. If 0 or >= half width/height, draws filled rectangle. Defaults to 0 (filled).
-    )doc");
+    )doc"
+    );
 
-    subDraw.def("rects", &rects, py::arg("rects"), py::arg("color"), py::arg("thickness") = 0,
-                R"doc(
+    subDraw.def(
+        "rects", &rects, py::arg("rects"), py::arg("color"), py::arg("thickness") = 0,
+        R"doc(
 Batch draw an array of rectangles to the renderer.
 
 Args:
     rects (Sequence[Rect]): The rectangles to batch draw.
     color (Color): The color of the rectangles.
     thickness (int, optional): The border thickness of the rectangles. If 0 or >= half width/height, draws filled rectangles. Defaults to 0 (filled).
-    )doc");
+    )doc"
+    );
 
-    subDraw.def("polygon", &polygon, py::arg("polygon"), py::arg("color"),
-                py::arg("filled") = false, R"doc(
+    subDraw.def(
+        "polygon", &polygon, py::arg("polygon"), py::arg("color"), py::arg("filled") = false,
+        R"doc(
 Draw a polygon to the renderer.
 
 Args:
@@ -490,9 +518,10 @@ Args:
     color (Color): The color of the polygon.
     filled (bool, optional): Whether to draw a filled polygon or just the outline.
                              Defaults to False (outline). Works with both convex and concave polygons.
-    )doc");
+    )doc"
+    );
 }
-} // namespace kn::draw
+}  // namespace kn::draw
 
 Uint64 packPoint(const int x, const int y)
 {

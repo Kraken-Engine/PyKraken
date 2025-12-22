@@ -1,15 +1,16 @@
 #include "Text.hpp"
-#include "Camera.hpp"
-#include "Font.hpp"
-#include "Log.hpp"
-#include "Rect.hpp"
-#include "Renderer.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <mutex>
 #include <stdexcept>
 #include <vector>
+
+#include "Camera.hpp"
+#include "Font.hpp"
+#include "Log.hpp"
+#include "Rect.hpp"
+#include "Renderer.hpp"
 
 namespace kn
 {
@@ -85,37 +86,37 @@ void Text::draw(Vec2 pos, const Anchor anchor) const
 
     switch (anchor)
     {
-    case Anchor::TopLeft:
-        // no offset
-        break;
-    case Anchor::TopMid:
-        pos.x -= textW / 2.0;
-        break;
-    case Anchor::TopRight:
-        pos.x -= textW;
-        break;
-    case Anchor::MidLeft:
-        pos.y -= textH / 2.0;
-        break;
-    case Anchor::Center:
-        pos.x -= textW / 2.0;
-        pos.y -= textH / 2.0;
-        break;
-    case Anchor::MidRight:
-        pos.x -= textW;
-        pos.y -= textH / 2.0;
-        break;
-    case Anchor::BottomLeft:
-        pos.y -= textH;
-        break;
-    case Anchor::BottomMid:
-        pos.x -= textW / 2.0;
-        pos.y -= textH;
-        break;
-    case Anchor::BottomRight:
-        pos.x -= textW;
-        pos.y -= textH;
-        break;
+        case Anchor::TopLeft:
+            // no offset
+            break;
+        case Anchor::TopMid:
+            pos.x -= textW / 2.0;
+            break;
+        case Anchor::TopRight:
+            pos.x -= textW;
+            break;
+        case Anchor::MidLeft:
+            pos.y -= textH / 2.0;
+            break;
+        case Anchor::Center:
+            pos.x -= textW / 2.0;
+            pos.y -= textH / 2.0;
+            break;
+        case Anchor::MidRight:
+            pos.x -= textW;
+            pos.y -= textH / 2.0;
+            break;
+        case Anchor::BottomLeft:
+            pos.y -= textH;
+            break;
+        case Anchor::BottomMid:
+            pos.x -= textW / 2.0;
+            pos.y -= textH;
+            break;
+        case Anchor::BottomRight:
+            pos.x -= textW;
+            pos.y -= textH;
+            break;
     }
 
     const int drawX = static_cast<int>(std::round(pos.x));
@@ -306,8 +307,9 @@ Note:
     A window/renderer must be created before using text. Typically you should
     call kn.window.create(...) first, which initializes the text engine.
     )doc")
-        .def(py::init<const Font&>(), py::arg("font"),
-             R"doc(
+        .def(
+            py::init<const Font&>(), py::arg("font"),
+            R"doc(
 Create a Text object.
 
 Args:
@@ -315,7 +317,8 @@ Args:
 
 Raises:
     RuntimeError: If text creation fails.
-    )doc")
+    )doc"
+        )
 
         .def_readwrite("shadow_color", &Text::shadowColor, R"doc(
 Get or set the shadow color for the text.
@@ -383,7 +386,8 @@ Args:
 Raises:
     RuntimeError: If the renderer is not initialized or text drawing fails.
     RuntimeError: If the text font is not set or has gone out of scope.
-        )doc")
+        )doc"
+        )
         .def("set_font", &Text::setFont, py::arg("font"), R"doc(
 Set the font to use for rendering this text.
 
@@ -397,5 +401,5 @@ Returns:
     Rect: A rectangle with x=0, y=0, and width/height of the text.
     )doc");
 }
-} // namespace text
-} // namespace kn
+}  // namespace text
+}  // namespace kn

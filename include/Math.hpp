@@ -21,7 +21,8 @@ class PolarCoordinate
 
     template <typename T>
     PolarCoordinate(T angle, T radius)
-        : angle(static_cast<double>(angle)), radius(static_cast<double>(radius))
+        : angle(static_cast<double>(angle)),
+          radius(static_cast<double>(radius))
     {
     }
 
@@ -43,11 +44,18 @@ class Vec2
     ~Vec2() = default;
 
     template <typename T>
-    explicit Vec2(T value) : x(static_cast<double>(value)), y(static_cast<double>(value))
+    explicit Vec2(T value)
+        : x(static_cast<double>(value)),
+          y(static_cast<double>(value))
     {
     }
 
-    template <typename T> Vec2(T x, T y) : x(static_cast<double>(x)), y(static_cast<double>(y)) {}
+    template <typename T>
+    Vec2(T x, T y)
+        : x(static_cast<double>(x)),
+          y(static_cast<double>(y))
+    {
+    }
 
     [[nodiscard]] Vec2 copy() const;
 
@@ -77,7 +85,7 @@ class Vec2
 
     [[nodiscard]] double distanceSquaredTo(const Vec2& other) const;
 
-    Vec2 operator-() const; // Unary negation
+    Vec2 operator-() const;  // Unary negation
 
     Vec2 operator+(const Vec2& other) const;
 
@@ -117,11 +125,11 @@ Vec2 operator*(double lhs, const Vec2& rhs);
 struct Transform
 {
     Vec2 pos{0.0, 0.0};
-    Vec2 size{};          // Explicit size (empty = use texture/srcRect size)
-    double angle = 0.0;   // In radians
+    Vec2 size{};         // Explicit size (empty = use texture/srcRect size)
+    double angle = 0.0;  // In radians
     Vec2 scale{1.0, 1.0};
     Anchor anchor = Anchor::TopLeft;
-    Vec2 pivot{0.5, 0.5}; // Normalized pivot point, centered by default
+    Vec2 pivot{0.5, 0.5};  // Normalized pivot point, centered by default
 };
 
 namespace math
@@ -155,5 +163,5 @@ double dot(const Vec2& a, const Vec2& b);
 double cross(const Vec2& a, const Vec2& b);
 
 double angleBetween(const Vec2& a, const Vec2& b);
-} // namespace math
-} // namespace kn
+}  // namespace math
+}  // namespace kn

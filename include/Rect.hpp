@@ -20,17 +20,27 @@ class Rect
     Rect() = default;
     Rect(const Vec2& pos, const Vec2& size);
     template <typename T>
-    Rect(T x, T y, T w, T h) : x(x), y(y), w(static_cast<double>(w)), h(static_cast<double>(h))
+    Rect(T x, T y, T w, T h)
+        : x(x),
+          y(y),
+          w(static_cast<double>(w)),
+          h(static_cast<double>(h))
     {
     }
     template <typename T>
     Rect(const Vec2& pos, T w, T h)
-        : x(pos.x), y(pos.y), w(static_cast<double>(w)), h(static_cast<double>(h))
+        : x(pos.x),
+          y(pos.y),
+          w(static_cast<double>(w)),
+          h(static_cast<double>(h))
     {
     }
     template <typename T>
     Rect(T x, T y, const Vec2& size)
-        : x(x), y(y), w(static_cast<double>(size.x)), h(static_cast<double>(size.y))
+        : x(x),
+          y(y),
+          w(static_cast<double>(size.x)),
+          h(static_cast<double>(size.y))
     {
     }
     ~Rect() = default;
@@ -100,5 +110,5 @@ Rect clamp(const Rect& rect, const Rect& other);
 Rect scaleBy(const Rect& rect, double factor);
 Rect scaleBy(const Rect& rect, const Vec2& factor);
 Rect scaleTo(const Rect& rect, const Vec2& size);
-} // namespace rect
-} // namespace kn
+}  // namespace rect
+}  // namespace kn

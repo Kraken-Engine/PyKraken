@@ -1,39 +1,130 @@
 #include "Texture.hpp"
+
+#include <SDL3_image/SDL_image.h>
+#include <pybind11/native_enum.h>
+
 #include "Camera.hpp"
 #include "Color.hpp"
 #include "PixelArray.hpp"
 #include "Renderer.hpp"
 
-#include <SDL3_image/SDL_image.h>
-
 namespace kn
 {
-Texture::Texture(const PixelArray& pixelArray)
+Texture::Texture(const Vec2& size, const TextureScaleMode scaleMode)
 {
-    m_texPtr = SDL_CreateTextureFromSurface(renderer::_get(), pixelArray.getSDL());
+    const int width = static_cast<int>(size.x);
+    const int height = static_cast<int>(size.y);
+
+    if (width < 1 || height < 1)
+        throw std::invalid_argument("Texture size values must be at least 1");
+
+    m_texPtr = SDL_CreateTexture(
+        renderer::_get(), SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, width, height
+    );
+    if (!m_texPtr)
+    {
+        throw std::runtime_error("Failed to create texture: " + std::string(SDL_GetError()));
+    }
+
+    SDL_SetTextureScaleMode(m_texPtr, static_cast<SDL_ScaleMode>(scaleMode));
+
+    m_width = size.x;
+    m_height = size.y;
+}
+
+Texture::Texture(
+    const PixelArray& pixelArray, const TextureScaleMode scaleMode, const TextureAccess access
+)
+{
+    SDL_Surface* surface = pixelArray.getSDL();
+
+    if (access == TextureAccess::STATIC)
+    {
+        m_texPtr = SDL_CreateTextureFromSurface(renderer::_get(), surface);
+    }
+    else if (access == TextureAccess::TARGET)
+    {
+        m_texPtr = SDL_CreateTexture(
+            renderer::_get(), surface->format, SDL_TEXTUREACCESS_TARGET, surface->w, surface->h
+        );
+
+        if (!SDL_UpdateTexture(m_texPtr, nullptr, surface->pixels, surface->pitch))
+        {
+            SDL_DestroyTexture(m_texPtr);
+            m_texPtr = nullptr;
+            throw std::runtime_error(
+                "Failed to copy PixelArray to texture: " + std::string(SDL_GetError())
+            );
+        }
+    }
 
     if (!m_texPtr)
     {
-        throw std::runtime_error("Failed to create texture from PixelArray: " +
-                                 std::string(SDL_GetError()));
+        throw std::runtime_error(
+            "Failed to create texture from PixelArray: " + std::string(SDL_GetError())
+        );
     }
 
-    SDL_SetTextureScaleMode(m_texPtr, SDL_SCALEMODE_NEAREST);
+    SDL_SetTextureScaleMode(m_texPtr, static_cast<SDL_ScaleMode>(scaleMode));
+
+    float w, h;
+    SDL_GetTextureSize(m_texPtr, &w, &h);
+    m_width = static_cast<double>(w);
+    m_height = static_cast<double>(h);
 }
 
-Texture::Texture(const std::string& filePath)
+Texture::Texture(
+    const std::string& filePath, const TextureScaleMode scaleMode, const TextureAccess access
+)
 {
     if (filePath.empty())
         throw std::invalid_argument("File path cannot be empty");
 
-    m_texPtr = IMG_LoadTexture(renderer::_get(), filePath.c_str());
-    if (!m_texPtr)
-        throw std::runtime_error("Failed to load texture: " + std::string(SDL_GetError()));
+    if (access == TextureAccess::STATIC)
+    {
+        m_texPtr = IMG_LoadTexture(renderer::_get(), filePath.c_str());
+        if (!m_texPtr)
+            throw std::runtime_error("Failed to load texture: " + std::string(SDL_GetError()));
+    }
+    else if (access == TextureAccess::TARGET)
+    {
+        SDL_Surface* surface = IMG_Load(filePath.c_str());
+        if (!surface)
+            throw std::runtime_error(
+                "Failed to load image from file: " + std::string(SDL_GetError())
+            );
 
-    SDL_SetTextureScaleMode(m_texPtr, SDL_SCALEMODE_NEAREST);
+        m_texPtr = SDL_CreateTexture(
+            renderer::_get(), surface->format, SDL_TEXTUREACCESS_TARGET, surface->w, surface->h
+        );
+        if (!m_texPtr)
+        {
+            SDL_DestroySurface(surface);
+            throw std::runtime_error(
+                "Failed to create target texture: " + std::string(SDL_GetError())
+            );
+        }
+
+        if (!SDL_UpdateTexture(m_texPtr, nullptr, surface->pixels, surface->pitch))
+        {
+            SDL_DestroyTexture(m_texPtr);
+            SDL_DestroySurface(surface);
+            m_texPtr = nullptr;
+            throw std::runtime_error(
+                "Failed to copy image to texture: " + std::string(SDL_GetError())
+            );
+        }
+
+        SDL_DestroySurface(surface);
+    }
+
+    SDL_SetTextureScaleMode(m_texPtr, static_cast<SDL_ScaleMode>(scaleMode));
+
+    float w, h;
+    SDL_GetTextureSize(m_texPtr, &w, &h);
+    m_width = static_cast<double>(w);
+    m_height = static_cast<double>(h);
 }
-
-Texture::Texture(SDL_Texture* sdlTexture) { this->loadFromSDL(sdlTexture); }
 
 Texture::~Texture()
 {
@@ -44,25 +135,25 @@ Texture::~Texture()
     }
 }
 
-void Texture::loadFromSDL(SDL_Texture* sdlTexture)
+double Texture::getWidth() const
 {
-    if (m_texPtr)
-    {
-        SDL_DestroyTexture(m_texPtr);
-        m_texPtr = nullptr;
-    }
+    return m_width;
+}
 
-    m_texPtr = sdlTexture;
+double Texture::getHeight() const
+{
+    return m_height;
 }
 
 Vec2 Texture::getSize() const
 {
-    float w, h;
-    SDL_GetTextureSize(m_texPtr, &w, &h);
-    return {w, h};
+    return {m_width, m_height};
 }
 
-Rect Texture::getRect() const { return {0.0, 0.0, getSize()}; }
+Rect Texture::getRect() const
+{
+    return {0.0, 0.0, m_width, m_height};
+}
 
 void Texture::setTint(const Color& tint) const
 {
@@ -76,27 +167,59 @@ Color Texture::getTint() const
     return colorMod;
 }
 
-void Texture::setAlpha(const float alpha) const { SDL_SetTextureAlphaModFloat(m_texPtr, alpha); }
+void Texture::setAlpha(const float alpha) const
+{
+    if (!SDL_SetTextureAlphaModFloat(m_texPtr, alpha))
+    {
+        throw std::runtime_error("Failed to set texture alpha mod: " + std::string(SDL_GetError()));
+    }
+}
 
 float Texture::getAlpha() const
 {
     float alphaMod;
-    SDL_GetTextureAlphaModFloat(m_texPtr, &alphaMod);
+    if (!SDL_GetTextureAlphaModFloat(m_texPtr, &alphaMod))
+    {
+        throw std::runtime_error("Failed to get texture alpha mod: " + std::string(SDL_GetError()));
+    }
     return alphaMod;
 }
 
-void Texture::makeAdditive() const { SDL_SetTextureBlendMode(m_texPtr, SDL_BLENDMODE_ADD); }
+void Texture::makeAdditive() const
+{
+    SDL_SetTextureBlendMode(m_texPtr, SDL_BLENDMODE_ADD);
+}
 
-void Texture::makeMultiply() const { SDL_SetTextureBlendMode(m_texPtr, SDL_BLENDMODE_MUL); }
+void Texture::makeMultiply() const
+{
+    SDL_SetTextureBlendMode(m_texPtr, SDL_BLENDMODE_MUL);
+}
 
-void Texture::makeNormal() const { SDL_SetTextureBlendMode(m_texPtr, SDL_BLENDMODE_BLEND); }
+void Texture::makeNormal() const
+{
+    SDL_SetTextureBlendMode(m_texPtr, SDL_BLENDMODE_BLEND);
+}
 
-SDL_Texture* Texture::getSDL() const { return m_texPtr; }
+SDL_Texture* Texture::getSDL() const
+{
+    return m_texPtr;
+}
 
 namespace texture
 {
 void _bind(const py::module_& module)
 {
+    py::native_enum<TextureAccess>(module, "TextureAccess", "enum.IntEnum")
+        .value("STATIC", TextureAccess::STATIC)
+        .value("TARGET", TextureAccess::TARGET)
+        .finalize();
+
+    py::native_enum<TextureScaleMode>(module, "TextureScaleMode", "enum.IntEnum")
+        .value("NEAREST", TextureScaleMode::NEAREST)
+        .value("LINEAR", TextureScaleMode::LINEAR)
+        .value("PIXEL_ART", TextureScaleMode::PIXELART)
+        .finalize();
+
     py::classh<Texture> texture(module, "Texture", R"doc(
 Represents a hardware-accelerated image that can be efficiently rendered.
 
@@ -123,25 +246,101 @@ When True, the texture is mirrored vertically (top-bottom flip).
         )doc");
 
     texture
-        .def(py::init<const std::string&>(), py::arg("file_path"), R"doc(
+        .def(
+            py::init(
+                [](const std::string& filePath, const py::object& scaleModeObj,
+                   const TextureAccess access) -> std::shared_ptr<Texture>
+                {
+                    TextureScaleMode mode = renderer::getDefaultScaleMode();
+                    try
+                    {
+                        if (!scaleModeObj.is_none())
+                            mode = scaleModeObj.cast<TextureScaleMode>();
+                    }
+                    catch (const py::cast_error&)
+                    {
+                        throw std::invalid_argument("Invalid scale mode provided");
+                    }
+
+                    return std::make_shared<Texture>(filePath, mode, access);
+                }
+            ),
+            py::arg("file_path"), py::arg("scale_mode") = py::none(),
+            py::arg("access") = TextureAccess::STATIC, R"doc(
 Create a Texture by loading an image from a file.
+If no scale mode is provided, the default renderer scale mode is used.
 
 Args:
     file_path (str): Path to the image file to load.
+    scale_mode (TextureScaleMode, optional): Scaling/filtering mode for the texture.
+    access (TextureAccess, optional): Texture access type (STATIC or TARGET).
 
 Raises:
     ValueError: If file_path is empty.
     RuntimeError: If the file cannot be loaded or texture creation fails.
-        )doc")
-        .def(py::init<const PixelArray&>(), py::arg("pixel_array"), R"doc(
+        )doc"
+        )
+        .def(
+            py::init(
+                [](const PixelArray& pixelArray, const py::object& scaleModeObj,
+                   const TextureAccess access) -> std::shared_ptr<Texture>
+                {
+                    TextureScaleMode mode = renderer::getDefaultScaleMode();
+                    try
+                    {
+                        if (!scaleModeObj.is_none())
+                            mode = scaleModeObj.cast<TextureScaleMode>();
+                    }
+                    catch (const py::cast_error&)
+                    {
+                        throw std::invalid_argument("Invalid scale mode provided");
+                    }
+                    return std::make_shared<Texture>(pixelArray, mode, access);
+                }
+            ),
+            py::arg("pixel_array"), py::arg("scale_mode") = py::none(),
+            py::arg("access") = TextureAccess::STATIC, R"doc(
 Create a Texture from an existing PixelArray.
+If no scale mode is provided, the default renderer scale mode is used.
 
 Args:
     pixel_array (PixelArray): The pixel array to convert to a texture.
+    scale_mode (TextureScaleMode, optional): Scaling/filtering mode for the texture.
+    access (TextureAccess, optional): Texture access type (STATIC or TARGET).
 
 Raises:
     RuntimeError: If texture creation from pixel array fails.
-        )doc")
+        )doc"
+        )
+        .def(
+            py::init(
+                [](const Vec2& size, const py::object& scaleModeObj) -> std::shared_ptr<Texture>
+                {
+                    TextureScaleMode mode = renderer::getDefaultScaleMode();
+                    try
+                    {
+                        if (!scaleModeObj.is_none())
+                            mode = scaleModeObj.cast<TextureScaleMode>();
+                    }
+                    catch (const py::cast_error&)
+                    {
+                        throw std::invalid_argument("Invalid scale mode provided");
+                    }
+                    return std::make_shared<Texture>(size, mode);
+                }
+            ),
+            py::arg("size"), py::arg("scale_mode") = py::none(), R"doc(
+Create a (render target) Texture with the specified size.
+If no scale mode is provided, the default renderer scale mode is used.
+
+Args:
+    size (Vec2): The width and height of the texture.
+    scale_mode (TextureScaleMode, optional): Scaling/filtering mode for the texture.
+
+Raises:
+    RuntimeError: If texture creation fails.
+        )doc"
+        )
 
         .def_readwrite("flip", &Texture::flip, R"doc(
 The flip settings for horizontal and vertical mirroring.
@@ -183,5 +382,5 @@ Set the texture to use normal (alpha) blending mode.
 This is the default blending mode for standard transparency effects.
         )doc");
 }
-} // namespace texture
-} // namespace kn
+}  // namespace texture
+}  // namespace kn

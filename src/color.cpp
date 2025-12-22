@@ -5,7 +5,10 @@
 
 namespace kn
 {
-void Color::fromHex(const std::string_view hex) { *this = color::fromHex(hex); }
+void Color::fromHex(const std::string_view hex)
+{
+    *this = color::fromHex(hex);
+}
 
 std::string Color::toHex() const
 {
@@ -17,7 +20,10 @@ std::string Color::toHex() const
     return "#" + ss.str();
 }
 
-void Color::fromHSV(const color::HSV& hsv) { *this = color::fromHSV(hsv); }
+void Color::fromHSV(const color::HSV& hsv)
+{
+    *this = color::fromHSV(hsv);
+}
 
 color::HSV Color::toHSV() const
 {
@@ -34,7 +40,7 @@ color::HSV Color::toHSV() const
 
     if (delta < 0.00001f)
     {
-        h = 0; // Undefined hue
+        h = 0;  // Undefined hue
         s = 0;
     }
     else
@@ -48,18 +54,23 @@ color::HSV Color::toHSV() const
         else
             h = (rNorm - gNorm) / delta + 4.0;
 
-        h *= 60.0; // Convert to degrees
+        h *= 60.0;  // Convert to degrees
     }
 
     return {h, s, v, a / 255.0};
 }
 
-Color::operator SDL_Color() const { return {r, g, b, a}; }
+Color::operator SDL_Color() const
+{
+    return {r, g, b, a};
+}
 
 Color::operator SDL_FColor() const
 {
-    return {static_cast<float>(r) / 255.f, static_cast<float>(g) / 255.f,
-            static_cast<float>(b) / 255.f, static_cast<float>(a) / 255.f};
+    return {
+        static_cast<float>(r) / 255.f, static_cast<float>(g) / 255.f, static_cast<float>(b) / 255.f,
+        static_cast<float>(a) / 255.f
+    };
 }
 
 Color::operator uint32_t() const
@@ -73,9 +84,15 @@ bool Color::operator==(const Color& other) const
     return r == other.r && g == other.g && b == other.b && a == other.a;
 }
 
-bool Color::operator!=(const Color& other) const { return !(*this == other); }
+bool Color::operator!=(const Color& other) const
+{
+    return !(*this == other);
+}
 
-Color Color::operator-() const { return color::invert(*this); }
+Color Color::operator-() const
+{
+    return color::invert(*this);
+}
 
 Color Color::operator*(const double scalar) const
 {
@@ -134,29 +151,37 @@ Color fromHex(std::string_view hex)
     if (hex.length() == 6)
     {
         // RRGGBB
-        return {hexToByte(hex.substr(0, 2)), hexToByte(hex.substr(2, 2)),
-                hexToByte(hex.substr(4, 2)), 255};
+        return {
+            hexToByte(hex.substr(0, 2)), hexToByte(hex.substr(2, 2)), hexToByte(hex.substr(4, 2)),
+            255
+        };
     }
 
     if (hex.length() == 8)
     {
         // RRGGBBAA
-        return {hexToByte(hex.substr(0, 2)), hexToByte(hex.substr(2, 2)),
-                hexToByte(hex.substr(4, 2)), hexToByte(hex.substr(6, 2))};
+        return {
+            hexToByte(hex.substr(0, 2)), hexToByte(hex.substr(2, 2)), hexToByte(hex.substr(4, 2)),
+            hexToByte(hex.substr(6, 2))
+        };
     }
 
     if (hex.length() == 3)
     {
         // RGB → duplicate each
-        return {hexToByte(std::string(2, hex[0])), hexToByte(std::string(2, hex[1])),
-                hexToByte(std::string(2, hex[2])), 255};
+        return {
+            hexToByte(std::string(2, hex[0])), hexToByte(std::string(2, hex[1])),
+            hexToByte(std::string(2, hex[2])), 255
+        };
     }
 
     if (hex.length() == 4)
     {
         // RGBA → duplicate each
-        return {hexToByte(std::string(2, hex[0])), hexToByte(std::string(2, hex[1])),
-                hexToByte(std::string(2, hex[2])), hexToByte(std::string(2, hex[3]))};
+        return {
+            hexToByte(std::string(2, hex[0])), hexToByte(std::string(2, hex[1])),
+            hexToByte(std::string(2, hex[2])), hexToByte(std::string(2, hex[3]))
+        };
     }
 
     throw std::invalid_argument("Invalid hex string format");
@@ -212,21 +237,26 @@ Color fromHSV(const HSV& hsv)
         b = x;
     }
 
-    return {static_cast<uint8_t>((r + m) * 255.0), static_cast<uint8_t>((g + m) * 255.0),
-            static_cast<uint8_t>((b + m) * 255.0), static_cast<uint8_t>(hsv.a * 255.0)};
+    return {
+        static_cast<uint8_t>((r + m) * 255.0), static_cast<uint8_t>((g + m) * 255.0),
+        static_cast<uint8_t>((b + m) * 255.0), static_cast<uint8_t>(hsv.a * 255.0)
+    };
 }
 
 Color lerp(const Color& a, const Color& b, const double t)
 {
     return {
         static_cast<uint8_t>(a.r + (b.r - a.r) * t), static_cast<uint8_t>(a.g + (b.g - a.g) * t),
-        static_cast<uint8_t>(a.b + (b.b - a.b) * t), static_cast<uint8_t>(a.a + (b.a - a.a) * t)};
+        static_cast<uint8_t>(a.b + (b.b - a.b) * t), static_cast<uint8_t>(a.a + (b.a - a.a) * t)
+    };
 }
 
 Color invert(const Color& color)
 {
-    return {static_cast<uint8_t>(255 - color.r), static_cast<uint8_t>(255 - color.g),
-            static_cast<uint8_t>(255 - color.b), color.a};
+    return {
+        static_cast<uint8_t>(255 - color.r), static_cast<uint8_t>(255 - color.g),
+        static_cast<uint8_t>(255 - color.b), color.a
+    };
 }
 
 Color grayscale(const Color& color)
@@ -247,8 +277,9 @@ Each channel (r, g, b, a) is an 8-bit unsigned integer.
 Create a Color with default values (0, 0, 0, 255).
         )doc")
 
-        .def(py::init<uint8_t, uint8_t, uint8_t, uint8_t>(), py::arg("r"), py::arg("g"),
-             py::arg("b"), py::arg("a") = 255, R"doc(
+        .def(
+            py::init<uint8_t, uint8_t, uint8_t, uint8_t>(), py::arg("r"), py::arg("g"),
+            py::arg("b"), py::arg("a") = 255, R"doc(
 Create a Color from RGBA components.
 
 Args:
@@ -256,40 +287,51 @@ Args:
     g (int): Green value [0-255].
     b (int): Blue value [0-255].
     a (int, optional): Alpha value [0-255]. Defaults to 255.
-        )doc")
+        )doc"
+        )
 
-        .def(py::init([](const std::string& hex) -> Color { return fromHex(hex); }), py::arg("hex"),
-             R"doc(
+        .def(
+            py::init([](const std::string& hex) -> Color { return fromHex(hex); }), py::arg("hex"),
+            R"doc(
 Create a Color from a hex string.
 
 Args:
     hex (str): Hex color string (with or without '#' prefix).
-        )doc")
+        )doc"
+        )
 
-        .def(py::init(
-                 [](const py::sequence& seq) -> Color
-                 {
-                     if (seq.size() == 3)
-                     {
-                         return {seq[0].cast<uint8_t>(), seq[1].cast<uint8_t>(),
-                                 seq[2].cast<uint8_t>(), 255};
-                     }
-                     if (seq.size() == 4)
-                     {
-                         return {seq[0].cast<uint8_t>(), seq[1].cast<uint8_t>(),
-                                 seq[2].cast<uint8_t>(), seq[3].cast<uint8_t>()};
-                     }
-                     throw std::invalid_argument(
-                         "Sequence must contain 3 (RGB) or 4 (RGBA) integer values.");
-                 }),
-             py::arg("sequence"), R"doc(
+        .def(
+            py::init(
+                [](const py::sequence& seq) -> Color
+                {
+                    if (seq.size() == 3)
+                    {
+                        return {
+                            seq[0].cast<uint8_t>(), seq[1].cast<uint8_t>(), seq[2].cast<uint8_t>(),
+                            255
+                        };
+                    }
+                    if (seq.size() == 4)
+                    {
+                        return {
+                            seq[0].cast<uint8_t>(), seq[1].cast<uint8_t>(), seq[2].cast<uint8_t>(),
+                            seq[3].cast<uint8_t>()
+                        };
+                    }
+                    throw std::invalid_argument(
+                        "Sequence must contain 3 (RGB) or 4 (RGBA) integer values."
+                    );
+                }
+            ),
+            py::arg("sequence"), R"doc(
 Create a Color from a sequence of RGB(A) integers.
 
 Args:
     sequence (list or tuple): A sequence of 3 or 4 integers [0-255].
         - 3 values: RGB (alpha defaults to 255)
         - 4 values: RGBA
-        )doc")
+        )doc"
+        )
 
         .def_readwrite("r", &Color::r, R"doc(
 Red channel value.
@@ -363,7 +405,8 @@ Example:
     color.hsv = (120, 1.0, 1.0)        # Pure green
     color.hsv = (240, 0.5, 0.8, 0.9)   # Light blue with transparency
     h, s, v, a = color.hsv              # Get HSV values
-        )doc")
+        )doc"
+        )
         .def(
             "copy", [](const Color& self) -> Color { return {self.r, self.g, self.b, self.a}; },
             R"doc(
@@ -371,25 +414,31 @@ Create a copy of the color.
 
 Returns:
     Color: A new Color object with the same RGBA values.
-        )doc")
+        )doc"
+        )
 
-        .def("__str__",
-             [](const Color& c) -> std::string
-             {
-                 return "(" + std::to_string(c.r) + ", " + std::to_string(c.g) + ", " +
-                        std::to_string(c.b) + ", " + std::to_string(c.a) + ")";
-             })
+        .def(
+            "__str__",
+            [](const Color& c) -> std::string
+            {
+                return "(" + std::to_string(c.r) + ", " + std::to_string(c.g) + ", " +
+                       std::to_string(c.b) + ", " + std::to_string(c.a) + ")";
+            }
+        )
 
-        .def("__repr__",
-             [](const Color& c) -> std::string
-             {
-                 return "Color(" + std::to_string(c.r) + ", " + std::to_string(c.g) + ", " +
-                        std::to_string(c.b) + ", " + std::to_string(c.a) + ")";
-             })
+        .def(
+            "__repr__",
+            [](const Color& c) -> std::string
+            {
+                return "Color(" + std::to_string(c.r) + ", " + std::to_string(c.g) + ", " +
+                       std::to_string(c.b) + ", " + std::to_string(c.a) + ")";
+            }
+        )
 
         .def(
             "__iter__", [](const Color& c) -> py::iterator
-            { return py::make_iterator(&c.r, &c.r + 4); }, py::keep_alive<0, 1>())
+            { return py::make_iterator(&c.r, &c.r + 4); }, py::keep_alive<0, 1>()
+        )
 
         .def(
             "__getitem__",
@@ -399,7 +448,8 @@ Returns:
                     throw py::index_error();
                 return *(&c.r + i);
             },
-            py::arg("index"))
+            py::arg("index")
+        )
 
         .def(
             "__setitem__",
@@ -409,7 +459,8 @@ Returns:
                     throw py::index_error();
                 *(&c.r + i) = value;
             },
-            py::arg("index"), py::arg("value"))
+            py::arg("index"), py::arg("value")
+        )
 
         .def("__len__", [](const Color&) -> int { return 4; })
 
@@ -465,7 +516,8 @@ Args:
     s (float): Saturation (0-1).
     v (float): Value/brightness (0-1).
     a (float, optional): Alpha (0-1). Defaults to 1.0.
-        )doc");
+        )doc"
+    );
 
     subColor.def("lerp", &lerp, py::arg("a"), py::arg("b"), py::arg("t"), R"doc(
 Linearly interpolate between two colors.
@@ -537,5 +589,5 @@ Example:
     subColor.attr("OLIVE") = OLIVE;
     subColor.attr("MAROON") = MAROON;
 }
-} // namespace color
-} // namespace kn
+}  // namespace color
+}  // namespace kn
