@@ -26,6 +26,7 @@ enum class TextureScaleMode
     NEAREST = SDL_SCALEMODE_NEAREST,
     LINEAR = SDL_SCALEMODE_LINEAR,
     PIXELART = SDL_SCALEMODE_PIXELART,
+    DEFAULT
 };
 
 class Texture
@@ -37,13 +38,13 @@ class Texture
         bool v = false;
     } flip;
 
-    Texture(const Vec2& size, TextureScaleMode scaleMode);
+    Texture(const Vec2& size, TextureScaleMode scaleMode = TextureScaleMode::DEFAULT);
     Texture(
-        const PixelArray& pixelArray, TextureScaleMode scaleMode,
+        const PixelArray& pixelArray, TextureScaleMode scaleMode = TextureScaleMode::DEFAULT,
         TextureAccess access = TextureAccess::STATIC
     );
     Texture(
-        const std::string& filePath, TextureScaleMode scaleMode,
+        const std::string& filePath, TextureScaleMode scaleMode = TextureScaleMode::DEFAULT,
         TextureAccess access = TextureAccess::STATIC
     );
     ~Texture();
