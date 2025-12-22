@@ -5,13 +5,14 @@
 #include <memory>
 #include <vector>
 
+#include "Color.hpp"
+#include "Math.hpp"
+
 namespace py = pybind11;
 
 namespace kn
 {
-class Vec2;
 class PixelArray;
-struct Color;
 class Rect;
 
 class Mask
