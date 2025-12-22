@@ -2917,7 +2917,7 @@ class Texture:
         def v(self, arg0: bool) -> None:
             ...
     @typing.overload
-    def __init__(self, file_path: str, scale_mode: typing.Any = None, access: TextureAccess = TextureAccess.STATIC) -> None:
+    def __init__(self, file_path: str, scale_mode: TextureScaleMode = TextureScaleMode.DEFAULT, access: TextureAccess = TextureAccess.STATIC) -> None:
         """
         Create a Texture by loading an image from a file.
         If no scale mode is provided, the default renderer scale mode is used.
@@ -2932,7 +2932,7 @@ class Texture:
             RuntimeError: If the file cannot be loaded or texture creation fails.
         """
     @typing.overload
-    def __init__(self, pixel_array: PixelArray, scale_mode: typing.Any = None, access: TextureAccess = TextureAccess.STATIC) -> None:
+    def __init__(self, pixel_array: PixelArray, scale_mode: TextureScaleMode = TextureScaleMode.DEFAULT, access: TextureAccess = TextureAccess.STATIC) -> None:
         """
         Create a Texture from an existing PixelArray.
         If no scale mode is provided, the default renderer scale mode is used.
@@ -2946,7 +2946,7 @@ class Texture:
             RuntimeError: If texture creation from pixel array fails.
         """
     @typing.overload
-    def __init__(self, size: Vec2, scale_mode: typing.Any = None) -> None:
+    def __init__(self, size: Vec2, scale_mode: TextureScaleMode = TextureScaleMode.DEFAULT) -> None:
         """
         Create a (render target) Texture with the specified size.
         If no scale mode is provided, the default renderer scale mode is used.
@@ -3027,6 +3027,7 @@ class TextureAccess(enum.IntEnum):
         Convert to a string according to format_spec.
         """
 class TextureScaleMode(enum.IntEnum):
+    DEFAULT: typing.ClassVar[TextureScaleMode]  # value = <TextureScaleMode.DEFAULT: 3>
     LINEAR: typing.ClassVar[TextureScaleMode]  # value = <TextureScaleMode.LINEAR: 1>
     NEAREST: typing.ClassVar[TextureScaleMode]  # value = <TextureScaleMode.NEAREST: 0>
     PIXEL_ART: typing.ClassVar[TextureScaleMode]  # value = <TextureScaleMode.PIXEL_ART: 2>

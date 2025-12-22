@@ -26,7 +26,10 @@ Texture::Texture(const Vec2& size, const TextureScaleMode scaleMode)
         throw std::runtime_error("Failed to create texture: " + std::string(SDL_GetError()));
     }
 
-    SDL_SetTextureScaleMode(m_texPtr, static_cast<SDL_ScaleMode>(scaleMode));
+    const TextureScaleMode finalScaleMode = (scaleMode == TextureScaleMode::DEFAULT)
+                                                ? renderer::getDefaultScaleMode()
+                                                : scaleMode;
+    SDL_SetTextureScaleMode(m_texPtr, static_cast<SDL_ScaleMode>(finalScaleMode));
 
     m_width = size.x;
     m_height = size.y;
@@ -65,7 +68,10 @@ Texture::Texture(
         );
     }
 
-    SDL_SetTextureScaleMode(m_texPtr, static_cast<SDL_ScaleMode>(scaleMode));
+    const TextureScaleMode finalScaleMode = (scaleMode == TextureScaleMode::DEFAULT)
+                                                ? renderer::getDefaultScaleMode()
+                                                : scaleMode;
+    SDL_SetTextureScaleMode(m_texPtr, static_cast<SDL_ScaleMode>(finalScaleMode));
 
     float w, h;
     SDL_GetTextureSize(m_texPtr, &w, &h);
@@ -118,7 +124,10 @@ Texture::Texture(
         SDL_DestroySurface(surface);
     }
 
-    SDL_SetTextureScaleMode(m_texPtr, static_cast<SDL_ScaleMode>(scaleMode));
+    const TextureScaleMode finalScaleMode = (scaleMode == TextureScaleMode::DEFAULT)
+                                                ? renderer::getDefaultScaleMode()
+                                                : scaleMode;
+    SDL_SetTextureScaleMode(m_texPtr, static_cast<SDL_ScaleMode>(finalScaleMode));
 
     float w, h;
     SDL_GetTextureSize(m_texPtr, &w, &h);
@@ -218,6 +227,7 @@ void _bind(const py::module_& module)
         .value("NEAREST", TextureScaleMode::NEAREST)
         .value("LINEAR", TextureScaleMode::LINEAR)
         .value("PIXEL_ART", TextureScaleMode::PIXELART)
+        .value("DEFAULT", TextureScaleMode::DEFAULT)
         .finalize();
 
     py::classh<Texture> texture(module, "Texture", R"doc(
@@ -247,25 +257,8 @@ When True, the texture is mirrored vertically (top-bottom flip).
 
     texture
         .def(
-            py::init(
-                [](const std::string& filePath, const py::object& scaleModeObj,
-                   const TextureAccess access) -> std::shared_ptr<Texture>
-                {
-                    TextureScaleMode mode = renderer::getDefaultScaleMode();
-                    try
-                    {
-                        if (!scaleModeObj.is_none())
-                            mode = scaleModeObj.cast<TextureScaleMode>();
-                    }
-                    catch (const py::cast_error&)
-                    {
-                        throw std::invalid_argument("Invalid scale mode provided");
-                    }
-
-                    return std::make_shared<Texture>(filePath, mode, access);
-                }
-            ),
-            py::arg("file_path"), py::arg("scale_mode") = py::none(),
+            py::init<const std::string&, TextureScaleMode, TextureAccess>(), py::arg("file_path"),
+            py::arg("scale_mode") = TextureScaleMode::DEFAULT,
             py::arg("access") = TextureAccess::STATIC, R"doc(
 Create a Texture by loading an image from a file.
 If no scale mode is provided, the default renderer scale mode is used.
@@ -281,24 +274,8 @@ Raises:
         )doc"
         )
         .def(
-            py::init(
-                [](const PixelArray& pixelArray, const py::object& scaleModeObj,
-                   const TextureAccess access) -> std::shared_ptr<Texture>
-                {
-                    TextureScaleMode mode = renderer::getDefaultScaleMode();
-                    try
-                    {
-                        if (!scaleModeObj.is_none())
-                            mode = scaleModeObj.cast<TextureScaleMode>();
-                    }
-                    catch (const py::cast_error&)
-                    {
-                        throw std::invalid_argument("Invalid scale mode provided");
-                    }
-                    return std::make_shared<Texture>(pixelArray, mode, access);
-                }
-            ),
-            py::arg("pixel_array"), py::arg("scale_mode") = py::none(),
+            py::init<const PixelArray&, TextureScaleMode, TextureAccess>(), py::arg("pixel_array"),
+            py::arg("scale_mode") = TextureScaleMode::DEFAULT,
             py::arg("access") = TextureAccess::STATIC, R"doc(
 Create a Texture from an existing PixelArray.
 If no scale mode is provided, the default renderer scale mode is used.
@@ -313,23 +290,8 @@ Raises:
         )doc"
         )
         .def(
-            py::init(
-                [](const Vec2& size, const py::object& scaleModeObj) -> std::shared_ptr<Texture>
-                {
-                    TextureScaleMode mode = renderer::getDefaultScaleMode();
-                    try
-                    {
-                        if (!scaleModeObj.is_none())
-                            mode = scaleModeObj.cast<TextureScaleMode>();
-                    }
-                    catch (const py::cast_error&)
-                    {
-                        throw std::invalid_argument("Invalid scale mode provided");
-                    }
-                    return std::make_shared<Texture>(size, mode);
-                }
-            ),
-            py::arg("size"), py::arg("scale_mode") = py::none(), R"doc(
+            py::init<const Vec2&, TextureScaleMode>(), py::arg("size"),
+            py::arg("scale_mode") = TextureScaleMode::DEFAULT, R"doc(
 Create a (render target) Texture with the specified size.
 If no scale mode is provided, the default renderer scale mode is used.
 
