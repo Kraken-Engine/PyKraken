@@ -32,8 +32,8 @@
 #include "Window.hpp"
 
 constexpr int KRAKEN_MAJOR_VERSION = 1;
-constexpr int KRAKEN_MINOR_VERSION = 4;
-constexpr int KRAKEN_MICRO_VERSION = 2;
+constexpr int KRAKEN_MINOR_VERSION = 5;
+constexpr int KRAKEN_MICRO_VERSION = 0;
 
 constexpr const char* getPlatform();
 constexpr const char* getArchitecture();
