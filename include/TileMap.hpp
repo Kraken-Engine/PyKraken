@@ -17,10 +17,8 @@ namespace py = pybind11;
 
 namespace kn
 {
-class Polygon;
-class Line;
-class Ellipse;
-
+namespace tilemap
+{
 class TileSet
 {
   public:
@@ -87,7 +85,7 @@ class TileSet
     [[nodiscard]] uint32_t getTileCount() const;
     [[nodiscard]] uint32_t getColumns() const;
     [[nodiscard]] Vec2 getTileOffset() const;
-    [[nodiscard]] const std::vector<Terrain>& getTerrainTypes() const;
+    [[nodiscard]] const std::vector<Terrain>& getTerrains() const;
     [[nodiscard]] const std::vector<Tile>& getTiles() const;
     [[nodiscard]] bool hasTile(uint32_t id) const;
     [[nodiscard]] const Tile* getTile(uint32_t id) const;
@@ -103,12 +101,12 @@ class TileSet
     uint32_t m_tileCount = 0;
     uint32_t m_columns = 0;
     Vec2 m_tileOffset{};
-    std::vector<Terrain> m_terrainTypes{};
+    std::vector<Terrain> m_terrains{};
     std::vector<Tile> m_tiles{};
     std::vector<std::uint32_t> m_tileIndex;
     std::shared_ptr<Texture> m_texture = nullptr;
 
-    friend class TileMap;
+    friend class Map;
 };
 
 class Layer
@@ -118,23 +116,44 @@ class Layer
     bool visible = true;
 
     Layer() = default;
-    ~Layer() = default;
+    virtual ~Layer() = default;
 
     [[nodiscard]] std::string getName() const;
     [[nodiscard]] Vec2 getOffset() const;
+    [[nodiscard]] tmx::Layer::Type getType() const;
 
   private:
+    tmx::Layer::Type m_type;
     std::string m_name = "";
     Vec2 m_offset{};
+
+    friend class Map;
 };
 
 class TileLayer : public Layer
 {
   public:
-    struct Tile
+    class Tile
     {
         uint32_t id = 0;
         uint8_t flipFlags = 0;
+
+      public:
+        Tile(uint32_t tileID, uint8_t flags)
+            : id(tileID),
+              flipFlags(flags)
+        {
+        }
+
+        [[nodiscard]] uint32_t getID() const
+        {
+            return id;
+        }
+
+        [[nodiscard]] uint8_t getFlipFlags() const
+        {
+            return flipFlags;
+        }
     };
 
     TileLayer() = default;
@@ -144,6 +163,8 @@ class TileLayer : public Layer
 
   private:
     std::vector<Tile> m_tiles{};
+
+    friend class Map;
 };
 
 struct TextProperties
@@ -161,18 +182,20 @@ struct TextProperties
     std::string text = "";
 };
 
-class Object
+class MapObject
 {
   public:
+    Vec2 position{};
     double rotation = 0.0;
     bool visible = true;
 
-    Object() = default;
-    ~Object() = default;
+    MapObject() = default;
+    ~MapObject() = default;
 
     [[nodiscard]] uint32_t getUID() const;
     [[nodiscard]] std::string getName() const;
     [[nodiscard]] std::string getType() const;
+    [[nodiscard]] Rect getRect() const;
     [[nodiscard]] uint32_t getTileID() const;
     [[nodiscard]] tmx::Object::Shape getShapeType() const;
     [[nodiscard]] const std::vector<Vec2>& getVertices() const;
@@ -182,10 +205,13 @@ class Object
     uint32_t m_uid = 0;
     std::string m_name = "";
     std::string m_type = "";
+    Rect m_rect{};
     uint32_t m_tileId = 0;
     tmx::Object::Shape m_shape;
     std::vector<Vec2> m_vertices{};
     TextProperties m_text{};
+
+    friend class Map;
 };
 
 class ObjectGroup : public Layer
@@ -197,11 +223,13 @@ class ObjectGroup : public Layer
     ~ObjectGroup() = default;
 
     [[nodiscard]] tmx::ObjectGroup::DrawOrder getDrawOrder() const;
-    [[nodiscard]] const std::vector<Object>& getObjects() const;
+    [[nodiscard]] const std::vector<MapObject>& getObjects() const;
 
   private:
     tmx::ObjectGroup::DrawOrder m_drawOrder;
-    std::vector<Object> m_objects{};
+    std::vector<MapObject> m_objects{};
+
+    friend class Map;
 };
 
 class ImageLayer : public Layer
@@ -214,19 +242,20 @@ class ImageLayer : public Layer
 
   private:
     std::shared_ptr<Texture> m_texture = nullptr;
+
+    friend class Map;
 };
 
-class TileMap
+class Map
 {
   public:
     Color backgroundColor{};
 
-    TileMap() = default;
-    ~TileMap() = default;
+    Map() = default;
+    ~Map() = default;
 
     void loadFromTMX(const std::string& tmxPath);
-    // TODO: Implement LDTK support
-    // void loadFromLDTK(const std::string& ldtkPath);
+    // TODO: loadFromLDTK
 
     [[nodiscard]] tmx::Orientation getOrientation() const;
     [[nodiscard]] tmx::RenderOrder getRenderOrder() const;
@@ -236,22 +265,22 @@ class TileMap
     [[nodiscard]] double getHexSideLength() const;
     [[nodiscard]] tmx::StaggerAxis getStaggerAxis() const;
     [[nodiscard]] tmx::StaggerIndex getStaggerIndex() const;
+    [[nodiscard]] const std::vector<TileSet>& getTileSets() const;
+    [[nodiscard]] const std::vector<std::shared_ptr<Layer>>& getLayers() const;
 
   private:
     tmx::Orientation m_orient = tmx::Orientation::None;
     tmx::RenderOrder m_renderOrder = tmx::RenderOrder::None;
-    tmx::StaggerAxis m_staggerAxis = tmx::StaggerAxis::None;
-    tmx::StaggerIndex m_staggerIndex = tmx::StaggerIndex::None;
     Vec2 m_mapSize{};
     Vec2 m_tileSize{};
     Rect m_bounds{};
-    std::vector<TileSet> m_tileSets{};
-    std::vector<TileLayer> m_tileLayers{};
     double m_hexSideLength = 0.0;
+    tmx::StaggerAxis m_staggerAxis = tmx::StaggerAxis::None;
+    tmx::StaggerIndex m_staggerIndex = tmx::StaggerIndex::None;
+    std::vector<TileSet> m_tileSets{};
+    std::vector<std::shared_ptr<Layer>> m_layers{};
 };
 
-namespace tile_map
-{
-void _bind(const py::module_& module);
-}
+void _bind(py::module_& module);
+}  // namespace tilemap
 }  // namespace kn

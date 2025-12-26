@@ -19,7 +19,7 @@ namespace event
 {
 void _bind(py::module_& module);
 
-std::vector<Event> poll();
+const std::vector<Event> poll();
 
 void start_text_input();
 

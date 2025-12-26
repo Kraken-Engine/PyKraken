@@ -42,7 +42,7 @@ void setDeadZone(float deadZone, int slot = 0);
 
 float getDeadZone(int slot = 0);
 
-std::vector<int> getConnectedSlots();
+const std::vector<int> getConnectedSlots();
 
 void _clearStates();
 

@@ -22,6 +22,8 @@ PenaltyBreakBeforeFirstCallParameter: 1000
 PenaltyBreakAssignment: 100
 
 AlignAfterOpenBracket: BlockIndent
+
+IndentCaseLabels: false
 ---
 Language: Cpp
 DerivePointerAlignment: false

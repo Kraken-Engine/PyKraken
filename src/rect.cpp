@@ -1,5 +1,7 @@
 #include "Rect.hpp"
 
+#include <pybind11/stl_bind.h>
+
 namespace kn
 {
 
@@ -540,21 +542,22 @@ Raises:
             {
                 switch (i)
                 {
-                    case 0:
-                        return rect.x;
-                    case 1:
-                        return rect.y;
-                    case 2:
-                        return rect.w;
-                    case 3:
-                        return rect.h;
-                    default:
-                        throw py::index_error("Index out of range");
+                case 0:
+                    return rect.x;
+                case 1:
+                    return rect.y;
+                case 2:
+                    return rect.w;
+                case 3:
+                    return rect.h;
+                default:
+                    throw py::index_error("Index out of range");
                 }
             },
             py::arg("index")
         );
     py::implicitly_convertible<py::sequence, Rect>();
+    py::bind_vector<std::vector<kn::Rect>>(module, "RectList");
 
     auto subRect = module.def_submodule("rect", "Rectangle related functions");
 

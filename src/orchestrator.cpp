@@ -313,7 +313,7 @@ void _tick()
 void _bind(py::module_& module)
 {
     // ----- Effect base class (not directly instantiable) -----
-    py::class_<Effect, std::shared_ptr<Effect>>(module, "Effect", R"doc(
+    py::classh<Effect>(module, "Effect", R"doc(
 Base class for timeline effects. Not directly instantiable.
     )doc");
 
@@ -344,13 +344,13 @@ Methods:
             py::init(
                 [](const py::object& target) -> Orchestrator
                 {
-                    Orchestrator orch;
-
                     if (target.is_none())
                         throw py::type_error(
-                            "target must be a Transform or an object with a 'transform' "
-                            "attribute, not None"
+                            "target must be a Transform or an object with a 'transform' attribute, "
+                            "not None"
                         );
+
+                    Orchestrator orch;
 
                     // Try to get transform attribute first (for Sprite-like objects)
                     if (py::hasattr(target, "transform"))
@@ -391,6 +391,7 @@ Args:
             [](Orchestrator& self, const py::args& effects) -> Orchestrator&
             {
                 std::vector<std::shared_ptr<Effect>> effectVec;
+                effectVec.reserve(effects.size());
                 for (const auto& arg : effects)
                 {
                     try

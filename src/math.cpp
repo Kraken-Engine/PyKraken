@@ -1,6 +1,7 @@
 #include "Math.hpp"
 
 #include <SDL3/SDL.h>
+#include <pybind11/stl_bind.h>
 
 #include <algorithm>
 
@@ -330,6 +331,8 @@ Methods:
     distance_to: Measure distance to another Vec2.
     distance_squared_to: Measure squared distance to another Vec2.
         )doc");
+
+    py::bind_vector<std::vector<kn::Vec2>>(module, "Vec2List");
 
     py::classh<Transform>(module, "Transform", R"doc(
 Transform represents a 2D transformation with position, size, rotation, and scale.

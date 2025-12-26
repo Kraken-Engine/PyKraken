@@ -1,4 +1,4 @@
-#include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
 
 #include <algorithm>
 #include <filesystem>
@@ -226,11 +226,8 @@ the number of frames to extract from the strip, and the playback speed in frames
 per second (FPS).
     )doc")
         .def(
-            py::init<>(
-                [](const std::string& name, int frame_count, double fps) -> SheetStrip
-                { return {name, frame_count, fps}; }
-            ),
-            py::arg("name"), py::arg("frame_count"), py::arg("fps"), R"doc(
+            py::init<const std::string&, int, double>(), py::arg("name"), py::arg("frame_count"),
+            py::arg("fps"), R"doc(
 Create a sprite sheet strip definition.
 
 Args:
@@ -262,6 +259,8 @@ Determines how fast the animation plays. Higher values result in faster playback
 Type:
     float: The frames per second for this animation.
         )doc");
+
+    py::bind_vector<std::vector<SheetStrip>>(module, "SheetStripList");
 
     py::classh<AnimationController>(module, "AnimationController", R"doc(
 Manages and controls sprite animations with multiple animation sequences.

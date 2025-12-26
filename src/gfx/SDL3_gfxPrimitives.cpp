@@ -1337,22 +1337,22 @@ bool arcRGBA(
             dstart = (double)start;
             switch (oct)
             {
-                case 0:
-                case 3:
-                    temp = sin(dstart * M_PI / 180.);
-                    break;
-                case 1:
-                case 6:
-                    temp = cos(dstart * M_PI / 180.);
-                    break;
-                case 2:
-                case 5:
-                    temp = -cos(dstart * M_PI / 180.);
-                    break;
-                case 4:
-                case 7:
-                    temp = -sin(dstart * M_PI / 180.);
-                    break;
+            case 0:
+            case 3:
+                temp = sin(dstart * M_PI / 180.);
+                break;
+            case 1:
+            case 6:
+                temp = cos(dstart * M_PI / 180.);
+                break;
+            case 2:
+            case 5:
+                temp = -cos(dstart * M_PI / 180.);
+                break;
+            case 4:
+            case 7:
+                temp = -sin(dstart * M_PI / 180.);
+                break;
             }
             temp *= rad;
             stopval_start = (int)temp;
@@ -1376,22 +1376,22 @@ bool arcRGBA(
             dend = (double)end;
             switch (oct)
             {
-                case 0:
-                case 3:
-                    temp = sin(dend * M_PI / 180);
-                    break;
-                case 1:
-                case 6:
-                    temp = cos(dend * M_PI / 180);
-                    break;
-                case 2:
-                case 5:
-                    temp = -cos(dend * M_PI / 180);
-                    break;
-                case 4:
-                case 7:
-                    temp = -sin(dend * M_PI / 180);
-                    break;
+            case 0:
+            case 3:
+                temp = sin(dend * M_PI / 180);
+                break;
+            case 1:
+            case 6:
+                temp = cos(dend * M_PI / 180);
+                break;
+            case 2:
+            case 5:
+                temp = -cos(dend * M_PI / 180);
+                break;
+            case 4:
+            case 7:
+                temp = -sin(dend * M_PI / 180);
+                break;
             }
             temp *= rad;
             stopval_end = (int)temp;
@@ -3727,18 +3727,18 @@ bool stringRGBA(
         result &= characterRGBA(renderer, curx, cury, *curchar, r, g, b, a);
         switch (charRotation)
         {
-            case 0:
-                curx += charWidthLocal;
-                break;
-            case 2:
-                curx -= charWidthLocal;
-                break;
-            case 1:
-                cury += charHeightLocal;
-                break;
-            case 3:
-                cury -= charHeightLocal;
-                break;
+        case 0:
+            curx += charWidthLocal;
+            break;
+        case 2:
+            curx -= charWidthLocal;
+            break;
+        case 1:
+            cury += charHeightLocal;
+            break;
+        case 3:
+            cury -= charHeightLocal;
+            break;
         }
         curchar++;
     }

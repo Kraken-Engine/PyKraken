@@ -1,7 +1,7 @@
 #include "Draw.hpp"
 
 #include <gfx/SDL3_gfxPrimitives.h>
-#include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
 
 #include <set>
 

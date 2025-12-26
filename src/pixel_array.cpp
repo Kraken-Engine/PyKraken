@@ -56,33 +56,33 @@ void PixelArray::blit(
     Rect dstRect = other.getRect();
     switch (anchor)
     {
-        case Anchor::TopLeft:
-            dstRect.setTopLeft(pos);
-            break;
-        case Anchor::TopMid:
-            dstRect.setTopMid(pos);
-            break;
-        case Anchor::TopRight:
-            dstRect.setTopRight(pos);
-            break;
-        case Anchor::MidLeft:
-            dstRect.setMidLeft(pos);
-            break;
-        case Anchor::Center:
-            dstRect.setCenter(pos);
-            break;
-        case Anchor::MidRight:
-            dstRect.setMidRight(pos);
-            break;
-        case Anchor::BottomLeft:
-            dstRect.setBottomLeft(pos);
-            break;
-        case Anchor::BottomMid:
-            dstRect.setBottomMid(pos);
-            break;
-        case Anchor::BottomRight:
-            dstRect.setBottomRight(pos);
-            break;
+    case Anchor::TopLeft:
+        dstRect.setTopLeft(pos);
+        break;
+    case Anchor::TopMid:
+        dstRect.setTopMid(pos);
+        break;
+    case Anchor::TopRight:
+        dstRect.setTopRight(pos);
+        break;
+    case Anchor::MidLeft:
+        dstRect.setMidLeft(pos);
+        break;
+    case Anchor::Center:
+        dstRect.setCenter(pos);
+        break;
+    case Anchor::MidRight:
+        dstRect.setMidRight(pos);
+        break;
+    case Anchor::BottomLeft:
+        dstRect.setBottomLeft(pos);
+        break;
+    case Anchor::BottomMid:
+        dstRect.setBottomMid(pos);
+        break;
+    case Anchor::BottomRight:
+        dstRect.setBottomRight(pos);
+        break;
     }
 
     const auto dstSDL = static_cast<SDL_Rect>(dstRect);
@@ -246,22 +246,22 @@ void PixelArray::scroll(const int dx, const int dy, const ScrollMode scrollMode)
         // Handle Y boundary based on scroll mode
         switch (scrollMode)
         {
-            case ScrollMode::REPEAT:
-                srcY = (srcY % height + height) % height;
-                break;
+        case ScrollMode::REPEAT:
+            srcY = (srcY % height + height) % height;
+            break;
 
-            case ScrollMode::ERASE:
-                if (srcY < 0 || srcY >= height)
-                {
-                    // Erase entire row
-                    std::memset(pixels + dstY * pitch, 0, width * bytesPerPixel);
-                    continue;
-                }
-                break;
+        case ScrollMode::ERASE:
+            if (srcY < 0 || srcY >= height)
+            {
+                // Erase entire row
+                std::memset(pixels + dstY * pitch, 0, width * bytesPerPixel);
+                continue;
+            }
+            break;
 
-            case ScrollMode::SMEAR:
-                srcY = std::max(0, std::min(height - 1, srcY));
-                break;
+        case ScrollMode::SMEAR:
+            srcY = std::max(0, std::min(height - 1, srcY));
+            break;
         }
 
         // Process row with optimized X handling
@@ -275,21 +275,21 @@ void PixelArray::scroll(const int dx, const int dy, const ScrollMode scrollMode)
             // Handle X boundary based on scroll mode
             switch (scrollMode)
             {
-                case ScrollMode::REPEAT:
-                    srcX = (srcX % width + width) % width;
-                    break;
+            case ScrollMode::REPEAT:
+                srcX = (srcX % width + width) % width;
+                break;
 
-                case ScrollMode::ERASE:
-                    if (srcX < 0 || srcX >= width)
-                    {
-                        std::memset(dstRow + dstX * bytesPerPixel, 0, bytesPerPixel);
-                        continue;
-                    }
-                    break;
+            case ScrollMode::ERASE:
+                if (srcX < 0 || srcX >= width)
+                {
+                    std::memset(dstRow + dstX * bytesPerPixel, 0, bytesPerPixel);
+                    continue;
+                }
+                break;
 
-                case ScrollMode::SMEAR:
-                    srcX = std::max(0, std::min(width - 1, srcX));
-                    break;
+            case ScrollMode::SMEAR:
+                srcX = std::max(0, std::min(width - 1, srcX));
+                break;
             }
 
             std::

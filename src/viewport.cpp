@@ -21,44 +21,44 @@ std::vector<Rect> layout(const uint8_t count, const ViewportMode mode)
 
     switch (count)
     {
-        case 4:
+    case 4:
+    {
+        const Vec2 vpSize = rRes * 0.5;
+        viewports.push_back({0.0, 0.0, vpSize});
+        viewports.push_back({vpSize.x, 0.0, vpSize});
+        viewports.push_back({0.0, vpSize.y, vpSize});
+        viewports.push_back({vpSize, vpSize});
+        break;
+    }
+    case 3:
+    {
+        const Vec2 vpSize = rRes * 0.5;
+        viewports.push_back({0.0, 0.0, vpSize});
+        viewports.push_back({vpSize.x, 0.0, vpSize});
+        viewports.push_back({0.0, vpSize.y, {rRes.x, vpSize.y}});
+        break;
+    }
+    case 2:
+    {
+        switch (mode)
         {
-            const Vec2 vpSize = rRes * 0.5;
+        case ViewportMode::HORIZONTAL:
+        {
+            const Vec2 vpSize{rRes.x, rRes.y * 0.5};
             viewports.push_back({0.0, 0.0, vpSize});
-            viewports.push_back({vpSize.x, 0.0, vpSize});
             viewports.push_back({0.0, vpSize.y, vpSize});
-            viewports.push_back({vpSize, vpSize});
             break;
         }
-        case 3:
+        case ViewportMode::VERTICAL:
         {
-            const Vec2 vpSize = rRes * 0.5;
+            const Vec2 vpSize{rRes.x * 0.5, rRes.y};
             viewports.push_back({0.0, 0.0, vpSize});
             viewports.push_back({vpSize.x, 0.0, vpSize});
-            viewports.push_back({0.0, vpSize.y, {rRes.x, vpSize.y}});
             break;
         }
-        case 2:
-        {
-            switch (mode)
-            {
-                case ViewportMode::HORIZONTAL:
-                {
-                    const Vec2 vpSize{rRes.x, rRes.y * 0.5};
-                    viewports.push_back({0.0, 0.0, vpSize});
-                    viewports.push_back({0.0, vpSize.y, vpSize});
-                    break;
-                }
-                case ViewportMode::VERTICAL:
-                {
-                    const Vec2 vpSize{rRes.x * 0.5, rRes.y};
-                    viewports.push_back({0.0, 0.0, vpSize});
-                    viewports.push_back({vpSize.x, 0.0, vpSize});
-                    break;
-                }
-            }
-            break;
         }
+        break;
+    }
     }
 
     return viewports;

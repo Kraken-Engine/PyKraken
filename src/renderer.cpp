@@ -160,33 +160,33 @@ void draw(const std::shared_ptr<Texture>& texture, Transform transform, const Re
     Vec2 pos = transform.pos - cameraPos;
     switch (transform.anchor)
     {
-        case Anchor::TopLeft:
-            dstRect.setTopLeft(pos);
-            break;
-        case Anchor::TopMid:
-            dstRect.setTopMid(pos);
-            break;
-        case Anchor::TopRight:
-            dstRect.setTopRight(pos);
-            break;
-        case Anchor::MidLeft:
-            dstRect.setMidLeft(pos);
-            break;
-        case Anchor::Center:
-            dstRect.setCenter(pos);
-            break;
-        case Anchor::MidRight:
-            dstRect.setMidRight(pos);
-            break;
-        case Anchor::BottomLeft:
-            dstRect.setBottomLeft(pos);
-            break;
-        case Anchor::BottomMid:
-            dstRect.setBottomMid(pos);
-            break;
-        case Anchor::BottomRight:
-            dstRect.setBottomRight(pos);
-            break;
+    case Anchor::TopLeft:
+        dstRect.setTopLeft(pos);
+        break;
+    case Anchor::TopMid:
+        dstRect.setTopMid(pos);
+        break;
+    case Anchor::TopRight:
+        dstRect.setTopRight(pos);
+        break;
+    case Anchor::MidLeft:
+        dstRect.setMidLeft(pos);
+        break;
+    case Anchor::Center:
+        dstRect.setCenter(pos);
+        break;
+    case Anchor::MidRight:
+        dstRect.setMidRight(pos);
+        break;
+    case Anchor::BottomLeft:
+        dstRect.setBottomLeft(pos);
+        break;
+    case Anchor::BottomMid:
+        dstRect.setBottomMid(pos);
+        break;
+    case Anchor::BottomRight:
+        dstRect.setBottomRight(pos);
+        break;
     }
     const SDL_FRect dstSDLRect = static_cast<SDL_FRect>(dstRect);
 
