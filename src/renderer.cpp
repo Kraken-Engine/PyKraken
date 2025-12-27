@@ -133,7 +133,7 @@ std::unique_ptr<PixelArray> readPixels(const Rect& src)
     return std::make_unique<PixelArray>(surface);
 }
 
-void draw(const std::shared_ptr<Texture>& texture, Transform transform, const Rect& srcRect)
+void draw(const std::shared_ptr<Texture>& texture, const Transform& transform, const Rect& srcRect)
 {
     if (!_renderer)
         throw std::runtime_error("Renderer not yet initialized");
@@ -147,11 +147,9 @@ void draw(const std::shared_ptr<Texture>& texture, Transform transform, const Re
         flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_VERTICAL);
 
     Vec2 baseSize = transform.size;
+    const Vec2 srcSize = srcRect.getSize();
     if (baseSize.isZero())
-    {
-        const Vec2 srcSize = srcRect.getSize();
         baseSize = !srcSize.isZero() ? srcSize : texture->getSize();
-    }
 
     Rect dstRect{};
     dstRect.setSize({baseSize.x * transform.scale.x, baseSize.y * transform.scale.y});
@@ -188,29 +186,31 @@ void draw(const std::shared_ptr<Texture>& texture, Transform transform, const Re
         dstRect.setBottomRight(pos);
         break;
     }
-    const SDL_FRect dstSDLRect = static_cast<SDL_FRect>(dstRect);
+    auto dstSDLRect = static_cast<SDL_FRect>(dstRect);
+    dstSDLRect.x = std::floorf(dstSDLRect.x);
+    dstSDLRect.y = std::floorf(dstSDLRect.y);
 
-    SDL_FRect srcSDLRect{};
-    if (srcRect.w == 0.0 && srcRect.h == 0.0)
-    {
-        const Vec2 textureSize = texture->getSize();
-        srcSDLRect.w = static_cast<float>(textureSize.x);
-        srcSDLRect.h = static_cast<float>(textureSize.y);
-    }
-    else
-    {
-        srcSDLRect = static_cast<SDL_FRect>(srcRect);
-    }
+    auto srcSDLRect = srcSize.isZero() ? static_cast<SDL_FRect>(texture->getRect())
+                                       : static_cast<SDL_FRect>(srcRect);
+
+    // Prevent bleeding edge pixels
+    // static float inset = 0.05f;
+    // srcSDLRect.x += inset;
+    // srcSDLRect.y += inset;
+    // srcSDLRect.w -= inset * 2.f;
+    // srcSDLRect.h -= inset * 2.f;
 
     SDL_FPoint pivot =
-        {dstSDLRect.w * static_cast<float>(transform.pivot.x),
-         dstSDLRect.h * static_cast<float>(transform.pivot.y)};
+        {static_cast<float>(dstRect.w * transform.pivot.x),
+         static_cast<float>(dstRect.h * transform.pivot.y)};
 
     if (!SDL_RenderTextureRotated(
             _renderer, texture->getSDL(), &srcSDLRect, &dstSDLRect, TO_DEGREES(transform.angle),
             &pivot, flipAxis
         ))
+    {
         throw std::runtime_error("Failed to render texture: " + std::string(SDL_GetError()));
+    }
 }
 
 SDL_Renderer* _get()

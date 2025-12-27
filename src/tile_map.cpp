@@ -5,6 +5,10 @@
 #include <tmxlite/ImageLayer.hpp>
 #include <tmxlite/TileLayer.hpp>
 
+#include "Draw.hpp"
+#include "Line.hpp"
+#include "Polygon.hpp"
+#include "Renderer.hpp"
 #include "TileMap.hpp"
 
 #ifndef M_PI
@@ -60,33 +64,40 @@ void Map::loadFromTMX(const std::string& tmxPath)
             auto tileLayer = std::make_shared<TileLayer>();
             tileLayer->m_type = tmx::Layer::Type::Tile;
             tileLayer->m_name = tmxTileLayer.getName();
-            tileLayer->m_offset = {tileOffset.x, tileOffset.y};
+            tileLayer->offset = {tileOffset.x, tileOffset.y};
+            tileLayer->visible = tmxTileLayer.getVisible();
 
             const auto& tmxTiles = tmxTileLayer.getTiles();
             tileLayer->m_tiles.reserve(tmxTiles.size());
             for (const auto& tmxTile : tmxTiles)
             {
-                tileLayer->m_tiles.emplace_back(tmxTile.ID, tmxTile.flipFlags);
+                TileLayer::Tile tile;
+                tile.m_id = tmxTile.ID;
+                tile.m_flipFlags = tmxTile.flipFlags;
+                tileLayer->m_tiles.push_back(std::move(tile));
             }
+
+            tileLayer->setOpacity(tmxTileLayer.getOpacity());
 
             layer = tileLayer;
             break;
         }
         case tmx::Layer::Type::Object:
         {
-            const auto& tmxTileLayer = tmxLayer->getLayerAs<tmx::ObjectGroup>();
-            const auto& tileOffset = tmxTileLayer.getOffset();
-            const auto& objColor = tmxTileLayer.getColour();
+            const auto& tmxObjLayer = tmxLayer->getLayerAs<tmx::ObjectGroup>();
+            const auto& tileOffset = tmxObjLayer.getOffset();
+            const auto& objColor = tmxObjLayer.getColour();
 
             auto objGroup = std::make_shared<ObjectGroup>();
             objGroup->m_type = tmx::Layer::Type::Object;
-            objGroup->m_name = tmxTileLayer.getName();
-            objGroup->m_offset = {tileOffset.x, tileOffset.y};
+            objGroup->m_name = tmxObjLayer.getName();
+            objGroup->offset = {tileOffset.x, tileOffset.y};
+            objGroup->visible = tmxObjLayer.getVisible();
 
             objGroup->color = {objColor.r, objColor.g, objColor.b, objColor.a};
-            objGroup->m_drawOrder = tmxTileLayer.getDrawOrder();
+            objGroup->m_drawOrder = tmxObjLayer.getDrawOrder();
 
-            const auto& tmxObjects = tmxTileLayer.getObjects();
+            const auto& tmxObjects = tmxObjLayer.getObjects();
             objGroup->m_objects.reserve(tmxObjects.size());
             for (const auto& tmxObject : tmxObjects)
             {
@@ -95,12 +106,14 @@ void Map::loadFromTMX(const std::string& tmxPath)
                 mapObj.m_name = tmxObject.getName();
                 mapObj.m_type = tmxObject.getType();
                 const auto& pos = tmxObject.getPosition();
-                mapObj.position = {pos.x, pos.y};
+                mapObj.transform.pos = {pos.x, pos.y};
                 const auto& aabb = tmxObject.getAABB();
                 mapObj.m_rect = {aabb.left, aabb.top, aabb.width, aabb.height};
                 mapObj.m_tileId = tmxObject.getTileID();
                 mapObj.m_shape = tmxObject.getShape();
-                mapObj.rotation = static_cast<double>(tmxObject.getRotation());
+                mapObj.transform.angle = math::toRadians(
+                    static_cast<double>(tmxObject.getRotation())
+                );
                 mapObj.visible = tmxObject.visible();
 
                 const auto& points = tmxObject.getPoints();
@@ -128,20 +141,25 @@ void Map::loadFromTMX(const std::string& tmxPath)
                 objGroup->m_objects.push_back(std::move(mapObj));
             }
 
+            objGroup->setOpacity(tmxObjLayer.getOpacity());
+
             layer = objGroup;
             break;
         }
         case tmx::Layer::Type::Image:
         {
-            const auto& tmxTileLayer = tmxLayer->getLayerAs<tmx::ImageLayer>();
-            const auto& tileOffset = tmxTileLayer.getOffset();
+            const auto& tmxImgLayer = tmxLayer->getLayerAs<tmx::ImageLayer>();
+            const auto& tileOffset = tmxImgLayer.getOffset();
 
             auto imgLayer = std::make_shared<ImageLayer>();
             imgLayer->m_type = tmx::Layer::Type::Image;
-            imgLayer->m_name = tmxTileLayer.getName();
-            imgLayer->m_offset = {tileOffset.x, tileOffset.y};
+            imgLayer->m_name = tmxImgLayer.getName();
+            imgLayer->offset = {tileOffset.x, tileOffset.y};
+            imgLayer->visible = tmxImgLayer.getVisible();
 
-            imgLayer->m_texture = std::make_shared<Texture>(tmxTileLayer.getImagePath());
+            imgLayer->m_texture = std::make_shared<Texture>(tmxImgLayer.getImagePath());
+            imgLayer->transform.pos = {tileOffset.x, tileOffset.y};
+            imgLayer->setOpacity(tmxImgLayer.getOpacity());
 
             layer = imgLayer;
             break;
@@ -150,6 +168,7 @@ void Map::loadFromTMX(const std::string& tmxPath)
 
         if (layer)
         {
+            layer->m_map = this;
             m_layers.push_back(std::move(layer));
         }
     }
@@ -199,8 +218,11 @@ void Map::loadFromTMX(const std::string& tmxPath)
             // clang-format on
         }
 
-        // Move last in case other operations need it
-        tileSet.m_tileIndex = std::move(tileSet.m_tileIndex);
+        tileSet.m_tileIndex.assign(tileSet.m_tileCount, 0);
+        for (const auto& tile : tileSet.m_tiles)
+        {
+            tileSet.m_tileIndex[tile.m_ID] = tile.m_ID + 1;
+        }
 
         m_tileSets.push_back(std::move(tileSet));
     }
@@ -209,6 +231,14 @@ void Map::loadFromTMX(const std::string& tmxPath)
 tmx::Orientation Map::getOrientation() const
 {
     return m_orient;
+}
+
+void Map::render()
+{
+    for (const auto& layer : m_layers)
+    {
+        layer->render();
+    }
 }
 
 tmx::RenderOrder Map::getRenderOrder() const
@@ -321,9 +351,12 @@ const TileSet::Tile* TileSet::getTile(uint32_t id) const
     if (!hasTile(id))
         return nullptr;
 
-    id -= m_firstGID;
-    id = m_tileIndex[id];
-    return id ? &m_tiles[id - 1] : nullptr;
+    const uint32_t local = id - m_firstGID;
+    if (local >= m_tileIndex.size())
+        return nullptr;
+
+    const uint32_t idx = m_tileIndex[local];
+    return idx ? &m_tiles[idx - 1] : nullptr;
 }
 
 std::shared_ptr<Texture> TileSet::getTexture() const
@@ -336,11 +369,6 @@ std::string Layer::getName() const
     return m_name;
 }
 
-Vec2 Layer::getOffset() const
-{
-    return m_offset;
-}
-
 tmx::Layer::Type Layer::getType() const
 {
     return m_type;
@@ -349,6 +377,121 @@ tmx::Layer::Type Layer::getType() const
 const std::vector<TileLayer::Tile>& TileLayer::getTiles() const
 {
     return m_tiles;
+}
+
+void TileLayer::setOpacity(const double value)
+{
+    m_opacity = value;
+}
+
+double TileLayer::getOpacity() const
+{
+    return m_opacity;
+}
+
+void TileLayer::render()
+{
+    if (!visible)
+        return;
+
+    // Only orthogonal maps supported for now
+    if (m_map->getOrientation() != tmx::Orientation::Orthogonal)
+        return;
+
+    // Only right-down render order supported for now
+    if (m_map->getRenderOrder() != tmx::RenderOrder::RightDown)
+        return;
+
+    const auto mapW = static_cast<int>(m_map->getMapSize().x);
+    const auto mapH = static_cast<int>(m_map->getMapSize().y);
+    const auto tileW = static_cast<int>(m_map->getTileSize().x);
+    const auto tileH = static_cast<int>(m_map->getTileSize().y);
+
+    Transform renderTransform{};
+
+    for (size_t y = 0; y < mapH; ++y)
+    {
+        for (size_t x = 0; x < mapW; ++x)
+        {
+            const size_t index = y * static_cast<size_t>(mapW) + x;
+            if (index >= m_tiles.size())
+                continue;
+
+            const TileLayer::Tile& tile = m_tiles[index];
+            const uint32_t gid = tile.getID();
+            if (gid == 0)
+                continue;
+
+            const TileSet* foundSet = nullptr;
+            for (const auto& ts : m_map->getTileSets())
+            {
+                if (ts.hasTile(gid))
+                {
+                    foundSet = &ts;
+                    break;
+                }
+            }
+
+            if (!foundSet)
+                continue;
+
+            const TileSet::Tile* setTile = foundSet->getTile(gid);
+            const auto setTexture = foundSet->getTexture();
+            if (!setTile || !setTexture)
+                continue;
+
+            setTexture->setAlpha(static_cast<float>(m_opacity));
+
+            renderTransform.pos = offset + Vec2{x * tileW, y * tileH};
+
+            const uint8_t flipFlags = tile.getFlipFlags();
+            const bool flipH = flipFlags & tmx::TileLayer::FlipFlag::Horizontal;
+            const bool flipV = flipFlags & tmx::TileLayer::FlipFlag::Vertical;
+            const bool flipD = flipFlags & tmx::TileLayer::FlipFlag::Diagonal;
+            double rotation = 0.0;
+            bool h = false;
+            bool v = false;
+
+            if (!flipD)
+            {
+                h = flipH;
+                v = flipV;
+            }
+            else
+            {
+                if (flipH && flipV)
+                {
+                    rotation = -M_PI_2;
+                    h = false;
+                    v = true;
+                }
+                else if (flipH)
+                {
+                    rotation = M_PI_2;
+                }
+                else if (flipV)
+                {
+                    rotation = -M_PI_2;
+                }
+                else
+                {
+                    rotation = M_PI_2;
+                    h = false;
+                    v = true;
+                }
+            }
+            renderTransform.angle = rotation;
+            setTexture->flip.h = h;
+            setTexture->flip.v = v;
+
+            renderer::draw(setTexture, renderTransform, setTile->getClipRect());
+        }
+    }
+}
+
+const std::vector<TileLayer::Tile> TileLayer::getFromArea(const Rect& area) const
+{
+    // TODO: Implement this method
 }
 
 uint32_t MapObject::getUID() const
@@ -401,9 +544,152 @@ const std::vector<MapObject>& ObjectGroup::getObjects() const
     return m_objects;
 }
 
+void ObjectGroup::setOpacity(const double value)
+{
+    m_opacity = value;
+}
+
+double ObjectGroup::getOpacity() const
+{
+    return m_opacity;
+}
+
+void ObjectGroup::render()
+{
+    if (!visible)
+        return;
+
+    if (m_drawOrder == tmx::ObjectGroup::DrawOrder::TopDown && !m_sorted)
+    {
+        std::sort(
+            m_objects.begin(), m_objects.end(),
+            [this](const MapObject& a, const MapObject& b)
+            {
+                const double bottomA = offset.y + a.transform.pos.y + a.getRect().getBottom();
+                const double bottomB = offset.y + b.transform.pos.y + b.getRect().getBottom();
+                return bottomA < bottomB;
+            }
+        );
+        m_sorted = true;
+    }
+
+    for (const auto& obj : m_objects)
+    {
+        if (!obj.visible)
+            continue;
+
+        if (obj.getTileID() != 0)
+        {
+            const uint32_t gid = obj.getTileID();
+
+            const TileSet* foundTS = nullptr;
+            for (const auto& ts : m_map->getTileSets())
+            {
+                if (ts.hasTile(gid))
+                {
+                    foundTS = &ts;
+                    break;
+                }
+            }
+
+            if (!foundTS)
+                continue;
+
+            const auto* tile = foundTS->getTile(gid);
+            auto setTexture = foundTS->getTexture();
+            if (!tile || !setTexture)
+                continue;
+
+            setTexture->setAlpha(static_cast<float>(m_opacity));
+            if (tile && setTexture)
+            {
+                Transform renderTransform = obj.transform;
+                renderTransform.pos += offset;
+                renderer::draw(setTexture, renderTransform, tile->getClipRect());
+            }
+
+            continue;
+        }
+
+        const Vec2 renderOffset = offset + obj.transform.pos;
+        Color drawColor = color;
+        drawColor.a = static_cast<uint8_t>(static_cast<double>(drawColor.a) * m_opacity);
+
+        switch (obj.getShapeType())
+        {
+        case tmx::Object::Shape::Rectangle:
+        {
+            Rect rect = obj.getRect();
+            // Only add offset since position is already included in rect
+            rect.setTopLeft(rect.getTopLeft() + offset);
+            draw::rect(rect, drawColor);
+            break;
+        }
+
+        case tmx::Object::Shape::Ellipse:
+        {
+            Rect rect = obj.getRect();
+            rect.setTopLeft(rect.getTopLeft() + offset);
+            draw::ellipse(rect, drawColor, true);
+            break;
+        }
+
+        case tmx::Object::Shape::Point:
+            if (const auto& verts = obj.getVertices(); !verts.empty())
+                draw::point(verts[0] + renderOffset, drawColor);
+            break;
+
+        case tmx::Object::Shape::Polygon:
+        {
+            Polygon polygon{obj.getVertices()};
+            polygon.translate(renderOffset);
+            draw::polygon(polygon, drawColor, true);
+            break;
+        }
+
+        case tmx::Object::Shape::Polyline:
+        {
+            const auto& verts = obj.getVertices();
+            if (verts.size() < 2)
+                break;
+
+            for (size_t i = 1; i < verts.size(); ++i)
+            {
+                const Vec2 start = renderOffset + verts[i - 1];
+                const Vec2 end = renderOffset + verts[i];
+                draw::line(Line{start, end}, drawColor);
+            }
+            break;
+        }
+
+        default:
+            break;
+        }
+    }
+}
+
 std::shared_ptr<Texture> ImageLayer::getTexture() const
 {
     return m_texture;
+}
+
+void ImageLayer::render()
+{
+    if (!visible)
+        return;
+
+    renderer::draw(m_texture, transform);
+}
+
+void ImageLayer::setOpacity(const double value)
+{
+    m_opacity = value;
+    m_texture->setAlpha(static_cast<float>(value));
+}
+
+double ImageLayer::getOpacity() const
+{
+    return m_opacity;
 }
 
 void _bind(py::module_& module)
@@ -480,11 +766,15 @@ void _bind(py::module_& module)
     py::bind_vector<std::vector<TileSet>>(subTilemap, "TileSetList");
 
     py::classh<Layer>(subTilemap, "Layer")
-        .def_readwrite("opacity", &Layer::opacity)
         .def_readwrite("visible", &Layer::visible)
+        .def_readwrite("offset", &Layer::offset)
+
+        .def_property("opacity", &Layer::getOpacity, &Layer::setOpacity)
 
         .def_property_readonly("name", &Layer::getName)
-        .def_property_readonly("offset", &Layer::getOffset);
+        .def_property_readonly("type", &Layer::getType)
+
+        .def("render", &Layer::render);
     py::bind_vector<std::vector<std::shared_ptr<Layer>>>(subTilemap, "LayerList");
 
     auto tileLayerClass = py::classh<TileLayer, Layer>(subTilemap, "TileLayer");
@@ -494,7 +784,12 @@ void _bind(py::module_& module)
         .def_property_readonly("flip_flags", &TileLayer::Tile::getFlipFlags);
     py::bind_vector<std::vector<TileLayer::Tile>>(tileLayerClass, "TileLayerTileList");
 
-    tileLayerClass.def_property_readonly("tiles", &TileLayer::getTiles);
+    tileLayerClass
+        .def_property("opacity", &TileLayer::getOpacity, &TileLayer::setOpacity)
+
+        .def_property_readonly("tiles", &TileLayer::getTiles)
+
+        .def("render", &TileLayer::render);
 
     py::classh<TextProperties>(subTilemap, "TextProperties")
         .def_readwrite("font_family", &TextProperties::fontFamily)
@@ -520,8 +815,7 @@ void _bind(py::module_& module)
         .value("TEXT", tmx::Object::Shape::Text)
         .finalize();
 
-    mapObjectClass.def_readwrite("position", &MapObject::position)
-        .def_readwrite("rotation", &MapObject::rotation)
+    mapObjectClass.def_readwrite("transform", &MapObject::transform)
         .def_readwrite("visible", &MapObject::visible)
 
         .def_property_readonly("uid", &MapObject::getUID)
@@ -544,11 +838,19 @@ void _bind(py::module_& module)
     objGroupClass
         .def_readwrite("color", &ObjectGroup::color)
 
+        .def_property("opacity", &ObjectGroup::getOpacity, &ObjectGroup::setOpacity)
+
         .def_property_readonly("draw_order", &ObjectGroup::getDrawOrder)
-        .def_property_readonly("objects", &ObjectGroup::getObjects);
+        .def_property_readonly("objects", &ObjectGroup::getObjects)
+
+        .def("render", &ObjectGroup::render);
 
     py::classh<ImageLayer, Layer>(subTilemap, "ImageLayer")
-        .def_property_readonly("texture", &ImageLayer::getTexture);
+        .def_property("opacity", &ImageLayer::getOpacity, &ImageLayer::setOpacity)
+
+        .def_property_readonly("texture", &ImageLayer::getTexture)
+
+        .def("render", &ImageLayer::render);
 
     py::classh<Map>(subTilemap, "Map")
         .def(py::init<>())
@@ -557,6 +859,8 @@ void _bind(py::module_& module)
 
         .def("load_from_tmx", &Map::loadFromTMX, py::arg("tmx_path"))
         // TODO: load_from_ldtk
+
+        .def("render", &Map::render)
 
         .def_property_readonly("orientation", &Map::getOrientation)
         .def_property_readonly("render_order", &Map::getRenderOrder)

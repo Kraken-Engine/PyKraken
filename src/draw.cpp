@@ -24,7 +24,8 @@ static void _circle(SDL_Renderer* renderer, const Vec2& center, int radius, int 
 void point(const Vec2& point, const Color& color)
 {
     SDL_Renderer* rend = renderer::_get();
-    SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a);
+    if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+        throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
 
     if (const auto [x, y] = static_cast<SDL_FPoint>(point - camera::getActivePos());
         !SDL_RenderPoint(rend, x, y))
@@ -37,8 +38,8 @@ void points(const std::vector<Vec2>& points, const Color& color)
         return;
 
     SDL_Renderer* rend = renderer::_get();
-
-    SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a);
+    if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+        throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
 
     std::vector<SDL_FPoint> sdlPoints;
     sdlPoints.reserve(points.size());
@@ -70,7 +71,8 @@ void pointsFromNDArray(
     const double* data = static_cast<double*>(info.ptr);
 
     SDL_Renderer* rend = renderer::_get();
-    SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a);
+    if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+        throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
 
     std::vector<SDL_FPoint> sdlPoints;
     sdlPoints.reserve(n);
@@ -96,7 +98,8 @@ void circle(const Circle& circle, const Color& color, const int thickness)
         return;
 
     SDL_Renderer* rend = renderer::_get();
-    SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a);
+    if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+        throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
 
     if (thickness == 1)
         _circleThin(rend, circle.pos - camera::getActivePos(), static_cast<int>(circle.radius));
@@ -112,7 +115,8 @@ void ellipse(const Rect& bounds, const Color& color, const bool filled)
         return;
 
     SDL_Renderer* rend = renderer::_get();
-    SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a);
+    if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+        throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
 
     const Vec2 cameraPos = camera::getActivePos();
     const auto sdlRect = static_cast<SDL_FRect>(
@@ -120,17 +124,27 @@ void ellipse(const Rect& bounds, const Color& color, const bool filled)
     );
 
     if (filled)
-        filledEllipseRGBA(
-            rend, static_cast<Sint16>(sdlRect.x + sdlRect.w / 2),
-            static_cast<Sint16>(sdlRect.y + sdlRect.h / 2), static_cast<Sint16>(sdlRect.w / 2),
-            static_cast<Sint16>(sdlRect.h / 2), color.r, color.g, color.b, color.a
-        );
+    {
+        if (!filledEllipseRGBA(
+                rend, static_cast<Sint16>(sdlRect.x + sdlRect.w / 2),
+                static_cast<Sint16>(sdlRect.y + sdlRect.h / 2), static_cast<Sint16>(sdlRect.w / 2),
+                static_cast<Sint16>(sdlRect.h / 2), color.r, color.g, color.b, color.a
+            ))
+            throw std::runtime_error(
+                "Failed to render filled ellipse: " + std::string(SDL_GetError())
+            );
+    }
     else
-        ellipseRGBA(
-            rend, static_cast<Sint16>(sdlRect.x + sdlRect.w / 2),
-            static_cast<Sint16>(sdlRect.y + sdlRect.h / 2), static_cast<Sint16>(sdlRect.w / 2),
-            static_cast<Sint16>(sdlRect.h / 2), color.r, color.g, color.b, color.a
-        );
+    {
+        if (!ellipseRGBA(
+                rend, static_cast<Sint16>(sdlRect.x + sdlRect.w / 2),
+                static_cast<Sint16>(sdlRect.y + sdlRect.h / 2), static_cast<Sint16>(sdlRect.w / 2),
+                static_cast<Sint16>(sdlRect.h / 2), color.r, color.g, color.b, color.a
+            ))
+        {
+            throw std::runtime_error("Failed to render ellipse: " + std::string(SDL_GetError()));
+        }
+    }
 }
 
 void line(const Line& line, const Color& color, const int thickness)
@@ -142,11 +156,21 @@ void line(const Line& line, const Color& color, const int thickness)
     const auto y2 = static_cast<Sint16>(line.by - cameraPos.y);
 
     if (thickness <= 1)
-        lineRGBA(renderer::_get(), x1, y1, x2, y2, color.r, color.g, color.b, color.a);
+    {
+        if (!lineRGBA(renderer::_get(), x1, y1, x2, y2, color.r, color.g, color.b, color.a))
+        {
+            throw std::runtime_error("Failed to render line: " + std::string(SDL_GetError()));
+        }
+    }
     else
-        thickLineRGBA(
-            renderer::_get(), x1, y1, x2, y2, thickness, color.r, color.g, color.b, color.a
-        );
+    {
+        if (!thickLineRGBA(
+                renderer::_get(), x1, y1, x2, y2, thickness, color.r, color.g, color.b, color.a
+            ))
+        {
+            throw std::runtime_error("Failed to render thick line: " + std::string(SDL_GetError()));
+        }
+    }
 }
 
 void rect(Rect rect, const Color& color, const int thickness)
@@ -161,16 +185,22 @@ void rect(Rect rect, const Color& color, const int thickness)
 
     if (thickness <= 0 || thickness > rect.w / 2.0 || thickness > rect.h / 2.0)
     {
-        SDL_RenderFillRect(rend, &sdlRect);
+        if (!SDL_RenderFillRect(rend, &sdlRect))
+            throw std::runtime_error(
+                "Failed to render filled rectangle: " + std::string(SDL_GetError())
+            );
         return;
     }
 
-    SDL_RenderRect(rend, &sdlRect);
+    if (!SDL_RenderRect(rend, &sdlRect))
+        throw std::runtime_error("Failed to render rectangle: " + std::string(SDL_GetError()));
+
     for (int i = 1; i < thickness; i++)
     {
         rect.inflate({-2, -2});
         sdlRect = static_cast<SDL_FRect>(rect);
-        SDL_RenderRect(rend, &sdlRect);
+        if (!SDL_RenderRect(rend, &sdlRect))
+            throw std::runtime_error("Failed to render rectangle: " + std::string(SDL_GetError()));
     }
 }
 
@@ -180,7 +210,8 @@ void rects(const std::vector<Rect>& rects, const Color& color, const int thickne
         return;
 
     SDL_Renderer* rend = renderer::_get();
-    SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a);
+    if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+        throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
 
     const Vec2 cameraPos = camera::getActivePos();
 
@@ -200,38 +231,47 @@ void rects(const std::vector<Rect>& rects, const Color& color, const int thickne
 
     // For filled rectangles or thick outlines, use batch fill
     if (thickness <= 0)
-        SDL_RenderFillRects(rend, sdlRects.data(), static_cast<int>(sdlRects.size()));
-    else
     {
-        // For outlined rectangles, use batch outline
-        SDL_RenderRects(rend, sdlRects.data(), static_cast<int>(sdlRects.size()));
+        if (!SDL_RenderFillRects(rend, sdlRects.data(), static_cast<int>(sdlRects.size())))
+            throw std::runtime_error(
+                "Failed to render filled rectangles: " + std::string(SDL_GetError())
+            );
+        return;
+    }
 
-        // For thick outlines, draw additional nested rectangles
-        if (thickness > 1)
+    // For outlined rectangles, use batch outline
+    if (!SDL_RenderRects(rend, sdlRects.data(), static_cast<int>(sdlRects.size())))
+        throw std::runtime_error("Failed to render rectangles: " + std::string(SDL_GetError()));
+
+    // For thick outlines, draw additional nested rectangles
+    if (thickness == 1)
+        return;
+
+    for (int i = 1; i < thickness; i++)
+    {
+        std::vector<SDL_FRect> innerRects;
+        innerRects.reserve(rects.size());
+
+        for (const Rect& rect : rects)
         {
-            for (int i = 1; i < thickness; i++)
-            {
-                std::vector<SDL_FRect> innerRects;
-                innerRects.reserve(rects.size());
+            // Skip if thickness exceeds rectangle dimensions
+            if (i >= rect.w / 2.0 || i >= rect.h / 2.0)
+                continue;
 
-                for (const Rect& rect : rects)
-                {
-                    // Skip if thickness exceeds rectangle dimensions
-                    if (i >= rect.w / 2.0 || i >= rect.h / 2.0)
-                        continue;
-
-                    SDL_FRect innerRect;
-                    innerRect.x = static_cast<float>(rect.x - cameraPos.x + i);
-                    innerRect.y = static_cast<float>(rect.y - cameraPos.y + i);
-                    innerRect.w = static_cast<float>(rect.w - 2 * i);
-                    innerRect.h = static_cast<float>(rect.h - 2 * i);
-                    innerRects.push_back(innerRect);
-                }
-
-                if (!innerRects.empty())
-                    SDL_RenderRects(rend, innerRects.data(), static_cast<int>(innerRects.size()));
-            }
+            const SDL_FRect innerRect = {
+                static_cast<float>(rect.x - cameraPos.x + i),
+                static_cast<float>(rect.y - cameraPos.y + i),
+                static_cast<float>(rect.w - 2 * i),
+                static_cast<float>(rect.h - 2 * i),
+            };
+            innerRects.push_back(innerRect);
         }
+
+        if (innerRects.empty())
+            break;
+
+        if (!SDL_RenderRects(rend, innerRects.data(), static_cast<int>(innerRects.size())))
+            throw std::runtime_error("Failed to render rectangles: " + std::string(SDL_GetError()));
     }
 }
 
@@ -262,15 +302,27 @@ void polygon(const Polygon& polygon, const Color& color, const bool filled)
     }
 
     if (filled)
-        filledPolygonRGBA(
-            renderer::_get(), vx.data(), vy.data(), static_cast<int>(size), color.r, color.g,
-            color.b, color.a
-        );
+    {
+        if (!filledPolygonRGBA(
+                renderer::_get(), vx.data(), vy.data(), static_cast<int>(size), color.r, color.g,
+                color.b, color.a
+            ))
+        {
+            throw std::runtime_error(
+                "Failed to render filled polygon: " + std::string(SDL_GetError())
+            );
+        }
+    }
     else
-        polygonRGBA(
-            renderer::_get(), vx.data(), vy.data(), static_cast<int>(size), color.r, color.g,
-            color.b, color.a
-        );
+    {
+        if (!polygonRGBA(
+                renderer::_get(), vx.data(), vy.data(), static_cast<int>(size), color.r, color.g,
+                color.b, color.a
+            ))
+        {
+            throw std::runtime_error("Failed to render polygon: " + std::string(SDL_GetError()));
+        }
+    }
 }
 
 void _circleThin(SDL_Renderer* renderer, const Vec2& center, const int radius)
@@ -322,7 +374,8 @@ void _circleThin(SDL_Renderer* renderer, const Vec2& center, const int radius)
         points.push_back(SDL_FPoint{static_cast<float>(px), static_cast<float>(py)});
     }
 
-    SDL_RenderPoints(renderer, points.data(), static_cast<int>(points.size()));
+    if (!SDL_RenderPoints(renderer, points.data(), static_cast<int>(points.size())))
+        throw std::runtime_error("Failed to render circle points: " + std::string(SDL_GetError()));
 }
 
 void _circle(SDL_Renderer* renderer, const Vec2& center, const int radius, const int thickness)
@@ -331,10 +384,13 @@ void _circle(SDL_Renderer* renderer, const Vec2& center, const int radius, const
 
     auto hLine = [&](const int x1, const int y, const int x2)
     {
-        SDL_RenderLine(
-            renderer, static_cast<float>(x1), static_cast<float>(y), static_cast<float>(x2),
-            static_cast<float>(y)
-        );
+        if (!SDL_RenderLine(
+                renderer, static_cast<float>(x1), static_cast<float>(y), static_cast<float>(x2),
+                static_cast<float>(y)
+            ))
+        {
+            throw std::runtime_error("Failed to render line: " + std::string(SDL_GetError()));
+        }
     };
 
     auto drawCircleSpan = [&](const int r, std::unordered_map<int, std::pair<int, int>>& bounds)

@@ -38,7 +38,8 @@ TextureScaleMode getDefaultScaleMode();
 void setTarget(const std::shared_ptr<Texture>& target);
 
 void draw(
-    const std::shared_ptr<Texture>& texture, Transform transform = {}, const Rect& srcRect = {}
+    const std::shared_ptr<Texture>& texture, const Transform& transform = {},
+    const Rect& srcRect = {}
 );
 }  // namespace renderer
 }  // namespace kn

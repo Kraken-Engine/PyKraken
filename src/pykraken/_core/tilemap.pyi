@@ -8,22 +8,33 @@ import pykraken._core
 import typing
 __all__: list[str] = ['ImageLayer', 'Layer', 'LayerList', 'LayerType', 'Map', 'MapObject', 'MapObjectList', 'MapOrientation', 'MapRenderOrder', 'MapStaggerAxis', 'MapStaggerIndex', 'ObjectGroup', 'TextProperties', 'TileLayer', 'TileSet', 'TileSetList']
 class ImageLayer(Layer):
-    @property
-    def texture(self) -> pykraken._core.Texture:
-        ...
-class Layer:
-    visible: bool
-    @property
-    def name(self) -> str:
-        ...
-    @property
-    def offset(self) -> pykraken._core.Vec2:
+    def render(self) -> None:
         ...
     @property
     def opacity(self) -> float:
         ...
     @opacity.setter
-    def opacity(self, arg0: typing.SupportsFloat) -> None:
+    def opacity(self, arg1: typing.SupportsFloat) -> None:
+        ...
+    @property
+    def texture(self) -> pykraken._core.Texture:
+        ...
+class Layer:
+    offset: pykraken._core.Vec2
+    visible: bool
+    def render(self) -> None:
+        ...
+    @property
+    def name(self) -> str:
+        ...
+    @property
+    def opacity(self) -> float:
+        ...
+    @opacity.setter
+    def opacity(self, arg1: typing.SupportsFloat) -> None:
+        ...
+    @property
+    def type(self) -> LayerType:
         ...
 class LayerList:
     __hash__: typing.ClassVar[None] = None
@@ -141,6 +152,8 @@ class Map:
         ...
     def load_from_tmx(self, tmx_path: str) -> None:
         ...
+    def render(self) -> None:
+        ...
     @property
     def bounds(self) -> pykraken._core.Rect:
         ...
@@ -186,19 +199,13 @@ class MapObject:
             """
             Convert to a string according to format_spec.
             """
-    position: pykraken._core.Vec2
+    transform: pykraken._core.Transform
     visible: bool
     @property
     def name(self) -> str:
         ...
     @property
     def rect(self) -> pykraken._core.Rect:
-        ...
-    @property
-    def rotation(self) -> float:
-        ...
-    @rotation.setter
-    def rotation(self, arg0: typing.SupportsFloat) -> None:
         ...
     @property
     def shape_type(self) -> MapObject.ShapeType:
@@ -356,11 +363,19 @@ class ObjectGroup(Layer):
             Convert to a string according to format_spec.
             """
     color: pykraken._core.Color
+    def render(self) -> None:
+        ...
     @property
     def draw_order(self) -> ObjectGroup.DrawOrder:
         ...
     @property
     def objects(self) -> list[MapObject]:
+        ...
+    @property
+    def opacity(self) -> float:
+        ...
+    @opacity.setter
+    def opacity(self, arg1: typing.SupportsFloat) -> None:
         ...
 class TextProperties:
     align: pykraken._core.Align
@@ -465,6 +480,14 @@ class TileLayer(Layer):
             """
             Remove and return the item at index ``i``
             """
+    def render(self) -> None:
+        ...
+    @property
+    def opacity(self) -> float:
+        ...
+    @opacity.setter
+    def opacity(self, arg1: typing.SupportsFloat) -> None:
+        ...
     @property
     def tiles(self) -> list[TileLayer.Tile]:
         ...

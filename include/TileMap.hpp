@@ -19,6 +19,8 @@ namespace kn
 {
 namespace tilemap
 {
+class Map;
+
 class TileSet
 {
   public:
@@ -103,7 +105,7 @@ class TileSet
     Vec2 m_tileOffset{};
     std::vector<Terrain> m_terrains{};
     std::vector<Tile> m_tiles{};
-    std::vector<std::uint32_t> m_tileIndex;
+    std::vector<uint32_t> m_tileIndex;
     std::shared_ptr<Texture> m_texture = nullptr;
 
     friend class Map;
@@ -112,20 +114,24 @@ class TileSet
 class Layer
 {
   public:
-    double opacity = 1.0;
     bool visible = true;
+    Vec2 offset{};
 
     Layer() = default;
     virtual ~Layer() = default;
 
+    virtual void render() = 0;
+    virtual void setOpacity(double value) = 0;
+    virtual double getOpacity() const = 0;
+
     [[nodiscard]] std::string getName() const;
-    [[nodiscard]] Vec2 getOffset() const;
     [[nodiscard]] tmx::Layer::Type getType() const;
 
-  private:
+  protected:
+    Map* m_map = nullptr;
     tmx::Layer::Type m_type;
     std::string m_name = "";
-    Vec2 m_offset{};
+    double m_opacity = 1.0;
 
     friend class Map;
 };
@@ -135,24 +141,20 @@ class TileLayer : public Layer
   public:
     class Tile
     {
-        uint32_t id = 0;
-        uint8_t flipFlags = 0;
+        uint32_t m_id = 0;
+        uint8_t m_flipFlags = 0;
+
+        friend class Map;
 
       public:
-        Tile(uint32_t tileID, uint8_t flags)
-            : id(tileID),
-              flipFlags(flags)
-        {
-        }
-
         [[nodiscard]] uint32_t getID() const
         {
-            return id;
+            return m_id;
         }
 
         [[nodiscard]] uint8_t getFlipFlags() const
         {
-            return flipFlags;
+            return m_flipFlags;
         }
     };
 
@@ -160,6 +162,11 @@ class TileLayer : public Layer
     ~TileLayer() = default;
 
     [[nodiscard]] const std::vector<Tile>& getTiles() const;
+    [[nodiscard]] const std::vector<Tile> getFromArea(const Rect& area) const;
+
+    void render() override;
+    void setOpacity(double value) override;
+    double getOpacity() const override;
 
   private:
     std::vector<Tile> m_tiles{};
@@ -185,8 +192,7 @@ struct TextProperties
 class MapObject
 {
   public:
-    Vec2 position{};
-    double rotation = 0.0;
+    Transform transform{};
     bool visible = true;
 
     MapObject() = default;
@@ -207,7 +213,7 @@ class MapObject
     std::string m_type = "";
     Rect m_rect{};
     uint32_t m_tileId = 0;
-    tmx::Object::Shape m_shape;
+    tmx::Object::Shape m_shape = tmx::Object::Shape::Rectangle;
     std::vector<Vec2> m_vertices{};
     TextProperties m_text{};
 
@@ -224,10 +230,14 @@ class ObjectGroup : public Layer
 
     [[nodiscard]] tmx::ObjectGroup::DrawOrder getDrawOrder() const;
     [[nodiscard]] const std::vector<MapObject>& getObjects() const;
+    void render() override;
+    void setOpacity(double value) override;
+    double getOpacity() const override;
 
   private:
-    tmx::ObjectGroup::DrawOrder m_drawOrder;
+    tmx::ObjectGroup::DrawOrder m_drawOrder = tmx::ObjectGroup::DrawOrder::TopDown;
     std::vector<MapObject> m_objects{};
+    bool m_sorted = false;
 
     friend class Map;
 };
@@ -235,10 +245,15 @@ class ObjectGroup : public Layer
 class ImageLayer : public Layer
 {
   public:
+    Transform transform{};
+
     ImageLayer() = default;
     ~ImageLayer() = default;
 
     [[nodiscard]] std::shared_ptr<Texture> getTexture() const;
+    void render() override;
+    void setOpacity(double value) override;
+    double getOpacity() const override;
 
   private:
     std::shared_ptr<Texture> m_texture = nullptr;
@@ -254,6 +269,7 @@ class Map
     Map() = default;
     ~Map() = default;
 
+    void render();
     void loadFromTMX(const std::string& tmxPath);
     // TODO: loadFromLDTK
 
