@@ -3590,9 +3590,35 @@ class Vec2:
         Returns:
             bool: True if both components are within the tolerance.
         """
+    def move_toward(self, target: Vec2, delta: typing.SupportsFloat) -> None:
+        """
+        Move this Vec2 toward a target Vec2 by a specified delta.
+        
+        Args:
+            target (Vec2): The target vector to move towards.
+            delta (float): The maximum distance to move.
+        """
+    def moved_toward(self, target: Vec2, delta: typing.SupportsFloat) -> Vec2:
+        """
+        Return a new Vec2 moved toward a target Vec2 by a specified delta.
+        
+        Args:
+            target (Vec2): The target vector to move towards.
+            delta (float): The maximum distance to move.
+        
+        Returns:
+            Vec2: A new vector moved toward the target.
+        """
     def normalize(self) -> None:
         """
         Normalize this Vec2 in place.
+        """
+    def normalized(self) -> Vec2:
+        """
+        Return a new normalized Vec2.
+        
+        Returns:
+            Vec2: A new vector with unit length.
         """
     def project(self, other: Vec2) -> Vec2:
         """
@@ -3631,12 +3657,32 @@ class Vec2:
         Args:
             radians (float): Rotation angle in radians.
         """
+    def rotated(self, radians: typing.SupportsFloat) -> Vec2:
+        """
+        Return a new Vec2 rotated by a specified angle.
+        
+        Args:
+            radians (float): Rotation angle in radians.
+        
+        Returns:
+            Vec2: A new vector rotated by the given angle.
+        """
     def scale_to_length(self, length: typing.SupportsFloat) -> None:
         """
         Scale this Vec2 to a specific magnitude.
         
         Args:
             length (float): Target vector length.
+        """
+    def scaled_to_length(self, length: typing.SupportsFloat) -> Vec2:
+        """
+        Return a new Vec2 scaled to a specific magnitude.
+        
+        Args:
+            length (float): Target vector length.
+        
+        Returns:
+            Vec2: A new vector scaled to the specified length.
         """
     def to_polar(self) -> PolarCoordinate:
         """

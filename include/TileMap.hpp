@@ -277,8 +277,7 @@ class Map
     ~Map() = default;
 
     void render();
-    void loadFromTMX(const std::string& tmxPath);
-    // TODO: loadFromLDTK
+    void load(const std::string& tmxPath);
 
     [[nodiscard]] tmx::Orientation getOrientation() const;
     [[nodiscard]] tmx::RenderOrder getRenderOrder() const;

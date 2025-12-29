@@ -23,7 +23,7 @@ namespace kn
 {
 namespace tilemap
 {
-void Map::loadFromTMX(const std::string& tmxPath)
+void Map::load(const std::string& tmxPath)
 {
     tmx::Map tmxMap;
     if (!tmxMap.load(tmxPath))
@@ -819,24 +819,75 @@ void _bind(py::module_& module)
         .finalize();
 
     // ----- TileSet -----
-    auto tileSetClass = py::classh<TileSet>(subTilemap, "TileSet");
+    auto tileSetClass = py::classh<TileSet>(subTilemap, "TileSet", R"doc(
+TileSet represents a collection of tiles and associated metadata.
 
-    py::classh<TileSet::Tile>(tileSetClass, "Tile")
+Attributes:
+    first_gid (int): First global tile ID in the tileset.
+    last_gid (int): Last global tile ID in the tileset.
+    name (str): Name of the tileset.
+    tile_size (Vec2): Size of individual tiles.
+    spacing (int): Pixel spacing between tiles in the source image.
+    margin (int): Margin in the source image.
+    tile_count (int): Total number of tiles.
+    columns (int): Number of tile columns in the source image.
+    tile_offset (Vec2): Offset applied to tiles.
+    terrains (list): List of terrain definitions.
+    tiles (list): List of tile metadata.
+    texture (Texture): Source texture for this tileset.
+
+Methods:
+    has_tile: Check whether a global tile id belongs to this tileset.
+    get_tile: Retrieve tile metadata for a given id.
+    )doc");
+
+    py::classh<TileSet::Tile>(tileSetClass, "Tile", R"doc(
+Tile represents a single tile entry within a TileSet.
+
+Attributes:
+    id (int): Local tile id.
+    terrain_indices (list): Terrain indices for the tile.
+    probability (float): Chance for auto-tiling/probability maps.
+    clip_rect (Rect): Source rectangle in the tileset texture.
+    )doc")
         .def_property_readonly("id", &TileSet::Tile::getID)
         .def_property_readonly("terrain_indices", &TileSet::Tile::getTerrainIndices)
         .def_property_readonly("probability", &TileSet::Tile::getProbability)
         .def_property_readonly("clip_rect", &TileSet::Tile::getClipRect);
     py::bind_vector<std::vector<TileSet::Tile>>(tileSetClass, "TileSetTileList");
 
-    py::classh<TileSet::Terrain>(tileSetClass, "Terrain")
+    py::classh<TileSet::Terrain>(tileSetClass, "Terrain", R"doc(
+Terrain describes a named terrain type defined in a tileset.
+
+Attributes:
+    name (str): Terrain name.
+    tile_id (int): Representative tile id for the terrain.
+    )doc")
         .def_property_readonly("name", &TileSet::Terrain::getName)
         .def_property_readonly("tile_id", &TileSet::Terrain::getTileID);
     py::bind_vector<std::vector<TileSet::Terrain>>(tileSetClass, "TerrainList");
 
-    tileSetClass.def("has_tile", &TileSet::hasTile, py::arg("id"))
+    tileSetClass
+        .def("has_tile", &TileSet::hasTile, py::arg("id"), R"doc(
+Check whether a global tile id belongs to this tileset.
+
+Args:
+    id (int): Global tile id (GID).
+
+Returns:
+    bool: True if the tileset contains the tile id, False otherwise.
+        )doc")
         .def(
             "get_tile", &TileSet::getTile, py::arg("id"),
-            py::return_value_policy::reference_internal
+            py::return_value_policy::reference_internal, R"doc(
+Retrieve tile metadata for a given id.
+
+Args:
+    id (int): Global tile id (GID).
+
+Returns:
+    Tile: The tile metadata, or None if not found.
+        )doc"
         )
 
         .def_property_readonly("first_gid", &TileSet::getFirstGID)
@@ -854,7 +905,19 @@ void _bind(py::module_& module)
     py::bind_vector<std::vector<TileSet>>(subTilemap, "TileSetList");
 
     // ----- Layer -----
-    py::classh<Layer>(subTilemap, "Layer")
+    py::classh<Layer>(subTilemap, "Layer", R"doc(
+Layer is the base class for all tilemap layers.
+
+Attributes:
+    visible (bool): Whether the layer is visible.
+    offset (Vec2): Per-layer drawing offset.
+    opacity (float): Layer opacity (0.0-1.0).
+    name (str): Layer name.
+    type (LayerType): Layer type enum.
+
+Methods:
+    render: Draw the layer to the current renderer.
+    )doc")
         .def_readwrite("visible", &Layer::visible)
         .def_readwrite("offset", &Layer::offset)
 
@@ -863,33 +926,88 @@ void _bind(py::module_& module)
         .def_property_readonly("name", &Layer::getName)
         .def_property_readonly("type", &Layer::getType)
 
-        .def("render", &Layer::render);
+        .def("render", &Layer::render, R"doc(
+Draw the layer to the current renderer.
+        )doc");
     py::bind_vector<std::vector<std::shared_ptr<Layer>>>(subTilemap, "LayerList");
 
     // ----- TileLayer -----
-    auto tileLayerClass = py::classh<TileLayer, Layer>(subTilemap, "TileLayer");
+    auto tileLayerClass = py::classh<TileLayer, Layer>(subTilemap, "TileLayer", R"doc(
+TileLayer represents a grid of tiles within the map.
 
-    py::classh<TileLayer::Tile>(tileLayerClass, "Tile")
+Attributes:
+    opacity (float): Layer opacity (0.0-1.0).
+    tiles (list): List of `Tile` entries for the layer grid.
+
+Methods:
+    get_from_area: Return tiles intersecting a Rect area.
+    get_from_point: Return the tile at a given world position.
+    render: Draw the tile layer.
+    )doc");
+
+    py::classh<TileLayer::Tile>(tileLayerClass, "Tile", R"doc(
+Tile represents an instance of a tile in a TileLayer.
+
+Attributes:
+    id (int): Global tile id (GID).
+    flip_flags (int): Flags describing tile flips/rotations.
+    )doc")
         .def_property_readonly("id", &TileLayer::Tile::getID)
         .def_property_readonly("flip_flags", &TileLayer::Tile::getFlipFlags);
     py::bind_vector<std::vector<TileLayer::Tile>>(tileLayerClass, "TileLayerTileList");
 
-    py::classh<TileLayer::TileResult>(tileLayerClass, "TileResult")
+    py::classh<TileLayer::TileResult>(tileLayerClass, "TileResult", R"doc(
+TileResult bundles a `Tile` with its world-space `Rect`.
+
+Attributes:
+    tile (Tile): The tile entry.
+    rect (Rect): The world-space rectangle covered by the tile.
+    )doc")
         .def_readonly("tile", &TileLayer::TileResult::tile)
         .def_readonly("rect", &TileLayer::TileResult::rect);
 
-    tileLayerClass
-        .def_property("opacity", &TileLayer::getOpacity, &TileLayer::setOpacity)
-
+    tileLayerClass.def_property("opacity", &TileLayer::getOpacity, &TileLayer::setOpacity)
         .def_property_readonly("tiles", &TileLayer::getTiles)
 
-        .def("get_from_area", &TileLayer::getFromArea, py::arg("area"))
-        .def("get_from_point", &TileLayer::getFromPoint, py::arg("position"))
+        .def("get_from_area", &TileLayer::getFromArea, py::arg("area"), R"doc(
+Return tiles intersecting a Rect area.
 
-        .def("render", &TileLayer::render);
+Args:
+    area (Rect): World-space area to query.
+
+Returns:
+    list[TileLayer.TileResult]: List of TileResult entries for tiles intersecting the area.
+        )doc")
+        .def("get_from_point", &TileLayer::getFromPoint, py::arg("position"), R"doc(
+Return the tile at a given world position.
+
+Args:
+    position (Vec2): World-space position to query.
+
+Returns:
+    Optional[TileLayer.TileResult]: TileResult entry if a tile exists at the position, None otherwise.
+        )doc")
+        .def("render", &TileLayer::render, R"doc(
+Draw the tile layer.
+        )doc");
 
     // ----- MapObject -----
-    py::classh<TextProperties>(subTilemap, "TextProperties")
+    py::classh<TextProperties>(subTilemap, "TextProperties", R"doc(
+TextProperties holds styling for text objects on the map.
+
+Attributes:
+    font_family (str): Name of the font family.
+    pixel_size (int): Font size in pixels.
+    wrap (bool): Whether wrapping is enabled.
+    color (Color): Text color.
+    bold (bool): Bold style flag.
+    italic (bool): Italic style flag.
+    underline (bool): Underline flag.
+    strikethrough (bool): Strikethrough flag.
+    kerning (bool): Kerning enabled flag.
+    align (Align): Horizontal alignment.
+    text (str): The text content.
+    )doc")
         .def_readwrite("font_family", &TextProperties::fontFamily)
         .def_readwrite("pixel_size", &TextProperties::pixelSize)
         .def_readwrite("wrap", &TextProperties::wrap)
@@ -902,7 +1020,21 @@ void _bind(py::module_& module)
         .def_readwrite("align", &TextProperties::align)
         .def_readwrite("text", &TextProperties::text);
 
-    auto mapObjectClass = py::classh<MapObject>(subTilemap, "MapObject");
+    auto mapObjectClass = py::classh<MapObject>(subTilemap, "MapObject", R"doc(
+MapObject represents a placed object on an object layer.
+
+Attributes:
+    transform (Transform): Transformation component for the object.
+    visible (bool): Visibility flag.
+    uid (int): Unique identifier.
+    name (str): Object name.
+    type (str): Object type string.
+    rect (Rect): Bounding rectangle.
+    tile_id (int): Associated tile id if the object is a tile.
+    shape_type (ShapeType): The shape enum for the object.
+    vertices (list): Vertex list for polygon/polyline shapes.
+    text (TextProperties): Text properties when shape is text.
+    )doc");
 
     py::native_enum<tmx::Object::Shape>(mapObjectClass, "ShapeType", "enum.IntEnum")
         .value("RECTANGLE", tmx::Object::Shape::Rectangle)
@@ -927,7 +1059,18 @@ void _bind(py::module_& module)
     py::bind_vector<std::vector<MapObject>>(subTilemap, "MapObjectList");
 
     // ----- ObjectGroup -----
-    auto objGroupClass = py::classh<ObjectGroup, Layer>(subTilemap, "ObjectGroup");
+    auto objGroupClass = py::classh<ObjectGroup, Layer>(subTilemap, "ObjectGroup", R"doc(
+ObjectGroup is a layer containing placed MapObjects.
+
+Attributes:
+    color (Color): Tint color applied to non-tile objects.
+    opacity (float): Layer opacity.
+    draw_order (DrawOrder): Drawing order for objects.
+    objects (list): List of contained MapObject instances.
+
+Methods:
+    render: Draw the object group.
+    )doc");
 
     py::native_enum<tmx::ObjectGroup::DrawOrder>(objGroupClass, "DrawOrder", "enum.IntEnum")
         .value("INDEX", tmx::ObjectGroup::DrawOrder::Index)
@@ -942,26 +1085,63 @@ void _bind(py::module_& module)
         .def_property_readonly("draw_order", &ObjectGroup::getDrawOrder)
         .def_property_readonly("objects", &ObjectGroup::getObjects)
 
-        .def("render", &ObjectGroup::render);
+        .def("render", &ObjectGroup::render, R"doc(
+Draw the object group.
+        )doc");
 
     // ----- ImageLayer -----
-    py::classh<ImageLayer, Layer>(subTilemap, "ImageLayer")
+    py::classh<ImageLayer, Layer>(subTilemap, "ImageLayer", R"doc(
+ImageLayer displays a single image as a layer.
+
+Attributes:
+    opacity (float): Layer opacity.
+    texture (Texture): The layer image texture.
+
+Methods:
+    render: Draw the image layer.
+    )doc")
         .def_property("opacity", &ImageLayer::getOpacity, &ImageLayer::setOpacity)
 
         .def_property_readonly("texture", &ImageLayer::getTexture)
 
-        .def("render", &ImageLayer::render);
+        .def("render", &ImageLayer::render, R"doc(
+Draw the image layer.
+        )doc");
 
     // ----- Map -----
-    py::classh<Map>(subTilemap, "Map")
+    py::classh<Map>(subTilemap, "Map", R"doc(
+Map represents a loaded TMX map and provides access to its layers and tilesets.
+
+Attributes:
+    background_color (Color): Map background color.
+    orientation (MapOrientation): Map orientation enum.
+    render_order (MapRenderOrder): Tile render order enum.
+    map_size (Vec2): Tile grid dimensions.
+    tile_size (Vec2): Size of individual tiles.
+    bounds (Rect): Map bounds in pixels.
+    hex_side_length (float): Hex side length for hex maps.
+    stagger_axis (MapStaggerAxis): Stagger axis enum for staggered/hex maps.
+    stagger_index (MapStaggerIndex): Stagger index enum.
+    tile_sets (list): List of TileSet objects.
+    layers (list): List of Layer instances.
+
+Methods:
+    load: Load a TMX file from path.
+    render: Render all layers.
+    )doc")
         .def(py::init<>())
 
         .def_readwrite("background_color", &Map::backgroundColor)
 
-        .def("load_from_tmx", &Map::loadFromTMX, py::arg("tmx_path"))
-        // TODO: load_from_ldtk
+        .def("load", &Map::load, py::arg("tmx_path"), R"doc(
+Load a TMX file from path.
 
-        .def("render", &Map::render)
+Args:
+    tmx_path (str): Path to the TMX file to load.
+        )doc")
+        .def("render", &Map::render, R"doc(
+Render all layers.
+        )doc")
 
         .def_property_readonly("orientation", &Map::getOrientation)
         .def_property_readonly("render_order", &Map::getRenderOrder)

@@ -69,9 +69,13 @@ class Vec2
 
     void rotate(double rad);
 
+    Vec2 rotated(double rad) const;
+
     [[nodiscard]] PolarCoordinate toPolar() const;
 
     void scaleToLength(double scalar);
+
+    Vec2 scaledToLength(double scalar) const;
 
     [[nodiscard]] Vec2 project(const Vec2& other) const;
 
@@ -81,9 +85,15 @@ class Vec2
 
     void normalize();
 
+    Vec2 normalized() const;
+
     [[nodiscard]] double distanceTo(const Vec2& other) const;
 
     [[nodiscard]] double distanceSquaredTo(const Vec2& other) const;
+
+    void moveToward(const Vec2& target, double maxStep);
+
+    Vec2 movedToward(const Vec2& target, double maxStep) const;
 
     Vec2 operator-() const;  // Unary negation
 
@@ -136,15 +146,7 @@ namespace math
 {
 void _bind(py::module_& module);
 
-Vec2 scaleToLength(const Vec2& vec, double scalar);
-
 Vec2 fromPolar(double rad, double radius);
-
-Vec2 fromPolar(const PolarCoordinate& polar);
-
-Vec2 normalize(Vec2 vec);
-
-Vec2 rotate(const Vec2& vec, double rad);
 
 Vec2 clampVec(const Vec2& vec, const Vec2& min, const Vec2& max);
 
