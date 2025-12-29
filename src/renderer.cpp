@@ -186,21 +186,12 @@ void draw(const std::shared_ptr<Texture>& texture, const Transform& transform, c
         dstRect.setBottomRight(pos);
         break;
     }
-    auto dstSDLRect = static_cast<SDL_FRect>(dstRect);
-    dstSDLRect.x = std::floorf(dstSDLRect.x);
-    dstSDLRect.y = std::floorf(dstSDLRect.y);
 
+    auto dstSDLRect = static_cast<SDL_FRect>(dstRect);
     auto srcSDLRect = srcSize.isZero() ? static_cast<SDL_FRect>(texture->getRect())
                                        : static_cast<SDL_FRect>(srcRect);
 
-    // Prevent bleeding edge pixels
-    // static float inset = 0.05f;
-    // srcSDLRect.x += inset;
-    // srcSDLRect.y += inset;
-    // srcSDLRect.w -= inset * 2.f;
-    // srcSDLRect.h -= inset * 2.f;
-
-    SDL_FPoint pivot =
+    const SDL_FPoint pivot =
         {static_cast<float>(dstRect.w * transform.pivot.x),
          static_cast<float>(dstRect.h * transform.pivot.y)};
 

@@ -39,7 +39,7 @@ namespace camera
 {
 Vec2 getActivePos()
 {
-    return _cameraPos;
+    return {std::floor(_cameraPos.x), std::floor(_cameraPos.y)};
 }
 
 void _bind(const py::module_& module)

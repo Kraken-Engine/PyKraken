@@ -3,6 +3,7 @@
 #include <pybind11/pybind11.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <tmxlite/Map.hpp>
 #include <vector>
@@ -158,11 +159,18 @@ class TileLayer : public Layer
         }
     };
 
+    struct TileResult
+    {
+        Tile tile;
+        Rect rect;
+    };
+
     TileLayer() = default;
     ~TileLayer() = default;
 
     [[nodiscard]] const std::vector<Tile>& getTiles() const;
-    [[nodiscard]] const std::vector<Tile> getFromArea(const Rect& area) const;
+    [[nodiscard]] std::vector<TileResult> getFromArea(const Rect& area) const;
+    [[nodiscard]] std::optional<TileResult> getFromPoint(const Vec2& position) const;
 
     void render() override;
     void setOpacity(double value) override;
@@ -237,7 +245,6 @@ class ObjectGroup : public Layer
   private:
     tmx::ObjectGroup::DrawOrder m_drawOrder = tmx::ObjectGroup::DrawOrder::TopDown;
     std::vector<MapObject> m_objects{};
-    bool m_sorted = false;
 
     friend class Map;
 };

@@ -141,6 +141,28 @@ void Map::loadFromTMX(const std::string& tmxPath)
                 objGroup->m_objects.push_back(std::move(mapObj));
             }
 
+            if (objGroup->m_drawOrder == tmx::ObjectGroup::DrawOrder::TopDown)
+            {
+                using SortEntry = std::pair<size_t, double>;
+
+                std::vector<SortEntry> sortEntries;
+                sortEntries.reserve(objGroup->m_objects.size());
+                for (size_t i = 0; i < objGroup->m_objects.size(); ++i)
+                    sortEntries.emplace_back(i, objGroup->m_objects[i].getRect().getBottom());
+
+                std::sort(
+                    sortEntries.begin(), sortEntries.end(),
+                    [](const SortEntry& a, const SortEntry& b) { return a.second < b.second; }
+                );
+
+                std::vector<MapObject> sortedObjects;
+                sortedObjects.reserve(objGroup->m_objects.size());
+                for (const auto& entry : sortEntries)
+                    sortedObjects.push_back(std::move(objGroup->m_objects[entry.first]));
+
+                objGroup->m_objects = std::move(sortedObjects);
+            }
+
             objGroup->setOpacity(tmxObjLayer.getOpacity());
 
             layer = objGroup;
@@ -489,9 +511,88 @@ void TileLayer::render()
     }
 }
 
-const std::vector<TileLayer::Tile> TileLayer::getFromArea(const Rect& area) const
+std::vector<TileLayer::TileResult> TileLayer::getFromArea(const Rect& area) const
 {
-    // TODO: Implement this method
+    std::vector<TileLayer::TileResult> foundTiles;
+
+    const double tileW = m_map->getTileSize().x;
+    const double tileH = m_map->getTileSize().y;
+    const auto mapW = static_cast<int>(m_map->getMapSize().x);
+    const auto mapH = static_cast<int>(m_map->getMapSize().y);
+
+    // Calculate the grid range (clamped to map boundaries)
+    const int startX =
+        std::max(0, static_cast<int>(std::floor((area.getLeft() - offset.x) / tileW)));
+    const int startY =
+        std::max(0, static_cast<int>(std::floor((area.getTop() - offset.y) / tileH)));
+    const int endX =
+        std::min(mapW - 1, static_cast<int>(std::floor((area.getRight() - offset.x) / tileW)));
+    const int endY =
+        std::min(mapH - 1, static_cast<int>(std::floor((area.getBottom() - offset.y) / tileH)));
+
+    // Reserve space to avoid frequent reallocations
+    foundTiles.reserve((endX - startX + 1) * (endY - startY + 1));
+
+    for (int y = startY; y <= endY; ++y)
+        for (int x = startX; x <= endX; ++x)
+        {
+            const auto index = static_cast<size_t>(y * mapW + x);
+            if (index < m_tiles.size() && m_tiles[index].getID() != 0)
+            {
+                const TileLayer::TileResult result{
+                    m_tiles[index],
+                    {
+                        offset.x + x * tileW,
+                        offset.y + y * tileH,
+                        tileW,
+                        tileH,
+                    }
+                };
+                foundTiles.push_back(std::move(result));
+            }
+        }
+
+    return foundTiles;
+}
+
+std::optional<TileLayer::TileResult> TileLayer::getFromPoint(const Vec2& position) const
+{
+    // Adjust position by the layer's offset
+    const double localX = position.x - offset.x;
+    const double localY = position.y - offset.y;
+
+    const double tileW = m_map->getTileSize().x;
+    const double tileH = m_map->getTileSize().y;
+    const double mapW = m_map->getMapSize().x;
+    const double mapH = m_map->getMapSize().y;
+
+    // Convert world coordinates to grid coordinates
+    const auto x = static_cast<int>(std::floor(localX / tileW));
+    const auto y = static_cast<int>(std::floor(localY / tileH));
+
+    // Bounds check
+    if (x < 0 || x >= mapW || y < 0 || y >= mapH)
+    {
+        return std::nullopt;
+    }
+
+    const auto index = static_cast<size_t>(y * mapW + x);
+    if (index >= m_tiles.size())
+    {
+        return std::nullopt;
+    }
+
+    const TileResult result{
+        m_tiles[index],
+        {
+            offset.x + x * tileW,
+            offset.y + y * tileH,
+            tileW,
+            tileH,
+        }
+    };
+
+    return result;
 }
 
 uint32_t MapObject::getUID() const
@@ -558,20 +659,6 @@ void ObjectGroup::render()
 {
     if (!visible)
         return;
-
-    if (m_drawOrder == tmx::ObjectGroup::DrawOrder::TopDown && !m_sorted)
-    {
-        std::sort(
-            m_objects.begin(), m_objects.end(),
-            [this](const MapObject& a, const MapObject& b)
-            {
-                const double bottomA = offset.y + a.transform.pos.y + a.getRect().getBottom();
-                const double bottomB = offset.y + b.transform.pos.y + b.getRect().getBottom();
-                return bottomA < bottomB;
-            }
-        );
-        m_sorted = true;
-    }
 
     for (const auto& obj : m_objects)
     {
@@ -694,9 +781,9 @@ double ImageLayer::getOpacity() const
 
 void _bind(py::module_& module)
 {
-    // Create submodule called "tilemap"
     auto subTilemap = module.def_submodule("tilemap", "Tile map handling module");
 
+    // ----- Enums -----
     py::native_enum<tmx::Orientation>(subTilemap, "MapOrientation", "enum.IntEnum")
         .value("ORTHOGONAL", tmx::Orientation::Orthogonal)
         .value("ISOMETRIC", tmx::Orientation::Isometric)
@@ -731,6 +818,7 @@ void _bind(py::module_& module)
         .value("IMAGE", tmx::Layer::Type::Image)
         .finalize();
 
+    // ----- TileSet -----
     auto tileSetClass = py::classh<TileSet>(subTilemap, "TileSet");
 
     py::classh<TileSet::Tile>(tileSetClass, "Tile")
@@ -765,6 +853,7 @@ void _bind(py::module_& module)
         .def_property_readonly("texture", &TileSet::getTexture);
     py::bind_vector<std::vector<TileSet>>(subTilemap, "TileSetList");
 
+    // ----- Layer -----
     py::classh<Layer>(subTilemap, "Layer")
         .def_readwrite("visible", &Layer::visible)
         .def_readwrite("offset", &Layer::offset)
@@ -777,6 +866,7 @@ void _bind(py::module_& module)
         .def("render", &Layer::render);
     py::bind_vector<std::vector<std::shared_ptr<Layer>>>(subTilemap, "LayerList");
 
+    // ----- TileLayer -----
     auto tileLayerClass = py::classh<TileLayer, Layer>(subTilemap, "TileLayer");
 
     py::classh<TileLayer::Tile>(tileLayerClass, "Tile")
@@ -784,13 +874,21 @@ void _bind(py::module_& module)
         .def_property_readonly("flip_flags", &TileLayer::Tile::getFlipFlags);
     py::bind_vector<std::vector<TileLayer::Tile>>(tileLayerClass, "TileLayerTileList");
 
+    py::classh<TileLayer::TileResult>(tileLayerClass, "TileResult")
+        .def_readonly("tile", &TileLayer::TileResult::tile)
+        .def_readonly("rect", &TileLayer::TileResult::rect);
+
     tileLayerClass
         .def_property("opacity", &TileLayer::getOpacity, &TileLayer::setOpacity)
 
         .def_property_readonly("tiles", &TileLayer::getTiles)
 
+        .def("get_from_area", &TileLayer::getFromArea, py::arg("area"))
+        .def("get_from_point", &TileLayer::getFromPoint, py::arg("position"))
+
         .def("render", &TileLayer::render);
 
+    // ----- MapObject -----
     py::classh<TextProperties>(subTilemap, "TextProperties")
         .def_readwrite("font_family", &TextProperties::fontFamily)
         .def_readwrite("pixel_size", &TextProperties::pixelSize)
@@ -828,6 +926,7 @@ void _bind(py::module_& module)
         .def_property_readonly("text", &MapObject::getTextProperties);
     py::bind_vector<std::vector<MapObject>>(subTilemap, "MapObjectList");
 
+    // ----- ObjectGroup -----
     auto objGroupClass = py::classh<ObjectGroup, Layer>(subTilemap, "ObjectGroup");
 
     py::native_enum<tmx::ObjectGroup::DrawOrder>(objGroupClass, "DrawOrder", "enum.IntEnum")
@@ -845,6 +944,7 @@ void _bind(py::module_& module)
 
         .def("render", &ObjectGroup::render);
 
+    // ----- ImageLayer -----
     py::classh<ImageLayer, Layer>(subTilemap, "ImageLayer")
         .def_property("opacity", &ImageLayer::getOpacity, &ImageLayer::setOpacity)
 
@@ -852,6 +952,7 @@ void _bind(py::module_& module)
 
         .def("render", &ImageLayer::render);
 
+    // ----- Map -----
     py::classh<Map>(subTilemap, "Map")
         .def(py::init<>())
 

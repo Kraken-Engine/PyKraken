@@ -480,6 +480,17 @@ class TileLayer(Layer):
             """
             Remove and return the item at index ``i``
             """
+    class TileResult:
+        @property
+        def rect(self) -> pykraken._core.Rect:
+            ...
+        @property
+        def tile(self) -> TileLayer.Tile:
+            ...
+    def get_from_area(self, area: pykraken._core.Rect) -> list[TileLayer.TileResult]:
+        ...
+    def get_from_point(self, position: pykraken._core.Vec2) -> pykraken._core.tilemap.TileLayer.TileResult | None:
+        ...
     def render(self) -> None:
         ...
     @property
