@@ -1,5 +1,5 @@
 #include <pybind11/native_enum.h>
-#include <pybind11/stl.h>
+// #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
 #include <tmxlite/ImageLayer.hpp>
@@ -841,7 +841,7 @@ Methods:
     get_tile: Retrieve tile metadata for a given id.
     )doc");
 
-    py::classh<TileSet::Tile>(tileSetClass, "Tile", R"doc(
+    auto tileSetTileClass = py::classh<TileSet::Tile>(tileSetClass, "Tile", R"doc(
 Tile represents a single tile entry within a TileSet.
 
 Attributes:
@@ -849,8 +849,54 @@ Attributes:
     terrain_indices (list): Terrain indices for the tile.
     probability (float): Chance for auto-tiling/probability maps.
     clip_rect (Rect): Source rectangle in the tileset texture.
-    )doc")
-        .def_property_readonly("id", &TileSet::Tile::getID)
+    )doc");
+
+    py::class_<std::array<int, 4>>(tileSetTileClass, "TerrainIndices")
+        .def("__len__", [](const std::array<int, 4>&) { return 4; })
+        .def(
+            "__iter__", [](const std::array<int, 4>& arr)
+            { return py::make_iterator(arr.begin(), arr.end()); }, py::keep_alive<0, 1>()
+        )
+        .def(
+            "__getitem__",
+            [](const std::array<int, 4>& arr, const size_t i)
+            {
+                if (i >= arr.size())
+                    throw py::index_error("Index out of range");
+                return arr[i];
+            }
+        )
+        .def(
+            "__repr__",
+            [](const std::array<int, 4>& arr)
+            {
+                std::string repr = "TerrainIndices(";
+                for (size_t i = 0; i < arr.size(); ++i)
+                {
+                    repr += std::to_string(arr[i]);
+                    if (i < arr.size() - 1)
+                        repr += ", ";
+                }
+                repr += ")";
+                return repr;
+            }
+        )
+        .def(
+            "__str__",
+            [](const std::array<int, 4>& arr)
+            {
+                std::string str = "[";
+                for (size_t i = 0; i < arr.size(); ++i)
+                {
+                    str += std::to_string(arr[i]);
+                    if (i < arr.size() - 1)
+                        str += ", ";
+                }
+                str += "]";
+                return str;
+            }
+        );
+    tileSetTileClass.def_property_readonly("id", &TileSet::Tile::getID)
         .def_property_readonly("terrain_indices", &TileSet::Tile::getTerrainIndices)
         .def_property_readonly("probability", &TileSet::Tile::getProbability)
         .def_property_readonly("clip_rect", &TileSet::Tile::getClipRect);
@@ -965,6 +1011,7 @@ Attributes:
     )doc")
         .def_readonly("tile", &TileLayer::TileResult::tile)
         .def_readonly("rect", &TileLayer::TileResult::rect);
+    py::bind_vector<std::vector<TileLayer::TileResult>>(tileLayerClass, "TileResultList");
 
     tileLayerClass.def_property("opacity", &TileLayer::getOpacity, &TileLayer::setOpacity)
         .def_property_readonly("tiles", &TileLayer::getTiles)
@@ -978,7 +1025,14 @@ Args:
 Returns:
     list[TileLayer.TileResult]: List of TileResult entries for tiles intersecting the area.
         )doc")
-        .def("get_from_point", &TileLayer::getFromPoint, py::arg("position"), R"doc(
+        .def(
+            "get_from_point",
+            [](const TileLayer& self, const Vec2& position) -> py::object
+            {
+                const auto result = self.getFromPoint(position);
+                return result.has_value() ? py::cast(result.value()) : py::none();
+            },
+            py::arg("position"), R"doc(
 Return the tile at a given world position.
 
 Args:
@@ -986,7 +1040,8 @@ Args:
 
 Returns:
     Optional[TileLayer.TileResult]: TileResult entry if a tile exists at the position, None otherwise.
-        )doc")
+        )doc"
+        )
         .def("render", &TileLayer::render, R"doc(
 Draw the tile layer.
         )doc");

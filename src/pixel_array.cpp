@@ -704,8 +704,8 @@ std::unique_ptr<PixelArray> scaleBy(const PixelArray& pixelArray, const double f
 
 std::unique_ptr<PixelArray> scaleBy(const PixelArray& pixelArray, const Vec2& factor)
 {
-    if (factor <= Vec2{})
-        throw std::invalid_argument("Scale factor must be a positive value.");
+    if (factor.x <= 0.0 || factor.y <= 0.0)
+        throw std::invalid_argument("Scale factors must be positive values.");
 
     const Vec2 originalSize = pixelArray.getSize();
     return scaleTo(pixelArray, {originalSize.x * factor.x, originalSize.y * factor.y});

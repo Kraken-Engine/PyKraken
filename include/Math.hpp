@@ -117,14 +117,6 @@ class Vec2
 
     bool operator!=(const Vec2& other) const;
 
-    bool operator<(const Vec2& other) const;
-
-    bool operator>(const Vec2& other) const;
-
-    bool operator<=(const Vec2& other) const;
-
-    bool operator>=(const Vec2& other) const;
-
     explicit operator SDL_Point() const;
 
     explicit operator SDL_FPoint() const;

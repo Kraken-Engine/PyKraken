@@ -78,7 +78,7 @@ PolarCoordinate Vec2::toPolar() const
 
 void Vec2::scaleToLength(const double scalar)
 {
-    if (x == 0.0 && y == 0.0 || scalar == 1.0)
+    if (isZero() || scalar == 1.0)
         return;
 
     if (scalar == 0.0)
@@ -102,7 +102,7 @@ Vec2 Vec2::scaledToLength(const double scalar) const
 
 Vec2 Vec2::project(const Vec2& other) const
 {
-    if (x == 0.0 && y == 0.0)
+    if (other.isZero())
         return {};
 
     const double lenSq = other.x * other.x + other.y * other.y;
@@ -121,7 +121,7 @@ Vec2 Vec2::reflect(const Vec2& other) const
 
 void Vec2::normalize()
 {
-    if (x == 0.0 && y == 0.0)
+    if (isZero())
         return;
 
     const double length = getLength();
@@ -232,22 +232,6 @@ bool Vec2::operator==(const Vec2& other) const
 bool Vec2::operator!=(const Vec2& other) const
 {
     return !(*this == other);
-}
-bool Vec2::operator<(const Vec2& other) const
-{
-    return x < other.x && y < other.y;
-}
-bool Vec2::operator>(const Vec2& other) const
-{
-    return x > other.x && y > other.y;
-}
-bool Vec2::operator<=(const Vec2& other) const
-{
-    return !(*this > other);
-}
-bool Vec2::operator>=(const Vec2& other) const
-{
-    return !(*this < other);
 }
 
 Vec2::operator SDL_Point() const
@@ -840,11 +824,7 @@ Returns:
             }
         )
         .def("__eq__", &Vec2::operator==, py::arg("other"))
-        .def("__ne__", &Vec2::operator!=, py::arg("other"))
-        .def("__lt__", &Vec2::operator<, py::arg("other"))
-        .def("__le__", &Vec2::operator<=, py::arg("other"))
-        .def("__gt__", &Vec2::operator>, py::arg("other"))
-        .def("__ge__", &Vec2::operator>=, py::arg("other"));
+        .def("__ne__", &Vec2::operator!=, py::arg("other"));
     py::implicitly_convertible<py::sequence, Vec2>();
 
     auto subMath = module.def_submodule("math", "Math related functions");

@@ -137,25 +137,34 @@ void draw(const std::shared_ptr<Texture>& texture, const Transform& transform, c
 {
     if (!_renderer)
         throw std::runtime_error("Renderer not yet initialized");
+    if (!texture)
+        throw std::runtime_error("Texture is null");
+    if (srcRect.w < 0.0 || srcRect.h < 0.0)
+        throw std::runtime_error("Source rectangle has negative width or height");
 
-    const Vec2 cameraPos = camera::getActivePos();
-
-    SDL_FlipMode flipAxis = SDL_FLIP_NONE;
-    if (texture->flip.h)
-        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_HORIZONTAL);
-    if (texture->flip.v)
-        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_VERTICAL);
+    if (srcRect.w == 0.0 && srcRect.h >= 0.0 || srcRect.w >= 0.0 && srcRect.h == 0.0)
+        return;
+    if (transform.size.isZero() && srcRect.getSize().isZero())
+        return;
+    if (transform.scale.isZero())
+        return;
+    if (texture->getAlpha() == 0.0f)
+        return;
 
     Vec2 baseSize = transform.size;
     const Vec2 srcSize = srcRect.getSize();
     if (baseSize.isZero())
         baseSize = !srcSize.isZero() ? srcSize : texture->getSize();
 
-    Rect dstRect{};
-    dstRect.setSize({baseSize.x * transform.scale.x, baseSize.y * transform.scale.y});
+    Rect dstRect{
+        0.0,
+        0.0,
+        baseSize.x * transform.scale.x,
+        baseSize.y * transform.scale.y,
+    };
 
     // Position based on anchor
-    Vec2 pos = transform.pos - cameraPos;
+    const Vec2 pos = transform.pos - camera::getActivePos();
     switch (transform.anchor)
     {
     case Anchor::TopLeft:
@@ -187,13 +196,27 @@ void draw(const std::shared_ptr<Texture>& texture, const Transform& transform, c
         break;
     }
 
-    auto dstSDLRect = static_cast<SDL_FRect>(dstRect);
-    auto srcSDLRect = srcSize.isZero() ? static_cast<SDL_FRect>(texture->getRect())
-                                       : static_cast<SDL_FRect>(srcRect);
+    // cull if completely outside the screen
+    const Vec2 targetRes = getTargetResolution();
+    if (dstRect.getRight() < 0.0 || dstRect.x >= targetRes.x || dstRect.getBottom() < 0.0 ||
+        dstRect.y >= targetRes.y)
+    {
+        return;
+    }
+
+    const auto dstSDLRect = static_cast<SDL_FRect>(dstRect);
+    const auto srcSDLRect = srcSize.isZero() ? static_cast<SDL_FRect>(texture->getRect())
+                                             : static_cast<SDL_FRect>(srcRect);
 
     const SDL_FPoint pivot =
         {static_cast<float>(dstRect.w * transform.pivot.x),
          static_cast<float>(dstRect.h * transform.pivot.y)};
+
+    SDL_FlipMode flipAxis = SDL_FLIP_NONE;
+    if (texture->flip.h)
+        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_HORIZONTAL);
+    if (texture->flip.v)
+        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_VERTICAL);
 
     if (!SDL_RenderTextureRotated(
             _renderer, texture->getSDL(), &srcSDLRect, &dstSDLRect, TO_DEGREES(transform.angle),

@@ -50,7 +50,7 @@ class TileSet
     struct Tile
     {
         uint32_t m_ID = 0;
-        std::array<int32_t, 4> m_terrainIndices{};
+        std::array<int, 4> m_terrainIndices{};
         uint32_t m_probability = 100;
         Rect m_clipRect{};
 
