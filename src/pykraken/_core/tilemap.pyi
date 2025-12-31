@@ -528,6 +528,7 @@ class TileLayer(Layer):
         Attributes:
             id (int): Global tile id (GID).
             flip_flags (int): Flags describing tile flips/rotations.
+            tileset_index (int): Index of the tileset this tile belongs to.
             
         """
         @property
@@ -535,6 +536,9 @@ class TileLayer(Layer):
             ...
         @property
         def id(self) -> int:
+            ...
+        @property
+        def tileset_index(self) -> int:
             ...
     class TileLayerTileList:
         def __bool__(self) -> bool:

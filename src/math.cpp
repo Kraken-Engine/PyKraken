@@ -354,7 +354,14 @@ Attributes:
                     {
                         const auto pos = posObj.is_none() ? Vec2{} : posObj.cast<Vec2>();
                         const auto size = sizeObj.is_none() ? Vec2{} : sizeObj.cast<Vec2>();
-                        const auto scale = scaleObj.is_none() ? Vec2{1.0} : scaleObj.cast<Vec2>();
+                        Vec2 scale{1.0};
+                        if (!scaleObj.is_none())
+                        {
+                            const bool isNumeric = py::isinstance<py::int_>(scaleObj) ||
+                                                   py::isinstance<py::float_>(scaleObj);
+                            scale = isNumeric ? Vec2{scaleObj.cast<double>()}
+                                              : scaleObj.cast<Vec2>();
+                        }
                         const auto pivot = pivotObj.is_none() ? Vec2{0.5} : pivotObj.cast<Vec2>();
                         return {pos, size, angle, scale, anchor, pivot};
                     }

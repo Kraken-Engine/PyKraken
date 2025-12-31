@@ -57,14 +57,18 @@ void _quit()
 
 void clear(const Color& color)
 {
-    SDL_SetRenderDrawColor(_renderer, color.r, color.g, color.b, color.a);
-    SDL_RenderClear(_renderer);
+    if (!SDL_SetRenderDrawColor(_renderer, color.r, color.g, color.b, color.a))
+        throw std::runtime_error("Failed to set render draw color: " + std::string(SDL_GetError()));
+    if (!SDL_RenderClear(_renderer))
+        throw std::runtime_error("Failed to clear renderer: " + std::string(SDL_GetError()));
 }
 
 void clear(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a)
 {
-    SDL_SetRenderDrawColor(_renderer, r, g, b, a);
-    SDL_RenderClear(_renderer);
+    if (!SDL_SetRenderDrawColor(_renderer, r, g, b, a))
+        throw std::runtime_error("Failed to set render draw color: " + std::string(SDL_GetError()));
+    if (!SDL_RenderClear(_renderer))
+        throw std::runtime_error("Failed to clear renderer: " + std::string(SDL_GetError()));
 }
 
 Vec2 getTargetResolution()
@@ -72,12 +76,18 @@ Vec2 getTargetResolution()
     if (SDL_Texture* target = SDL_GetRenderTarget(_renderer); target)
     {
         float w, h;
-        SDL_GetTextureSize(target, &w, &h);
+        if (!SDL_GetTextureSize(target, &w, &h))
+            throw std::runtime_error(
+                "Failed to get render target size: " + std::string(SDL_GetError())
+            );
         return {w, h};
     }
 
     int w, h;
-    SDL_GetRenderLogicalPresentation(_renderer, &w, &h, nullptr);
+    if (!SDL_GetRenderLogicalPresentation(_renderer, &w, &h, nullptr))
+        throw std::runtime_error(
+            "Failed to get logical presentation size: " + std::string(SDL_GetError())
+        );
     return {w, h};
 }
 
@@ -98,8 +108,17 @@ void setTarget(const std::shared_ptr<Texture>& target)
     SDL_Texture* targetSDL = target->getSDL();
 
     const auto textureProperties = SDL_GetTextureProperties(targetSDL);
+    if (textureProperties == 0)
+        throw std::runtime_error(
+            "Failed to get texture properties: " + std::string(SDL_GetError())
+        );
+
     const auto access =
         SDL_GetNumberProperty(textureProperties, SDL_PROP_TEXTURE_ACCESS_NUMBER, -1);
+    if (access == -1)
+        throw std::runtime_error(
+            "Failed to get texture access property: " + std::string(SDL_GetError())
+        );
 
     if (access != SDL_TEXTUREACCESS_TARGET)
         throw std::runtime_error("Texture is not created with TARGET access");
@@ -120,7 +139,8 @@ TextureScaleMode getDefaultScaleMode()
 
 void present()
 {
-    SDL_RenderPresent(_renderer);
+    if (!SDL_RenderPresent(_renderer))
+        throw std::runtime_error("Failed to present renderer: " + std::string(SDL_GetError()));
 }
 
 std::unique_ptr<PixelArray> readPixels(const Rect& src)
@@ -138,18 +158,22 @@ void draw(const std::shared_ptr<Texture>& texture, const Transform& transform, c
     if (!_renderer)
         throw std::runtime_error("Renderer not yet initialized");
     if (!texture)
-        throw std::runtime_error("Texture is null");
+        throw std::runtime_error("Texture cannot be null");
     if (srcRect.w < 0.0 || srcRect.h < 0.0)
         throw std::runtime_error("Source rectangle has negative width or height");
 
-    if (srcRect.w == 0.0 && srcRect.h >= 0.0 || srcRect.w >= 0.0 && srcRect.h == 0.0)
-        return;
-    if (transform.size.isZero() && srcRect.getSize().isZero())
+    if (srcRect.w == 0.0 && srcRect.h > 0.0 || srcRect.w > 0.0 && srcRect.h == 0.0)
         return;
     if (transform.scale.isZero())
+    {
+        log::warn("Transform scale is zero, skipping draw call");
         return;
+    }
     if (texture->getAlpha() == 0.0f)
+    {
+        log::warn("Texture alpha is zero, skipping draw call");
         return;
+    }
 
     Vec2 baseSize = transform.size;
     const Vec2 srcSize = srcRect.getSize();

@@ -5,6 +5,7 @@
 #include <tmxlite/ImageLayer.hpp>
 #include <tmxlite/TileLayer.hpp>
 
+#include "Camera.hpp"
 #include "Draw.hpp"
 #include "Line.hpp"
 #include "Polygon.hpp"
@@ -27,9 +28,10 @@ void Map::load(const std::string& tmxPath)
 {
     tmx::Map tmxMap;
     if (!tmxMap.load(tmxPath))
-    {
         throw std::runtime_error("Failed to load TMX map from path: " + tmxPath);
-    }
+
+    if (tmxMap.getTilesets().size() >= static_cast<size_t>(std::numeric_limits<uint8_t>::max()))
+        throw std::runtime_error("Too many tilesets in TMX map: " + tmxPath);
 
     m_orient = tmxMap.getOrientation();
     m_renderOrder = tmxMap.getRenderOrder();
@@ -71,7 +73,7 @@ void Map::load(const std::string& tmxPath)
             tileLayer->m_tiles.reserve(tmxTiles.size());
             for (const auto& tmxTile : tmxTiles)
             {
-                TileLayer::Tile tile;
+                TileLayer::Tile tile{};
                 tile.m_id = tmxTile.ID;
                 tile.m_flipFlags = tmxTile.flipFlags;
                 tileLayer->m_tiles.push_back(std::move(tile));
@@ -243,10 +245,34 @@ void Map::load(const std::string& tmxPath)
         tileSet.m_tileIndex.assign(tileSet.m_tileCount, 0);
         for (const auto& tile : tileSet.m_tiles)
         {
-            tileSet.m_tileIndex[tile.m_ID] = tile.m_ID + 1;
+            tileSet.m_tileIndex[tile.m_id] = tile.m_id + 1;
         }
 
         m_tileSets.push_back(std::move(tileSet));
+    }
+
+    // Populate tileset index for each tile in tile layers to avoid per-tile
+    // tileset lookups during rendering.
+    for (auto& layerPtr : m_layers)
+    {
+        if (layerPtr->getType() != tmx::Layer::Type::Tile)
+            continue;
+
+        auto* tileLayer = static_cast<TileLayer*>(layerPtr.get());
+        for (auto& tile : tileLayer->m_tiles)
+        {
+            const uint32_t gid = tile.m_id;
+            if (gid == 0)
+                continue;
+            for (size_t tsIdx = 0; tsIdx < m_tileSets.size(); ++tsIdx)
+            {
+                if (m_tileSets[tsIdx].hasTile(gid))
+                {
+                    tile.m_tilesetIdx = static_cast<uint8_t>(tsIdx);
+                    break;
+                }
+            }
+        }
     }
 }
 
@@ -411,17 +437,28 @@ double TileLayer::getOpacity() const
     return m_opacity;
 }
 
+struct FlipInfo
+{
+    float rotation;
+    bool h;
+    bool v;
+};
+
+// index by (flags & 0b111)
+static constexpr FlipInfo kFlipLUT[8] = {
+    {0.0f, false, false},            // 0: none
+    {0.0f, true, false},             // 1: H
+    {0.0f, false, true},             // 2: V
+    {0.0f, true, true},              // 3: H|V
+    {+float(M_PI_2), false, true},   // 4: D
+    {+float(M_PI_2), true, false},   // 5: D|H
+    {-float(M_PI_2), false, false},  // 6: D|V
+    {-float(M_PI_2), false, true},   // 7: D|H|V
+};
+
 void TileLayer::render()
 {
     if (!visible)
-        return;
-
-    // Only orthogonal maps supported for now
-    if (m_map->getOrientation() != tmx::Orientation::Orthogonal)
-        return;
-
-    // Only right-down render order supported for now
-    if (m_map->getRenderOrder() != tmx::RenderOrder::RightDown)
         return;
 
     const auto mapW = static_cast<int>(m_map->getMapSize().x);
@@ -429,82 +466,101 @@ void TileLayer::render()
     const auto tileW = static_cast<int>(m_map->getTileSize().x);
     const auto tileH = static_cast<int>(m_map->getTileSize().y);
 
-    Transform renderTransform{};
+    // Compute visible tile range from the active camera and clamp to map bounds
+    const Vec2 camPos = camera::getActivePos();
+    const Vec2 targetRes = renderer::getTargetResolution();
+    const double camLeft = camPos.x;
+    const double camTop = camPos.y;
+    const double camRight = camLeft + targetRes.x;
+    const double camBottom = camTop + targetRes.y;
 
-    for (size_t y = 0; y < mapH; ++y)
+    auto camMinX = static_cast<int>(std::floor((camLeft - offset.x) / tileW));
+    auto camMinY = static_cast<int>(std::floor((camTop - offset.y) / tileH));
+    auto camMaxX = static_cast<int>(std::floor((camRight - offset.x) / tileW));
+    auto camMaxY = static_cast<int>(std::floor((camBottom - offset.y) / tileH));
+
+    camMinX = std::max(0, std::min(mapW - 1, camMinX));
+    camMinY = std::max(0, std::min(mapH - 1, camMinY));
+    camMaxX = std::max(0, std::min(mapW - 1, camMaxX));
+    camMaxY = std::max(0, std::min(mapH - 1, camMaxY));
+
+    if (camMinX > camMaxX || camMinY > camMaxY)
+        return;
+
+    int startX, endX, stepX;
+    int startY, endY, stepY;
+
+    switch (m_map->getRenderOrder())
     {
-        for (size_t x = 0; x < mapW; ++x)
-        {
-            const size_t index = y * static_cast<size_t>(mapW) + x;
-            if (index >= m_tiles.size())
-                continue;
+    case tmx::RenderOrder::RightDown:
+        startX = camMinX;
+        endX = camMaxX;
+        stepX = 1;
+        startY = camMinY;
+        endY = camMaxY;
+        stepY = 1;
+        break;
+    case tmx::RenderOrder::RightUp:
+        startX = camMinX;
+        endX = camMaxX;
+        stepX = 1;
+        startY = camMaxY;
+        endY = camMinY;
+        stepY = -1;
+        break;
+    case tmx::RenderOrder::LeftDown:
+        startX = camMaxX;
+        endX = camMinX;
+        stepX = -1;
+        startY = camMinY;
+        endY = camMaxY;
+        stepY = 1;
+        break;
+    case tmx::RenderOrder::LeftUp:
+        startX = camMaxX;
+        endX = camMinX;
+        stepX = -1;
+        startY = camMaxY;
+        endY = camMinY;
+        stepY = -1;
+        break;
+    default:
+        throw std::runtime_error("Unsupported render order in tile layer rendering");
+    }
 
-            const TileLayer::Tile& tile = m_tiles[index];
+    Transform renderTransform{};
+    renderTransform.pos = offset;
+
+    const auto layerAlpha = static_cast<float>(m_opacity);
+
+    const int endYExclusive = endY + stepY;
+    const int endXExclusive = endX + stepX;
+    const auto dx = static_cast<double>(stepX * tileW);
+
+    for (int y = startY; y != endYExclusive; y += stepY)
+    {
+        const auto rowBase = static_cast<size_t>(y * mapW);
+        auto px = offset.x + static_cast<double>(startX * tileW);
+        const auto py = offset.y + static_cast<double>(y * tileH);
+
+        for (int x = startX; x != endXExclusive; x += stepX, px += dx)
+        {
+            const TileLayer::Tile& tile = m_tiles[rowBase + static_cast<size_t>(x)];
             const uint32_t gid = tile.getID();
             if (gid == 0)
                 continue;
 
-            const TileSet* foundSet = nullptr;
-            for (const auto& ts : m_map->getTileSets())
-            {
-                if (ts.hasTile(gid))
-                {
-                    foundSet = &ts;
-                    break;
-                }
-            }
+            const TileSet& foundSet = m_map->getTileSets()[tile.getTilesetIndex()];
+            const TileSet::Tile* setTile = foundSet.getTile(gid);
+            const auto setTexture = foundSet.getTexture();
 
-            if (!foundSet)
-                continue;
+            setTexture->setAlpha(layerAlpha);
+            renderTransform.pos = {px, py};
 
-            const TileSet::Tile* setTile = foundSet->getTile(gid);
-            const auto setTexture = foundSet->getTexture();
-            if (!setTile || !setTexture)
-                continue;
-
-            setTexture->setAlpha(static_cast<float>(m_opacity));
-
-            renderTransform.pos = offset + Vec2{x * tileW, y * tileH};
-
-            const uint8_t flipFlags = tile.getFlipFlags();
-            const bool flipH = flipFlags & tmx::TileLayer::FlipFlag::Horizontal;
-            const bool flipV = flipFlags & tmx::TileLayer::FlipFlag::Vertical;
-            const bool flipD = flipFlags & tmx::TileLayer::FlipFlag::Diagonal;
-            double rotation = 0.0;
-            bool h = false;
-            bool v = false;
-
-            if (!flipD)
-            {
-                h = flipH;
-                v = flipV;
-            }
-            else
-            {
-                if (flipH && flipV)
-                {
-                    rotation = -M_PI_2;
-                    h = false;
-                    v = true;
-                }
-                else if (flipH)
-                {
-                    rotation = M_PI_2;
-                }
-                else if (flipV)
-                {
-                    rotation = -M_PI_2;
-                }
-                else
-                {
-                    rotation = M_PI_2;
-                    h = false;
-                    v = true;
-                }
-            }
-            renderTransform.angle = rotation;
-            setTexture->flip.h = h;
-            setTexture->flip.v = v;
+            const FlipInfo flipInfo = kFlipLUT[tile.getFlipFlags() & 0x7];
+            renderTransform.angle = flipInfo.rotation;
+            setTexture->flip.h = flipInfo.h;
+            setTexture->flip.v = flipInfo.v;
 
             renderer::draw(setTexture, renderTransform, setTile->getClipRect());
         }
@@ -513,25 +569,39 @@ void TileLayer::render()
 
 std::vector<TileLayer::TileResult> TileLayer::getFromArea(const Rect& area) const
 {
-    std::vector<TileLayer::TileResult> foundTiles;
-
     const double tileW = m_map->getTileSize().x;
     const double tileH = m_map->getTileSize().y;
     const auto mapW = static_cast<int>(m_map->getMapSize().x);
     const auto mapH = static_cast<int>(m_map->getMapSize().y);
 
+    // Early reject if the query area doesn't intersect this layer's bounds
+    {
+        const double layerLeft = offset.x;
+        const double layerTop = offset.y;
+        const double layerRight = layerLeft + static_cast<double>(mapW) * tileW;
+        const double layerBottom = layerTop + static_cast<double>(mapH) * tileH;
+        if (area.getRight() < layerLeft || area.getLeft() > layerRight ||
+            area.getBottom() < layerTop || area.getTop() > layerBottom)
+        {
+            return {};
+        }
+    }
+
     // Calculate the grid range (clamped to map boundaries)
-    const int startX =
+    const auto startX =
         std::max(0, static_cast<int>(std::floor((area.getLeft() - offset.x) / tileW)));
-    const int startY =
+    const auto startY =
         std::max(0, static_cast<int>(std::floor((area.getTop() - offset.y) / tileH)));
-    const int endX =
+    const auto endX =
         std::min(mapW - 1, static_cast<int>(std::floor((area.getRight() - offset.x) / tileW)));
-    const int endY =
+    const auto endY =
         std::min(mapH - 1, static_cast<int>(std::floor((area.getBottom() - offset.y) / tileH)));
 
-    // Reserve space to avoid frequent reallocations
-    foundTiles.reserve((endX - startX + 1) * (endY - startY + 1));
+    if (startX > endX || startY > endY)
+        return {};
+
+    std::vector<TileLayer::TileResult> foundTiles;
+    foundTiles.reserve(static_cast<size_t>((endX - startX + 1) * (endY - startY + 1)));
 
     for (int y = startY; y <= endY; ++y)
         for (int x = startX; x <= endX; ++x)
@@ -997,9 +1067,11 @@ Tile represents an instance of a tile in a TileLayer.
 Attributes:
     id (int): Global tile id (GID).
     flip_flags (int): Flags describing tile flips/rotations.
+    tileset_index (int): Index of the tileset this tile belongs to.
     )doc")
         .def_property_readonly("id", &TileLayer::Tile::getID)
-        .def_property_readonly("flip_flags", &TileLayer::Tile::getFlipFlags);
+        .def_property_readonly("flip_flags", &TileLayer::Tile::getFlipFlags)
+        .def_property_readonly("tileset_index", &TileLayer::Tile::getTilesetIndex);
     py::bind_vector<std::vector<TileLayer::Tile>>(tileLayerClass, "TileLayerTileList");
 
     py::classh<TileLayer::TileResult>(tileLayerClass, "TileResult", R"doc(

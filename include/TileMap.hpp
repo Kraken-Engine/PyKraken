@@ -49,7 +49,7 @@ class TileSet
 
     struct Tile
     {
-        uint32_t m_ID = 0;
+        uint32_t m_id = 0;
         std::array<int, 4> m_terrainIndices{};
         uint32_t m_probability = 100;
         Rect m_clipRect{};
@@ -57,7 +57,7 @@ class TileSet
       public:
         [[nodiscard]] uint32_t getID() const
         {
-            return m_ID;
+            return m_id;
         }
 
         [[nodiscard]] const std::array<int32_t, 4>& getTerrainIndices() const
@@ -144,6 +144,7 @@ class TileLayer : public Layer
     {
         uint32_t m_id = 0;
         uint8_t m_flipFlags = 0;
+        uint8_t m_tilesetIdx = static_cast<uint8_t>(-1);  // -1 = unknown
 
         friend class Map;
 
@@ -151,6 +152,11 @@ class TileLayer : public Layer
         [[nodiscard]] uint32_t getID() const
         {
             return m_id;
+        }
+
+        [[nodiscard]] uint8_t getTilesetIndex() const
+        {
+            return m_tilesetIdx;
         }
 
         [[nodiscard]] uint8_t getFlipFlags() const
