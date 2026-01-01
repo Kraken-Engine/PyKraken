@@ -20,9 +20,9 @@ void _bind(py::module_& module);
 
 void circle(const Circle& circle, const Color& color, int thickness = 0);
 
-void ellipse(const Rect& bounds, const Color& color, bool filled = false);
+void ellipse(Rect bounds, const Color& color, bool filled = false);
 
-void point(const Vec2& point, const Color& color);
+void point(Vec2 point, const Color& color);
 void points(const std::vector<Vec2>& points, const Color& color);
 void pointsFromNDArray(
     const py::array_t<double, py::array::c_style | py::array::forcecast>& arr, const Color& color

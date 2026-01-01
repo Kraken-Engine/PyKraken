@@ -572,31 +572,31 @@ const char* getBackendName(ma_backend backend)
 {
     switch (backend)
     {
-        case ma_backend_wasapi:
-            return "WASAPI";
-        case ma_backend_dsound:
-            return "DirectSound";
-        case ma_backend_winmm:
-            return "WinMM";
-        case ma_backend_coreaudio:
-            return "CoreAudio";
-        case ma_backend_alsa:
-            return "ALSA";
-        case ma_backend_pulseaudio:
-            return "PulseAudio";
-        case ma_backend_jack:
-            return "JACK";
-        case ma_backend_oss:
-            return "OSS";
-        case ma_backend_aaudio:
-            return "AAudio";
-        case ma_backend_opensl:
-            return "OpenSL ES";
-        case ma_backend_webaudio:
-            return "WebAudio";
-        case ma_backend_null:
-            return "Null";
-        default:
-            return "Unknown";
+    case ma_backend_wasapi:
+        return "WASAPI";
+    case ma_backend_dsound:
+        return "DirectSound";
+    case ma_backend_winmm:
+        return "WinMM";
+    case ma_backend_coreaudio:
+        return "CoreAudio";
+    case ma_backend_alsa:
+        return "ALSA";
+    case ma_backend_pulseaudio:
+        return "PulseAudio";
+    case ma_backend_jack:
+        return "JACK";
+    case ma_backend_oss:
+        return "OSS";
+    case ma_backend_aaudio:
+        return "AAudio";
+    case ma_backend_opensl:
+        return "OpenSL ES";
+    case ma_backend_webaudio:
+        return "WebAudio";
+    case ma_backend_null:
+        return "Null";
+    default:
+        return "Unknown";
     }
 }

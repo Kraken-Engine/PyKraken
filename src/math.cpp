@@ -1,6 +1,7 @@
 #include "Math.hpp"
 
 #include <SDL3/SDL.h>
+#include <pybind11/stl_bind.h>
 
 #include <algorithm>
 
@@ -63,6 +64,13 @@ void Vec2::rotate(const double rad)
     y = newY;
 }
 
+Vec2 Vec2::rotated(const double rad) const
+{
+    Vec2 result = *this;
+    result.rotate(rad);
+    return result;
+}
+
 PolarCoordinate Vec2::toPolar() const
 {
     return {getAngle(), getLength()};
@@ -70,7 +78,7 @@ PolarCoordinate Vec2::toPolar() const
 
 void Vec2::scaleToLength(const double scalar)
 {
-    if (x == 0.0 && y == 0.0 || scalar == 1.0)
+    if (isZero() || scalar == 1.0)
         return;
 
     if (scalar == 0.0)
@@ -85,9 +93,16 @@ void Vec2::scaleToLength(const double scalar)
     y *= scale;
 }
 
+Vec2 Vec2::scaledToLength(const double scalar) const
+{
+    Vec2 result = *this;
+    result.scaleToLength(scalar);
+    return result;
+}
+
 Vec2 Vec2::project(const Vec2& other) const
 {
-    if (x == 0.0 && y == 0.0)
+    if (other.isZero())
         return {};
 
     const double lenSq = other.x * other.x + other.y * other.y;
@@ -106,12 +121,19 @@ Vec2 Vec2::reflect(const Vec2& other) const
 
 void Vec2::normalize()
 {
-    if (x == 0.0 && y == 0.0)
+    if (isZero())
         return;
 
     const double length = getLength();
     x /= length;
     y /= length;
+}
+
+Vec2 Vec2::normalized() const
+{
+    Vec2 result = *this;
+    result.normalize();
+    return result;
 }
 
 double Vec2::distanceTo(const Vec2& other) const
@@ -122,6 +144,30 @@ double Vec2::distanceTo(const Vec2& other) const
 double Vec2::distanceSquaredTo(const Vec2& other) const
 {
     return (other - *this).getLengthSquared();
+}
+
+void Vec2::moveToward(const Vec2& target, const double maxStep)
+{
+    if (maxStep <= 0.0)
+        return;
+
+    const Vec2 diff = target - *this;
+    const double dist = diff.getLength();
+
+    if (dist <= maxStep)
+    {
+        *this = target;
+        return;
+    }
+
+    *this += diff / dist * maxStep;
+}
+
+Vec2 Vec2::movedToward(const Vec2& target, const double maxStep) const
+{
+    Vec2 result = *this;
+    result.moveToward(target, maxStep);
+    return result;
 }
 
 Vec2 Vec2::operator-() const
@@ -187,22 +233,6 @@ bool Vec2::operator!=(const Vec2& other) const
 {
     return !(*this == other);
 }
-bool Vec2::operator<(const Vec2& other) const
-{
-    return x < other.x && y < other.y;
-}
-bool Vec2::operator>(const Vec2& other) const
-{
-    return x > other.x && y > other.y;
-}
-bool Vec2::operator<=(const Vec2& other) const
-{
-    return !(*this > other);
-}
-bool Vec2::operator>=(const Vec2& other) const
-{
-    return !(*this < other);
-}
 
 Vec2::operator SDL_Point() const
 {
@@ -215,39 +245,9 @@ Vec2::operator SDL_FPoint() const
 
 namespace math
 {
-Vec2 scaleToLength(const Vec2& vec, const double scalar)
-{
-    if (vec.x == 0.0 && vec.y == 0.0 || scalar == 1.0)
-        return vec;
-
-    if (scalar == 0.0)
-        return {};
-
-    const double scale = scalar / vec.getLength();
-    return {vec.x * scale, vec.y * scale};
-}
-
 Vec2 fromPolar(const double rad, const double radius)
 {
     return {radius * std::cos(rad), radius * std::sin(rad)};
-}
-
-Vec2 fromPolar(const PolarCoordinate& polar)
-{
-    return fromPolar(polar.angle, polar.radius);
-}
-
-Vec2 normalize(Vec2 vec)
-{
-    vec.normalize();
-    return vec;
-}
-
-Vec2 rotate(const Vec2& vec, const double rad)
-{
-    Vec2 r = vec;
-    r.rotate(rad);
-    return r;
 }
 
 Vec2 clampVec(const Vec2& vec, const Vec2& min, const Vec2& max)
@@ -331,6 +331,8 @@ Methods:
     distance_squared_to: Measure squared distance to another Vec2.
         )doc");
 
+    py::bind_vector<std::vector<kn::Vec2>>(module, "Vec2List");
+
     py::classh<Transform>(module, "Transform", R"doc(
 Transform represents a 2D transformation with position, size, rotation, and scale.
 
@@ -352,7 +354,14 @@ Attributes:
                     {
                         const auto pos = posObj.is_none() ? Vec2{} : posObj.cast<Vec2>();
                         const auto size = sizeObj.is_none() ? Vec2{} : sizeObj.cast<Vec2>();
-                        const auto scale = scaleObj.is_none() ? Vec2{1.0} : scaleObj.cast<Vec2>();
+                        Vec2 scale{1.0};
+                        if (!scaleObj.is_none())
+                        {
+                            const bool isNumeric = py::isinstance<py::int_>(scaleObj) ||
+                                                   py::isinstance<py::float_>(scaleObj);
+                            scale = isNumeric ? Vec2{scaleObj.cast<double>()}
+                                              : scaleObj.cast<Vec2>();
+                        }
                         const auto pivot = pivotObj.is_none() ? Vec2{0.5} : pivotObj.cast<Vec2>();
                         return {pos, size, angle, scale, anchor, pivot};
                     }
@@ -672,14 +681,38 @@ Rotate this Vec2 in place.
 Args:
     radians (float): Rotation angle in radians.
         )doc")
+        .def("rotated", &Vec2::rotated, py::arg("radians"), R"doc(
+Return a new Vec2 rotated by a specified angle.
+
+Args:
+    radians (float): Rotation angle in radians.
+
+Returns:
+    Vec2: A new vector rotated by the given angle.
+        )doc")
         .def("normalize", &Vec2::normalize, R"doc(
 Normalize this Vec2 in place.
+        )doc")
+        .def("normalized", &Vec2::normalized, R"doc(
+Return a new normalized Vec2.
+
+Returns:
+    Vec2: A new vector with unit length.
         )doc")
         .def("scale_to_length", &Vec2::scaleToLength, py::arg("length"), R"doc(
 Scale this Vec2 to a specific magnitude.
 
 Args:
     length (float): Target vector length.
+        )doc")
+        .def("scaled_to_length", &Vec2::scaledToLength, py::arg("length"), R"doc(
+Return a new Vec2 scaled to a specific magnitude.
+
+Args:
+    length (float): Target vector length.
+
+Returns:
+    Vec2: A new vector scaled to the specified length.
         )doc")
         .def("distance_to", &Vec2::distanceTo, py::arg("other"), R"doc(
 Compute the Euclidean distance to another Vec2.
@@ -704,6 +737,23 @@ Convert this Vec2 to polar coordinates.
 
 Returns:
     PolarCoordinate: Polar representation with angle and length.
+        )doc")
+        .def("move_toward", &Vec2::moveToward, py::arg("target"), py::arg("delta"), R"doc(
+Move this Vec2 toward a target Vec2 by a specified delta.
+
+Args:
+    target (Vec2): The target vector to move towards.
+    delta (float): The maximum distance to move.
+        )doc")
+        .def("moved_toward", &Vec2::movedToward, py::arg("target"), py::arg("delta"), R"doc(
+Return a new Vec2 moved toward a target Vec2 by a specified delta.
+
+Args:
+    target (Vec2): The target vector to move towards.
+    delta (float): The maximum distance to move.
+
+Returns:
+    Vec2: A new vector moved toward the target.
         )doc")
 
         // Dunder methods
@@ -781,29 +831,12 @@ Returns:
             }
         )
         .def("__eq__", &Vec2::operator==, py::arg("other"))
-        .def("__ne__", &Vec2::operator!=, py::arg("other"))
-        .def("__lt__", &Vec2::operator<, py::arg("other"))
-        .def("__le__", &Vec2::operator<=, py::arg("other"))
-        .def("__gt__", &Vec2::operator>, py::arg("other"))
-        .def("__ge__", &Vec2::operator>=, py::arg("other"));
+        .def("__ne__", &Vec2::operator!=, py::arg("other"));
     py::implicitly_convertible<py::sequence, Vec2>();
 
     auto subMath = module.def_submodule("math", "Math related functions");
 
-    subMath.def("scale_to_length", &scaleToLength, py::arg("vector"), py::arg("length"), R"doc(
-Scale a vector to a given length.
-
-Args:
-    vector (Vec2): The input vector.
-    length (float): The target length.
-
-Returns:
-    Vec2: A new vector scaled to the specified length.
-        )doc");
-
-    subMath.def(
-        "from_polar", py::overload_cast<double, double>(&fromPolar), py::arg("angle"),
-        py::arg("radius"), R"doc(
+    subMath.def("from_polar", &fromPolar, py::arg("angle"), py::arg("radius"), R"doc(
 Convert polar coordinates to a Cartesian vector.
 
 Args:
@@ -812,30 +845,6 @@ Args:
 
 Returns:
     Vec2: The equivalent Cartesian vector.
-        )doc"
-    );
-
-    subMath.def(
-        "from_polar", py::overload_cast<const PolarCoordinate&>(&fromPolar), py::arg("polar"),
-        R"doc(
-Convert a PolarCoordinate object to a Cartesian vector.
-
-Args:
-    polar (PolarCoordinate): The polar coordinate to convert.
-
-Returns:
-    Vec2: The equivalent Cartesian vector.
-        )doc"
-    );
-
-    subMath.def("normalize", &normalize, py::arg("vec"), R"doc(
-Normalize a vector to unit length.
-
-Args:
-    vec (Vec2): The input vector.
-
-Returns:
-    Vec2: A new normalized vector.
         )doc");
 
     subMath.def(
@@ -970,17 +979,6 @@ Args:
 
 Returns:
     float: The angle between the vectors in radians [0, π].
-        )doc");
-
-    subMath.def("rotate", &rotate, py::arg("vec"), py::arg("angle"), R"doc(
-Rotate a vector by an angle.
-
-Args:
-    vec (Vec2): The vector to rotate.
-    angle (float): Rotation angle in radians.
-
-Returns:
-    Vec2: A new rotated vector.
         )doc");
 }
 }  // namespace math

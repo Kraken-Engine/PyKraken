@@ -4,7 +4,7 @@ Math related functions
 from __future__ import annotations
 import pykraken._core
 import typing
-__all__: list[str] = ['angle_between', 'clamp', 'cross', 'dot', 'from_polar', 'lerp', 'normalize', 'remap', 'rotate', 'scale_to_length', 'to_deg', 'to_rad']
+__all__: list[str] = ['angle_between', 'clamp', 'cross', 'dot', 'from_polar', 'lerp', 'remap', 'to_deg', 'to_rad']
 def angle_between(a: pykraken._core.Vec2, b: pykraken._core.Vec2) -> float:
     """
     Calculate the angle between two vectors.
@@ -64,7 +64,6 @@ def dot(a: pykraken._core.Vec2, b: pykraken._core.Vec2) -> float:
     Returns:
         float: The dot product (a.x * b.x + a.y * b.y).
     """
-@typing.overload
 def from_polar(angle: typing.SupportsFloat, radius: typing.SupportsFloat) -> pykraken._core.Vec2:
     """
     Convert polar coordinates to a Cartesian vector.
@@ -72,17 +71,6 @@ def from_polar(angle: typing.SupportsFloat, radius: typing.SupportsFloat) -> pyk
     Args:
         angle (float): The angle in radians.
         radius (float): The radius/distance from origin.
-    
-    Returns:
-        Vec2: The equivalent Cartesian vector.
-    """
-@typing.overload
-def from_polar(polar: pykraken._core.PolarCoordinate) -> pykraken._core.Vec2:
-    """
-    Convert a PolarCoordinate object to a Cartesian vector.
-    
-    Args:
-        polar (PolarCoordinate): The polar coordinate to convert.
     
     Returns:
         Vec2: The equivalent Cartesian vector.
@@ -113,16 +101,6 @@ def lerp(a: typing.SupportsFloat, b: typing.SupportsFloat, t: typing.SupportsFlo
     Returns:
         float: The interpolated value.
     """
-def normalize(vec: pykraken._core.Vec2) -> pykraken._core.Vec2:
-    """
-    Normalize a vector to unit length.
-    
-    Args:
-        vec (Vec2): The input vector.
-    
-    Returns:
-        Vec2: A new normalized vector.
-    """
 def remap(in_min: typing.SupportsFloat, in_max: typing.SupportsFloat, out_min: typing.SupportsFloat, out_max: typing.SupportsFloat, value: typing.SupportsFloat) -> float:
     """
     Remap a value from one range to another.
@@ -139,28 +117,6 @@ def remap(in_min: typing.SupportsFloat, in_max: typing.SupportsFloat, out_min: t
     
     Raises:
         ValueError: If in_min equals in_max.
-    """
-def rotate(vec: pykraken._core.Vec2, angle: typing.SupportsFloat) -> pykraken._core.Vec2:
-    """
-    Rotate a vector by an angle.
-    
-    Args:
-        vec (Vec2): The vector to rotate.
-        angle (float): Rotation angle in radians.
-    
-    Returns:
-        Vec2: A new rotated vector.
-    """
-def scale_to_length(vector: pykraken._core.Vec2, length: typing.SupportsFloat) -> pykraken._core.Vec2:
-    """
-    Scale a vector to a given length.
-    
-    Args:
-        vector (Vec2): The input vector.
-        length (float): The target length.
-    
-    Returns:
-        Vec2: A new vector scaled to the specified length.
     """
 def to_deg(radians: typing.SupportsFloat) -> float:
     """

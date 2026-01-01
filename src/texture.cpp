@@ -127,10 +127,22 @@ Texture::Texture(
     const TextureScaleMode finalScaleMode = (scaleMode == TextureScaleMode::DEFAULT)
                                                 ? renderer::getDefaultScaleMode()
                                                 : scaleMode;
-    SDL_SetTextureScaleMode(m_texPtr, static_cast<SDL_ScaleMode>(finalScaleMode));
+    if (!SDL_SetTextureScaleMode(m_texPtr, static_cast<SDL_ScaleMode>(finalScaleMode)))
+    {
+        SDL_DestroyTexture(m_texPtr);
+        m_texPtr = nullptr;
+        throw std::runtime_error(
+            "Failed to set texture scale mode: " + std::string(SDL_GetError())
+        );
+    }
 
     float w, h;
-    SDL_GetTextureSize(m_texPtr, &w, &h);
+    if (!SDL_GetTextureSize(m_texPtr, &w, &h))
+    {
+        SDL_DestroyTexture(m_texPtr);
+        m_texPtr = nullptr;
+        throw std::runtime_error("Failed to get texture size: " + std::string(SDL_GetError()));
+    }
     m_width = static_cast<double>(w);
     m_height = static_cast<double>(h);
 }

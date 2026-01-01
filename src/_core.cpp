@@ -1,3 +1,7 @@
+// clang-format off
+#include "opaque_types.hpp"
+// clang-format on
+
 #include "AnimationController.hpp"
 #include "Camera.hpp"
 #include "Circle.hpp"
@@ -32,8 +36,8 @@
 #include "Window.hpp"
 
 constexpr int KRAKEN_MAJOR_VERSION = 1;
-constexpr int KRAKEN_MINOR_VERSION = 4;
-constexpr int KRAKEN_MICRO_VERSION = 2;
+constexpr int KRAKEN_MINOR_VERSION = 5;
+constexpr int KRAKEN_MICRO_VERSION = 0;
 
 constexpr const char* getPlatform();
 constexpr const char* getArchitecture();
@@ -125,7 +129,7 @@ Tear down the Kraken engine subsystems.
     kn::draw::_bind(m);
     kn::animation_controller::_bind(m);
     kn::orchestrator::_bind(m);
-    kn::tile_map::_bind(m);
+    kn::tilemap::_bind(m);
     kn::shader_state::_bind(m);
     kn::viewport::_bind(m);
 }

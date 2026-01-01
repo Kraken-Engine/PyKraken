@@ -1,6 +1,6 @@
 #include "Input.hpp"
 
-#include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
 
 #include <algorithm>
 #include <unordered_map>
@@ -325,6 +325,8 @@ Args:
     slot (int, optional): Gamepad slot (default is 0).
         )doc"
         );
+
+    py::bind_vector<std::vector<InputAction>>(module, "InputActionList");
 
     auto subInput = module.def_submodule("input", "Input handling and action binding");
 

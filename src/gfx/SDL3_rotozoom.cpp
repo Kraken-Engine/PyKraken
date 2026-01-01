@@ -926,82 +926,81 @@ SDL_Surface* rotateSurface90Degrees(SDL_Surface* src, int numClockwiseTurns)
 
     switch (normalizedClockwiseTurns)
     {
-        case 0: /* Make a copy of the surface */
-        {
-            /* Unfortunately SDL_BlitSurface cannot be used to make a copy of the surface
-            since it does not preserve alpha. */
+    case 0: /* Make a copy of the surface */
+    {
+        /* Unfortunately SDL_BlitSurface cannot be used to make a copy of the surface
+        since it does not preserve alpha. */
 
-            if (src->pitch == dst->pitch)
+        if (src->pitch == dst->pitch)
+        {
+            /* If the pitch is the same for both surfaces, the memory can be copied all at once.
+             */
+            memcpy(dst->pixels, src->pixels, (src->h * src->pitch));
+        }
+        else
+        {
+            /* If the pitch differs, copy each row separately */
+            srcBuf = (Uint8*)(src->pixels);
+            dstBuf = (Uint8*)(dst->pixels);
+            bpr = src->w * bpp;
+            for (row = 0; row < src->h; row++)
             {
-                /* If the pitch is the same for both surfaces, the memory can be copied all at once.
-                 */
-                memcpy(dst->pixels, src->pixels, (src->h * src->pitch));
-            }
-            else
-            {
-                /* If the pitch differs, copy each row separately */
-                srcBuf = (Uint8*)(src->pixels);
-                dstBuf = (Uint8*)(dst->pixels);
-                bpr = src->w * bpp;
-                for (row = 0; row < src->h; row++)
-                {
-                    memcpy(dstBuf, srcBuf, bpr);
-                    srcBuf += src->pitch;
-                    dstBuf += dst->pitch;
-                }
+                memcpy(dstBuf, srcBuf, bpr);
+                srcBuf += src->pitch;
+                dstBuf += dst->pitch;
             }
         }
-        break;
+    }
+    break;
 
-            /* rotate clockwise */
-        case 1: /* rotated 90 degrees clockwise */
+        /* rotate clockwise */
+    case 1: /* rotated 90 degrees clockwise */
+    {
+        for (row = 0; row < src->h; ++row)
         {
-            for (row = 0; row < src->h; ++row)
+            srcBuf = (Uint8*)(src->pixels) + (row * src->pitch);
+            dstBuf = (Uint8*)(dst->pixels) + (dst->w - row - 1) * bpp;
+            for (col = 0; col < src->w; ++col)
             {
-                srcBuf = (Uint8*)(src->pixels) + (row * src->pitch);
-                dstBuf = (Uint8*)(dst->pixels) + (dst->w - row - 1) * bpp;
-                for (col = 0; col < src->w; ++col)
-                {
-                    memcpy(dstBuf, srcBuf, bpp);
-                    srcBuf += bpp;
-                    dstBuf += dst->pitch;
-                }
+                memcpy(dstBuf, srcBuf, bpp);
+                srcBuf += bpp;
+                dstBuf += dst->pitch;
             }
         }
-        break;
+    }
+    break;
 
-        case 2: /* rotated 180 degrees clockwise */
+    case 2: /* rotated 180 degrees clockwise */
+    {
+        for (row = 0; row < src->h; ++row)
         {
-            for (row = 0; row < src->h; ++row)
+            srcBuf = (Uint8*)(src->pixels) + (row * src->pitch);
+            dstBuf = (Uint8*)(dst->pixels) + ((dst->h - row - 1) * dst->pitch) + (dst->w - 1) * bpp;
+            for (col = 0; col < src->w; ++col)
             {
-                srcBuf = (Uint8*)(src->pixels) + (row * src->pitch);
-                dstBuf = (Uint8*)(dst->pixels) + ((dst->h - row - 1) * dst->pitch) +
-                         (dst->w - 1) * bpp;
-                for (col = 0; col < src->w; ++col)
-                {
-                    memcpy(dstBuf, srcBuf, bpp);
-                    srcBuf += bpp;
-                    dstBuf -= bpp;
-                }
+                memcpy(dstBuf, srcBuf, bpp);
+                srcBuf += bpp;
+                dstBuf -= bpp;
             }
         }
-        break;
+    }
+    break;
 
-        case 3: /* rotated 270 degrees clockwise */
+    case 3: /* rotated 270 degrees clockwise */
+    {
+        for (row = 0; row < src->h; ++row)
         {
-            for (row = 0; row < src->h; ++row)
+            srcBuf = (Uint8*)(src->pixels) + (row * src->pitch);
+            dstBuf = (Uint8*)(dst->pixels) + (row * bpp) + ((dst->h - 1) * dst->pitch);
+            for (col = 0; col < src->w; ++col)
             {
-                srcBuf = (Uint8*)(src->pixels) + (row * src->pitch);
-                dstBuf = (Uint8*)(dst->pixels) + (row * bpp) + ((dst->h - 1) * dst->pitch);
-                for (col = 0; col < src->w; ++col)
-                {
-                    memcpy(dstBuf, srcBuf, bpp);
-                    srcBuf += bpp;
-                    dstBuf -= dst->pitch;
-                }
+                memcpy(dstBuf, srcBuf, bpp);
+                srcBuf += bpp;
+                dstBuf -= dst->pitch;
             }
         }
-        break;
+    }
+    break;
     }
     /* end switch */
 

@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.23)
 project(pykraken LANGUAGES CXX)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 if(CMAKE_VERSION VERSION_GREATER_EQUAL "4.0")
   set(CMAKE_POLICY_VERSION_MINIMUM "3.5" CACHE STRING "" FORCE)
 endif()
@@ -12,6 +14,8 @@ set(PYK_MODULE_NAME    "_core"    CACHE STRING "Python extension module name")
 set(PYK_PACKAGE_DIR    "pykraken" CACHE STRING "Where to install the module inside the wheel")
 set(PYK_SOURCES_GLOB   "src/*.cpp;src/**/*.cpp" CACHE STRING "Glob(s) for C++ sources")
 option(PYK_VENDOR_SDL  "Vendor SDL3, SDL_image, SDL_ttf (static) via FetchContent" ON)
+option(PYK_VENDOR_TMXLITE "Vendor tmxlite (static) via FetchContent" ON)
+option(PYK_VENDOR_PYBIND11 "Vendor pybind11 via FetchContent" OFF)
 
 # -------------------------
 # Tooling
@@ -25,11 +29,21 @@ if (MSVC)
   add_compile_options(/bigobj /utf-8)
 endif()
 
+include(FetchContent)
+
 # -------------------------
 # pybind11
 # -------------------------
-# Expect pybind11 to be provided by your build system (e.g., scikit-build-core)
-find_package(pybind11 CONFIG REQUIRED)
+if (PYK_VENDOR_PYBIND11)
+  FetchContent_Declare(
+      pybind11
+      GIT_REPOSITORY https://github.com/pybind/pybind11.git
+      GIT_TAG        v3.0.1
+  )
+  FetchContent_MakeAvailable(pybind11)
+else()
+  find_package(pybind11 CONFIG REQUIRED)
+endif()
 file(GLOB_RECURSE PYK_SOURCES CONFIGURE_DEPENDS ${PYK_SOURCES_GLOB})
 if (PYK_SOURCES STREQUAL "")
   message(FATAL_ERROR "No sources found. Adjust PYK_SOURCES_GLOB (currently: ${PYK_SOURCES_GLOB}).")
@@ -52,8 +66,6 @@ set_target_properties(${PYK_MODULE_NAME} PROPERTIES
 # -------------------------
 # SDL3, SDL_image, SDL_ttf
 # -------------------------
-include(FetchContent)
-
 if (PYK_VENDOR_SDL)
   # Global: prefer static
   set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
@@ -113,8 +125,36 @@ foreach(lib SDL3 SDL3_image SDL3_ttf)
   endif()
 endforeach()
 
+# -------------------------
+# tmxlite
+# -------------------------
+if (PYK_VENDOR_TMXLITE)
+  set(TMXLITE_STATIC_LIB ON CACHE BOOL "" FORCE)
+  FetchContent_Declare(tmxlite
+      GIT_REPOSITORY https://github.com/fallahn/tmxlite.git
+      GIT_TAG        v1.4.4
+      GIT_SHALLOW    TRUE
+      SOURCE_SUBDIR  "tmxlite"
+  )
+  FetchContent_MakeAvailable(tmxlite)
+
+#   if (TARGET tmxlite)
+#     target_include_directories(${PYK_MODULE_NAME} PRIVATE
+#       $<TARGET_PROPERTY:tmxlite,INTERFACE_INCLUDE_DIRECTORIES>
+#     )
+#   else()
+#     message(FATAL_ERROR "Vendored tmxlite target was not created!")
+#   endif()
+else()
+  find_package(tmxlite CONFIG REQUIRED)
+endif()
+
+# -------------------------
+# Link libraries
+# -------------------------
 target_link_libraries(${PYK_MODULE_NAME} PRIVATE
   ${_sdl_targets}
+  tmxlite
 )
 
 # -------------------------

@@ -74,15 +74,15 @@ void Font::setAlignment(const Align alignment) const
 {
     switch (alignment)
     {
-        case Align::Left:
-            TTF_SetFontWrapAlignment(m_font, TTF_HORIZONTAL_ALIGN_LEFT);
-            break;
-        case Align::Center:
-            TTF_SetFontWrapAlignment(m_font, TTF_HORIZONTAL_ALIGN_CENTER);
-            break;
-        case Align::Right:
-            TTF_SetFontWrapAlignment(m_font, TTF_HORIZONTAL_ALIGN_RIGHT);
-            break;
+    case Align::Left:
+        TTF_SetFontWrapAlignment(m_font, TTF_HORIZONTAL_ALIGN_LEFT);
+        break;
+    case Align::Center:
+        TTF_SetFontWrapAlignment(m_font, TTF_HORIZONTAL_ALIGN_CENTER);
+        break;
+    case Align::Right:
+        TTF_SetFontWrapAlignment(m_font, TTF_HORIZONTAL_ALIGN_RIGHT);
+        break;
     }
 }
 
@@ -91,14 +91,14 @@ Align Font::getAlignment() const
     const TTF_HorizontalAlignment align = TTF_GetFontWrapAlignment(m_font);
     switch (align)
     {
-        case TTF_HORIZONTAL_ALIGN_LEFT:
-            return Align::Left;
-        case TTF_HORIZONTAL_ALIGN_CENTER:
-            return Align::Center;
-        case TTF_HORIZONTAL_ALIGN_RIGHT:
-            return Align::Right;
-        default:
-            return Align::Left;
+    case TTF_HORIZONTAL_ALIGN_LEFT:
+        return Align::Left;
+    case TTF_HORIZONTAL_ALIGN_CENTER:
+        return Align::Center;
+    case TTF_HORIZONTAL_ALIGN_RIGHT:
+        return Align::Right;
+    default:
+        return Align::Left;
     }
 }
 
@@ -106,21 +106,21 @@ void Font::setHinting(const font::Hinting hinting) const
 {
     switch (hinting)
     {
-        case font::Hinting::Normal:
-            TTF_SetFontHinting(m_font, TTF_HINTING_NORMAL);
-            break;
-        case font::Hinting::Light:
-            TTF_SetFontHinting(m_font, TTF_HINTING_LIGHT);
-            break;
-        case font::Hinting::Mono:
-            TTF_SetFontHinting(m_font, TTF_HINTING_MONO);
-            break;
-        case font::Hinting::LightSubpixel:
-            TTF_SetFontHinting(m_font, TTF_HINTING_LIGHT_SUBPIXEL);
-            break;
-        case font::Hinting::None:
-            TTF_SetFontHinting(m_font, TTF_HINTING_NONE);
-            break;
+    case font::Hinting::Normal:
+        TTF_SetFontHinting(m_font, TTF_HINTING_NORMAL);
+        break;
+    case font::Hinting::Light:
+        TTF_SetFontHinting(m_font, TTF_HINTING_LIGHT);
+        break;
+    case font::Hinting::Mono:
+        TTF_SetFontHinting(m_font, TTF_HINTING_MONO);
+        break;
+    case font::Hinting::LightSubpixel:
+        TTF_SetFontHinting(m_font, TTF_HINTING_LIGHT_SUBPIXEL);
+        break;
+    case font::Hinting::None:
+        TTF_SetFontHinting(m_font, TTF_HINTING_NONE);
+        break;
     }
 }
 
@@ -129,18 +129,18 @@ font::Hinting Font::getHinting() const
     const TTF_HintingFlags hinting = TTF_GetFontHinting(m_font);
     switch (hinting)
     {
-        case TTF_HINTING_NORMAL:
-            return font::Hinting::Normal;
-        case TTF_HINTING_LIGHT:
-            return font::Hinting::Light;
-        case TTF_HINTING_MONO:
-            return font::Hinting::Mono;
-        case TTF_HINTING_LIGHT_SUBPIXEL:
-            return font::Hinting::LightSubpixel;
-        case TTF_HINTING_NONE:
-            return font::Hinting::None;
-        default:
-            return font::Hinting::Normal;
+    case TTF_HINTING_NORMAL:
+        return font::Hinting::Normal;
+    case TTF_HINTING_LIGHT:
+        return font::Hinting::Light;
+    case TTF_HINTING_MONO:
+        return font::Hinting::Mono;
+    case TTF_HINTING_LIGHT_SUBPIXEL:
+        return font::Hinting::LightSubpixel;
+    case TTF_HINTING_NONE:
+        return font::Hinting::None;
+    default:
+        return font::Hinting::Normal;
     }
 }
 

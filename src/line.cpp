@@ -131,16 +131,16 @@ Args:
             {
                 switch (i)
                 {
-                    case 0:
-                        return self.ax;
-                    case 1:
-                        return self.ay;
-                    case 2:
-                        return self.bx;
-                    case 3:
-                        return self.by;
-                    default:
-                        throw py::index_error("Index out of range");
+                case 0:
+                    return self.ax;
+                case 1:
+                    return self.ay;
+                case 2:
+                    return self.bx;
+                case 3:
+                    return self.by;
+                default:
+                    throw py::index_error("Index out of range");
                 }
             },
             py::arg("index")

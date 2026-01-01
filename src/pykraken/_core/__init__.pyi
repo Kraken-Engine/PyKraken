@@ -17,10 +17,11 @@ from . import mouse
 from . import pixel_array
 from . import rect
 from . import renderer
+from . import tilemap
 from . import time
 from . import viewport
 from . import window
-__all__: list[str] = ['AUDIO_DEVICE_ADDED', 'AUDIO_DEVICE_FORMAT_CHANGED', 'AUDIO_DEVICE_REMOVED', 'Align', 'Anchor', 'AnimationController', 'Audio', 'AudioStream', 'CAMERA_DEVICE_ADDED', 'CAMERA_DEVICE_APPROVED', 'CAMERA_DEVICE_DENIED', 'CAMERA_DEVICE_REMOVED', 'CLIPBOARD_UPDATE', 'C_BACK', 'C_DPAD_DOWN', 'C_DPAD_LEFT', 'C_DPAD_RIGHT', 'C_DPAD_UP', 'C_EAST', 'C_GUIDE', 'C_LSHOULDER', 'C_LSTICK', 'C_LTRIGGER', 'C_LX', 'C_LY', 'C_NORTH', 'C_PS3', 'C_PS4', 'C_PS5', 'C_RSHOULDER', 'C_RSTICK', 'C_RTRIGGER', 'C_RX', 'C_RY', 'C_SOUTH', 'C_STANDARD', 'C_START', 'C_SWITCH_JOYCON_LEFT', 'C_SWITCH_JOYCON_PAIR', 'C_SWITCH_JOYCON_RIGHT', 'C_SWITCH_PRO', 'C_WEST', 'C_XBOX_360', 'C_XBOX_ONE', 'Camera', 'Circle', 'Color', 'DID_ENTER_BACKGROUND', 'DID_ENTER_FOREGROUND', 'DISPLAY_ADDED', 'DISPLAY_CONTENT_SCALE_CHANGED', 'DISPLAY_CURRENT_MODE_CHANGED', 'DISPLAY_DESKTOP_MODE_CHANGED', 'DISPLAY_MOVED', 'DISPLAY_ORIENTATION', 'DISPLAY_REMOVED', 'DISPLAY_USABLE_BOUNDS_CHANGED', 'DROP_BEGIN', 'DROP_COMPLETE', 'DROP_FILE', 'DROP_POSITION', 'DROP_TEXT', 'EasingAnimation', 'Effect', 'Event', 'EventType', 'FINGER_CANCELED', 'FINGER_DOWN', 'FINGER_MOTION', 'FINGER_UP', 'Font', 'FontHint', 'GAMEPAD_ADDED', 'GAMEPAD_AXIS_MOTION', 'GAMEPAD_BUTTON_DOWN', 'GAMEPAD_BUTTON_UP', 'GAMEPAD_REMAPPED', 'GAMEPAD_REMOVED', 'GAMEPAD_SENSOR_UPDATE', 'GAMEPAD_STEAM_HANDLE_UPDATED', 'GAMEPAD_TOUCHPAD_DOWN', 'GAMEPAD_TOUCHPAD_MOTION', 'GAMEPAD_TOUCHPAD_UP', 'GAMEPAD_UPDATE_COMPLETE', 'GamepadAxis', 'GamepadButton', 'GamepadType', 'InputAction', 'KEYBOARD_ADDED', 'KEYBOARD_REMOVED', 'KEYMAP_CHANGED', 'KEY_DOWN', 'KEY_UP', 'K_0', 'K_1', 'K_2', 'K_3', 'K_4', 'K_5', 'K_6', 'K_7', 'K_8', 'K_9', 'K_AGAIN', 'K_AMPERSAND', 'K_APPLICATION', 'K_ASTERISK', 'K_AT', 'K_BACKSLASH', 'K_BACKSPACE', 'K_CALL', 'K_CAPS', 'K_CARET', 'K_CHANNEL_DEC', 'K_CHANNEL_INC', 'K_COLON', 'K_COMMA', 'K_COPY', 'K_CUT', 'K_DBLQUOTE', 'K_DEL', 'K_DOLLAR', 'K_DOWN', 'K_END', 'K_ENDCALL', 'K_EQ', 'K_ESC', 'K_EXCLAIM', 'K_EXECUTE', 'K_F1', 'K_F10', 'K_F11', 'K_F12', 'K_F13', 'K_F14', 'K_F15', 'K_F2', 'K_F3', 'K_F4', 'K_F5', 'K_F6', 'K_F7', 'K_F8', 'K_F9', 'K_FIND', 'K_GRAVE', 'K_GT', 'K_HASH', 'K_HELP', 'K_HOME', 'K_INS', 'K_KP_0', 'K_KP_1', 'K_KP_2', 'K_KP_3', 'K_KP_4', 'K_KP_5', 'K_KP_6', 'K_KP_7', 'K_KP_8', 'K_KP_9', 'K_KP_DIV', 'K_KP_ENTER', 'K_KP_MINUS', 'K_KP_MULT', 'K_KP_PERIOD', 'K_KP_PLUS', 'K_LALT', 'K_LBRACE', 'K_LBRACKET', 'K_LCTRL', 'K_LEFT', 'K_LGUI', 'K_LPAREN', 'K_LSHIFT', 'K_LT', 'K_MEDIA_EJECT', 'K_MEDIA_FF', 'K_MEDIA_NEXT', 'K_MEDIA_PAUSE', 'K_MEDIA_PLAY', 'K_MEDIA_PLAY_PAUSE', 'K_MEDIA_PREV', 'K_MEDIA_REC', 'K_MEDIA_REWIND', 'K_MEDIA_SELECT', 'K_MEDIA_STOP', 'K_MENU', 'K_MINUS', 'K_MODE', 'K_MUTE', 'K_NUMLOCK', 'K_PASTE', 'K_PAUSE', 'K_PERCENT', 'K_PERIOD', 'K_PGDOWN', 'K_PGUP', 'K_PIPE', 'K_PLUS', 'K_POWER', 'K_PRTSCR', 'K_QUESTION', 'K_RALT', 'K_RBRACE', 'K_RBRACKET', 'K_RCTRL', 'K_RETURN', 'K_RGUI', 'K_RIGHT', 'K_RPAREN', 'K_RSHIFT', 'K_SCRLK', 'K_SELECT', 'K_SEMICOLON', 'K_SGLQUOTE', 'K_SLASH', 'K_SLEEP', 'K_SOFTLEFT', 'K_SOFTRIGHT', 'K_SPACE', 'K_STOP', 'K_TAB', 'K_TILDE', 'K_UNDERSCORE', 'K_UNDO', 'K_UNKNOWN', 'K_UP', 'K_VOLDOWN', 'K_VOLUP', 'K_WAKE', 'K_a', 'K_b', 'K_c', 'K_d', 'K_e', 'K_f', 'K_g', 'K_h', 'K_i', 'K_j', 'K_k', 'K_l', 'K_m', 'K_n', 'K_o', 'K_p', 'K_q', 'K_r', 'K_s', 'K_t', 'K_u', 'K_v', 'K_w', 'K_x', 'K_y', 'K_z', 'Keycode', 'LOCALE_CHANGED', 'LOW_MEMORY', 'Line', 'MOUSE_ADDED', 'MOUSE_BUTTON_DOWN', 'MOUSE_BUTTON_UP', 'MOUSE_MOTION', 'MOUSE_REMOVED', 'MOUSE_WHEEL', 'M_LEFT', 'M_MIDDLE', 'M_RIGHT', 'M_SIDE1', 'M_SIDE2', 'Mask', 'MouseButton', 'Orchestrator', 'PEN_AXIS', 'PEN_BUTTON_DOWN', 'PEN_BUTTON_UP', 'PEN_DOWN', 'PEN_MOTION', 'PEN_PROXIMITY_IN', 'PEN_PROXIMITY_OUT', 'PEN_UP', 'PINCH_BEGIN', 'PINCH_END', 'PINCH_UPDATE', 'P_DISTANCE', 'P_PRESSURE', 'P_ROTATION', 'P_SLIDER', 'P_TANGENTIAL_PRESSURE', 'P_TILT_X', 'P_TILT_Y', 'PenAxis', 'PixelArray', 'PolarCoordinate', 'Polygon', 'QUIT', 'RENDER_DEVICE_LOST', 'RENDER_DEVICE_RESET', 'RENDER_TARGETS_RESET', 'Rect', 'SCREEN_KEYBOARD_HIDDEN', 'SCREEN_KEYBOARD_SHOWN', 'SENSOR_UPDATE', 'SYSTEM_THEME_CHANGED', 'S_0', 'S_1', 'S_2', 'S_3', 'S_4', 'S_5', 'S_6', 'S_7', 'S_8', 'S_9', 'S_AGAIN', 'S_APOSTROPHE', 'S_APPLICATION', 'S_BACKSLASH', 'S_BACKSPACE', 'S_CALL', 'S_CAPS', 'S_CHANNEL_DEC', 'S_CHANNEL_INC', 'S_COMMA', 'S_COPY', 'S_CUT', 'S_DEL', 'S_DOWN', 'S_END', 'S_ENDCALL', 'S_EQ', 'S_ESC', 'S_EXECUTE', 'S_F1', 'S_F10', 'S_F11', 'S_F12', 'S_F13', 'S_F14', 'S_F15', 'S_F2', 'S_F3', 'S_F4', 'S_F5', 'S_F6', 'S_F7', 'S_F8', 'S_F9', 'S_FIND', 'S_GRAVE', 'S_HELP', 'S_HOME', 'S_INS', 'S_KP_0', 'S_KP_1', 'S_KP_2', 'S_KP_3', 'S_KP_4', 'S_KP_5', 'S_KP_6', 'S_KP_7', 'S_KP_8', 'S_KP_9', 'S_KP_DIV', 'S_KP_ENTER', 'S_KP_MINUS', 'S_KP_MULT', 'S_KP_PERIOD', 'S_KP_PLUS', 'S_LALT', 'S_LBRACKET', 'S_LCTRL', 'S_LEFT', 'S_LGUI', 'S_LSHIFT', 'S_MEDIA_EJECT', 'S_MEDIA_FAST_FORWARD', 'S_MEDIA_NEXT', 'S_MEDIA_PAUSE', 'S_MEDIA_PLAY', 'S_MEDIA_PLAY_PAUSE', 'S_MEDIA_PREV', 'S_MEDIA_REC', 'S_MEDIA_REWIND', 'S_MEDIA_SELECT', 'S_MEDIA_STOP', 'S_MENU', 'S_MINUS', 'S_MODE', 'S_MUTE', 'S_NUMLOCK', 'S_PASTE', 'S_PAUSE', 'S_PERIOD', 'S_PGDOWN', 'S_PGUP', 'S_POWER', 'S_PRTSCR', 'S_RALT', 'S_RBRACKET', 'S_RCTRL', 'S_RETURN', 'S_RGUI', 'S_RIGHT', 'S_RSHIFT', 'S_SCRLK', 'S_SELECT', 'S_SEMICOLON', 'S_SLASH', 'S_SLEEP', 'S_SOFTLEFT', 'S_SOFTRIGHT', 'S_SPACE', 'S_STOP', 'S_TAB', 'S_UNDO', 'S_UP', 'S_VOLDOWN', 'S_VOLUP', 'S_WAKE', 'S_a', 'S_b', 'S_c', 'S_d', 'S_e', 'S_f', 'S_g', 'S_h', 'S_i', 'S_j', 'S_k', 'S_l', 'S_m', 'S_n', 'S_o', 'S_p', 'S_q', 'S_r', 'S_s', 'S_t', 'S_u', 'S_v', 'S_w', 'S_x', 'S_y', 'S_z', 'Scancode', 'ScrollMode', 'ShaderState', 'SheetStrip', 'Sprite', 'TERMINATING', 'TEXT_EDITING', 'TEXT_EDITING_CANDIDATES', 'TEXT_INPUT', 'Text', 'Texture', 'TextureAccess', 'TextureScaleMode', 'Tile', 'TileLayer', 'TileMap', 'Timer', 'Transform', 'Vec2', 'ViewportMode', 'WILL_ENTER_BACKGROUND', 'WILL_ENTER_FOREGROUND', 'WINDOW_CLOSE_REQUESTED', 'WINDOW_DESTROYED', 'WINDOW_DISPLAY_CHANGED', 'WINDOW_DISPLAY_SCALE_CHANGED', 'WINDOW_ENTER_FULLSCREEN', 'WINDOW_EXPOSED', 'WINDOW_FOCUS_GAINED', 'WINDOW_FOCUS_LOST', 'WINDOW_HDR_STATE_CHANGED', 'WINDOW_HIDDEN', 'WINDOW_HIT_TEST', 'WINDOW_ICCPROF_CHANGED', 'WINDOW_LEAVE_FULLSCREEN', 'WINDOW_MAXIMIZED', 'WINDOW_MINIMIZED', 'WINDOW_MOUSE_ENTER', 'WINDOW_MOUSE_LEAVE', 'WINDOW_MOVED', 'WINDOW_OCCLUDED', 'WINDOW_RESIZED', 'WINDOW_RESTORED', 'WINDOW_SAFE_AREA_CHANGED', 'WINDOW_SHOWN', 'collision', 'color', 'draw', 'ease', 'event', 'gamepad', 'init', 'input', 'key', 'line', 'log', 'math', 'mouse', 'pixel_array', 'quit', 'rect', 'renderer', 'time', 'viewport', 'window']
+__all__: list[str] = ['AUDIO_DEVICE_ADDED', 'AUDIO_DEVICE_FORMAT_CHANGED', 'AUDIO_DEVICE_REMOVED', 'Align', 'Anchor', 'AnimationController', 'Audio', 'AudioStream', 'CAMERA_DEVICE_ADDED', 'CAMERA_DEVICE_APPROVED', 'CAMERA_DEVICE_DENIED', 'CAMERA_DEVICE_REMOVED', 'CLIPBOARD_UPDATE', 'C_BACK', 'C_DPAD_DOWN', 'C_DPAD_LEFT', 'C_DPAD_RIGHT', 'C_DPAD_UP', 'C_EAST', 'C_GUIDE', 'C_LSHOULDER', 'C_LSTICK', 'C_LTRIGGER', 'C_LX', 'C_LY', 'C_NORTH', 'C_PS3', 'C_PS4', 'C_PS5', 'C_RSHOULDER', 'C_RSTICK', 'C_RTRIGGER', 'C_RX', 'C_RY', 'C_SOUTH', 'C_STANDARD', 'C_START', 'C_SWITCH_JOYCON_LEFT', 'C_SWITCH_JOYCON_PAIR', 'C_SWITCH_JOYCON_RIGHT', 'C_SWITCH_PRO', 'C_WEST', 'C_XBOX_360', 'C_XBOX_ONE', 'Camera', 'Circle', 'Color', 'DID_ENTER_BACKGROUND', 'DID_ENTER_FOREGROUND', 'DISPLAY_ADDED', 'DISPLAY_CONTENT_SCALE_CHANGED', 'DISPLAY_CURRENT_MODE_CHANGED', 'DISPLAY_DESKTOP_MODE_CHANGED', 'DISPLAY_MOVED', 'DISPLAY_ORIENTATION', 'DISPLAY_REMOVED', 'DISPLAY_USABLE_BOUNDS_CHANGED', 'DROP_BEGIN', 'DROP_COMPLETE', 'DROP_FILE', 'DROP_POSITION', 'DROP_TEXT', 'EasingAnimation', 'Effect', 'Event', 'EventType', 'FINGER_CANCELED', 'FINGER_DOWN', 'FINGER_MOTION', 'FINGER_UP', 'Font', 'FontHint', 'GAMEPAD_ADDED', 'GAMEPAD_AXIS_MOTION', 'GAMEPAD_BUTTON_DOWN', 'GAMEPAD_BUTTON_UP', 'GAMEPAD_REMAPPED', 'GAMEPAD_REMOVED', 'GAMEPAD_SENSOR_UPDATE', 'GAMEPAD_STEAM_HANDLE_UPDATED', 'GAMEPAD_TOUCHPAD_DOWN', 'GAMEPAD_TOUCHPAD_MOTION', 'GAMEPAD_TOUCHPAD_UP', 'GAMEPAD_UPDATE_COMPLETE', 'GamepadAxis', 'GamepadButton', 'GamepadType', 'InputAction', 'InputActionList', 'KEYBOARD_ADDED', 'KEYBOARD_REMOVED', 'KEYMAP_CHANGED', 'KEY_DOWN', 'KEY_UP', 'K_0', 'K_1', 'K_2', 'K_3', 'K_4', 'K_5', 'K_6', 'K_7', 'K_8', 'K_9', 'K_AGAIN', 'K_AMPERSAND', 'K_APPLICATION', 'K_ASTERISK', 'K_AT', 'K_BACKSLASH', 'K_BACKSPACE', 'K_CALL', 'K_CAPS', 'K_CARET', 'K_CHANNEL_DEC', 'K_CHANNEL_INC', 'K_COLON', 'K_COMMA', 'K_COPY', 'K_CUT', 'K_DBLQUOTE', 'K_DEL', 'K_DOLLAR', 'K_DOWN', 'K_END', 'K_ENDCALL', 'K_EQ', 'K_ESC', 'K_EXCLAIM', 'K_EXECUTE', 'K_F1', 'K_F10', 'K_F11', 'K_F12', 'K_F13', 'K_F14', 'K_F15', 'K_F2', 'K_F3', 'K_F4', 'K_F5', 'K_F6', 'K_F7', 'K_F8', 'K_F9', 'K_FIND', 'K_GRAVE', 'K_GT', 'K_HASH', 'K_HELP', 'K_HOME', 'K_INS', 'K_KP_0', 'K_KP_1', 'K_KP_2', 'K_KP_3', 'K_KP_4', 'K_KP_5', 'K_KP_6', 'K_KP_7', 'K_KP_8', 'K_KP_9', 'K_KP_DIV', 'K_KP_ENTER', 'K_KP_MINUS', 'K_KP_MULT', 'K_KP_PERIOD', 'K_KP_PLUS', 'K_LALT', 'K_LBRACE', 'K_LBRACKET', 'K_LCTRL', 'K_LEFT', 'K_LGUI', 'K_LPAREN', 'K_LSHIFT', 'K_LT', 'K_MEDIA_EJECT', 'K_MEDIA_FF', 'K_MEDIA_NEXT', 'K_MEDIA_PAUSE', 'K_MEDIA_PLAY', 'K_MEDIA_PLAY_PAUSE', 'K_MEDIA_PREV', 'K_MEDIA_REC', 'K_MEDIA_REWIND', 'K_MEDIA_SELECT', 'K_MEDIA_STOP', 'K_MENU', 'K_MINUS', 'K_MODE', 'K_MUTE', 'K_NUMLOCK', 'K_PASTE', 'K_PAUSE', 'K_PERCENT', 'K_PERIOD', 'K_PGDOWN', 'K_PGUP', 'K_PIPE', 'K_PLUS', 'K_POWER', 'K_PRTSCR', 'K_QUESTION', 'K_RALT', 'K_RBRACE', 'K_RBRACKET', 'K_RCTRL', 'K_RETURN', 'K_RGUI', 'K_RIGHT', 'K_RPAREN', 'K_RSHIFT', 'K_SCRLK', 'K_SELECT', 'K_SEMICOLON', 'K_SGLQUOTE', 'K_SLASH', 'K_SLEEP', 'K_SOFTLEFT', 'K_SOFTRIGHT', 'K_SPACE', 'K_STOP', 'K_TAB', 'K_TILDE', 'K_UNDERSCORE', 'K_UNDO', 'K_UNKNOWN', 'K_UP', 'K_VOLDOWN', 'K_VOLUP', 'K_WAKE', 'K_a', 'K_b', 'K_c', 'K_d', 'K_e', 'K_f', 'K_g', 'K_h', 'K_i', 'K_j', 'K_k', 'K_l', 'K_m', 'K_n', 'K_o', 'K_p', 'K_q', 'K_r', 'K_s', 'K_t', 'K_u', 'K_v', 'K_w', 'K_x', 'K_y', 'K_z', 'Keycode', 'LOCALE_CHANGED', 'LOW_MEMORY', 'Line', 'MOUSE_ADDED', 'MOUSE_BUTTON_DOWN', 'MOUSE_BUTTON_UP', 'MOUSE_MOTION', 'MOUSE_REMOVED', 'MOUSE_WHEEL', 'M_LEFT', 'M_MIDDLE', 'M_RIGHT', 'M_SIDE1', 'M_SIDE2', 'Mask', 'MouseButton', 'Orchestrator', 'PEN_AXIS', 'PEN_BUTTON_DOWN', 'PEN_BUTTON_UP', 'PEN_DOWN', 'PEN_MOTION', 'PEN_PROXIMITY_IN', 'PEN_PROXIMITY_OUT', 'PEN_UP', 'PINCH_BEGIN', 'PINCH_END', 'PINCH_UPDATE', 'P_DISTANCE', 'P_PRESSURE', 'P_ROTATION', 'P_SLIDER', 'P_TANGENTIAL_PRESSURE', 'P_TILT_X', 'P_TILT_Y', 'PenAxis', 'PixelArray', 'PolarCoordinate', 'Polygon', 'QUIT', 'RENDER_DEVICE_LOST', 'RENDER_DEVICE_RESET', 'RENDER_TARGETS_RESET', 'Rect', 'RectList', 'SCREEN_KEYBOARD_HIDDEN', 'SCREEN_KEYBOARD_SHOWN', 'SENSOR_UPDATE', 'SYSTEM_THEME_CHANGED', 'S_0', 'S_1', 'S_2', 'S_3', 'S_4', 'S_5', 'S_6', 'S_7', 'S_8', 'S_9', 'S_AGAIN', 'S_APOSTROPHE', 'S_APPLICATION', 'S_BACKSLASH', 'S_BACKSPACE', 'S_CALL', 'S_CAPS', 'S_CHANNEL_DEC', 'S_CHANNEL_INC', 'S_COMMA', 'S_COPY', 'S_CUT', 'S_DEL', 'S_DOWN', 'S_END', 'S_ENDCALL', 'S_EQ', 'S_ESC', 'S_EXECUTE', 'S_F1', 'S_F10', 'S_F11', 'S_F12', 'S_F13', 'S_F14', 'S_F15', 'S_F2', 'S_F3', 'S_F4', 'S_F5', 'S_F6', 'S_F7', 'S_F8', 'S_F9', 'S_FIND', 'S_GRAVE', 'S_HELP', 'S_HOME', 'S_INS', 'S_KP_0', 'S_KP_1', 'S_KP_2', 'S_KP_3', 'S_KP_4', 'S_KP_5', 'S_KP_6', 'S_KP_7', 'S_KP_8', 'S_KP_9', 'S_KP_DIV', 'S_KP_ENTER', 'S_KP_MINUS', 'S_KP_MULT', 'S_KP_PERIOD', 'S_KP_PLUS', 'S_LALT', 'S_LBRACKET', 'S_LCTRL', 'S_LEFT', 'S_LGUI', 'S_LSHIFT', 'S_MEDIA_EJECT', 'S_MEDIA_FAST_FORWARD', 'S_MEDIA_NEXT', 'S_MEDIA_PAUSE', 'S_MEDIA_PLAY', 'S_MEDIA_PLAY_PAUSE', 'S_MEDIA_PREV', 'S_MEDIA_REC', 'S_MEDIA_REWIND', 'S_MEDIA_SELECT', 'S_MEDIA_STOP', 'S_MENU', 'S_MINUS', 'S_MODE', 'S_MUTE', 'S_NUMLOCK', 'S_PASTE', 'S_PAUSE', 'S_PERIOD', 'S_PGDOWN', 'S_PGUP', 'S_POWER', 'S_PRTSCR', 'S_RALT', 'S_RBRACKET', 'S_RCTRL', 'S_RETURN', 'S_RGUI', 'S_RIGHT', 'S_RSHIFT', 'S_SCRLK', 'S_SELECT', 'S_SEMICOLON', 'S_SLASH', 'S_SLEEP', 'S_SOFTLEFT', 'S_SOFTRIGHT', 'S_SPACE', 'S_STOP', 'S_TAB', 'S_UNDO', 'S_UP', 'S_VOLDOWN', 'S_VOLUP', 'S_WAKE', 'S_a', 'S_b', 'S_c', 'S_d', 'S_e', 'S_f', 'S_g', 'S_h', 'S_i', 'S_j', 'S_k', 'S_l', 'S_m', 'S_n', 'S_o', 'S_p', 'S_q', 'S_r', 'S_s', 'S_t', 'S_u', 'S_v', 'S_w', 'S_x', 'S_y', 'S_z', 'Scancode', 'ScrollMode', 'ShaderState', 'SheetStrip', 'SheetStripList', 'Sprite', 'TERMINATING', 'TEXT_EDITING', 'TEXT_EDITING_CANDIDATES', 'TEXT_INPUT', 'Text', 'Texture', 'TextureAccess', 'TextureScaleMode', 'Timer', 'Transform', 'Vec2', 'Vec2List', 'ViewportMode', 'WILL_ENTER_BACKGROUND', 'WILL_ENTER_FOREGROUND', 'WINDOW_CLOSE_REQUESTED', 'WINDOW_DESTROYED', 'WINDOW_DISPLAY_CHANGED', 'WINDOW_DISPLAY_SCALE_CHANGED', 'WINDOW_ENTER_FULLSCREEN', 'WINDOW_EXPOSED', 'WINDOW_FOCUS_GAINED', 'WINDOW_FOCUS_LOST', 'WINDOW_HDR_STATE_CHANGED', 'WINDOW_HIDDEN', 'WINDOW_HIT_TEST', 'WINDOW_ICCPROF_CHANGED', 'WINDOW_LEAVE_FULLSCREEN', 'WINDOW_MAXIMIZED', 'WINDOW_MINIMIZED', 'WINDOW_MOUSE_ENTER', 'WINDOW_MOUSE_LEAVE', 'WINDOW_MOVED', 'WINDOW_OCCLUDED', 'WINDOW_RESIZED', 'WINDOW_RESTORED', 'WINDOW_SAFE_AREA_CHANGED', 'WINDOW_SHOWN', 'collision', 'color', 'draw', 'ease', 'event', 'gamepad', 'init', 'input', 'key', 'line', 'log', 'math', 'mouse', 'pixel_array', 'quit', 'rect', 'renderer', 'tilemap', 'time', 'viewport', 'window']
 class Align(enum.IntEnum):
     CENTER: typing.ClassVar[Align]  # value = <Align.CENTER: 1>
     LEFT: typing.ClassVar[Align]  # value = <Align.LEFT: 0>
@@ -71,7 +72,7 @@ class AnimationController:
         Returns:
             bool: True if the animation completed a loop during the last update.
         """
-    def load_sprite_sheet(self, frame_size: Vec2, strips: collections.abc.Sequence[SheetStrip]) -> None:
+    def load_sprite_sheet(self, frame_size: Vec2, strips: SheetStripList) -> None:
         """
         Load one or more animations for a sprite sheet texture.
         
@@ -1093,6 +1094,84 @@ class InputAction:
             gamepad_axis (GamepadAxis): Gamepad axis code.
             is_positive (bool): True for positive direction, False for negative.
             slot (int, optional): Gamepad slot (default is 0).
+        """
+class InputActionList:
+    def __bool__(self) -> bool:
+        """
+        Check whether the list is nonempty
+        """
+    @typing.overload
+    def __delitem__(self, arg0: typing.SupportsInt) -> None:
+        """
+        Delete the list elements at index ``i``
+        """
+    @typing.overload
+    def __delitem__(self, arg0: slice) -> None:
+        """
+        Delete list elements using a slice object
+        """
+    @typing.overload
+    def __getitem__(self, s: slice) -> InputActionList:
+        """
+        Retrieve list elements using a slice object
+        """
+    @typing.overload
+    def __getitem__(self, arg0: typing.SupportsInt) -> InputAction:
+        ...
+    @typing.overload
+    def __init__(self) -> None:
+        ...
+    @typing.overload
+    def __init__(self, arg0: InputActionList) -> None:
+        """
+        Copy constructor
+        """
+    @typing.overload
+    def __init__(self, arg0: collections.abc.Iterable) -> None:
+        ...
+    def __iter__(self) -> collections.abc.Iterator[InputAction]:
+        ...
+    def __len__(self) -> int:
+        ...
+    @typing.overload
+    def __setitem__(self, arg0: typing.SupportsInt, arg1: InputAction) -> None:
+        ...
+    @typing.overload
+    def __setitem__(self, arg0: slice, arg1: InputActionList) -> None:
+        """
+        Assign list elements using a slice object
+        """
+    def append(self, x: InputAction) -> None:
+        """
+        Add an item to the end of the list
+        """
+    def clear(self) -> None:
+        """
+        Clear the contents
+        """
+    @typing.overload
+    def extend(self, L: InputActionList) -> None:
+        """
+        Extend the list by appending all the items in the given list
+        """
+    @typing.overload
+    def extend(self, L: collections.abc.Iterable) -> None:
+        """
+        Extend the list by appending all the items in the given list
+        """
+    def insert(self, i: typing.SupportsInt, x: InputAction) -> None:
+        """
+        Insert an item at a given position.
+        """
+    @typing.overload
+    def pop(self) -> InputAction:
+        """
+        Remove and return the last item
+        """
+    @typing.overload
+    def pop(self, i: typing.SupportsInt) -> InputAction:
+        """
+        Remove and return the item at index ``i``
         """
 class Keycode(enum.IntEnum):
     K_0: typing.ClassVar[Keycode]  # value = <Keycode.K_0: 48>
@@ -2421,6 +2500,101 @@ class Rect:
     @y.setter
     def y(self, arg0: typing.SupportsFloat) -> None:
         ...
+class RectList:
+    __hash__: typing.ClassVar[None] = None
+    def __bool__(self) -> bool:
+        """
+        Check whether the list is nonempty
+        """
+    def __contains__(self, x: Rect) -> bool:
+        """
+        Return true the container contains ``x``
+        """
+    @typing.overload
+    def __delitem__(self, arg0: typing.SupportsInt) -> None:
+        """
+        Delete the list elements at index ``i``
+        """
+    @typing.overload
+    def __delitem__(self, arg0: slice) -> None:
+        """
+        Delete list elements using a slice object
+        """
+    def __eq__(self, arg0: RectList) -> bool:
+        ...
+    @typing.overload
+    def __getitem__(self, s: slice) -> RectList:
+        """
+        Retrieve list elements using a slice object
+        """
+    @typing.overload
+    def __getitem__(self, arg0: typing.SupportsInt) -> Rect:
+        ...
+    @typing.overload
+    def __init__(self) -> None:
+        ...
+    @typing.overload
+    def __init__(self, arg0: RectList) -> None:
+        """
+        Copy constructor
+        """
+    @typing.overload
+    def __init__(self, arg0: collections.abc.Iterable) -> None:
+        ...
+    def __iter__(self) -> collections.abc.Iterator[Rect]:
+        ...
+    def __len__(self) -> int:
+        ...
+    def __ne__(self, arg0: RectList) -> bool:
+        ...
+    @typing.overload
+    def __setitem__(self, arg0: typing.SupportsInt, arg1: Rect) -> None:
+        ...
+    @typing.overload
+    def __setitem__(self, arg0: slice, arg1: RectList) -> None:
+        """
+        Assign list elements using a slice object
+        """
+    def append(self, x: Rect) -> None:
+        """
+        Add an item to the end of the list
+        """
+    def clear(self) -> None:
+        """
+        Clear the contents
+        """
+    def count(self, x: Rect) -> int:
+        """
+        Return the number of times ``x`` appears in the list
+        """
+    @typing.overload
+    def extend(self, L: RectList) -> None:
+        """
+        Extend the list by appending all the items in the given list
+        """
+    @typing.overload
+    def extend(self, L: collections.abc.Iterable) -> None:
+        """
+        Extend the list by appending all the items in the given list
+        """
+    def insert(self, i: typing.SupportsInt, x: Rect) -> None:
+        """
+        Insert an item at a given position.
+        """
+    @typing.overload
+    def pop(self) -> Rect:
+        """
+        Remove and return the last item
+        """
+    @typing.overload
+    def pop(self, i: typing.SupportsInt) -> Rect:
+        """
+        Remove and return the item at index ``i``
+        """
+    def remove(self, x: Rect) -> None:
+        """
+        Remove the first item from the list whose value is x. It is an error if there is no such item.
+        """
 class Scancode(enum.IntEnum):
     S_0: typing.ClassVar[Scancode]  # value = <Scancode.S_0: 39>
     S_1: typing.ClassVar[Scancode]  # value = <Scancode.S_1: 30>
@@ -2667,6 +2841,84 @@ class SheetStrip:
     @name.setter
     def name(self, arg0: str) -> None:
         ...
+class SheetStripList:
+    def __bool__(self) -> bool:
+        """
+        Check whether the list is nonempty
+        """
+    @typing.overload
+    def __delitem__(self, arg0: typing.SupportsInt) -> None:
+        """
+        Delete the list elements at index ``i``
+        """
+    @typing.overload
+    def __delitem__(self, arg0: slice) -> None:
+        """
+        Delete list elements using a slice object
+        """
+    @typing.overload
+    def __getitem__(self, s: slice) -> SheetStripList:
+        """
+        Retrieve list elements using a slice object
+        """
+    @typing.overload
+    def __getitem__(self, arg0: typing.SupportsInt) -> SheetStrip:
+        ...
+    @typing.overload
+    def __init__(self) -> None:
+        ...
+    @typing.overload
+    def __init__(self, arg0: SheetStripList) -> None:
+        """
+        Copy constructor
+        """
+    @typing.overload
+    def __init__(self, arg0: collections.abc.Iterable) -> None:
+        ...
+    def __iter__(self) -> collections.abc.Iterator[SheetStrip]:
+        ...
+    def __len__(self) -> int:
+        ...
+    @typing.overload
+    def __setitem__(self, arg0: typing.SupportsInt, arg1: SheetStrip) -> None:
+        ...
+    @typing.overload
+    def __setitem__(self, arg0: slice, arg1: SheetStripList) -> None:
+        """
+        Assign list elements using a slice object
+        """
+    def append(self, x: SheetStrip) -> None:
+        """
+        Add an item to the end of the list
+        """
+    def clear(self) -> None:
+        """
+        Clear the contents
+        """
+    @typing.overload
+    def extend(self, L: SheetStripList) -> None:
+        """
+        Extend the list by appending all the items in the given list
+        """
+    @typing.overload
+    def extend(self, L: collections.abc.Iterable) -> None:
+        """
+        Extend the list by appending all the items in the given list
+        """
+    def insert(self, i: typing.SupportsInt, x: SheetStrip) -> None:
+        """
+        Insert an item at a given position.
+        """
+    @typing.overload
+    def pop(self) -> SheetStrip:
+        """
+        Remove and return the last item
+        """
+    @typing.overload
+    def pop(self, i: typing.SupportsInt) -> SheetStrip:
+        """
+        Remove and return the item at index ``i``
+        """
 class Sprite:
     """
     
@@ -3038,180 +3290,6 @@ class TextureScaleMode(enum.IntEnum):
         """
         Convert to a string according to format_spec.
         """
-class Tile:
-    """
-    
-    Represents a single tile instance in a layer.
-        
-    """
-    @property
-    def angle(self) -> float:
-        """
-        The rotation angle in radians.
-        """
-    @property
-    def anti_diag_flip(self) -> bool:
-        """
-        Whether the tile is flipped across the anti-diagonal.
-        """
-    @property
-    def collider(self) -> Rect:
-        """
-        The fitted collider rectangle for the tile's opaque area.
-        """
-    @property
-    def dst(self) -> Rect:
-        """
-        The destination rectangle on the map.
-        """
-    @property
-    def h_flip(self) -> bool:
-        """
-        Whether the tile is flipped horizontally.
-        """
-    @property
-    def layer(self) -> TileLayer:
-        """
-        Get the owning Layer.
-        
-        Returns:
-            Layer | None: The owning Layer if it still exists; otherwise None.
-        """
-    @property
-    def src(self) -> Rect:
-        """
-        The source rectangle within the tileset texture.
-        """
-    @property
-    def v_flip(self) -> bool:
-        """
-        Whether the tile is flipped vertically.
-        """
-class TileLayer:
-    """
-    
-    A layer of a tile map.
-    
-    Layers can be either tile layers or object layers and contain a list of tiles.
-        
-    """
-    class Type(enum.IntEnum):
-        """
-        
-        The type of a Layer.
-            
-        """
-        OBJECT: typing.ClassVar[TileLayer.Type]  # value = <Type.OBJECT: 0>
-        TILE: typing.ClassVar[TileLayer.Type]  # value = <Type.TILE: 1>
-        @classmethod
-        def __new__(cls, value):
-            ...
-        def __format__(self, format_spec):
-            """
-            Convert to a string according to format_spec.
-            """
-    OBJECT: typing.ClassVar[TileLayer.Type]  # value = <Type.OBJECT: 0>
-    TILE: typing.ClassVar[TileLayer.Type]  # value = <Type.TILE: 1>
-    def get_from_area(self, area: Rect) -> list[Tile]:
-        """
-        Get all tiles whose destination rectangles fall within a query rect.
-        
-        Args:
-            area (Rect): The world-space rectangle to test.
-        
-        Returns:
-            list[Tile]: Tiles intersecting the given area.
-        """
-    def get_tile_at(self, column: typing.SupportsInt, row: typing.SupportsInt) -> pykraken._core.Tile | None:
-        """
-        Get the tile located at the specified grid coordinates.
-        
-        Args:
-            column (int): The tile column index.
-            row (int): The tile row index.
-        
-        Returns:
-            Tile | None: The tile at the grid coordinate, or None if empty/out of range.
-        """
-    def render(self) -> None:
-        """
-        Render the layer.
-        """
-    @property
-    def is_visible(self) -> bool:
-        """
-        Whether the layer is visible.
-        """
-    @property
-    def name(self) -> str:
-        """
-        The name of the layer.
-        """
-    @property
-    def tiles(self) -> list[Tile]:
-        """
-        The list of Tile instances contained in this layer.
-        """
-    @property
-    def type(self) -> TileLayer.Type:
-        """
-        The layer type (OBJECT or TILE).
-        """
-class TileMap:
-    """
-    
-    Loads and renders TMX tile maps.
-    
-    Parses a Tiled TMX file, loads the tileset texture, and exposes layers and tiles for rendering and queries.
-        
-    """
-    @staticmethod
-    def get_tile_collection(layers: collections.abc.Sequence[TileLayer]) -> list[Tile]:
-        """
-        Collect all tiles from the provided layers into a single list.
-        
-        Args:
-            layers (Sequence[Layer]): The layers to collect tiles from.
-        
-        Returns:
-            list[Tile]: A flat list of tiles from the given layers.
-        """
-    def __init__(self, tmx_path: str, border_size: typing.SupportsInt = 0) -> None:
-        """
-        Create a TileMap by loading a TMX file.
-        
-        Args:
-            tmx_path (str): Path to the TMX file.
-            border_size (int): Optional border (in pixels) around each tile in the tileset; defaults to 0.
-        
-        Raises:
-            RuntimeError: If the TMX or TSX files cannot be loaded or parsed.
-        """
-    def get_layer(self, name: str, type: TileLayer.Type = TileLayer.Type.TILE) -> TileLayer:
-        """
-        Get a layer by name and type.
-        
-        Args:
-            name (str): The layer name.
-            type (Layer.Type): The expected layer type (defaults to TILE).
-        
-        Returns:
-            Layer: The matching layer.
-        
-        Raises:
-            ValueError: If no matching layer is found or the type doesn't match.
-        """
-    def get_layers(self) -> list[TileLayer]:
-        """
-        Get all layers in the map.
-        
-        Returns:
-            list[Layer]: A list of all layers.
-        """
-    def render(self) -> None:
-        """
-        Render all visible layers.
-        """
 class Timer:
     """
     
@@ -3396,11 +3474,7 @@ class Vec2:
         ...
     def __eq__(self, other: Vec2) -> bool:
         ...
-    def __ge__(self, other: Vec2) -> bool:
-        ...
     def __getitem__(self, index: typing.SupportsInt) -> float:
-        ...
-    def __gt__(self, other: Vec2) -> bool:
         ...
     def __hash__(self) -> int:
         ...
@@ -3447,11 +3521,7 @@ class Vec2:
         ...
     def __itruediv__(self, scalar: typing.SupportsFloat) -> Vec2:
         ...
-    def __le__(self, other: Vec2) -> bool:
-        ...
     def __len__(self) -> int:
-        ...
-    def __lt__(self, other: Vec2) -> bool:
         ...
     def __mul__(self, scalar: typing.SupportsFloat) -> Vec2:
         ...
@@ -3512,9 +3582,35 @@ class Vec2:
         Returns:
             bool: True if both components are within the tolerance.
         """
+    def move_toward(self, target: Vec2, delta: typing.SupportsFloat) -> None:
+        """
+        Move this Vec2 toward a target Vec2 by a specified delta.
+        
+        Args:
+            target (Vec2): The target vector to move towards.
+            delta (float): The maximum distance to move.
+        """
+    def moved_toward(self, target: Vec2, delta: typing.SupportsFloat) -> Vec2:
+        """
+        Return a new Vec2 moved toward a target Vec2 by a specified delta.
+        
+        Args:
+            target (Vec2): The target vector to move towards.
+            delta (float): The maximum distance to move.
+        
+        Returns:
+            Vec2: A new vector moved toward the target.
+        """
     def normalize(self) -> None:
         """
         Normalize this Vec2 in place.
+        """
+    def normalized(self) -> Vec2:
+        """
+        Return a new normalized Vec2.
+        
+        Returns:
+            Vec2: A new vector with unit length.
         """
     def project(self, other: Vec2) -> Vec2:
         """
@@ -3553,12 +3649,32 @@ class Vec2:
         Args:
             radians (float): Rotation angle in radians.
         """
+    def rotated(self, radians: typing.SupportsFloat) -> Vec2:
+        """
+        Return a new Vec2 rotated by a specified angle.
+        
+        Args:
+            radians (float): Rotation angle in radians.
+        
+        Returns:
+            Vec2: A new vector rotated by the given angle.
+        """
     def scale_to_length(self, length: typing.SupportsFloat) -> None:
         """
         Scale this Vec2 to a specific magnitude.
         
         Args:
             length (float): Target vector length.
+        """
+    def scaled_to_length(self, length: typing.SupportsFloat) -> Vec2:
+        """
+        Return a new Vec2 scaled to a specific magnitude.
+        
+        Args:
+            length (float): Target vector length.
+        
+        Returns:
+            Vec2: A new vector scaled to the specified length.
         """
     def to_polar(self) -> PolarCoordinate:
         """
@@ -3644,6 +3760,101 @@ class Vec2:
         
         Returns:
             Vec2: Vector composed of (y, y).
+        """
+class Vec2List:
+    __hash__: typing.ClassVar[None] = None
+    def __bool__(self) -> bool:
+        """
+        Check whether the list is nonempty
+        """
+    def __contains__(self, x: Vec2) -> bool:
+        """
+        Return true the container contains ``x``
+        """
+    @typing.overload
+    def __delitem__(self, arg0: typing.SupportsInt) -> None:
+        """
+        Delete the list elements at index ``i``
+        """
+    @typing.overload
+    def __delitem__(self, arg0: slice) -> None:
+        """
+        Delete list elements using a slice object
+        """
+    def __eq__(self, arg0: Vec2List) -> bool:
+        ...
+    @typing.overload
+    def __getitem__(self, s: slice) -> Vec2List:
+        """
+        Retrieve list elements using a slice object
+        """
+    @typing.overload
+    def __getitem__(self, arg0: typing.SupportsInt) -> Vec2:
+        ...
+    @typing.overload
+    def __init__(self) -> None:
+        ...
+    @typing.overload
+    def __init__(self, arg0: Vec2List) -> None:
+        """
+        Copy constructor
+        """
+    @typing.overload
+    def __init__(self, arg0: collections.abc.Iterable) -> None:
+        ...
+    def __iter__(self) -> collections.abc.Iterator[Vec2]:
+        ...
+    def __len__(self) -> int:
+        ...
+    def __ne__(self, arg0: Vec2List) -> bool:
+        ...
+    @typing.overload
+    def __setitem__(self, arg0: typing.SupportsInt, arg1: Vec2) -> None:
+        ...
+    @typing.overload
+    def __setitem__(self, arg0: slice, arg1: Vec2List) -> None:
+        """
+        Assign list elements using a slice object
+        """
+    def append(self, x: Vec2) -> None:
+        """
+        Add an item to the end of the list
+        """
+    def clear(self) -> None:
+        """
+        Clear the contents
+        """
+    def count(self, x: Vec2) -> int:
+        """
+        Return the number of times ``x`` appears in the list
+        """
+    @typing.overload
+    def extend(self, L: Vec2List) -> None:
+        """
+        Extend the list by appending all the items in the given list
+        """
+    @typing.overload
+    def extend(self, L: collections.abc.Iterable) -> None:
+        """
+        Extend the list by appending all the items in the given list
+        """
+    def insert(self, i: typing.SupportsInt, x: Vec2) -> None:
+        """
+        Insert an item at a given position.
+        """
+    @typing.overload
+    def pop(self) -> Vec2:
+        """
+        Remove and return the last item
+        """
+    @typing.overload
+    def pop(self, i: typing.SupportsInt) -> Vec2:
+        """
+        Remove and return the item at index ``i``
+        """
+    def remove(self, x: Vec2) -> None:
+        """
+        Remove the first item from the list whose value is x. It is an error if there is no such item.
         """
 class ViewportMode(enum.IntEnum):
     HORIZONTAL: typing.ClassVar[ViewportMode]  # value = <ViewportMode.HORIZONTAL: 1>

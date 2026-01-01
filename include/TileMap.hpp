@@ -2,148 +2,313 @@
 
 #include <pybind11/pybind11.h>
 
-#include <algorithm>
-#include <cmath>
 #include <memory>
 #include <optional>
-#include <pugixml/pugixml.hpp>
 #include <string>
+#include <tmxlite/Map.hpp>
 #include <vector>
 
+#include "Color.hpp"
+#include "Math.hpp"
 #include "Rect.hpp"
+#include "Texture.hpp"
+#include "_globals.hpp"
 
 namespace py = pybind11;
 
 namespace kn
 {
-class Texture;
-class TileLayer;
-
-namespace tile_map
+namespace tilemap
 {
-void _bind(const py::module_& module);
-}
+class Map;
 
-struct Tile
-{
-    std::weak_ptr<const TileLayer> layer;
-
-    Rect src;
-    Rect dst;
-    Rect collider;
-
-    bool hFlip;
-    bool vFlip;
-    bool antiDiagFlip;
-    double angle;
-};
-
-class TileLayer
+class TileSet
 {
   public:
-    enum Type
+    class Terrain
     {
-        OBJECT,
-        TILE,
-    } const type;
+        std::string m_name;
+        uint32_t m_tileID = static_cast<uint32_t>(-1);
 
-    const bool isVisible;
-    const std::string name;
-    std::vector<Tile> tiles;
+      public:
+        Terrain(const std::string& name, uint32_t tileID)
+            : m_name(name),
+              m_tileID(tileID)
+        {
+        }
 
-    TileLayer(
-        Type type, bool isVisible, std::string name, const std::shared_ptr<Texture>& tileSetTexture
-    );
+        [[nodiscard]] std::string getName() const
+        {
+            return m_name;
+        }
+        [[nodiscard]] uint32_t getTileID() const
+        {
+            return m_tileID;
+        }
+    };
+
+    struct Tile
+    {
+        uint32_t m_id = 0;
+        std::array<int, 4> m_terrainIndices{};
+        uint32_t m_probability = 100;
+        Rect m_clipRect{};
+
+      public:
+        [[nodiscard]] uint32_t getID() const
+        {
+            return m_id;
+        }
+
+        [[nodiscard]] const std::array<int32_t, 4>& getTerrainIndices() const
+        {
+            return m_terrainIndices;
+        }
+
+        [[nodiscard]] uint32_t getProbability() const
+        {
+            return m_probability;
+        }
+
+        [[nodiscard]] Rect getClipRect() const
+        {
+            return m_clipRect;
+        }
+    };
+
+    TileSet() = default;
+    ~TileSet() = default;
+
+    [[nodiscard]] uint32_t getFirstGID() const;
+    [[nodiscard]] uint32_t getLastGID() const;
+    [[nodiscard]] std::string getName() const;
+    [[nodiscard]] Vec2 getTileSize() const;
+    [[nodiscard]] uint32_t getSpacing() const;
+    [[nodiscard]] uint32_t getMargin() const;
+    [[nodiscard]] uint32_t getTileCount() const;
+    [[nodiscard]] uint32_t getColumns() const;
+    [[nodiscard]] Vec2 getTileOffset() const;
+    [[nodiscard]] const std::vector<Terrain>& getTerrains() const;
+    [[nodiscard]] const std::vector<Tile>& getTiles() const;
+    [[nodiscard]] bool hasTile(uint32_t id) const;
+    [[nodiscard]] const Tile* getTile(uint32_t id) const;
+    [[nodiscard]] std::shared_ptr<Texture> getTexture() const;
+
+  private:
+    uint32_t m_firstGID = 0;
+    uint32_t m_lastGID = 0;
+    std::string m_name = "";
+    Vec2 m_tileSize{};
+    uint32_t m_spacing = 0;
+    uint32_t m_margin = 0;
+    uint32_t m_tileCount = 0;
+    uint32_t m_columns = 0;
+    Vec2 m_tileOffset{};
+    std::vector<Terrain> m_terrains{};
+    std::vector<Tile> m_tiles{};
+    std::vector<uint32_t> m_tileIndex;
+    std::shared_ptr<Texture> m_texture = nullptr;
+
+    friend class Map;
+};
+
+class Layer
+{
+  public:
+    bool visible = true;
+    Vec2 offset{};
+
+    Layer() = default;
+    virtual ~Layer() = default;
+
+    virtual void render() = 0;
+    virtual void setOpacity(double value) = 0;
+    virtual double getOpacity() const = 0;
+
+    [[nodiscard]] std::string getName() const;
+    [[nodiscard]] tmx::Layer::Type getType() const;
+
+  protected:
+    Map* m_map = nullptr;
+    tmx::Layer::Type m_type;
+    std::string m_name = "";
+    double m_opacity = 1.0;
+
+    friend class Map;
+};
+
+class TileLayer : public Layer
+{
+  public:
+    class Tile
+    {
+        uint32_t m_id = 0;
+        uint8_t m_flipFlags = 0;
+        uint8_t m_tilesetIdx = static_cast<uint8_t>(-1);  // -1 = unknown
+
+        friend class Map;
+
+      public:
+        [[nodiscard]] uint32_t getID() const
+        {
+            return m_id;
+        }
+
+        [[nodiscard]] uint8_t getTilesetIndex() const
+        {
+            return m_tilesetIdx;
+        }
+
+        [[nodiscard]] uint8_t getFlipFlags() const
+        {
+            return m_flipFlags;
+        }
+    };
+
+    struct TileResult
+    {
+        Tile tile;
+        Rect rect;
+    };
+
+    TileLayer() = default;
     ~TileLayer() = default;
 
-    void render() const;
-    [[nodiscard]] std::vector<Tile> getFromArea(const Rect& area) const;
-    [[nodiscard]] std::optional<Tile> getTileAt(int column, int row) const;
+    [[nodiscard]] const std::vector<Tile>& getTiles() const;
+    [[nodiscard]] std::vector<TileResult> getFromArea(const Rect& area) const;
+    [[nodiscard]] std::optional<TileResult> getFromPoint(const Vec2& position) const;
+
+    void render() override;
+    void setOpacity(double value) override;
+    double getOpacity() const override;
 
   private:
-    friend class TileMap;
-    void buildTileGrid(int mapWidth, int mapHeight, int tileWidth, int tileHeight);
-    template <typename Fn>
-    bool forEachTileInArea(const Rect& area, Fn&& fn) const;
+    std::vector<Tile> m_tiles{};
 
-    std::shared_ptr<Texture> m_tileSetTexture;
-    int m_gridWidth = 0;
-    int m_gridHeight = 0;
-    int m_tileWidth = 0;
-    int m_tileHeight = 0;
-    std::vector<int> m_tileIndices;
+    friend class Map;
 };
 
-class TileMap
+struct TextProperties
+{
+    std::string fontFamily = "";
+    uint32_t pixelSize = 16;
+    bool wrap = false;
+    Color color{};
+    bool bold = false;
+    bool italic = false;
+    bool underline = false;
+    bool strikethrough = false;
+    bool kerning = true;
+    Align align = Align::Left;
+    std::string text = "";
+};
+
+class MapObject
 {
   public:
-    explicit TileMap(const std::string& tmxPath, int borderSize = 0);
-    ~TileMap() = default;
+    Transform transform{};
+    bool visible = true;
 
-    [[nodiscard]] std::shared_ptr<const TileLayer> getLayer(
-        const std::string& name, TileLayer::Type type = TileLayer::TILE
-    ) const;
-    [[nodiscard]] const std::vector<std::shared_ptr<const TileLayer>>& getLayers() const;
+    MapObject() = default;
+    ~MapObject() = default;
 
-    void render() const;
-
-    static std::vector<Tile> getTileCollection(
-        const std::vector<std::shared_ptr<const TileLayer>>& layers
-    );
+    [[nodiscard]] uint32_t getUID() const;
+    [[nodiscard]] std::string getName() const;
+    [[nodiscard]] std::string getType() const;
+    [[nodiscard]] Rect getRect() const;
+    [[nodiscard]] uint32_t getTileID() const;
+    [[nodiscard]] tmx::Object::Shape getShapeType() const;
+    [[nodiscard]] const std::vector<Vec2>& getVertices() const;
+    [[nodiscard]] const TextProperties& getTextProperties() const;
 
   private:
-    std::string m_dirPath;
-    std::vector<std::shared_ptr<const TileLayer>> m_layerVec;
+    uint32_t m_uid = 0;
+    std::string m_name = "";
+    std::string m_type = "";
+    Rect m_rect{};
+    uint32_t m_tileId = 0;
+    tmx::Object::Shape m_shape = tmx::Object::Shape::Rectangle;
+    std::vector<Vec2> m_vertices{};
+    TextProperties m_text{};
 
-    [[nodiscard]] std::string getTexturePath(const pugi::xml_node& mapNode) const;
-    static Rect getFittedRect(SDL_Surface* surface, const Rect& srcRect, const Vec2& position);
+    friend class Map;
 };
 
-template <typename Fn>
-bool TileLayer::forEachTileInArea(const Rect& area, Fn&& fn) const
+class ObjectGroup : public Layer
 {
-    if (type != TILE || m_tileIndices.empty() || m_gridWidth <= 0 || m_gridHeight <= 0 ||
-        m_tileWidth <= 0 || m_tileHeight <= 0)
-        return true;
+  public:
+    Color color{};
 
-    if (area.w <= 0 || area.h <= 0)
-        return true;
+    ObjectGroup() = default;
+    ~ObjectGroup() = default;
 
-    const double minX = area.x;
-    const double minY = area.y;
-    const double maxX = area.x + area.w;
-    const double maxY = area.y + area.h;
+    [[nodiscard]] tmx::ObjectGroup::DrawOrder getDrawOrder() const;
+    [[nodiscard]] const std::vector<MapObject>& getObjects() const;
+    void render() override;
+    void setOpacity(double value) override;
+    double getOpacity() const override;
 
-    const int rawStartCol = static_cast<int>(std::floor(minX / static_cast<double>(m_tileWidth)));
-    const int rawEndCol = static_cast<int>(std::ceil(maxX / static_cast<double>(m_tileWidth))) - 1;
-    const int rawStartRow = static_cast<int>(std::floor(minY / static_cast<double>(m_tileHeight)));
-    const int rawEndRow = static_cast<int>(std::ceil(maxY / static_cast<double>(m_tileHeight))) - 1;
+  private:
+    tmx::ObjectGroup::DrawOrder m_drawOrder = tmx::ObjectGroup::DrawOrder::TopDown;
+    std::vector<MapObject> m_objects{};
 
-    if (rawEndCol < 0 || rawEndRow < 0 || rawStartCol >= m_gridWidth || rawStartRow >= m_gridHeight)
-        return true;
+    friend class Map;
+};
 
-    const int startCol = std::clamp(rawStartCol, 0, m_gridWidth - 1);
-    const int endCol = std::clamp(rawEndCol, 0, m_gridWidth - 1);
-    const int startRow = std::clamp(rawStartRow, 0, m_gridHeight - 1);
-    const int endRow = std::clamp(rawEndRow, 0, m_gridHeight - 1);
+class ImageLayer : public Layer
+{
+  public:
+    Transform transform{};
 
-    if (startCol > endCol || startRow > endRow)
-        return true;
+    ImageLayer() = default;
+    ~ImageLayer() = default;
 
-    for (int row = startRow; row <= endRow; ++row)
-    {
-        const size_t rowOff = static_cast<size_t>(row) * static_cast<size_t>(m_gridWidth);
-        for (int col = startCol; col <= endCol; ++col)
-        {
-            const int tileIndex = m_tileIndices[rowOff + static_cast<size_t>(col)];
-            if (tileIndex < 0)
-                continue;
+    [[nodiscard]] std::shared_ptr<Texture> getTexture() const;
+    void render() override;
+    void setOpacity(double value) override;
+    double getOpacity() const override;
 
-            if (!fn(tiles[static_cast<size_t>(tileIndex)]))
-                return false;
-        }
-    }
+  private:
+    std::shared_ptr<Texture> m_texture = nullptr;
 
-    return true;
-}
+    friend class Map;
+};
+
+class Map
+{
+  public:
+    Color backgroundColor{};
+
+    Map() = default;
+    ~Map() = default;
+
+    void render();
+    void load(const std::string& tmxPath);
+
+    [[nodiscard]] tmx::Orientation getOrientation() const;
+    [[nodiscard]] tmx::RenderOrder getRenderOrder() const;
+    [[nodiscard]] Vec2 getMapSize() const;
+    [[nodiscard]] Vec2 getTileSize() const;
+    [[nodiscard]] Rect getBounds() const;
+    [[nodiscard]] double getHexSideLength() const;
+    [[nodiscard]] tmx::StaggerAxis getStaggerAxis() const;
+    [[nodiscard]] tmx::StaggerIndex getStaggerIndex() const;
+    [[nodiscard]] const std::vector<TileSet>& getTileSets() const;
+    [[nodiscard]] const std::vector<std::shared_ptr<Layer>>& getLayers() const;
+
+  private:
+    tmx::Orientation m_orient = tmx::Orientation::None;
+    tmx::RenderOrder m_renderOrder = tmx::RenderOrder::None;
+    Vec2 m_mapSize{};
+    Vec2 m_tileSize{};
+    Rect m_bounds{};
+    double m_hexSideLength = 0.0;
+    tmx::StaggerAxis m_staggerAxis = tmx::StaggerAxis::None;
+    tmx::StaggerIndex m_staggerIndex = tmx::StaggerIndex::None;
+    std::vector<TileSet> m_tileSets{};
+    std::vector<std::shared_ptr<Layer>> m_layers{};
+};
+
+void _bind(py::module_& module);
+}  // namespace tilemap
 }  // namespace kn

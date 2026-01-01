@@ -135,14 +135,14 @@ Return a copy of the circle.
             {
                 switch (i)
                 {
-                    case 0:
-                        return circle.pos.x;
-                    case 1:
-                        return circle.pos.y;
-                    case 2:
-                        return circle.radius;
-                    default:
-                        throw py::index_error("Index out of range");
+                case 0:
+                    return circle.pos.x;
+                case 1:
+                    return circle.pos.y;
+                case 2:
+                    return circle.radius;
+                default:
+                    throw py::index_error("Index out of range");
                 }
             },
             py::arg("index")

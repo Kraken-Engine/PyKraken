@@ -2,7 +2,6 @@
 Functions for drawing shape objects
 """
 from __future__ import annotations
-import collections.abc
 import numpy
 import numpy.typing
 import pykraken._core
@@ -48,7 +47,7 @@ def point(point: pykraken._core.Vec2, color: pykraken._core.Color) -> None:
     Raises:
         RuntimeError: If point rendering fails.
     """
-def points(points: collections.abc.Sequence[pykraken._core.Vec2], color: pykraken._core.Color) -> None:
+def points(points: pykraken._core.Vec2List, color: pykraken._core.Color) -> None:
     """
     Batch draw an array of points to the renderer.
     
@@ -94,7 +93,7 @@ def rect(rect: pykraken._core.Rect, color: pykraken._core.Color, thickness: typi
         color (Color): The color of the rectangle.
         thickness (int, optional): The border thickness. If 0 or >= half width/height, draws filled rectangle. Defaults to 0 (filled).
     """
-def rects(rects: collections.abc.Sequence[pykraken._core.Rect], color: pykraken._core.Color, thickness: typing.SupportsInt = 0) -> None:
+def rects(rects: pykraken._core.RectList, color: pykraken._core.Color, thickness: typing.SupportsInt = 0) -> None:
     """
     Batch draw an array of rectangles to the renderer.
     
