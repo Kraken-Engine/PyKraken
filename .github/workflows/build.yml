@@ -31,13 +31,12 @@ jobs:
       - name: Build and test wheels
         uses: pypa/cibuildwheel@v3.2.0
         env:
-          CIBW_BUILD_FRONTEND: "build[uv]"
+          CIBW_BUILD_FRONTEND: "build"
           CIBW_BUILD_VERBOSITY: 1
           CIBW_SKIP: "*-musllinux_* *-win32"
           CIBW_BUILD: "cp311-* cp312-* cp313-* cp314-*"
           CIBW_ARCHS_WINDOWS: "AMD64"
           CIBW_ENVIRONMENT: CMAKE_GENERATOR=Ninja
-
           CIBW_ENVIRONMENT_WINDOWS: "CC=cl CXX=cl"
 
           # Minimal system headers inside manylinux
