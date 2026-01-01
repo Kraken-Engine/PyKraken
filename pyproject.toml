@@ -39,4 +39,3 @@ license-files = ["LICENSE"]
 
 [tool.scikit-build]
 wheel.packages = ["src/pykraken"]
-cmake.build-type = "Release"
