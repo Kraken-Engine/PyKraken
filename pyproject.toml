@@ -1,5 +1,5 @@
 [build-system]
-requires = ["scikit-build-core", "pybind11", "cibuildwheel"]
+requires = ["scikit-build-core", "pybind11"]
 build-backend = "scikit_build_core.build"
 
 [project]
@@ -39,3 +39,4 @@ license-files = ["LICENSE"]
 
 [tool.scikit-build]
 wheel.packages = ["src/pykraken"]
+cmake.build-type = "Release"
