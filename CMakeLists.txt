@@ -15,7 +15,7 @@ set(PYK_PACKAGE_DIR    "pykraken" CACHE STRING "Where to install the module insi
 set(PYK_SOURCES_GLOB   "src/*.cpp;src/**/*.cpp" CACHE STRING "Glob(s) for C++ sources")
 option(PYK_VENDOR_SDL  "Vendor SDL3, SDL_image, SDL_ttf (static) via FetchContent" ON)
 option(PYK_VENDOR_TMXLITE "Vendor tmxlite (static) via FetchContent" ON)
-option(PYK_VENDOR_PYBIND11 "Vendor pybind11 via FetchContent" ON)
+option(PYK_VENDOR_PYBIND11 "Vendor pybind11 via FetchContent" OFF)
 
 # -------------------------
 # Tooling
