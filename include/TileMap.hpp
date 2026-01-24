@@ -12,6 +12,7 @@
 #include "Math.hpp"
 #include "Rect.hpp"
 #include "Texture.hpp"
+#include "Transform.hpp"
 #include "_globals.hpp"
 
 namespace py = pybind11;

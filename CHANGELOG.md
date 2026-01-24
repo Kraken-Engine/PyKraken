@@ -5,7 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) when possible.
 
-## [1.5.0] - 2025-12-30
+## [1.5.1] - 2026-01-24
+
+### Added
+- Added `Vec2.ZERO`, `Vec2.UP`, `Vec2.DOWN`, `Vec2.LEFT`, and `Vec2.RIGHT` constants for common vector directions.
+- Added the ability to multiply two `Vec2` objects element-wise using the `*` operator.
+- Added docstrings to every enum and their values, as well as to any properties of tilemap-related objects that were missing them.
+- New `transform` submodule with `compose` and `compose_chain` functions for parenting transforms.
+
+### Changed
+- `Vec2` boolean conversion now checks for both components being exactly zero, rather than using a tolerance.
+- `fx.move_to` function now requires a `Vec2` for the `pos` parameter instead of accepting an optional argument of any object type.
+
+## [1.5.0] - 2025-12-31
 
 ### Added
 - Added `build.py` script for automating build and compilation tasks.

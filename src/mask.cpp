@@ -531,7 +531,7 @@ Get the outline points of the mask.
 Returns a list of points that form the outline of all solid regions.
 
 Returns:
-    list[Vec2]: A list of outline points.
+    Vec2List: A list of outline points.
         )doc")
         .def("get_bounding_rect", &Mask::getBoundingRect, R"doc(
 Get the bounding rectangle that contains all solid pixels.
@@ -594,7 +594,7 @@ Args:
     offset (Vec2): Position offset between the masks. Defaults to (0, 0).
 
 Returns:
-    list[Vec2]: A list of collision points.
+    Vec2List: A list of collision points.
         )doc"
         )
         .def("is_empty", &Mask::isEmpty, R"doc(

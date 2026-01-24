@@ -307,10 +307,12 @@ namespace pixel_array
 {
 void _bind(py::module_& module)
 {
-    py::native_enum<ScrollMode>(module, "ScrollMode", "enum.IntEnum")
-        .value("SMEAR", ScrollMode::SMEAR)
-        .value("ERASE", ScrollMode::ERASE)
-        .value("REPEAT", ScrollMode::REPEAT)
+    py::native_enum<ScrollMode>(module, "ScrollMode", "enum.IntEnum", R"doc(
+Edge handling behavior for PixelArray scrolling.
+    )doc")
+        .value("SMEAR", ScrollMode::SMEAR, "Clamp edge pixels when scrolling")
+        .value("ERASE", ScrollMode::ERASE, "Erase pixels that scroll out")
+        .value("REPEAT", ScrollMode::REPEAT, "Wrap pixels when scrolling")
         .finalize();
 
     py::classh<PixelArray>(module, "PixelArray", R"doc(

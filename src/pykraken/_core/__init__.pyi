@@ -19,10 +19,16 @@ from . import rect
 from . import renderer
 from . import tilemap
 from . import time
+from . import transform
 from . import viewport
 from . import window
-__all__: list[str] = ['AUDIO_DEVICE_ADDED', 'AUDIO_DEVICE_FORMAT_CHANGED', 'AUDIO_DEVICE_REMOVED', 'Align', 'Anchor', 'AnimationController', 'Audio', 'AudioStream', 'CAMERA_DEVICE_ADDED', 'CAMERA_DEVICE_APPROVED', 'CAMERA_DEVICE_DENIED', 'CAMERA_DEVICE_REMOVED', 'CLIPBOARD_UPDATE', 'C_BACK', 'C_DPAD_DOWN', 'C_DPAD_LEFT', 'C_DPAD_RIGHT', 'C_DPAD_UP', 'C_EAST', 'C_GUIDE', 'C_LSHOULDER', 'C_LSTICK', 'C_LTRIGGER', 'C_LX', 'C_LY', 'C_NORTH', 'C_PS3', 'C_PS4', 'C_PS5', 'C_RSHOULDER', 'C_RSTICK', 'C_RTRIGGER', 'C_RX', 'C_RY', 'C_SOUTH', 'C_STANDARD', 'C_START', 'C_SWITCH_JOYCON_LEFT', 'C_SWITCH_JOYCON_PAIR', 'C_SWITCH_JOYCON_RIGHT', 'C_SWITCH_PRO', 'C_WEST', 'C_XBOX_360', 'C_XBOX_ONE', 'Camera', 'Circle', 'Color', 'DID_ENTER_BACKGROUND', 'DID_ENTER_FOREGROUND', 'DISPLAY_ADDED', 'DISPLAY_CONTENT_SCALE_CHANGED', 'DISPLAY_CURRENT_MODE_CHANGED', 'DISPLAY_DESKTOP_MODE_CHANGED', 'DISPLAY_MOVED', 'DISPLAY_ORIENTATION', 'DISPLAY_REMOVED', 'DISPLAY_USABLE_BOUNDS_CHANGED', 'DROP_BEGIN', 'DROP_COMPLETE', 'DROP_FILE', 'DROP_POSITION', 'DROP_TEXT', 'EasingAnimation', 'Effect', 'Event', 'EventType', 'FINGER_CANCELED', 'FINGER_DOWN', 'FINGER_MOTION', 'FINGER_UP', 'Font', 'FontHint', 'GAMEPAD_ADDED', 'GAMEPAD_AXIS_MOTION', 'GAMEPAD_BUTTON_DOWN', 'GAMEPAD_BUTTON_UP', 'GAMEPAD_REMAPPED', 'GAMEPAD_REMOVED', 'GAMEPAD_SENSOR_UPDATE', 'GAMEPAD_STEAM_HANDLE_UPDATED', 'GAMEPAD_TOUCHPAD_DOWN', 'GAMEPAD_TOUCHPAD_MOTION', 'GAMEPAD_TOUCHPAD_UP', 'GAMEPAD_UPDATE_COMPLETE', 'GamepadAxis', 'GamepadButton', 'GamepadType', 'InputAction', 'InputActionList', 'KEYBOARD_ADDED', 'KEYBOARD_REMOVED', 'KEYMAP_CHANGED', 'KEY_DOWN', 'KEY_UP', 'K_0', 'K_1', 'K_2', 'K_3', 'K_4', 'K_5', 'K_6', 'K_7', 'K_8', 'K_9', 'K_AGAIN', 'K_AMPERSAND', 'K_APPLICATION', 'K_ASTERISK', 'K_AT', 'K_BACKSLASH', 'K_BACKSPACE', 'K_CALL', 'K_CAPS', 'K_CARET', 'K_CHANNEL_DEC', 'K_CHANNEL_INC', 'K_COLON', 'K_COMMA', 'K_COPY', 'K_CUT', 'K_DBLQUOTE', 'K_DEL', 'K_DOLLAR', 'K_DOWN', 'K_END', 'K_ENDCALL', 'K_EQ', 'K_ESC', 'K_EXCLAIM', 'K_EXECUTE', 'K_F1', 'K_F10', 'K_F11', 'K_F12', 'K_F13', 'K_F14', 'K_F15', 'K_F2', 'K_F3', 'K_F4', 'K_F5', 'K_F6', 'K_F7', 'K_F8', 'K_F9', 'K_FIND', 'K_GRAVE', 'K_GT', 'K_HASH', 'K_HELP', 'K_HOME', 'K_INS', 'K_KP_0', 'K_KP_1', 'K_KP_2', 'K_KP_3', 'K_KP_4', 'K_KP_5', 'K_KP_6', 'K_KP_7', 'K_KP_8', 'K_KP_9', 'K_KP_DIV', 'K_KP_ENTER', 'K_KP_MINUS', 'K_KP_MULT', 'K_KP_PERIOD', 'K_KP_PLUS', 'K_LALT', 'K_LBRACE', 'K_LBRACKET', 'K_LCTRL', 'K_LEFT', 'K_LGUI', 'K_LPAREN', 'K_LSHIFT', 'K_LT', 'K_MEDIA_EJECT', 'K_MEDIA_FF', 'K_MEDIA_NEXT', 'K_MEDIA_PAUSE', 'K_MEDIA_PLAY', 'K_MEDIA_PLAY_PAUSE', 'K_MEDIA_PREV', 'K_MEDIA_REC', 'K_MEDIA_REWIND', 'K_MEDIA_SELECT', 'K_MEDIA_STOP', 'K_MENU', 'K_MINUS', 'K_MODE', 'K_MUTE', 'K_NUMLOCK', 'K_PASTE', 'K_PAUSE', 'K_PERCENT', 'K_PERIOD', 'K_PGDOWN', 'K_PGUP', 'K_PIPE', 'K_PLUS', 'K_POWER', 'K_PRTSCR', 'K_QUESTION', 'K_RALT', 'K_RBRACE', 'K_RBRACKET', 'K_RCTRL', 'K_RETURN', 'K_RGUI', 'K_RIGHT', 'K_RPAREN', 'K_RSHIFT', 'K_SCRLK', 'K_SELECT', 'K_SEMICOLON', 'K_SGLQUOTE', 'K_SLASH', 'K_SLEEP', 'K_SOFTLEFT', 'K_SOFTRIGHT', 'K_SPACE', 'K_STOP', 'K_TAB', 'K_TILDE', 'K_UNDERSCORE', 'K_UNDO', 'K_UNKNOWN', 'K_UP', 'K_VOLDOWN', 'K_VOLUP', 'K_WAKE', 'K_a', 'K_b', 'K_c', 'K_d', 'K_e', 'K_f', 'K_g', 'K_h', 'K_i', 'K_j', 'K_k', 'K_l', 'K_m', 'K_n', 'K_o', 'K_p', 'K_q', 'K_r', 'K_s', 'K_t', 'K_u', 'K_v', 'K_w', 'K_x', 'K_y', 'K_z', 'Keycode', 'LOCALE_CHANGED', 'LOW_MEMORY', 'Line', 'MOUSE_ADDED', 'MOUSE_BUTTON_DOWN', 'MOUSE_BUTTON_UP', 'MOUSE_MOTION', 'MOUSE_REMOVED', 'MOUSE_WHEEL', 'M_LEFT', 'M_MIDDLE', 'M_RIGHT', 'M_SIDE1', 'M_SIDE2', 'Mask', 'MouseButton', 'Orchestrator', 'PEN_AXIS', 'PEN_BUTTON_DOWN', 'PEN_BUTTON_UP', 'PEN_DOWN', 'PEN_MOTION', 'PEN_PROXIMITY_IN', 'PEN_PROXIMITY_OUT', 'PEN_UP', 'PINCH_BEGIN', 'PINCH_END', 'PINCH_UPDATE', 'P_DISTANCE', 'P_PRESSURE', 'P_ROTATION', 'P_SLIDER', 'P_TANGENTIAL_PRESSURE', 'P_TILT_X', 'P_TILT_Y', 'PenAxis', 'PixelArray', 'PolarCoordinate', 'Polygon', 'QUIT', 'RENDER_DEVICE_LOST', 'RENDER_DEVICE_RESET', 'RENDER_TARGETS_RESET', 'Rect', 'RectList', 'SCREEN_KEYBOARD_HIDDEN', 'SCREEN_KEYBOARD_SHOWN', 'SENSOR_UPDATE', 'SYSTEM_THEME_CHANGED', 'S_0', 'S_1', 'S_2', 'S_3', 'S_4', 'S_5', 'S_6', 'S_7', 'S_8', 'S_9', 'S_AGAIN', 'S_APOSTROPHE', 'S_APPLICATION', 'S_BACKSLASH', 'S_BACKSPACE', 'S_CALL', 'S_CAPS', 'S_CHANNEL_DEC', 'S_CHANNEL_INC', 'S_COMMA', 'S_COPY', 'S_CUT', 'S_DEL', 'S_DOWN', 'S_END', 'S_ENDCALL', 'S_EQ', 'S_ESC', 'S_EXECUTE', 'S_F1', 'S_F10', 'S_F11', 'S_F12', 'S_F13', 'S_F14', 'S_F15', 'S_F2', 'S_F3', 'S_F4', 'S_F5', 'S_F6', 'S_F7', 'S_F8', 'S_F9', 'S_FIND', 'S_GRAVE', 'S_HELP', 'S_HOME', 'S_INS', 'S_KP_0', 'S_KP_1', 'S_KP_2', 'S_KP_3', 'S_KP_4', 'S_KP_5', 'S_KP_6', 'S_KP_7', 'S_KP_8', 'S_KP_9', 'S_KP_DIV', 'S_KP_ENTER', 'S_KP_MINUS', 'S_KP_MULT', 'S_KP_PERIOD', 'S_KP_PLUS', 'S_LALT', 'S_LBRACKET', 'S_LCTRL', 'S_LEFT', 'S_LGUI', 'S_LSHIFT', 'S_MEDIA_EJECT', 'S_MEDIA_FAST_FORWARD', 'S_MEDIA_NEXT', 'S_MEDIA_PAUSE', 'S_MEDIA_PLAY', 'S_MEDIA_PLAY_PAUSE', 'S_MEDIA_PREV', 'S_MEDIA_REC', 'S_MEDIA_REWIND', 'S_MEDIA_SELECT', 'S_MEDIA_STOP', 'S_MENU', 'S_MINUS', 'S_MODE', 'S_MUTE', 'S_NUMLOCK', 'S_PASTE', 'S_PAUSE', 'S_PERIOD', 'S_PGDOWN', 'S_PGUP', 'S_POWER', 'S_PRTSCR', 'S_RALT', 'S_RBRACKET', 'S_RCTRL', 'S_RETURN', 'S_RGUI', 'S_RIGHT', 'S_RSHIFT', 'S_SCRLK', 'S_SELECT', 'S_SEMICOLON', 'S_SLASH', 'S_SLEEP', 'S_SOFTLEFT', 'S_SOFTRIGHT', 'S_SPACE', 'S_STOP', 'S_TAB', 'S_UNDO', 'S_UP', 'S_VOLDOWN', 'S_VOLUP', 'S_WAKE', 'S_a', 'S_b', 'S_c', 'S_d', 'S_e', 'S_f', 'S_g', 'S_h', 'S_i', 'S_j', 'S_k', 'S_l', 'S_m', 'S_n', 'S_o', 'S_p', 'S_q', 'S_r', 'S_s', 'S_t', 'S_u', 'S_v', 'S_w', 'S_x', 'S_y', 'S_z', 'Scancode', 'ScrollMode', 'ShaderState', 'SheetStrip', 'SheetStripList', 'Sprite', 'TERMINATING', 'TEXT_EDITING', 'TEXT_EDITING_CANDIDATES', 'TEXT_INPUT', 'Text', 'Texture', 'TextureAccess', 'TextureScaleMode', 'Timer', 'Transform', 'Vec2', 'Vec2List', 'ViewportMode', 'WILL_ENTER_BACKGROUND', 'WILL_ENTER_FOREGROUND', 'WINDOW_CLOSE_REQUESTED', 'WINDOW_DESTROYED', 'WINDOW_DISPLAY_CHANGED', 'WINDOW_DISPLAY_SCALE_CHANGED', 'WINDOW_ENTER_FULLSCREEN', 'WINDOW_EXPOSED', 'WINDOW_FOCUS_GAINED', 'WINDOW_FOCUS_LOST', 'WINDOW_HDR_STATE_CHANGED', 'WINDOW_HIDDEN', 'WINDOW_HIT_TEST', 'WINDOW_ICCPROF_CHANGED', 'WINDOW_LEAVE_FULLSCREEN', 'WINDOW_MAXIMIZED', 'WINDOW_MINIMIZED', 'WINDOW_MOUSE_ENTER', 'WINDOW_MOUSE_LEAVE', 'WINDOW_MOVED', 'WINDOW_OCCLUDED', 'WINDOW_RESIZED', 'WINDOW_RESTORED', 'WINDOW_SAFE_AREA_CHANGED', 'WINDOW_SHOWN', 'collision', 'color', 'draw', 'ease', 'event', 'gamepad', 'init', 'input', 'key', 'line', 'log', 'math', 'mouse', 'pixel_array', 'quit', 'rect', 'renderer', 'tilemap', 'time', 'viewport', 'window']
+__all__: list[str] = ['AUDIO_DEVICE_ADDED', 'AUDIO_DEVICE_FORMAT_CHANGED', 'AUDIO_DEVICE_REMOVED', 'Align', 'Anchor', 'AnimationController', 'Audio', 'AudioStream', 'CAMERA_DEVICE_ADDED', 'CAMERA_DEVICE_APPROVED', 'CAMERA_DEVICE_DENIED', 'CAMERA_DEVICE_REMOVED', 'CLIPBOARD_UPDATE', 'C_BACK', 'C_DPAD_DOWN', 'C_DPAD_LEFT', 'C_DPAD_RIGHT', 'C_DPAD_UP', 'C_EAST', 'C_GUIDE', 'C_LSHOULDER', 'C_LSTICK', 'C_LTRIGGER', 'C_LX', 'C_LY', 'C_NORTH', 'C_PS3', 'C_PS4', 'C_PS5', 'C_RSHOULDER', 'C_RSTICK', 'C_RTRIGGER', 'C_RX', 'C_RY', 'C_SOUTH', 'C_STANDARD', 'C_START', 'C_SWITCH_JOYCON_LEFT', 'C_SWITCH_JOYCON_PAIR', 'C_SWITCH_JOYCON_RIGHT', 'C_SWITCH_PRO', 'C_WEST', 'C_XBOX_360', 'C_XBOX_ONE', 'Camera', 'Circle', 'Color', 'DID_ENTER_BACKGROUND', 'DID_ENTER_FOREGROUND', 'DISPLAY_ADDED', 'DISPLAY_CONTENT_SCALE_CHANGED', 'DISPLAY_CURRENT_MODE_CHANGED', 'DISPLAY_DESKTOP_MODE_CHANGED', 'DISPLAY_MOVED', 'DISPLAY_ORIENTATION', 'DISPLAY_REMOVED', 'DISPLAY_USABLE_BOUNDS_CHANGED', 'DROP_BEGIN', 'DROP_COMPLETE', 'DROP_FILE', 'DROP_POSITION', 'DROP_TEXT', 'EasingAnimation', 'Effect', 'Event', 'EventType', 'FINGER_CANCELED', 'FINGER_DOWN', 'FINGER_MOTION', 'FINGER_UP', 'Font', 'FontHint', 'GAMEPAD_ADDED', 'GAMEPAD_AXIS_MOTION', 'GAMEPAD_BUTTON_DOWN', 'GAMEPAD_BUTTON_UP', 'GAMEPAD_REMAPPED', 'GAMEPAD_REMOVED', 'GAMEPAD_SENSOR_UPDATE', 'GAMEPAD_STEAM_HANDLE_UPDATED', 'GAMEPAD_TOUCHPAD_DOWN', 'GAMEPAD_TOUCHPAD_MOTION', 'GAMEPAD_TOUCHPAD_UP', 'GAMEPAD_UPDATE_COMPLETE', 'GamepadAxis', 'GamepadButton', 'GamepadType', 'InputAction', 'InputActionList', 'KEYBOARD_ADDED', 'KEYBOARD_REMOVED', 'KEYMAP_CHANGED', 'KEY_DOWN', 'KEY_UP', 'K_0', 'K_1', 'K_2', 'K_3', 'K_4', 'K_5', 'K_6', 'K_7', 'K_8', 'K_9', 'K_AGAIN', 'K_AMPERSAND', 'K_APPLICATION', 'K_ASTERISK', 'K_AT', 'K_BACKSLASH', 'K_BACKSPACE', 'K_CALL', 'K_CAPS', 'K_CARET', 'K_CHANNEL_DEC', 'K_CHANNEL_INC', 'K_COLON', 'K_COMMA', 'K_COPY', 'K_CUT', 'K_DBLQUOTE', 'K_DEL', 'K_DOLLAR', 'K_DOWN', 'K_END', 'K_ENDCALL', 'K_EQ', 'K_ESC', 'K_EXCLAIM', 'K_EXECUTE', 'K_F1', 'K_F10', 'K_F11', 'K_F12', 'K_F13', 'K_F14', 'K_F15', 'K_F2', 'K_F3', 'K_F4', 'K_F5', 'K_F6', 'K_F7', 'K_F8', 'K_F9', 'K_FIND', 'K_GRAVE', 'K_GT', 'K_HASH', 'K_HELP', 'K_HOME', 'K_INS', 'K_KP_0', 'K_KP_1', 'K_KP_2', 'K_KP_3', 'K_KP_4', 'K_KP_5', 'K_KP_6', 'K_KP_7', 'K_KP_8', 'K_KP_9', 'K_KP_DIV', 'K_KP_ENTER', 'K_KP_MINUS', 'K_KP_MULT', 'K_KP_PERIOD', 'K_KP_PLUS', 'K_LALT', 'K_LBRACE', 'K_LBRACKET', 'K_LCTRL', 'K_LEFT', 'K_LGUI', 'K_LPAREN', 'K_LSHIFT', 'K_LT', 'K_MEDIA_EJECT', 'K_MEDIA_FF', 'K_MEDIA_NEXT', 'K_MEDIA_PAUSE', 'K_MEDIA_PLAY', 'K_MEDIA_PLAY_PAUSE', 'K_MEDIA_PREV', 'K_MEDIA_REC', 'K_MEDIA_REWIND', 'K_MEDIA_SELECT', 'K_MEDIA_STOP', 'K_MENU', 'K_MINUS', 'K_MODE', 'K_MUTE', 'K_NUMLOCK', 'K_PASTE', 'K_PAUSE', 'K_PERCENT', 'K_PERIOD', 'K_PGDOWN', 'K_PGUP', 'K_PIPE', 'K_PLUS', 'K_POWER', 'K_PRTSCR', 'K_QUESTION', 'K_RALT', 'K_RBRACE', 'K_RBRACKET', 'K_RCTRL', 'K_RETURN', 'K_RGUI', 'K_RIGHT', 'K_RPAREN', 'K_RSHIFT', 'K_SCRLK', 'K_SELECT', 'K_SEMICOLON', 'K_SGLQUOTE', 'K_SLASH', 'K_SLEEP', 'K_SOFTLEFT', 'K_SOFTRIGHT', 'K_SPACE', 'K_STOP', 'K_TAB', 'K_TILDE', 'K_UNDERSCORE', 'K_UNDO', 'K_UNKNOWN', 'K_UP', 'K_VOLDOWN', 'K_VOLUP', 'K_WAKE', 'K_a', 'K_b', 'K_c', 'K_d', 'K_e', 'K_f', 'K_g', 'K_h', 'K_i', 'K_j', 'K_k', 'K_l', 'K_m', 'K_n', 'K_o', 'K_p', 'K_q', 'K_r', 'K_s', 'K_t', 'K_u', 'K_v', 'K_w', 'K_x', 'K_y', 'K_z', 'Keycode', 'LOCALE_CHANGED', 'LOW_MEMORY', 'Line', 'MOUSE_ADDED', 'MOUSE_BUTTON_DOWN', 'MOUSE_BUTTON_UP', 'MOUSE_MOTION', 'MOUSE_REMOVED', 'MOUSE_WHEEL', 'M_LEFT', 'M_MIDDLE', 'M_RIGHT', 'M_SIDE1', 'M_SIDE2', 'Mask', 'MouseButton', 'Orchestrator', 'PEN_AXIS', 'PEN_BUTTON_DOWN', 'PEN_BUTTON_UP', 'PEN_DOWN', 'PEN_MOTION', 'PEN_PROXIMITY_IN', 'PEN_PROXIMITY_OUT', 'PEN_UP', 'PINCH_BEGIN', 'PINCH_END', 'PINCH_UPDATE', 'P_DISTANCE', 'P_PRESSURE', 'P_ROTATION', 'P_SLIDER', 'P_TANGENTIAL_PRESSURE', 'P_TILT_X', 'P_TILT_Y', 'PenAxis', 'PixelArray', 'PolarCoordinate', 'Polygon', 'QUIT', 'RENDER_DEVICE_LOST', 'RENDER_DEVICE_RESET', 'RENDER_TARGETS_RESET', 'Rect', 'RectList', 'SCREEN_KEYBOARD_HIDDEN', 'SCREEN_KEYBOARD_SHOWN', 'SENSOR_UPDATE', 'SYSTEM_THEME_CHANGED', 'S_0', 'S_1', 'S_2', 'S_3', 'S_4', 'S_5', 'S_6', 'S_7', 'S_8', 'S_9', 'S_AGAIN', 'S_APOSTROPHE', 'S_APPLICATION', 'S_BACKSLASH', 'S_BACKSPACE', 'S_CALL', 'S_CAPS', 'S_CHANNEL_DEC', 'S_CHANNEL_INC', 'S_COMMA', 'S_COPY', 'S_CUT', 'S_DEL', 'S_DOWN', 'S_END', 'S_ENDCALL', 'S_EQ', 'S_ESC', 'S_EXECUTE', 'S_F1', 'S_F10', 'S_F11', 'S_F12', 'S_F13', 'S_F14', 'S_F15', 'S_F2', 'S_F3', 'S_F4', 'S_F5', 'S_F6', 'S_F7', 'S_F8', 'S_F9', 'S_FIND', 'S_GRAVE', 'S_HELP', 'S_HOME', 'S_INS', 'S_KP_0', 'S_KP_1', 'S_KP_2', 'S_KP_3', 'S_KP_4', 'S_KP_5', 'S_KP_6', 'S_KP_7', 'S_KP_8', 'S_KP_9', 'S_KP_DIV', 'S_KP_ENTER', 'S_KP_MINUS', 'S_KP_MULT', 'S_KP_PERIOD', 'S_KP_PLUS', 'S_LALT', 'S_LBRACKET', 'S_LCTRL', 'S_LEFT', 'S_LGUI', 'S_LSHIFT', 'S_MEDIA_EJECT', 'S_MEDIA_FAST_FORWARD', 'S_MEDIA_NEXT', 'S_MEDIA_PAUSE', 'S_MEDIA_PLAY', 'S_MEDIA_PLAY_PAUSE', 'S_MEDIA_PREV', 'S_MEDIA_REC', 'S_MEDIA_REWIND', 'S_MEDIA_SELECT', 'S_MEDIA_STOP', 'S_MENU', 'S_MINUS', 'S_MODE', 'S_MUTE', 'S_NUMLOCK', 'S_PASTE', 'S_PAUSE', 'S_PERIOD', 'S_PGDOWN', 'S_PGUP', 'S_POWER', 'S_PRTSCR', 'S_RALT', 'S_RBRACKET', 'S_RCTRL', 'S_RETURN', 'S_RGUI', 'S_RIGHT', 'S_RSHIFT', 'S_SCRLK', 'S_SELECT', 'S_SEMICOLON', 'S_SLASH', 'S_SLEEP', 'S_SOFTLEFT', 'S_SOFTRIGHT', 'S_SPACE', 'S_STOP', 'S_TAB', 'S_UNDO', 'S_UP', 'S_VOLDOWN', 'S_VOLUP', 'S_WAKE', 'S_a', 'S_b', 'S_c', 'S_d', 'S_e', 'S_f', 'S_g', 'S_h', 'S_i', 'S_j', 'S_k', 'S_l', 'S_m', 'S_n', 'S_o', 'S_p', 'S_q', 'S_r', 'S_s', 'S_t', 'S_u', 'S_v', 'S_w', 'S_x', 'S_y', 'S_z', 'Scancode', 'ScrollMode', 'ShaderState', 'SheetStrip', 'SheetStripList', 'Sprite', 'TERMINATING', 'TEXT_EDITING', 'TEXT_EDITING_CANDIDATES', 'TEXT_INPUT', 'Text', 'Texture', 'TextureAccess', 'TextureScaleMode', 'Timer', 'Transform', 'Vec2', 'Vec2List', 'ViewportMode', 'WILL_ENTER_BACKGROUND', 'WILL_ENTER_FOREGROUND', 'WINDOW_CLOSE_REQUESTED', 'WINDOW_DESTROYED', 'WINDOW_DISPLAY_CHANGED', 'WINDOW_DISPLAY_SCALE_CHANGED', 'WINDOW_ENTER_FULLSCREEN', 'WINDOW_EXPOSED', 'WINDOW_FOCUS_GAINED', 'WINDOW_FOCUS_LOST', 'WINDOW_HDR_STATE_CHANGED', 'WINDOW_HIDDEN', 'WINDOW_HIT_TEST', 'WINDOW_ICCPROF_CHANGED', 'WINDOW_LEAVE_FULLSCREEN', 'WINDOW_MAXIMIZED', 'WINDOW_MINIMIZED', 'WINDOW_MOUSE_ENTER', 'WINDOW_MOUSE_LEAVE', 'WINDOW_MOVED', 'WINDOW_OCCLUDED', 'WINDOW_RESIZED', 'WINDOW_RESTORED', 'WINDOW_SAFE_AREA_CHANGED', 'WINDOW_SHOWN', 'collision', 'color', 'draw', 'ease', 'event', 'gamepad', 'init', 'input', 'key', 'line', 'log', 'math', 'mouse', 'pixel_array', 'quit', 'rect', 'renderer', 'tilemap', 'time', 'transform', 'viewport', 'window']
 class Align(enum.IntEnum):
+    """
+    
+    Horizontal alignment options for layout and text.
+        
+    """
     CENTER: typing.ClassVar[Align]  # value = <Align.CENTER: 1>
     LEFT: typing.ClassVar[Align]  # value = <Align.LEFT: 0>
     RIGHT: typing.ClassVar[Align]  # value = <Align.RIGHT: 2>
@@ -34,6 +40,11 @@ class Align(enum.IntEnum):
         Convert to a string according to format_spec.
         """
 class Anchor(enum.IntEnum):
+    """
+    
+    Anchor positions used for aligning elements within a rectangle.
+        
+    """
     BOTTOM_LEFT: typing.ClassVar[Anchor]  # value = <Anchor.BOTTOM_LEFT: 6>
     BOTTOM_MID: typing.ClassVar[Anchor]  # value = <Anchor.BOTTOM_MID: 7>
     BOTTOM_RIGHT: typing.ClassVar[Anchor]  # value = <Anchor.BOTTOM_RIGHT: 8>
@@ -722,6 +733,11 @@ class Event:
         The event type (e.g., KEY_DOWN, MOUSE_BUTTON_UP).
         """
 class EventType(enum.IntEnum):
+    """
+    
+    SDL event type constants for input and system events.
+        
+    """
     AUDIO_DEVICE_ADDED: typing.ClassVar[EventType]  # value = <EventType.AUDIO_DEVICE_ADDED: 4352>
     AUDIO_DEVICE_FORMAT_CHANGED: typing.ClassVar[EventType]  # value = <EventType.AUDIO_DEVICE_FORMAT_CHANGED: 4354>
     AUDIO_DEVICE_REMOVED: typing.ClassVar[EventType]  # value = <EventType.AUDIO_DEVICE_REMOVED: 4353>
@@ -992,6 +1008,11 @@ class FontHint(enum.IntEnum):
         Convert to a string according to format_spec.
         """
 class GamepadAxis(enum.IntEnum):
+    """
+    
+    Gamepad axis identifiers.
+        
+    """
     C_LTRIGGER: typing.ClassVar[GamepadAxis]  # value = <GamepadAxis.C_LTRIGGER: 4>
     C_LX: typing.ClassVar[GamepadAxis]  # value = <GamepadAxis.C_LX: 0>
     C_LY: typing.ClassVar[GamepadAxis]  # value = <GamepadAxis.C_LY: 1>
@@ -1006,6 +1027,11 @@ class GamepadAxis(enum.IntEnum):
         Convert to a string according to format_spec.
         """
 class GamepadButton(enum.IntEnum):
+    """
+    
+    Gamepad button identifiers.
+        
+    """
     C_BACK: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_BACK: 4>
     C_DPAD_DOWN: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_DPAD_DOWN: 12>
     C_DPAD_LEFT: typing.ClassVar[GamepadButton]  # value = <GamepadButton.C_DPAD_LEFT: 13>
@@ -1029,6 +1055,11 @@ class GamepadButton(enum.IntEnum):
         Convert to a string according to format_spec.
         """
 class GamepadType(enum.IntEnum):
+    """
+    
+    Gamepad device type identifiers.
+        
+    """
     C_PS3: typing.ClassVar[GamepadType]  # value = <GamepadType.C_PS3: 4>
     C_PS4: typing.ClassVar[GamepadType]  # value = <GamepadType.C_PS4: 5>
     C_PS5: typing.ClassVar[GamepadType]  # value = <GamepadType.C_PS5: 6>
@@ -1174,6 +1205,11 @@ class InputActionList:
         Remove and return the item at index ``i``
         """
 class Keycode(enum.IntEnum):
+    """
+    
+    Keyboard keycodes representing logical keys.
+        
+    """
     K_0: typing.ClassVar[Keycode]  # value = <Keycode.K_0: 48>
     K_1: typing.ClassVar[Keycode]  # value = <Keycode.K_1: 49>
     K_2: typing.ClassVar[Keycode]  # value = <Keycode.K_2: 50>
@@ -1585,7 +1621,7 @@ class Mask:
             offset (Vec2): Position offset between the masks. Defaults to (0, 0).
         
         Returns:
-            list[Vec2]: A list of collision points.
+            Vec2List: A list of collision points.
         """
     def get_count(self) -> int:
         """
@@ -1601,7 +1637,7 @@ class Mask:
         Returns a list of points that form the outline of all solid regions.
         
         Returns:
-            list[Vec2]: A list of outline points.
+            Vec2List: A list of outline points.
         """
     def get_overlap_area(self, other: Mask, offset: typing.Any = None) -> int:
         """
@@ -1691,6 +1727,11 @@ class Mask:
         The width of the mask in pixels.
         """
 class MouseButton(enum.IntEnum):
+    """
+    
+    Mouse button identifiers.
+        
+    """
     M_LEFT: typing.ClassVar[MouseButton]  # value = <MouseButton.M_LEFT: 1>
     M_MIDDLE: typing.ClassVar[MouseButton]  # value = <MouseButton.M_MIDDLE: 2>
     M_RIGHT: typing.ClassVar[MouseButton]  # value = <MouseButton.M_RIGHT: 3>
@@ -1807,6 +1848,11 @@ class Orchestrator:
         Whether the animation is currently playing.
         """
 class PenAxis(enum.IntEnum):
+    """
+    
+    Stylus/pen axis identifiers for pen motion data.
+        
+    """
     P_DISTANCE: typing.ClassVar[PenAxis]  # value = <PenAxis.P_DISTANCE: 3>
     P_PRESSURE: typing.ClassVar[PenAxis]  # value = <PenAxis.P_PRESSURE: 0>
     P_ROTATION: typing.ClassVar[PenAxis]  # value = <PenAxis.P_ROTATION: 4>
@@ -2596,6 +2642,11 @@ class RectList:
         Remove the first item from the list whose value is x. It is an error if there is no such item.
         """
 class Scancode(enum.IntEnum):
+    """
+    
+    Keyboard scancodes representing physical key locations.
+        
+    """
     S_0: typing.ClassVar[Scancode]  # value = <Scancode.S_0: 39>
     S_1: typing.ClassVar[Scancode]  # value = <Scancode.S_1: 30>
     S_2: typing.ClassVar[Scancode]  # value = <Scancode.S_2: 31>
@@ -2746,6 +2797,11 @@ class Scancode(enum.IntEnum):
         Convert to a string according to format_spec.
         """
 class ScrollMode(enum.IntEnum):
+    """
+    
+    Edge handling behavior for PixelArray scrolling.
+        
+    """
     ERASE: typing.ClassVar[ScrollMode]  # value = <ScrollMode.ERASE: 1>
     REPEAT: typing.ClassVar[ScrollMode]  # value = <ScrollMode.REPEAT: 2>
     SMEAR: typing.ClassVar[ScrollMode]  # value = <ScrollMode.SMEAR: 0>
@@ -3269,6 +3325,11 @@ class Texture:
     def tint(self, arg1: Color) -> None:
         ...
 class TextureAccess(enum.IntEnum):
+    """
+    
+    Texture access mode for GPU textures.
+        
+    """
     STATIC: typing.ClassVar[TextureAccess]  # value = <TextureAccess.STATIC: 0>
     TARGET: typing.ClassVar[TextureAccess]  # value = <TextureAccess.TARGET: 2>
     @classmethod
@@ -3279,6 +3340,11 @@ class TextureAccess(enum.IntEnum):
         Convert to a string according to format_spec.
         """
 class TextureScaleMode(enum.IntEnum):
+    """
+    
+    Texture scaling and filtering modes.
+        
+    """
     DEFAULT: typing.ClassVar[TextureScaleMode]  # value = <TextureScaleMode.DEFAULT: 3>
     LINEAR: typing.ClassVar[TextureScaleMode]  # value = <TextureScaleMode.LINEAR: 1>
     NEAREST: typing.ClassVar[TextureScaleMode]  # value = <TextureScaleMode.NEAREST: 0>
@@ -3468,6 +3534,11 @@ class Vec2:
         distance_squared_to: Measure squared distance to another Vec2.
             
     """
+    DOWN: typing.ClassVar[Vec2]  # value = Vec2(0.000000, 1.000000)
+    LEFT: typing.ClassVar[Vec2]  # value = Vec2(-1.000000, 0.000000)
+    RIGHT: typing.ClassVar[Vec2]  # value = Vec2(1.000000, 0.000000)
+    UP: typing.ClassVar[Vec2]  # value = Vec2(0.000000, -1.000000)
+    ZERO: typing.ClassVar[Vec2]  # value = Vec2(0.000000, 0.000000)
     def __add__(self, other: Vec2) -> Vec2:
         ...
     def __bool__(self) -> bool:
@@ -3480,6 +3551,10 @@ class Vec2:
         ...
     def __iadd__(self, other: Vec2) -> Vec2:
         ...
+    @typing.overload
+    def __imul__(self, other: Vec2) -> Vec2:
+        ...
+    @typing.overload
     def __imul__(self, scalar: typing.SupportsFloat) -> Vec2:
         ...
     @typing.overload
@@ -3523,6 +3598,10 @@ class Vec2:
         ...
     def __len__(self) -> int:
         ...
+    @typing.overload
+    def __mul__(self, other: Vec2) -> Vec2:
+        ...
+    @typing.overload
     def __mul__(self, scalar: typing.SupportsFloat) -> Vec2:
         ...
     def __ne__(self, other: Vec2) -> bool:
@@ -3857,6 +3936,11 @@ class Vec2List:
         Remove the first item from the list whose value is x. It is an error if there is no such item.
         """
 class ViewportMode(enum.IntEnum):
+    """
+    
+    Viewport layout mode for split-screen layouts.
+        
+    """
     HORIZONTAL: typing.ClassVar[ViewportMode]  # value = <ViewportMode.HORIZONTAL: 1>
     VERTICAL: typing.ClassVar[ViewportMode]  # value = <ViewportMode.VERTICAL: 0>
     @classmethod
@@ -3876,7 +3960,7 @@ def _fx_call(callback: collections.abc.Callable[[], None]) -> Effect:
     Returns:
         Effect: The call effect.
     """
-def _fx_move_to(pos: typing.Any = None, dur: typing.SupportsFloat = 0.0, ease: typing.Any = None) -> Effect:
+def _fx_move_to(pos: Vec2, dur: typing.SupportsFloat = 0.0, ease: typing.Any = None) -> Effect:
     """
     Create a move-to effect.
     
@@ -3893,7 +3977,7 @@ def _fx_rotate_by(delta: typing.SupportsFloat, clockwise: bool = True, dur: typi
     Create a rotate-by effect.
     
     Args:
-        delta (float): Delta angle in radians to rotate by.
+        delta (float): Delta angle in radians to rotate by in radians.
         clockwise (bool): Direction of rotation. True for clockwise, False for counterclockwise.
         dur (float): Duration in seconds.
         ease (callable): Easing function (t -> t).

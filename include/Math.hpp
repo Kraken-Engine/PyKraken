@@ -3,8 +3,6 @@
 #include <SDL3/SDL.h>
 #include <pybind11/pybind11.h>
 
-#include "_globals.hpp"
-
 namespace py = pybind11;
 
 namespace kn
@@ -39,8 +37,13 @@ class Vec2
     double x = 0.0;
     double y = 0.0;
 
-    Vec2() = default;
+    static Vec2 ZERO();
+    static Vec2 LEFT();
+    static Vec2 RIGHT();
+    static Vec2 UP();
+    static Vec2 DOWN();
 
+    Vec2() = default;
     ~Vec2() = default;
 
     template <typename T>
@@ -101,6 +104,8 @@ class Vec2
 
     Vec2 operator-(const Vec2& other) const;
 
+    Vec2 operator*(const Vec2& other) const;
+
     Vec2 operator*(double scalar) const;
 
     Vec2 operator/(double scalar) const;
@@ -108,6 +113,8 @@ class Vec2
     Vec2& operator+=(const Vec2& other);
 
     Vec2& operator-=(const Vec2& other);
+
+    Vec2& operator*=(const Vec2& other);
 
     Vec2& operator*=(double scalar);
 
@@ -117,22 +124,14 @@ class Vec2
 
     bool operator!=(const Vec2& other) const;
 
+    explicit operator bool() const;
+
     explicit operator SDL_Point() const;
 
     explicit operator SDL_FPoint() const;
 };
 
 Vec2 operator*(double lhs, const Vec2& rhs);
-
-struct Transform
-{
-    Vec2 pos{0.0, 0.0};
-    Vec2 size{};         // Explicit size (empty = use texture/srcRect size)
-    double angle = 0.0;  // In radians
-    Vec2 scale{1.0, 1.0};
-    Anchor anchor = Anchor::TopLeft;
-    Vec2 pivot{0.5, 0.5};  // Normalized pivot point, centered by default
-};
 
 namespace math
 {

@@ -32,12 +32,13 @@
 #include "Texture.hpp"
 #include "TileMap.hpp"
 #include "Time.hpp"
+#include "Transform.hpp"
 #include "Viewport.hpp"
 #include "Window.hpp"
 
 constexpr int KRAKEN_MAJOR_VERSION = 1;
 constexpr int KRAKEN_MINOR_VERSION = 5;
-constexpr int KRAKEN_MICRO_VERSION = 0;
+constexpr int KRAKEN_MICRO_VERSION = 1;
 
 constexpr const char* getPlatform();
 constexpr const char* getArchitecture();
@@ -103,6 +104,7 @@ Tear down the Kraken engine subsystems.
     kn::color::_bind(m);
     kn::constants::_bind(m);
     kn::math::_bind(m);
+    kn::transform::_bind(m);
     kn::rect::_bind(m);
     kn::pixel_array::_bind(m);
     kn::texture::_bind(m);

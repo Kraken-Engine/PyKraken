@@ -26,13 +26,17 @@ class ImageLayer(Layer):
         """
     @property
     def opacity(self) -> float:
-        ...
+        """
+        Layer opacity from 0.0 to 1.0.
+        """
     @opacity.setter
     def opacity(self, arg1: typing.SupportsFloat) -> None:
         ...
     @property
     def texture(self) -> pykraken._core.Texture:
-        ...
+        """
+        Texture used by the image layer.
+        """
 class Layer:
     """
     
@@ -49,23 +53,43 @@ class Layer:
         render: Draw the layer to the current renderer.
         
     """
-    offset: pykraken._core.Vec2
-    visible: bool
     def render(self) -> None:
         """
         Draw the layer to the current renderer.
         """
     @property
     def name(self) -> str:
+        """
+        Layer name.
+        """
+    @property
+    def offset(self) -> pykraken._core.Vec2:
+        """
+        Per-layer drawing offset.
+        """
+    @offset.setter
+    def offset(self, arg0: pykraken._core.Vec2) -> None:
         ...
     @property
     def opacity(self) -> float:
-        ...
+        """
+        Layer opacity from 0.0 to 1.0.
+        """
     @opacity.setter
     def opacity(self, arg1: typing.SupportsFloat) -> None:
         ...
     @property
     def type(self) -> LayerType:
+        """
+        Layer type enum.
+        """
+    @property
+    def visible(self) -> bool:
+        """
+        Whether the layer is visible.
+        """
+    @visible.setter
+    def visible(self, arg0: bool) -> None:
         ...
 class LayerList:
     __hash__: typing.ClassVar[None] = None
@@ -167,6 +191,11 @@ class LayerList:
         Remove the first item from the list whose value is x. It is an error if there is no such item.
         """
 class LayerType(enum.IntEnum):
+    """
+    
+    TMX layer type values.
+        
+    """
     IMAGE: typing.ClassVar[LayerType]  # value = <LayerType.IMAGE: 2>
     OBJECT: typing.ClassVar[LayerType]  # value = <LayerType.OBJECT: 1>
     TILE: typing.ClassVar[LayerType]  # value = <LayerType.TILE: 0>
@@ -192,15 +221,14 @@ class Map:
         hex_side_length (float): Hex side length for hex maps.
         stagger_axis (MapStaggerAxis): Stagger axis enum for staggered/hex maps.
         stagger_index (MapStaggerIndex): Stagger index enum.
-        tile_sets (list): List of TileSet objects.
-        layers (list): List of Layer instances.
+        tile_sets (TileSetList): List of TileSet objects.
+        layers (LayerList): List of Layer instances.
     
     Methods:
         load: Load a TMX file from path.
         render: Render all layers.
         
     """
-    background_color: pykraken._core.Color
     def __init__(self) -> None:
         ...
     def load(self, tmx_path: str) -> None:
@@ -215,35 +243,63 @@ class Map:
         Render all layers.
         """
     @property
-    def bounds(self) -> pykraken._core.Rect:
+    def background_color(self) -> pykraken._core.Color:
+        """
+        Map background color.
+        """
+    @background_color.setter
+    def background_color(self, arg0: pykraken._core.Color) -> None:
         ...
+    @property
+    def bounds(self) -> pykraken._core.Rect:
+        """
+        Map bounds in pixels.
+        """
     @property
     def hex_side_length(self) -> float:
-        ...
+        """
+        Hex side length for hex maps.
+        """
     @property
     def layers(self) -> LayerList:
-        ...
+        """
+        LayerList of layers in the map.
+        """
     @property
     def map_size(self) -> pykraken._core.Vec2:
-        ...
+        """
+        Map dimensions in tiles.
+        """
     @property
     def orientation(self) -> MapOrientation:
-        ...
+        """
+        Map orientation enum.
+        """
     @property
     def render_order(self) -> MapRenderOrder:
-        ...
+        """
+        Tile render order enum.
+        """
     @property
     def stagger_axis(self) -> MapStaggerAxis:
-        ...
+        """
+        Stagger axis enum for staggered/hex maps.
+        """
     @property
     def stagger_index(self) -> MapStaggerIndex:
-        ...
+        """
+        Stagger index enum for staggered/hex maps.
+        """
     @property
     def tile_sets(self) -> TileSetList:
-        ...
+        """
+        TileSetList of tilesets used by the map.
+        """
     @property
     def tile_size(self) -> pykraken._core.Vec2:
-        ...
+        """
+        Size of tiles in pixels.
+        """
 class MapObject:
     """
     
@@ -258,11 +314,16 @@ class MapObject:
         rect (Rect): Bounding rectangle.
         tile_id (int): Associated tile id if the object is a tile.
         shape_type (ShapeType): The shape enum for the object.
-        vertices (list): Vertex list for polygon/polyline shapes.
+        vertices (Vec2List): Vertex list for polygon/polyline shapes.
         text (TextProperties): Text properties when shape is text.
         
     """
     class ShapeType(enum.IntEnum):
+        """
+        
+        TMX object shape types.
+            
+        """
         ELLIPSE: typing.ClassVar[MapObject.ShapeType]  # value = <ShapeType.ELLIPSE: 1>
         POINT: typing.ClassVar[MapObject.ShapeType]  # value = <ShapeType.POINT: 2>
         POLYGON: typing.ClassVar[MapObject.ShapeType]  # value = <ShapeType.POLYGON: 3>
@@ -276,31 +337,61 @@ class MapObject:
             """
             Convert to a string according to format_spec.
             """
-    transform: pykraken._core.Transform
-    visible: bool
     @property
     def name(self) -> str:
-        ...
+        """
+        Object name.
+        """
     @property
     def rect(self) -> pykraken._core.Rect:
-        ...
+        """
+        Object bounding rectangle.
+        """
     @property
     def shape_type(self) -> MapObject.ShapeType:
-        ...
+        """
+        Shape type enum for the object.
+        """
     @property
     def text(self) -> TextProperties:
-        ...
+        """
+        Text properties if the object is text.
+        """
     @property
     def tile_id(self) -> int:
+        """
+        Associated tile id when the object is a tile.
+        """
+    @property
+    def transform(self) -> pykraken._core.Transform:
+        """
+        Transform component for the object.
+        """
+    @transform.setter
+    def transform(self, arg0: pykraken._core.Transform) -> None:
         ...
     @property
     def type(self) -> str:
-        ...
+        """
+        Object type string.
+        """
     @property
     def uid(self) -> int:
-        ...
+        """
+        Unique object identifier.
+        """
     @property
     def vertices(self) -> pykraken._core.Vec2List:
+        """
+        Vec2List of vertices for polygon/polyline shapes.
+        """
+    @property
+    def visible(self) -> bool:
+        """
+        Visibility flag.
+        """
+    @visible.setter
+    def visible(self, arg0: bool) -> None:
         ...
 class MapObjectList:
     def __bool__(self) -> bool:
@@ -381,6 +472,11 @@ class MapObjectList:
         Remove and return the item at index ``i``
         """
 class MapOrientation(enum.IntEnum):
+    """
+    
+    TMX map orientation values.
+        
+    """
     HEXAGONAL: typing.ClassVar[MapOrientation]  # value = <MapOrientation.HEXAGONAL: 3>
     ISOMETRIC: typing.ClassVar[MapOrientation]  # value = <MapOrientation.ISOMETRIC: 1>
     NONE: typing.ClassVar[MapOrientation]  # value = <MapOrientation.NONE: 4>
@@ -394,6 +490,11 @@ class MapOrientation(enum.IntEnum):
         Convert to a string according to format_spec.
         """
 class MapRenderOrder(enum.IntEnum):
+    """
+    
+    Tile render order for TMX maps.
+        
+    """
     LEFT_DOWN: typing.ClassVar[MapRenderOrder]  # value = <MapRenderOrder.LEFT_DOWN: 2>
     LEFT_UP: typing.ClassVar[MapRenderOrder]  # value = <MapRenderOrder.LEFT_UP: 3>
     NONE: typing.ClassVar[MapRenderOrder]  # value = <MapRenderOrder.NONE: 4>
@@ -407,6 +508,11 @@ class MapRenderOrder(enum.IntEnum):
         Convert to a string according to format_spec.
         """
 class MapStaggerAxis(enum.IntEnum):
+    """
+    
+    Stagger axis for staggered/hex maps.
+        
+    """
     NONE: typing.ClassVar[MapStaggerAxis]  # value = <MapStaggerAxis.NONE: 2>
     X: typing.ClassVar[MapStaggerAxis]  # value = <MapStaggerAxis.X: 0>
     Y: typing.ClassVar[MapStaggerAxis]  # value = <MapStaggerAxis.Y: 1>
@@ -418,6 +524,11 @@ class MapStaggerAxis(enum.IntEnum):
         Convert to a string according to format_spec.
         """
 class MapStaggerIndex(enum.IntEnum):
+    """
+    
+    Stagger index for staggered/hex maps.
+        
+    """
     EVEN: typing.ClassVar[MapStaggerIndex]  # value = <MapStaggerIndex.EVEN: 0>
     NONE: typing.ClassVar[MapStaggerIndex]  # value = <MapStaggerIndex.NONE: 2>
     ODD: typing.ClassVar[MapStaggerIndex]  # value = <MapStaggerIndex.ODD: 1>
@@ -437,13 +548,18 @@ class ObjectGroup(Layer):
         color (Color): Tint color applied to non-tile objects.
         opacity (float): Layer opacity.
         draw_order (DrawOrder): Drawing order for objects.
-        objects (list): List of contained MapObject instances.
+        objects (MapObjectList): List of contained MapObject instances.
     
     Methods:
         render: Draw the object group.
         
     """
     class DrawOrder(enum.IntEnum):
+        """
+        
+        Object drawing order for object layers.
+            
+        """
         INDEX: typing.ClassVar[ObjectGroup.DrawOrder]  # value = <DrawOrder.INDEX: 0>
         TOP_DOWN: typing.ClassVar[ObjectGroup.DrawOrder]  # value = <DrawOrder.TOP_DOWN: 1>
         @classmethod
@@ -453,20 +569,33 @@ class ObjectGroup(Layer):
             """
             Convert to a string according to format_spec.
             """
-    color: pykraken._core.Color
     def render(self) -> None:
         """
         Draw the object group.
         """
     @property
-    def draw_order(self) -> ObjectGroup.DrawOrder:
+    def color(self) -> pykraken._core.Color:
+        """
+        Tint color for non-tile objects.
+        """
+    @color.setter
+    def color(self, arg0: pykraken._core.Color) -> None:
         ...
+    @property
+    def draw_order(self) -> ObjectGroup.DrawOrder:
+        """
+        Drawing order for objects in the group.
+        """
     @property
     def objects(self) -> MapObjectList:
-        ...
+        """
+        MapObjectList of objects in the group.
+        """
     @property
     def opacity(self) -> float:
-        ...
+        """
+        Layer opacity from 0.0 to 1.0.
+        """
     @opacity.setter
     def opacity(self, arg1: typing.SupportsFloat) -> None:
         ...
@@ -489,21 +618,93 @@ class TextProperties:
         text (str): The text content.
         
     """
-    align: pykraken._core.Align
-    bold: bool
-    color: pykraken._core.Color
-    font_family: str
-    italic: bool
-    kerning: bool
-    strikethrough: bool
-    text: str
-    underline: bool
-    wrap: bool
+    @property
+    def align(self) -> pykraken._core.Align:
+        """
+        Horizontal text alignment.
+        """
+    @align.setter
+    def align(self, arg0: pykraken._core.Align) -> None:
+        ...
+    @property
+    def bold(self) -> bool:
+        """
+        Bold style flag.
+        """
+    @bold.setter
+    def bold(self, arg0: bool) -> None:
+        ...
+    @property
+    def color(self) -> pykraken._core.Color:
+        """
+        Text color.
+        """
+    @color.setter
+    def color(self, arg0: pykraken._core.Color) -> None:
+        ...
+    @property
+    def font_family(self) -> str:
+        """
+        Font family name.
+        """
+    @font_family.setter
+    def font_family(self, arg0: str) -> None:
+        ...
+    @property
+    def italic(self) -> bool:
+        """
+        Italic style flag.
+        """
+    @italic.setter
+    def italic(self, arg0: bool) -> None:
+        ...
+    @property
+    def kerning(self) -> bool:
+        """
+        Kerning enabled flag.
+        """
+    @kerning.setter
+    def kerning(self, arg0: bool) -> None:
+        ...
     @property
     def pixel_size(self) -> int:
-        ...
+        """
+        Font size in pixels.
+        """
     @pixel_size.setter
     def pixel_size(self, arg0: typing.SupportsInt) -> None:
+        ...
+    @property
+    def strikethrough(self) -> bool:
+        """
+        Strikethrough style flag.
+        """
+    @strikethrough.setter
+    def strikethrough(self, arg0: bool) -> None:
+        ...
+    @property
+    def text(self) -> str:
+        """
+        Text content.
+        """
+    @text.setter
+    def text(self, arg0: str) -> None:
+        ...
+    @property
+    def underline(self) -> bool:
+        """
+        Underline style flag.
+        """
+    @underline.setter
+    def underline(self, arg0: bool) -> None:
+        ...
+    @property
+    def wrap(self) -> bool:
+        """
+        Whether text wrapping is enabled.
+        """
+    @wrap.setter
+    def wrap(self, arg0: bool) -> None:
         ...
 class TileLayer(Layer):
     """
@@ -512,7 +713,7 @@ class TileLayer(Layer):
     
     Attributes:
         opacity (float): Layer opacity (0.0-1.0).
-        tiles (list): List of `Tile` entries for the layer grid.
+        tiles (TileLayerTileList): List of `Tile` entries for the layer grid.
     
     Methods:
         get_from_area: Return tiles intersecting a Rect area.
@@ -533,13 +734,19 @@ class TileLayer(Layer):
         """
         @property
         def flip_flags(self) -> int:
-            ...
+            """
+            Tile flip/rotation flags.
+            """
         @property
         def id(self) -> int:
-            ...
+            """
+            Global tile id (GID).
+            """
         @property
         def tileset_index(self) -> int:
-            ...
+            """
+            Index of the tileset used by this tile.
+            """
     class TileLayerTileList:
         def __bool__(self) -> bool:
             """
@@ -630,10 +837,14 @@ class TileLayer(Layer):
         """
         @property
         def rect(self) -> pykraken._core.Rect:
-            ...
+            """
+            World-space rectangle covered by the tile.
+            """
         @property
         def tile(self) -> TileLayer.Tile:
-            ...
+            """
+            The tile entry.
+            """
     class TileResultList:
         def __bool__(self) -> bool:
             """
@@ -720,7 +931,7 @@ class TileLayer(Layer):
             area (Rect): World-space area to query.
         
         Returns:
-            list[TileLayer.TileResult]: List of TileResult entries for tiles intersecting the area.
+            TileResultList: List of TileResult entries for tiles intersecting the area.
         """
     def get_from_point(self, position: pykraken._core.Vec2) -> typing.Any:
         """
@@ -738,13 +949,17 @@ class TileLayer(Layer):
         """
     @property
     def opacity(self) -> float:
-        ...
+        """
+        Layer opacity from 0.0 to 1.0.
+        """
     @opacity.setter
     def opacity(self, arg1: typing.SupportsFloat) -> None:
         ...
     @property
     def tiles(self) -> TileLayer.TileLayerTileList:
-        ...
+        """
+        TileLayerTileList of tiles in the layer grid.
+        """
 class TileSet:
     """
     
@@ -760,8 +975,8 @@ class TileSet:
         tile_count (int): Total number of tiles.
         columns (int): Number of tile columns in the source image.
         tile_offset (Vec2): Offset applied to tiles.
-        terrains (list): List of terrain definitions.
-        tiles (list): List of tile metadata.
+        terrains (TerrainList): List of terrain definitions.
+        tiles (TileSetTileList): List of tile metadata.
         texture (Texture): Source texture for this tileset.
     
     Methods:
@@ -781,10 +996,14 @@ class TileSet:
         """
         @property
         def name(self) -> str:
-            ...
+            """
+            Terrain name.
+            """
         @property
         def tile_id(self) -> int:
-            ...
+            """
+            Representative tile id for the terrain.
+            """
     class TerrainList:
         def __bool__(self) -> bool:
             """
@@ -888,16 +1107,24 @@ class TileSet:
                 ...
         @property
         def clip_rect(self) -> pykraken._core.Rect:
-            ...
+            """
+            Source rectangle of the tile within the tileset texture.
+            """
         @property
         def id(self) -> int:
-            ...
+            """
+            Local tile id within the tileset.
+            """
         @property
         def probability(self) -> int:
-            ...
+            """
+            Probability used for weighted/random tile placement.
+            """
         @property
         def terrain_indices(self) -> TileSet.Tile.TerrainIndices:
-            ...
+            """
+            Terrain indices for each corner of the tile.
+            """
     class TileSetTileList:
         def __bool__(self) -> bool:
             """
@@ -998,40 +1225,64 @@ class TileSet:
         """
     @property
     def columns(self) -> int:
-        ...
+        """
+            Number of tile columns in the source image.
+        """
     @property
     def first_gid(self) -> int:
-        ...
+        """
+            First global tile id (GID) in this tileset.
+        """
     @property
     def last_gid(self) -> int:
-        ...
+        """
+            Last global tile id (GID) in this tileset.
+        """
     @property
     def margin(self) -> int:
-        ...
+        """
+            Pixel margin around the source image.
+        """
     @property
     def name(self) -> str:
-        ...
+        """
+            Tileset name.
+        """
     @property
     def spacing(self) -> int:
-        ...
+        """
+            Pixel spacing between tiles in the source image.
+        """
     @property
     def terrains(self) -> TileSet.TerrainList:
-        ...
+        """
+            TerrainList of terrain definitions.
+        """
     @property
     def texture(self) -> pykraken._core.Texture:
-        ...
+        """
+            Source texture for the tileset.
+        """
     @property
     def tile_count(self) -> int:
-        ...
+        """
+            Total number of tiles in the tileset.
+        """
     @property
     def tile_offset(self) -> pykraken._core.Vec2:
-        ...
+        """
+            Per-tile offset applied when rendering.
+        """
     @property
     def tile_size(self) -> pykraken._core.Vec2:
-        ...
+        """
+            Size of tiles in pixels.
+        """
     @property
     def tiles(self) -> TileSet.TileSetTileList:
-        ...
+        """
+            TileSetTileList of tile metadata entries.
+        """
 class TileSetList:
     def __bool__(self) -> bool:
         """

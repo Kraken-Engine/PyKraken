@@ -1,141 +1,109 @@
 """
-Functions for transforming pixel arrays
+
+Submodule for Transform-related functionality.
+        
 """
 from __future__ import annotations
+import collections.abc
 import pykraken._core
 import typing
-__all__: list[str] = ['box_blur', 'flip', 'gaussian_blur', 'grayscale', 'invert', 'rotate', 'scale_by', 'scale_to']
-def box_blur(pixel_array: pykraken._core.PixelArray, radius: typing.SupportsInt, repeat_edge_pixels: bool = True) -> pykraken._core.PixelArray:
+__all__: list[str] = ['TransformList', 'compose', 'compose_chain']
+class TransformList:
+    def __bool__(self) -> bool:
+        """
+        Check whether the list is nonempty
+        """
+    @typing.overload
+    def __delitem__(self, arg0: typing.SupportsInt) -> None:
+        """
+        Delete the list elements at index ``i``
+        """
+    @typing.overload
+    def __delitem__(self, arg0: slice) -> None:
+        """
+        Delete list elements using a slice object
+        """
+    @typing.overload
+    def __getitem__(self, s: slice) -> TransformList:
+        """
+        Retrieve list elements using a slice object
+        """
+    @typing.overload
+    def __getitem__(self, arg0: typing.SupportsInt) -> pykraken._core.Transform:
+        ...
+    @typing.overload
+    def __init__(self) -> None:
+        ...
+    @typing.overload
+    def __init__(self, arg0: TransformList) -> None:
+        """
+        Copy constructor
+        """
+    @typing.overload
+    def __init__(self, arg0: collections.abc.Iterable) -> None:
+        ...
+    def __iter__(self) -> collections.abc.Iterator[pykraken._core.Transform]:
+        ...
+    def __len__(self) -> int:
+        ...
+    @typing.overload
+    def __setitem__(self, arg0: typing.SupportsInt, arg1: pykraken._core.Transform) -> None:
+        ...
+    @typing.overload
+    def __setitem__(self, arg0: slice, arg1: TransformList) -> None:
+        """
+        Assign list elements using a slice object
+        """
+    def append(self, x: pykraken._core.Transform) -> None:
+        """
+        Add an item to the end of the list
+        """
+    def clear(self) -> None:
+        """
+        Clear the contents
+        """
+    @typing.overload
+    def extend(self, L: TransformList) -> None:
+        """
+        Extend the list by appending all the items in the given list
+        """
+    @typing.overload
+    def extend(self, L: collections.abc.Iterable) -> None:
+        """
+        Extend the list by appending all the items in the given list
+        """
+    def insert(self, i: typing.SupportsInt, x: pykraken._core.Transform) -> None:
+        """
+        Insert an item at a given position.
+        """
+    @typing.overload
+    def pop(self) -> pykraken._core.Transform:
+        """
+        Remove and return the last item
+        """
+    @typing.overload
+    def pop(self, i: typing.SupportsInt) -> pykraken._core.Transform:
+        """
+        Remove and return the item at index ``i``
+        """
+def compose(*args) -> pykraken._core.Transform:
     """
-    Apply a box blur effect to a pixel array.
-    
-    Box blur creates a uniform blur effect by averaging pixels within a square kernel.
-    It's faster than Gaussian blur but produces a more uniform, less natural look.
+    Compose multiple Transform objects in order and return the resulting Transform in world space.
+    The first transform is treated as already in world space; each subsequent transform is local to the previous.
     
     Args:
-        pixel_array (PixelArray): The pixel array to blur.
-        radius (int): The blur radius in pixels. Larger values create stronger blur.
-        repeat_edge_pixels (bool, optional): Whether to repeat edge pixels when sampling
-                                            outside the pixel array bounds. Defaults to True.
+        *transforms: Two or more Transform objects to compose.
     
     Returns:
-        PixelArray: A new pixel array with the box blur effect applied.
-    
-    Raises:
-        RuntimeError: If pixel array creation fails during the blur process.
+        Transform: The composed Transform in world space.
     """
-def flip(pixel_array: pykraken._core.PixelArray, flip_x: bool, flip_y: bool) -> pykraken._core.PixelArray:
+def compose_chain(*args) -> TransformList:
     """
-    Flip a pixel array horizontally, vertically, or both.
+    Returns a list of cumulative world-space transforms excluding the initial input.
     
     Args:
-        pixel_array (PixelArray): The pixel array to flip.
-        flip_x (bool): Whether to flip horizontally (mirror left-right).
-        flip_y (bool): Whether to flip vertically (mirror top-bottom).
+        *transforms: Two or more Transform objects to compose.
     
     Returns:
-        PixelArray: A new pixel array with the flipped image.
-    
-    Raises:
-        RuntimeError: If pixel array creation fails.
-    """
-def gaussian_blur(pixel_array: pykraken._core.PixelArray, radius: typing.SupportsInt, repeat_edge_pixels: bool = True) -> pykraken._core.PixelArray:
-    """
-    Apply a Gaussian blur effect to a pixel array.
-    
-    Gaussian blur creates a natural, smooth blur effect using a Gaussian distribution
-    for pixel weighting. It produces higher quality results than box blur but is
-    computationally more expensive.
-    
-    Args:
-        pixel_array (PixelArray): The pixel array to blur.
-        radius (int): The blur radius in pixels. Larger values create stronger blur.
-        repeat_edge_pixels (bool, optional): Whether to repeat edge pixels when sampling
-                                            outside the pixel array bounds. Defaults to True.
-    
-    Returns:
-        PixelArray: A new pixel array with the Gaussian blur effect applied.
-    
-    Raises:
-        RuntimeError: If pixel array creation fails during the blur process.
-    """
-def grayscale(pixel_array: pykraken._core.PixelArray) -> pykraken._core.PixelArray:
-    """
-    Convert a pixel array to grayscale.
-    
-    Converts the pixel array to grayscale using the standard luminance formula:
-    gray = 0.299 * red + 0.587 * green + 0.114 * blue
-    
-    This formula accounts for human perception of brightness across different colors.
-    The alpha channel is preserved unchanged.
-    
-    Args:
-        pixel_array (PixelArray): The pixel array to convert to grayscale.
-    
-    Returns:
-        PixelArray: A new pixel array converted to grayscale.
-    
-    Raises:
-        RuntimeError: If pixel array creation fails.
-    """
-def invert(pixel_array: pykraken._core.PixelArray) -> pykraken._core.PixelArray:
-    """
-    Invert the colors of a pixel array.
-    
-    Creates a negative image effect by inverting each color channel (RGB).
-    The alpha channel is preserved unchanged.
-    
-    Args:
-        pixel_array (PixelArray): The pixel array to invert.
-    
-    Returns:
-        PixelArray: A new pixel array with inverted colors.
-    
-    Raises:
-        RuntimeError: If pixel array creation fails.
-    """
-def rotate(pixel_array: pykraken._core.PixelArray, angle: typing.SupportsFloat) -> pykraken._core.PixelArray:
-    """
-    Rotate a pixel array by a given angle.
-    
-    Args:
-        pixel_array (PixelArray): The pixel array to rotate.
-        angle (float): The rotation angle in degrees. Positive values rotate clockwise.
-    
-    Returns:
-        PixelArray: A new pixel array containing the rotated image. The output pixel array may be
-                larger than the input to accommodate the rotated image.
-    
-    Raises:
-        RuntimeError: If pixel array rotation fails.
-    """
-def scale_by(pixel_array: pykraken._core.PixelArray, factor: typing.SupportsFloat) -> pykraken._core.PixelArray:
-    """
-    Scale a pixel array by a given factor.
-    
-    Args:
-        pixel_array (PixelArray): The pixel array to scale.
-        factor (float): The scaling factor (must be > 0). Values > 1.0 enlarge,
-                       values < 1.0 shrink the pixel array.
-    
-    Returns:
-        PixelArray: A new pixel array scaled by the specified factor.
-    
-    Raises:
-        ValueError: If factor is <= 0.
-        RuntimeError: If pixel array creation or scaling fails.
-    """
-def scale_to(pixel_array: pykraken._core.PixelArray, size: pykraken._core.Vec2) -> pykraken._core.PixelArray:
-    """
-    Scale a pixel array to a new exact size.
-    
-    Args:
-        pixel_array (PixelArray): The pixel array to scale.
-        size (Vec2): The target size as (width, height).
-    
-    Returns:
-        PixelArray: A new pixel array scaled to the specified size.
-    
-    Raises:
-        RuntimeError: If pixel array creation or scaling fails.
+        TransformList: The composed Transforms for inputs 2..N in world space.
     """

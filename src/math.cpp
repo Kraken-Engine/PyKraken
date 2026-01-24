@@ -11,6 +11,31 @@
 
 namespace kn
 {
+Vec2 Vec2::ZERO()
+{
+    return {};
+}
+
+Vec2 Vec2::LEFT()
+{
+    return {-1.0, 0.0};
+}
+
+Vec2 Vec2::RIGHT()
+{
+    return {1.0, 0.0};
+}
+
+Vec2 Vec2::UP()
+{
+    return {0.0, -1.0};
+}
+
+Vec2 Vec2::DOWN()
+{
+    return {0.0, 1.0};
+}
+
 Vec2 PolarCoordinate::toCartesian() const
 {
     return {radius * std::cos(angle), radius * std::sin(angle)};
@@ -192,6 +217,11 @@ Vec2 Vec2::operator/(const double scalar) const
     return {x / scalar, y / scalar};
 }
 
+Vec2 Vec2::operator*(const Vec2& other) const
+{
+    return {x * other.x, y * other.y};
+}
+
 Vec2& Vec2::operator+=(const Vec2& other)
 {
     x += other.x;
@@ -210,6 +240,13 @@ Vec2& Vec2::operator*=(const double scalar)
 {
     x *= scalar;
     y *= scalar;
+    return *this;
+}
+
+Vec2& Vec2::operator*=(const Vec2& other)
+{
+    x *= other.x;
+    y *= other.y;
     return *this;
 }
 
@@ -232,6 +269,11 @@ bool Vec2::operator==(const Vec2& other) const
 bool Vec2::operator!=(const Vec2& other) const
 {
     return !(*this == other);
+}
+
+Vec2::operator bool() const
+{
+    return !(x == 0.0 && y == 0.0);
 }
 
 Vec2::operator SDL_Point() const
@@ -332,81 +374,6 @@ Methods:
         )doc");
 
     py::bind_vector<std::vector<kn::Vec2>>(module, "Vec2List");
-
-    py::classh<Transform>(module, "Transform", R"doc(
-Transform represents a 2D transformation with position, size, rotation, and scale.
-
-Attributes:
-    pos (Vec2): Position component.
-    size (Vec2): Explicit size (empty = use texture/srcRect size).
-    angle (float): Rotation component in radians.
-    scale (Vec2): Scale component.
-    anchor (Anchor): Anchor point for positioning.
-    pivot (Vec2): Normalized pivot point for rotation.
-    )doc")
-        .def(
-            py::init(
-                [](const py::object& posObj, const py::object& sizeObj, double angle,
-                   const py::object& scaleObj, Anchor anchor,
-                   const py::object& pivotObj) -> Transform
-                {
-                    try
-                    {
-                        const auto pos = posObj.is_none() ? Vec2{} : posObj.cast<Vec2>();
-                        const auto size = sizeObj.is_none() ? Vec2{} : sizeObj.cast<Vec2>();
-                        Vec2 scale{1.0};
-                        if (!scaleObj.is_none())
-                        {
-                            const bool isNumeric = py::isinstance<py::int_>(scaleObj) ||
-                                                   py::isinstance<py::float_>(scaleObj);
-                            scale = isNumeric ? Vec2{scaleObj.cast<double>()}
-                                              : scaleObj.cast<Vec2>();
-                        }
-                        const auto pivot = pivotObj.is_none() ? Vec2{0.5} : pivotObj.cast<Vec2>();
-                        return {pos, size, angle, scale, anchor, pivot};
-                    }
-                    catch (const py::cast_error&)
-                    {
-                        throw py::type_error(
-                            "Invalid type for Transform arguments, expected Vec2 for pos, size, "
-                            "scale, and pivot"
-                        );
-                    }
-                }
-            ),
-            py::arg("pos") = py::none(), py::arg("size") = py::none(), py::arg("angle") = 0.0,
-            py::arg("scale") = py::none(), py::arg("anchor") = Anchor::TopLeft,
-            py::arg("pivot") = py::none(),
-            R"doc(
-Initialize a Transform with optional keyword arguments.
-
-Args:
-    pos (Vec2): Position component. Defaults to (0, 0).
-    size (Vec2): Explicit size. Defaults to empty (auto-detect).
-    angle (float): Rotation in radians. Defaults to 0.
-    scale (Vec2): Scale multiplier. Defaults to (1, 1).
-    anchor (Anchor): Anchor point for positioning. Defaults to TOP_LEFT.
-    pivot (Vec2): Normalized rotation pivot. Defaults to (0.5, 0.5) for center.
-        )doc"
-        )
-        .def_readwrite("pos", &Transform::pos, R"doc(
-The position component as a Vec2.
-        )doc")
-        .def_readwrite("size", &Transform::size, R"doc(
-The explicit size as a Vec2. If zero/empty, uses texture or source rect size.
-        )doc")
-        .def_readwrite("angle", &Transform::angle, R"doc(
-The rotation component in radians.
-        )doc")
-        .def_readwrite("scale", &Transform::scale, R"doc(
-The scale component as a Vec2.
-        )doc")
-        .def_readwrite("anchor", &Transform::anchor, R"doc(
-The anchor point for positioning.
-        )doc")
-        .def_readwrite("pivot", &Transform::pivot, R"doc(
-The normalized pivot point for rotation.
-        )doc");
 
     // -------------- PolarCoordinate ----------------
     py::classh<PolarCoordinate>(module, "PolarCoordinate", R"doc(
@@ -631,6 +598,46 @@ Returns:
     Vec2: Vector composed of (y, y).
         )doc"
         )
+        .def_property_static(
+            "ZERO", [](const py::object&) -> Vec2 { return Vec2::ZERO(); }, nullptr, R"doc(
+Return a Vec2 with both components set to zero.
+
+Returns:
+    Vec2: A zero vector (0, 0).
+        )doc"
+        )
+        .def_property_static(
+            "LEFT", [](const py::object&) -> Vec2 { return Vec2::LEFT(); }, nullptr, R"doc(
+Return a Vec2 representing the left direction.
+
+Returns:
+    Vec2: A leftward unit vector (-1, 0).
+        )doc"
+        )
+        .def_property_static(
+            "RIGHT", [](const py::object&) -> Vec2 { return Vec2::RIGHT(); }, nullptr, R"doc(
+Return a Vec2 representing the right direction.
+
+Returns:
+    Vec2: A rightward unit vector (1, 0).
+        )doc"
+        )
+        .def_property_static(
+            "UP", [](const py::object&) -> Vec2 { return Vec2::UP(); }, nullptr, R"doc(
+Return a Vec2 representing the upward direction.
+
+Returns:
+    Vec2: An upward unit vector (0, -1).
+        )doc"
+        )
+        .def_property_static(
+            "DOWN", [](const py::object&) -> Vec2 { return Vec2::DOWN(); }, nullptr, R"doc(
+Return a Vec2 representing the downward direction.
+
+Returns:
+    Vec2: A downward unit vector (0, 1).
+        )doc"
+        )
 
         // Methods
         .def("copy", &Vec2::copy, R"doc(
@@ -811,14 +818,22 @@ Returns:
         )
         .def("__isub__", &Vec2::operator-=, py::arg("other"))
         .def("__neg__", py::overload_cast<>(&Vec2::operator-, py::const_))
-        .def("__bool__", [](const Vec2& v) -> bool { return !v.isZero(); })
+        .def("__bool__", [](const Vec2& v) -> bool { return static_cast<bool>(v); })
         .def("__truediv__", &Vec2::operator/, py::arg("scalar"))
         .def("__itruediv__", &Vec2::operator/=, py::arg("scalar"))
-        .def("__mul__", &Vec2::operator*, py::arg("scalar"))
+        .def(
+            "__mul__", py::overload_cast<const Vec2&>(&Vec2::operator*, py::const_),
+            py::arg("other")
+        )
+        .def(
+            "__mul__", py::overload_cast<const double>(&Vec2::operator*, py::const_),
+            py::arg("scalar")
+        )
         .def(
             "__rmul__", [](const Vec2& self, const double s) { return self * s; }, py::arg("scalar")
         )
-        .def("__imul__", &Vec2::operator*=, py::arg("scalar"))
+        .def("__imul__", py::overload_cast<const Vec2&>(&Vec2::operator*=), py::arg("other"))
+        .def("__imul__", py::overload_cast<const double>(&Vec2::operator*=), py::arg("scalar"))
 
         // Hash and comparison dunder methods
         .def(

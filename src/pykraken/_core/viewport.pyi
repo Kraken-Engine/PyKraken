@@ -16,7 +16,7 @@ def layout(count: typing.SupportsInt, mode: pykraken._core.ViewportMode = pykrak
                                   Defaults to VERTICAL.
     
     Returns:
-        list[Rect]: A list of Rects representing the viewports.
+        RectList: A list of Rects representing the viewports.
     """
 def set(rect: pykraken._core.Rect) -> None:
     """

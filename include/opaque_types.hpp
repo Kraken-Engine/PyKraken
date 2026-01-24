@@ -6,6 +6,7 @@
 #include "AnimationController.hpp"
 #include "Input.hpp"
 #include "TileMap.hpp"
+#include "Transform.hpp"
 
 // Tilemap opaque types
 PYBIND11_MAKE_OPAQUE(std::vector<kn::tilemap::TileSet::Terrain>);
@@ -26,3 +27,6 @@ PYBIND11_MAKE_OPAQUE(std::vector<kn::Rect>);
 
 // InputAction
 PYBIND11_MAKE_OPAQUE(std::vector<kn::InputAction>);
+
+// Transform
+PYBIND11_MAKE_OPAQUE(std::vector<kn::Transform>);

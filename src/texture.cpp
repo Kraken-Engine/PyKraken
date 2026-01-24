@@ -230,16 +230,20 @@ namespace texture
 {
 void _bind(const py::module_& module)
 {
-    py::native_enum<TextureAccess>(module, "TextureAccess", "enum.IntEnum")
-        .value("STATIC", TextureAccess::STATIC)
-        .value("TARGET", TextureAccess::TARGET)
+    py::native_enum<TextureAccess>(module, "TextureAccess", "enum.IntEnum", R"doc(
+Texture access mode for GPU textures.
+    )doc")
+        .value("STATIC", TextureAccess::STATIC, "Static texture")
+        .value("TARGET", TextureAccess::TARGET, "Render target texture")
         .finalize();
 
-    py::native_enum<TextureScaleMode>(module, "TextureScaleMode", "enum.IntEnum")
-        .value("NEAREST", TextureScaleMode::NEAREST)
-        .value("LINEAR", TextureScaleMode::LINEAR)
-        .value("PIXEL_ART", TextureScaleMode::PIXELART)
-        .value("DEFAULT", TextureScaleMode::DEFAULT)
+    py::native_enum<TextureScaleMode>(module, "TextureScaleMode", "enum.IntEnum", R"doc(
+Texture scaling and filtering modes.
+    )doc")
+        .value("NEAREST", TextureScaleMode::NEAREST, "Nearest-neighbor scaling")
+        .value("LINEAR", TextureScaleMode::LINEAR, "Linear filtering")
+        .value("PIXEL_ART", TextureScaleMode::PIXELART, "Pixel-art friendly scaling")
+        .value("DEFAULT", TextureScaleMode::DEFAULT, "Renderer default scaling")
         .finalize();
 
     py::classh<Texture> texture(module, "Texture", R"doc(

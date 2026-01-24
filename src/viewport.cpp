@@ -82,9 +82,11 @@ void unset()
 
 void _bind(py::module_& module)
 {
-    py::native_enum<ViewportMode>(module, "ViewportMode", "enum.IntEnum")
-        .value("VERTICAL", ViewportMode::VERTICAL)
-        .value("HORIZONTAL", ViewportMode::HORIZONTAL)
+    py::native_enum<ViewportMode>(module, "ViewportMode", "enum.IntEnum", R"doc(
+Viewport layout mode for split-screen layouts.
+    )doc")
+        .value("VERTICAL", ViewportMode::VERTICAL, "Split viewports vertically")
+        .value("HORIZONTAL", ViewportMode::HORIZONTAL, "Split viewports horizontally")
         .finalize();
 
     py::module_ subViewport = module.def_submodule("viewport", "Viewport management functions");
@@ -101,7 +103,7 @@ Args:
                               Defaults to VERTICAL.
 
 Returns:
-    list[Rect]: A list of Rects representing the viewports.
+    RectList: A list of Rects representing the viewports.
                     )doc"
     );
 

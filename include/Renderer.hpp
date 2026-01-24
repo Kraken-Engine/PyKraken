@@ -6,8 +6,8 @@
 #include <memory>
 
 #include "Color.hpp"
-#include "Math.hpp"
 #include "Rect.hpp"
+#include "Transform.hpp"
 #include "_globals.hpp"
 
 namespace py = pybind11;
