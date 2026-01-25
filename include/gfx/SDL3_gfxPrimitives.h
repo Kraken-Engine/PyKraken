@@ -275,19 +275,6 @@ extern "C"
                                              const Sint16* vy, int n, int s, Uint8 r, Uint8 g,
                                              Uint8 b, Uint8 a);
 
-    /* Characters/Strings */
-
-    SDL3_GFXPRIMITIVES_SCOPE void gfxPrimitivesSetFont(const void* fontdata, Uint32 cw, Uint32 ch);
-    SDL3_GFXPRIMITIVES_SCOPE void gfxPrimitivesSetFontRotation(Uint32 rotation);
-    SDL3_GFXPRIMITIVES_SCOPE bool characterColor(SDL_Renderer* renderer, Sint16 x, Sint16 y, char c,
-                                                 Uint32 color);
-    SDL3_GFXPRIMITIVES_SCOPE bool characterRGBA(SDL_Renderer* renderer, Sint16 x, Sint16 y, char c,
-                                                Uint8 r, Uint8 g, Uint8 b, Uint8 a);
-    SDL3_GFXPRIMITIVES_SCOPE bool stringColor(SDL_Renderer* renderer, Sint16 x, Sint16 y,
-                                              const char* s, Uint32 color);
-    SDL3_GFXPRIMITIVES_SCOPE bool stringRGBA(SDL_Renderer* renderer, Sint16 x, Sint16 y,
-                                             const char* s, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
-
     /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
 }

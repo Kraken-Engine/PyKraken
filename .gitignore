@@ -147,3 +147,5 @@ _skbuild/
 .idea/
 
 src/pykraken/*.dll
+
+main.py

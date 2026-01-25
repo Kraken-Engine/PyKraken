@@ -18,7 +18,8 @@ namespace draw
 {
 void _bind(py::module_& module);
 
-void circle(const Circle& circle, const Color& color, int thickness = 0);
+void circle(const Circle& circle, const Color& color, double thickness = 0, int numSegments = 36);
+void circles(const std::vector<Circle>& circles, const Color& color, double thickness = 0, int numSegments = 36);
 
 void ellipse(Rect bounds, const Color& color, bool filled = false);
 

@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "AnimationController.hpp"
+#include "Circle.hpp"
 #include "Input.hpp"
 #include "TileMap.hpp"
 #include "Transform.hpp"
@@ -24,6 +25,7 @@ PYBIND11_MAKE_OPAQUE(std::vector<kn::SheetStrip>);
 // Shape draws
 PYBIND11_MAKE_OPAQUE(std::vector<kn::Vec2>);
 PYBIND11_MAKE_OPAQUE(std::vector<kn::Rect>);
+PYBIND11_MAKE_OPAQUE(std::vector<kn::Circle>);
 
 // InputAction
 PYBIND11_MAKE_OPAQUE(std::vector<kn::InputAction>);

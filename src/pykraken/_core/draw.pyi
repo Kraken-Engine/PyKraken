@@ -6,16 +6,28 @@ import numpy
 import numpy.typing
 import pykraken._core
 import typing
-__all__: list[str] = ['circle', 'ellipse', 'line', 'point', 'points', 'points_from_ndarray', 'polygon', 'rect', 'rects']
-def circle(circle: pykraken._core.Circle, color: pykraken._core.Color, thickness: typing.SupportsInt = 0) -> None:
+__all__: list[str] = ['circle', 'circles', 'ellipse', 'line', 'point', 'points', 'points_from_ndarray', 'polygon', 'rect', 'rects']
+def circle(circle: pykraken._core.Circle, color: pykraken._core.Color, thickness: typing.SupportsFloat = 0, num_segments: typing.SupportsInt = 36) -> None:
     """
     Draw a circle to the renderer.
     
     Args:
         circle (Circle): The circle to draw.
         color (Color): The color of the circle.
-        thickness (int, optional): The line thickness. If 0 or >= radius, draws filled circle.
-                                  Defaults to 0 (filled).
+        thickness (float, optional): The line thickness. If <= 0 or >= radius, draws filled circle. Defaults to 0 (filled).
+        num_segments (int, optional): Number of segments to approximate the circle.
+                                      Higher values yield smoother circles. Defaults to 36.
+    """
+def circles(circles: pykraken._core.CircleList, color: pykraken._core.Color, thickness: typing.SupportsFloat = 0, num_segments: typing.SupportsInt = 36) -> None:
+    """
+    Draw an array of circles in bulk to the renderer.
+    
+    Args:
+        circles (Sequence[Circle]): The circles to draw in bulk.
+        color (Color): The color of the circles.
+        thickness (float, optional): The line thickness. If <= 0 or >= radius, draws filled circle. Defaults to 0 (filled).
+        num_segments (int, optional): Number of segments to approximate each circle.
+                                      Higher values yield smoother circles. Defaults to 36.
     """
 def ellipse(bounds: pykraken._core.Rect, color: pykraken._core.Color, filled: bool = False) -> None:
     """
