@@ -12,12 +12,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added the ability to multiply two `Vec2` objects element-wise using the `*` operator.
 - Added docstrings to every enum and their values, as well as to any properties of tilemap-related objects that were missing them.
 - New `transform` submodule with `compose` and `compose_chain` functions for parenting transforms.
-- New `draw.circles` function for drawing multiple circles in a single call (~2x faster than multiple `draw.circle` calls in testing).
+- New `draw.circles` function for drawing multiple circles in a single call (~3.5x faster than multiple `draw.circle` calls in testing).
 
 ### Changed
 - `Vec2` boolean conversion now checks for both components being exactly zero, rather than using a tolerance.
 - `fx.move_to` function now requires a `Vec2` for the `pos` parameter instead of accepting an optional argument of any object type.
 - Greatly improved quality and performance of `draw.circle` by switching to a GPU-based rendering approach.
+
+### Removed
+- Implicit conversians from sequences to `Vec2`, `Rect`, `Line`, `Color`, and `PolarCoordinate` have been removed for better type safety. Use explicit constructors instead.
 
 ## [1.5.0] - 2025-12-31
 

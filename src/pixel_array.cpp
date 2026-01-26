@@ -1,5 +1,5 @@
 #include <SDL3_image/SDL_image.h>
-// #include <gfx/SDL3_rotozoom.h>
+#include <gfx/SDL3_rotozoom.h>
 #include <pybind11/native_enum.h>
 
 #include "Color.hpp"

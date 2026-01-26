@@ -276,7 +276,6 @@ Each channel (r, g, b, a) is an 8-bit unsigned integer.
         .def(py::init(), R"doc(
 Create a Color with default values (0, 0, 0, 255).
         )doc")
-
         .def(
             py::init<uint8_t, uint8_t, uint8_t, uint8_t>(), py::arg("r"), py::arg("g"),
             py::arg("b"), py::arg("a") = 255, R"doc(
@@ -289,7 +288,6 @@ Args:
     a (int, optional): Alpha value [0-255]. Defaults to 255.
         )doc"
         )
-
         .def(
             py::init([](const std::string& hex) -> Color { return fromHex(hex); }), py::arg("hex"),
             R"doc(
@@ -297,39 +295,6 @@ Create a Color from a hex string.
 
 Args:
     hex (str): Hex color string (with or without '#' prefix).
-        )doc"
-        )
-
-        .def(
-            py::init(
-                [](const py::sequence& seq) -> Color
-                {
-                    if (seq.size() == 3)
-                    {
-                        return {
-                            seq[0].cast<uint8_t>(), seq[1].cast<uint8_t>(), seq[2].cast<uint8_t>(),
-                            255
-                        };
-                    }
-                    if (seq.size() == 4)
-                    {
-                        return {
-                            seq[0].cast<uint8_t>(), seq[1].cast<uint8_t>(), seq[2].cast<uint8_t>(),
-                            seq[3].cast<uint8_t>()
-                        };
-                    }
-                    throw std::invalid_argument(
-                        "Sequence must contain 3 (RGB) or 4 (RGBA) integer values."
-                    );
-                }
-            ),
-            py::arg("sequence"), R"doc(
-Create a Color from a sequence of RGB(A) integers.
-
-Args:
-    sequence (list or tuple): A sequence of 3 or 4 integers [0-255].
-        - 3 values: RGB (alpha defaults to 255)
-        - 4 values: RGBA
         )doc"
         )
 
@@ -472,9 +437,6 @@ Returns:
         .def("__mul__", &Color::operator*, py::arg("scalar"))
         .def("__rmul__", &Color::operator*, py::arg("scalar"))
         .def("__truediv__", &Color::operator/, py::arg("scalar"));
-
-    py::implicitly_convertible<py::sequence, Color>();
-    py::implicitly_convertible<py::str, Color>();
 
     auto subColor = module.def_submodule("color", R"doc(
 Color utility functions and predefined color constants.

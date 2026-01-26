@@ -61,39 +61,6 @@ Args:
     a (Vec2): Point A.
     b (Vec2): Point B.
          )doc")
-        .def(
-            py::init(
-                [](const py::sequence& abSeq) -> Line
-                {
-                    if (abSeq.size() != 2)
-                        throw std::invalid_argument("Line expects two 2D points");
-
-                    if (!py::isinstance<py::sequence>(abSeq[0]))
-                        throw std::invalid_argument("A point must be a sequence");
-                    if (!py::isinstance<py::sequence>(abSeq[1]))
-                        throw std::invalid_argument("B point must be a sequence");
-
-                    const auto aSeq = abSeq[0].cast<py::sequence>();
-                    const auto bSeq = abSeq[1].cast<py::sequence>();
-
-                    if (aSeq.size() != 2)
-                        throw std::invalid_argument("A point must be a 2-element sequence");
-                    if (bSeq.size() != 2)
-                        throw std::invalid_argument("B point must be a 2-element sequence");
-
-                    return {
-                        aSeq[0].cast<double>(), aSeq[1].cast<double>(), bSeq[0].cast<double>(),
-                        bSeq[1].cast<double>()
-                    };
-                }
-            ),
-            R"doc(
-Create a line from two 2-element sequences: [[ax, ay], [bx, by]].
-
-Raises:
-    ValueError: If either point is not a 2-element sequence.
-         )doc"
-        )
 
         .def_property("a", &Line::getA, &Line::setA, R"doc(
 Get or set point A as a tuple or Vec2.
@@ -148,7 +115,6 @@ Args:
         .def("__len__", [](const Line&) -> int { return 4; })
         .def("__eq__", &Line::operator==, py::arg("other"))
         .def("__ne__", &Line::operator!=, py::arg("other"));
-    py::implicitly_convertible<py::sequence, Line>();
 
     auto subLine = module.def_submodule("line");
 

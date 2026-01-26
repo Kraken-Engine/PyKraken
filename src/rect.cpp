@@ -349,29 +349,6 @@ Args:
     pos (Vec2): The position as a Vec2 (x, y).
     size (Vec2): The size as a Vec2 (width, height).
         )doc")
-        .def(
-            py::init(
-                [](const py::sequence& s) -> Rect
-                {
-                    if (s.size() != 4)
-                        throw std::runtime_error("Rect((x, y, w, h)) expects a 4-element sequence");
-
-                    return {
-                        s[0].cast<double>(), s[1].cast<double>(), s[2].cast<double>(),
-                        s[3].cast<double>()
-                    };
-                }
-            ),
-            R"doc(
-Create a Rect from a sequence of four elements.
-
-Args:
-    sequence: A sequence (list, tuple) containing [x, y, w, h].
-
-Raises:
-    RuntimeError: If sequence doesn't contain exactly 4 elements.
-        )doc"
-        )
 
         .def_readwrite("x", &Rect::x, R"doc(
 The x coordinate of the top-left corner.
@@ -556,7 +533,6 @@ Raises:
             },
             py::arg("index")
         );
-    py::implicitly_convertible<py::sequence, Rect>();
     py::bind_vector<std::vector<kn::Rect>>(module, "RectList");
 
     auto subRect = module.def_submodule("rect", "Rectangle related functions");

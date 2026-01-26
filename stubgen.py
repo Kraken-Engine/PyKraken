@@ -25,4 +25,24 @@ print(f"Running command in: {root_dir}")
 print(f"Command: {' '.join(command)}")
 
 result = subprocess.run(command)
+
+if result.returncode == 0:
+    print("Post-processing stubs...")
+    src_dir = root_dir / "src"
+
+    # Walk through the src directory to find generated .pyi files
+    for pyi_file in src_dir.rglob("*.pyi"):
+        # Check if a corresponding .py file exists
+        py_file = pyi_file.with_suffix(".py")
+
+        # Keep __init__.pyi as it is important for the package interface
+        if pyi_file.name == "__init__.pyi":
+            continue
+
+        if py_file.exists():
+            # Remove the generated .pyi file if a .py file exists
+            # This prevents overwriting or shadowing existing python source files (e.g. fx.py, shader_uniform.py)
+            print(f"Removing {pyi_file.relative_to(root_dir)} (shadows existing source)")
+            pyi_file.unlink()
+
 sys.exit(result.returncode)

@@ -450,9 +450,14 @@ class Circle:
             radius (float): Radius of the circle.
         """
     @typing.overload
-    def __init__(self, arg0: collections.abc.Sequence) -> None:
+    def __init__(self, x: typing.SupportsFloat, y: typing.SupportsFloat, radius: typing.SupportsFloat) -> None:
         """
-        Create a circle from a nested sequence: ([x, y], radius).
+        Create a circle at given x and y coordinates with a specified radius.
+        
+        Args:
+            x (float): X coordinate of the circle's center.
+            y (float): Y coordinate of the circle's center.
+            radius (float): Radius of the circle.
         """
     def __iter__(self) -> collections.abc.Iterator:
         ...
@@ -625,16 +630,6 @@ class Color:
         
         Args:
             hex (str): Hex color string (with or without '#' prefix).
-        """
-    @typing.overload
-    def __init__(self, sequence: collections.abc.Sequence) -> None:
-        """
-        Create a Color from a sequence of RGB(A) integers.
-        
-        Args:
-            sequence (list or tuple): A sequence of 3 or 4 integers [0-255].
-                - 3 values: RGB (alpha defaults to 255)
-                - 4 values: RGBA
         """
     def __iter__(self) -> collections.abc.Iterator:
         ...
@@ -1533,14 +1528,6 @@ class Line:
             a (Vec2): Point A.
             b (Vec2): Point B.
         """
-    @typing.overload
-    def __init__(self, arg0: collections.abc.Sequence) -> None:
-        """
-        Create a line from two 2-element sequences: [[ax, ay], [bx, by]].
-        
-        Raises:
-            ValueError: If either point is not a 2-element sequence.
-        """
     def __iter__(self) -> collections.abc.Iterator:
         ...
     def __len__(self) -> int:
@@ -2172,17 +2159,6 @@ class PolarCoordinate:
             angle (float): Angle in radians.
             radius (float): Distance from the origin.
         """
-    @typing.overload
-    def __init__(self, arg0: collections.abc.Sequence) -> None:
-        """
-        Initialize a PolarCoordinate from a two-item sequence.
-        
-        Args:
-            sequence (Sequence[float]): Iterable containing [angle, radius].
-        
-        Raises:
-            RuntimeError: If the sequence does not contain exactly two elements.
-        """
     def __iter__(self) -> collections.abc.Iterator:
         ...
     def __len__(self) -> int:
@@ -2386,17 +2362,6 @@ class Rect:
         Args:
             pos (Vec2): The position as a Vec2 (x, y).
             size (Vec2): The size as a Vec2 (width, height).
-        """
-    @typing.overload
-    def __init__(self, arg0: collections.abc.Sequence) -> None:
-        """
-        Create a Rect from a sequence of four elements.
-        
-        Args:
-            sequence: A sequence (list, tuple) containing [x, y, w, h].
-        
-        Raises:
-            RuntimeError: If sequence doesn't contain exactly 4 elements.
         """
     def __iter__(self) -> collections.abc.Iterator:
         ...
@@ -3673,17 +3638,6 @@ class Vec2:
         Args:
             x (float): Horizontal component.
             y (float): Vertical component.
-        """
-    @typing.overload
-    def __init__(self, arg0: collections.abc.Sequence) -> None:
-        """
-        Initialize a Vec2 from a two-item sequence.
-        
-        Args:
-            sequence (Sequence[float]): Iterable containing [x, y].
-        
-        Raises:
-            RuntimeError: If the sequence does not contain exactly two elements.
         """
     def __isub__(self, other: Vec2) -> Vec2:
         ...

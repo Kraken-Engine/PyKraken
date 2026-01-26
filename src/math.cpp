@@ -396,25 +396,6 @@ Args:
     angle (float): Angle in radians.
     radius (float): Distance from the origin.
         )doc")
-        .def(
-            py::init(
-                [](const py::sequence& s) -> PolarCoordinate
-                {
-                    if (s.size() != 2)
-                        throw std::runtime_error("PolarCoordinate expects a 2-element sequence");
-                    return {s[0].cast<double>(), s[1].cast<double>()};
-                }
-            ),
-            R"doc(
-Initialize a PolarCoordinate from a two-item sequence.
-
-Args:
-    sequence (Sequence[float]): Iterable containing [angle, radius].
-
-Raises:
-    RuntimeError: If the sequence does not contain exactly two elements.
-        )doc"
-        )
 
         // Properties
         .def_readwrite("angle", &PolarCoordinate::angle, R"doc(
@@ -486,7 +467,6 @@ Returns:
                 return ha ^ hr << 1;
             }
         );
-    py::implicitly_convertible<py::sequence, PolarCoordinate>();
 
     // -------------- Vec2 ----------------
 
@@ -507,25 +487,6 @@ Args:
     x (float): Horizontal component.
     y (float): Vertical component.
         )doc")
-        .def(
-            py::init(
-                [](const py::sequence& s) -> Vec2
-                {
-                    if (s.size() != 2)
-                        throw std::runtime_error("Vec2 requires a 2-element sequence");
-                    return {s[0].cast<double>(), s[1].cast<double>()};
-                }
-            ),
-            R"doc(
-Initialize a Vec2 from a two-item sequence.
-
-Args:
-    sequence (Sequence[float]): Iterable containing [x, y].
-
-Raises:
-    RuntimeError: If the sequence does not contain exactly two elements.
-        )doc"
-        )
 
         // Properties
         .def_readwrite("x", &Vec2::x, R"doc(
@@ -847,7 +808,6 @@ Returns:
         )
         .def("__eq__", &Vec2::operator==, py::arg("other"))
         .def("__ne__", &Vec2::operator!=, py::arg("other"));
-    py::implicitly_convertible<py::sequence, Vec2>();
 
     auto subMath = module.def_submodule("math", "Math related functions");
 

@@ -1,5 +1,7 @@
 #include "Draw.hpp"
 
+#include <gfx/SDL3_gfxPrimitives.h>
+
 #include "Camera.hpp"
 #include "Circle.hpp"
 #include "Color.hpp"
