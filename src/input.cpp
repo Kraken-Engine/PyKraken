@@ -335,7 +335,7 @@ Bind a name to a list of InputActions.
 
 Args:
     name (str): The identifier for this binding (e.g. "jump").
-    actions (list[InputAction]): One or more InputActions to bind.
+    actions (InputActionList): One or more InputActions to bind.
         )doc");
 
     subInput.def("unbind", &unbind, py::arg("name"), R"doc(

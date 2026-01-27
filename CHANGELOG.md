@@ -13,14 +13,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added docstrings to every enum and their values, as well as to any properties of tilemap-related objects that were missing them.
 - New `transform` submodule with `compose` and `compose_chain` functions for parenting transforms.
 - New `draw.circles` function for drawing multiple circles in a single call (~3.5x faster than multiple `draw.circle` calls in testing).
+- Added `texture.clip_area` property for getting/setting the texture's clipping area.
 
 ### Changed
 - `Vec2` boolean conversion now checks for both components being exactly zero, rather than using a tolerance.
 - `fx.move_to` function now requires a `Vec2` for the `pos` parameter instead of accepting an optional argument of any object type.
 - Greatly improved quality and performance of `draw.circle` by switching to a GPU-based rendering approach.
+- Animation controller's `load_sprite_sheet` method renamed to `add_sheet` and `clip` property renamed to `frame_area`.
+- `renderer.draw` function now accepts optional `anchor` and `pivot` parameters for specifying the drawing anchor and pivot points, both of `Vec2` type.
+- Both text and pixel array drawing functions now accept an optional `anchor` parameter of `Vec2` type for specifying the drawing anchor point.
+- `Anchor` enum changed to a class with static constants for common anchor points represented as `Vec2` objects.
 
 ### Removed
 - Implicit conversians from sequences to `Vec2`, `Rect`, `Line`, `Color`, and `PolarCoordinate` have been removed for better type safety. Use explicit constructors instead.
+- Removed `src` parameter from `renderer.draw` function.
+- Removed `clip` attribute from `Sprite` class.
+- `Transform` class no longer contains `pivot`, `size`, or `anchor` attributes.
 
 ## [1.5.0] - 2025-12-31
 

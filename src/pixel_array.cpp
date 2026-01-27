@@ -50,45 +50,16 @@ void PixelArray::fill(const Color& color) const
 }
 
 void PixelArray::blit(
-    const PixelArray& other, const Vec2& pos, const Anchor anchor, const Rect& srcRect
+    const PixelArray& other, const Vec2& pos, const Vec2& anchor, const Rect& srcRect
 ) const
 {
-    Rect dstRect = other.getRect();
-    switch (anchor)
-    {
-    case Anchor::TopLeft:
-        dstRect.setTopLeft(pos);
-        break;
-    case Anchor::TopMid:
-        dstRect.setTopMid(pos);
-        break;
-    case Anchor::TopRight:
-        dstRect.setTopRight(pos);
-        break;
-    case Anchor::MidLeft:
-        dstRect.setMidLeft(pos);
-        break;
-    case Anchor::Center:
-        dstRect.setCenter(pos);
-        break;
-    case Anchor::MidRight:
-        dstRect.setMidRight(pos);
-        break;
-    case Anchor::BottomLeft:
-        dstRect.setBottomLeft(pos);
-        break;
-    case Anchor::BottomMid:
-        dstRect.setBottomMid(pos);
-        break;
-    case Anchor::BottomRight:
-        dstRect.setBottomRight(pos);
-        break;
-    }
+    const Rect src = srcRect.getSize() ? other.getRect() : srcRect;
+    const SDL_Rect srcSDL = static_cast<SDL_Rect>(src);
 
-    const auto dstSDL = static_cast<SDL_Rect>(dstRect);
-    const auto srcSDL = static_cast<SDL_Rect>(
-        srcRect.w == 0.0 && srcRect.h == 0.0 ? this->getRect() : srcRect
-    );
+    // Calculate destination position based on anchor
+    const Vec2 dstPos = pos - src.getSize() * anchor;
+    const Rect dst{dstPos, src.w, src.h};
+    const SDL_Rect dstSDL = static_cast<SDL_Rect>(dst);
 
     if (!SDL_BlitSurface(other.getSDL(), &srcSDL, m_surface, &dstSDL))
         throw std::runtime_error("Failed to blit pixel array: " + std::string(SDL_GetError()));
@@ -394,26 +365,32 @@ Args:
         .def(
             "blit",
             [](const PixelArray& self, const PixelArray& other, const Vec2& pos,
-               const Anchor anchor, const py::object& srcObj) -> void
+               const py::object& anchorObj, const py::object& srcObj) -> void
             {
                 try
                 {
+                    Vec2 anchor{};
+                    if (!anchorObj.is_none())
+                        anchor = anchorObj.cast<Vec2>();
+
                     srcObj.is_none() ? self.blit(other, pos, anchor)
                                      : self.blit(other, pos, anchor, srcObj.cast<Rect>());
                 }
                 catch (const py::cast_error&)
                 {
-                    throw py::type_error("Invalid type for 'src', expected Rect");
+                    throw py::type_error(
+                        "Invalid type for 'src', expected Rect, or 'anchor' expected Vec2"
+                    );
                 }
             },
-            py::arg("pixel_array"), py::arg("pos"), py::arg("anchor") = Anchor::Center,
+            py::arg("pixel_array"), py::arg("pos"), py::arg("anchor") = py::none(),
             py::arg("src") = py::none(), R"doc(
 Blit (copy) another pixel array onto this pixel array at the specified position with anchor alignment.
 
 Args:
     pixel_array (PixelArray): The source pixel array to blit from.
     pos (Vec2): The position to blit to.
-    anchor (Anchor, optional): The anchor point for positioning. Defaults to CENTER.
+    anchor (Vec2, optional): The anchor point for positioning. Defaults to (0,0) TopLeft.
     src (Rect, optional): The source rectangle to blit from. Defaults to entire source pixel array.
 
 Raises:

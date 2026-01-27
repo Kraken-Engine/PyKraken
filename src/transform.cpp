@@ -20,26 +20,20 @@ Transform composePair(const Transform& parent, Transform child)
 void _bind(py::module_& module)
 {
     py::classh<Transform>(module, "Transform", R"doc(
-Transform represents a 2D transformation with position, size, rotation, and scale.
+Transform represents a 2D transformation with position, rotation, and scale.
 
 Attributes:
     pos (Vec2): Position component.
-    size (Vec2): Explicit size (empty = use texture/srcRect size).
     angle (float): Rotation component in radians.
     scale (Vec2): Scale component.
-    anchor (Anchor): Anchor point for positioning.
-    pivot (Vec2): Normalized pivot point for rotation.
     )doc")
         .def(
             py::init(
-                [](const py::object& posObj, const py::object& sizeObj, double angle,
-                   const py::object& scaleObj, Anchor anchor,
-                   const py::object& pivotObj) -> Transform
+                [](const py::object& posObj, double angle, const py::object& scaleObj) -> Transform
                 {
                     try
                     {
                         const auto pos = posObj.is_none() ? Vec2{} : posObj.cast<Vec2>();
-                        const auto size = sizeObj.is_none() ? Vec2{} : sizeObj.cast<Vec2>();
                         Vec2 scale{1.0};
                         if (!scaleObj.is_none())
                         {
@@ -48,50 +42,34 @@ Attributes:
                             scale = isNumeric ? Vec2{scaleObj.cast<double>()}
                                               : scaleObj.cast<Vec2>();
                         }
-                        const auto pivot = pivotObj.is_none() ? Vec2{0.5} : pivotObj.cast<Vec2>();
-                        return {pos, size, angle, scale, anchor, pivot};
+                        return {pos, angle, scale};
                     }
                     catch (const py::cast_error&)
                     {
                         throw py::type_error(
-                            "Invalid type for Transform arguments, expected Vec2 for pos, size, "
-                            "scale, and pivot"
+                            "Invalid type for Transform arguments, expected Vec2 for pos and scale"
                         );
                     }
                 }
             ),
-            py::arg("pos") = py::none(), py::arg("size") = py::none(), py::arg("angle") = 0.0,
-            py::arg("scale") = py::none(), py::arg("anchor") = Anchor::TopLeft,
-            py::arg("pivot") = py::none(),
+            py::arg("pos") = py::none(), py::arg("angle") = 0.0, py::arg("scale") = py::none(),
             R"doc(
 Initialize a Transform with optional keyword arguments.
 
 Args:
     pos (Vec2): Position component. Defaults to (0, 0).
-    size (Vec2): Explicit size. Defaults to empty (auto-detect).
     angle (float): Rotation in radians. Defaults to 0.
     scale (Vec2): Scale multiplier. Defaults to (1, 1).
-    anchor (Anchor): Anchor point for positioning. Defaults to TOP_LEFT.
-    pivot (Vec2): Normalized rotation pivot. Defaults to (0.5, 0.5) for center.
         )doc"
         )
         .def_readwrite("pos", &Transform::pos, R"doc(
 The position component as a Vec2.
-        )doc")
-        .def_readwrite("size", &Transform::size, R"doc(
-The explicit size as a Vec2. If zero/empty, uses texture or source rect size.
         )doc")
         .def_readwrite("angle", &Transform::angle, R"doc(
 The rotation component in radians.
         )doc")
         .def_readwrite("scale", &Transform::scale, R"doc(
 The scale component as a Vec2.
-        )doc")
-        .def_readwrite("anchor", &Transform::anchor, R"doc(
-The anchor point for positioning.
-        )doc")
-        .def_readwrite("pivot", &Transform::pivot, R"doc(
-The normalized pivot point for rotation.
         )doc");
 
     auto subTransform = module.def_submodule("transform", R"doc(

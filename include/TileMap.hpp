@@ -53,7 +53,7 @@ class TileSet
         uint32_t m_id = 0;
         std::array<int, 4> m_terrainIndices{};
         uint32_t m_probability = 100;
-        Rect m_clipRect{};
+        Rect m_clipArea{};
 
       public:
         [[nodiscard]] uint32_t getID() const
@@ -71,9 +71,9 @@ class TileSet
             return m_probability;
         }
 
-        [[nodiscard]] Rect getClipRect() const
+        [[nodiscard]] Rect getClipArea() const
         {
-            return m_clipRect;
+            return m_clipArea;
         }
     };
 

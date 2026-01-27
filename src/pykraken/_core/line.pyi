@@ -6,5 +6,5 @@ def move(line: pykraken._core.Line, offset: pykraken._core.Vec2) -> pykraken._co
     Move the given line by a Vec2 or 2-element sequence.
     
     Args:
-        offset (Vec2 | list[float]): The amount to move.
+        offset (Vec2): The amount to move.
     """

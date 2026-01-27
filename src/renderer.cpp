@@ -153,17 +153,20 @@ std::unique_ptr<PixelArray> readPixels(const Rect& src)
     return std::make_unique<PixelArray>(surface);
 }
 
-void draw(const std::shared_ptr<Texture>& texture, const Transform& transform, const Rect& srcRect)
+void draw(
+    const std::shared_ptr<Texture>& texture, const Transform& transform, const Vec2& anchor,
+    const Vec2& pivot
+)
 {
     if (!_renderer)
         throw std::runtime_error("Renderer not yet initialized");
     if (!texture)
         throw std::runtime_error("Texture cannot be null");
-    if (srcRect.w < 0.0 || srcRect.h < 0.0)
-        throw std::runtime_error("Source rectangle has negative width or height");
 
-    if (srcRect.w == 0.0 && srcRect.h > 0.0 || srcRect.w > 0.0 && srcRect.h == 0.0)
+    Rect clipArea = texture->getClipArea();
+    if (clipArea.w <= 0.0 || clipArea.h <= 0.0)
         return;
+
     if (transform.scale.isZero())
     {
         log::warn("Transform scale is zero, skipping draw call");
@@ -175,50 +178,22 @@ void draw(const std::shared_ptr<Texture>& texture, const Transform& transform, c
         return;
     }
 
-    Vec2 baseSize = transform.size;
-    const Vec2 srcSize = srcRect.getSize();
-    if (baseSize.isZero())
-        baseSize = !srcSize.isZero() ? srcSize : texture->getSize();
+    const Vec2 size = clipArea.getSize();
 
     Rect dstRect{
         0.0,
         0.0,
-        baseSize.x * transform.scale.x,
-        baseSize.y * transform.scale.y,
+        size.x * transform.scale.x,
+        size.y * transform.scale.y,
     };
 
-    // Position based on anchor
+    // Position based on anchor (normalized 0..1 view of the destination size)
     const Vec2 pos = transform.pos - camera::getActivePos();
-    switch (transform.anchor)
-    {
-    case Anchor::TopLeft:
-        dstRect.setTopLeft(pos);
-        break;
-    case Anchor::TopMid:
-        dstRect.setTopMid(pos);
-        break;
-    case Anchor::TopRight:
-        dstRect.setTopRight(pos);
-        break;
-    case Anchor::MidLeft:
-        dstRect.setMidLeft(pos);
-        break;
-    case Anchor::Center:
-        dstRect.setCenter(pos);
-        break;
-    case Anchor::MidRight:
-        dstRect.setMidRight(pos);
-        break;
-    case Anchor::BottomLeft:
-        dstRect.setBottomLeft(pos);
-        break;
-    case Anchor::BottomMid:
-        dstRect.setBottomMid(pos);
-        break;
-    case Anchor::BottomRight:
-        dstRect.setBottomRight(pos);
-        break;
-    }
+
+    // pos represents the world location where the anchor point should be.
+    // So the top-left of the rect is: pos - (width * anchor.x, height * anchor.y)
+    dstRect.x = pos.x - (dstRect.w * anchor.x);
+    dstRect.y = pos.y - (dstRect.h * anchor.y);
 
     // cull if completely outside the screen
     const Vec2 targetRes = getTargetResolution();
@@ -229,12 +204,10 @@ void draw(const std::shared_ptr<Texture>& texture, const Transform& transform, c
     }
 
     const auto dstSDLRect = static_cast<SDL_FRect>(dstRect);
-    const auto srcSDLRect = srcSize.isZero() ? static_cast<SDL_FRect>(texture->getRect())
-                                             : static_cast<SDL_FRect>(srcRect);
+    const auto srcSDLRect = static_cast<SDL_FRect>(clipArea);
 
-    const SDL_FPoint pivot =
-        {static_cast<float>(dstRect.w * transform.pivot.x),
-         static_cast<float>(dstRect.h * transform.pivot.y)};
+    // Pivot is normalized 0..1 relative to dstRect, for rotation center
+    const auto pivotPoint = static_cast<SDL_FPoint>(dstRect.getSize() * pivot);
 
     SDL_FlipMode flipAxis = SDL_FLIP_NONE;
     if (texture->flip.h)
@@ -244,7 +217,7 @@ void draw(const std::shared_ptr<Texture>& texture, const Transform& transform, c
 
     if (!SDL_RenderTextureRotated(
             _renderer, texture->getSDL(), &srcSDLRect, &dstSDLRect, TO_DEGREES(transform.angle),
-            &pivot, flipAxis
+            &pivotPoint, flipAxis
         ))
     {
         throw std::runtime_error("Failed to render texture: " + std::string(SDL_GetError()));
@@ -344,33 +317,25 @@ Raises:
     subRenderer.def(
         "draw",
         [](const std::shared_ptr<Texture>& texture, const py::object& transformObj,
-           const py::object& srcObj)
+           const py::object& anchorObj, const py::object& pivotObj)
         {
-            try
-            {
-                const auto transform = transformObj.is_none() ? Transform()
-                                                              : transformObj.cast<Transform>();
-                const auto srcRect = srcObj.is_none() ? Rect() : srcObj.cast<Rect>();
-                draw(texture, transform, srcRect);
-            }
-            catch (const py::cast_error&)
-            {
-                throw py::type_error(
-                    "Invalid type for arguments, expected (Texture, Transform, Rect)"
-                );
-            }
+            const auto transform = transformObj.is_none() ? Transform()
+                                                          : transformObj.cast<Transform>();
+            const auto anchor = anchorObj.is_none() ? Vec2{0.0, 0.0} : anchorObj.cast<Vec2>();
+            const auto pivot = pivotObj.is_none() ? Vec2{0.5, 0.5} : pivotObj.cast<Vec2>();
+
+            draw(texture, transform, anchor, pivot);
         },
-        py::arg("texture"), py::arg("transform") = py::none(), py::arg("src") = py::none(), R"doc(
-Render a texture with the specified transform and source rectangle.
+        py::arg("texture"), py::arg("transform") = py::none(), py::arg("anchor") = py::none(),
+        py::arg("pivot") = py::none(),
+        R"doc(
+Render a texture.
 
 Args:
     texture (Texture): The texture to render.
-    transform (Transform, optional): The transform (position, rotation, scale, anchor, pivot). Defaults to identity transform.
-    src (Rect, optional): The source rectangle from the texture. Defaults to entire texture if not specified.
-
-Raises:
-    TypeError: If arguments are not of expected types.
-    RuntimeError: If renderer is not initialized.
+    transform (Transform, optional): The transform (position, rotation, scale).
+    anchor (Vec2 | None): The anchor point (0.0-1.0). Defaults to top left (0, 0).
+    pivot (Vec2 | None): The rotation pivot (0.0-1.0). Defaults to center (0.5, 0.5).
         )doc"
     );
 

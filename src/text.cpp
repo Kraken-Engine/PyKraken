@@ -69,7 +69,7 @@ void Text::setFont(const Font& font) const
     }
 }
 
-void Text::draw(Vec2 pos, const Anchor anchor) const
+void Text::draw(Vec2 pos, const Vec2& anchor) const
 {
     if (!renderer::_get())
         throw std::runtime_error("Renderer not initialized");
@@ -84,40 +84,8 @@ void Text::draw(Vec2 pos, const Anchor anchor) const
     int textW = 0, textH = 0;
     TTF_GetTextSize(m_text, &textW, &textH);
 
-    switch (anchor)
-    {
-    case Anchor::TopLeft:
-        // no offset
-        break;
-    case Anchor::TopMid:
-        pos.x -= textW / 2.0;
-        break;
-    case Anchor::TopRight:
-        pos.x -= textW;
-        break;
-    case Anchor::MidLeft:
-        pos.y -= textH / 2.0;
-        break;
-    case Anchor::Center:
-        pos.x -= textW / 2.0;
-        pos.y -= textH / 2.0;
-        break;
-    case Anchor::MidRight:
-        pos.x -= textW;
-        pos.y -= textH / 2.0;
-        break;
-    case Anchor::BottomLeft:
-        pos.y -= textH;
-        break;
-    case Anchor::BottomMid:
-        pos.x -= textW / 2.0;
-        pos.y -= textH;
-        break;
-    case Anchor::BottomRight:
-        pos.x -= textW;
-        pos.y -= textH;
-        break;
-    }
+    pos.x -= textW * anchor.x;
+    pos.y -= textH * anchor.y;
 
     const int drawX = static_cast<int>(std::round(pos.x));
     const int drawY = static_cast<int>(std::round(pos.y));
@@ -359,7 +327,7 @@ Returns:
 
         .def(
             "draw",
-            [](const Text& self, const py::object& posObj, const Anchor anchor) -> void
+            [](const Text& self, const py::object& posObj, const py::object& anchorObj) -> void
             {
                 Vec2 pos{};
                 if (!posObj.is_none())
@@ -373,15 +341,29 @@ Returns:
                         throw py::type_error("Invalid type for 'pos', expected Vec2");
                     }
                 }
+
+                Vec2 anchor{};
+                if (!anchorObj.is_none())
+                {
+                    try
+                    {
+                        anchor = anchorObj.cast<Vec2>();
+                    }
+                    catch (const py::cast_error&)
+                    {
+                        throw py::type_error("Invalid type for 'anchor', expected Vec2");
+                    }
+                }
+
                 self.draw(pos, anchor);
             },
-            py::arg("pos") = py::none(), py::arg("anchor") = Anchor::TopLeft, R"doc(
+            py::arg("pos") = py::none(), py::arg("anchor") = py::none(), R"doc(
 Draw the text to the renderer at the specified position with alignment.
 A shadow is drawn if shadow_color.a > 0 and shadow_offset is not (0, 0).
 
 Args:
     pos (Vec2 | None): The position in pixels. Defaults to (0, 0).
-    anchor (Anchor): The anchor point for alignment. Defaults to TopLeft.
+    anchor (Vec2 | None): The anchor point for alignment (0.0-1.0). Defaults to top left (0, 0).
 
 Raises:
     RuntimeError: If the renderer is not initialized or text drawing fails.

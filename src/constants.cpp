@@ -3,26 +3,72 @@
 #include <SDL3/SDL.h>
 #include <pybind11/native_enum.h>
 
+#include "Math.hpp"
 #include "_globals.hpp"
+
+const kn::Vec2 kn::Anchor::TOP_LEFT = {0.0, 0.0};
+const kn::Vec2 kn::Anchor::TOP_MID = {0.5, 0.0};
+const kn::Vec2 kn::Anchor::TOP_RIGHT = {1.0, 0.0};
+const kn::Vec2 kn::Anchor::MID_LEFT = {0.0, 0.5};
+const kn::Vec2 kn::Anchor::CENTER = {0.5, 0.5};
+const kn::Vec2 kn::Anchor::MID_RIGHT = {1.0, 0.5};
+const kn::Vec2 kn::Anchor::BOTTOM_LEFT = {0.0, 1.0};
+const kn::Vec2 kn::Anchor::BOTTOM_MID = {0.5, 1.0};
+const kn::Vec2 kn::Anchor::BOTTOM_RIGHT = {1.0, 1.0};
 
 namespace kn::constants
 {
 void _bind(const py::module_& module)
 {
-    // Define Anchor enum
-    py::native_enum<Anchor>(module, "Anchor", "enum.IntEnum", R"doc(
-Anchor positions used for aligning elements within a rectangle.
+    // Define Anchor "enum" (class with static constants)
+    py::classh<Anchor>(module, "Anchor", R"doc(
+Anchor positions returning Vec2 values for alignment.
     )doc")
-        .value("TOP_LEFT", Anchor::TopLeft, "Top-left anchor")
-        .value("TOP_MID", Anchor::TopMid, "Top-center anchor")
-        .value("TOP_RIGHT", Anchor::TopRight, "Top-right anchor")
-        .value("MID_LEFT", Anchor::MidLeft, "Middle-left anchor")
-        .value("CENTER", Anchor::Center, "Center anchor")
-        .value("MID_RIGHT", Anchor::MidRight, "Middle-right anchor")
-        .value("BOTTOM_LEFT", Anchor::BottomLeft, "Bottom-left anchor")
-        .value("BOTTOM_MID", Anchor::BottomMid, "Bottom-center anchor")
-        .value("BOTTOM_RIGHT", Anchor::BottomRight, "Bottom-right anchor")
-        .finalize();
+        .def_property_readonly_static(
+            "TOP_LEFT", [](const py::object&) { return Anchor::TOP_LEFT; }, R"doc(
+Vec2 representing top-left anchor point.
+        )doc"
+        )
+        .def_property_readonly_static(
+            "TOP_MID", [](const py::object&) { return Anchor::TOP_MID; }, R"doc(
+Vec2 representing top-middle anchor point.
+        )doc"
+        )
+        .def_property_readonly_static(
+            "TOP_RIGHT", [](const py::object&) { return Anchor::TOP_RIGHT; }, R"doc(
+Vec2 representing top-right anchor point.
+        )doc"
+        )
+        .def_property_readonly_static(
+            "MID_LEFT", [](const py::object&) { return Anchor::MID_LEFT; }, R"doc(
+Vec2 representing middle-left anchor point.
+        )doc"
+        )
+        .def_property_readonly_static(
+            "CENTER", [](const py::object&) { return Anchor::CENTER; }, R"doc(
+Vec2 representing center anchor point.
+        )doc"
+        )
+        .def_property_readonly_static(
+            "MID_RIGHT", [](const py::object&) { return Anchor::MID_RIGHT; }, R"doc(
+Vec2 representing middle-right anchor point.
+        )doc"
+        )
+        .def_property_readonly_static(
+            "BOTTOM_LEFT", [](const py::object&) { return Anchor::BOTTOM_LEFT; }, R"doc(
+Vec2 representing bottom-left anchor point.
+        )doc"
+        )
+        .def_property_readonly_static(
+            "BOTTOM_MID", [](const py::object&) { return Anchor::BOTTOM_MID; }, R"doc(
+Vec2 representing bottom-middle anchor point.
+        )doc"
+        )
+        .def_property_readonly_static(
+            "BOTTOM_RIGHT", [](const py::object&) { return Anchor::BOTTOM_RIGHT; }, R"doc(
+Vec2 representing bottom-right anchor point.
+        )doc"
+        );
 
     // Define Align enum
     py::native_enum<Align>(module, "Align", "enum.IntEnum", R"doc(
@@ -40,9 +86,13 @@ SDL event type constants for input and system events.
         .value("QUIT", SDL_EVENT_QUIT, "Quit requested")
         .value("TERMINATING", SDL_EVENT_TERMINATING, "Application is terminating")
         .value("LOW_MEMORY", SDL_EVENT_LOW_MEMORY, "Low memory warning")
-        .value("WILL_ENTER_BACKGROUND", SDL_EVENT_WILL_ENTER_BACKGROUND, "About to enter background")
+        .value(
+            "WILL_ENTER_BACKGROUND", SDL_EVENT_WILL_ENTER_BACKGROUND, "About to enter background"
+        )
         .value("DID_ENTER_BACKGROUND", SDL_EVENT_DID_ENTER_BACKGROUND, "Entered background")
-        .value("WILL_ENTER_FOREGROUND", SDL_EVENT_WILL_ENTER_FOREGROUND, "About to enter foreground")
+        .value(
+            "WILL_ENTER_FOREGROUND", SDL_EVENT_WILL_ENTER_FOREGROUND, "About to enter foreground"
+        )
         .value("DID_ENTER_FOREGROUND", SDL_EVENT_DID_ENTER_FOREGROUND, "Entered foreground")
         .value("LOCALE_CHANGED", SDL_EVENT_LOCALE_CHANGED, "Locale settings changed")
         .value("SYSTEM_THEME_CHANGED", SDL_EVENT_SYSTEM_THEME_CHANGED, "System theme changed")
@@ -52,10 +102,22 @@ SDL event type constants for input and system events.
         .value("DISPLAY_ADDED", SDL_EVENT_DISPLAY_ADDED, "Display connected")
         .value("DISPLAY_REMOVED", SDL_EVENT_DISPLAY_REMOVED, "Display disconnected")
         .value("DISPLAY_MOVED", SDL_EVENT_DISPLAY_MOVED, "Display moved")
-        .value("DISPLAY_DESKTOP_MODE_CHANGED", SDL_EVENT_DISPLAY_DESKTOP_MODE_CHANGED, "Desktop display mode changed")
-        .value("DISPLAY_CURRENT_MODE_CHANGED", SDL_EVENT_DISPLAY_CURRENT_MODE_CHANGED, "Current display mode changed")
-        .value("DISPLAY_CONTENT_SCALE_CHANGED", SDL_EVENT_DISPLAY_CONTENT_SCALE_CHANGED, "Display content scale changed")
-        .value("DISPLAY_USABLE_BOUNDS_CHANGED", SDL_EVENT_DISPLAY_USABLE_BOUNDS_CHANGED, "Usable display bounds changed")
+        .value(
+            "DISPLAY_DESKTOP_MODE_CHANGED", SDL_EVENT_DISPLAY_DESKTOP_MODE_CHANGED,
+            "Desktop display mode changed"
+        )
+        .value(
+            "DISPLAY_CURRENT_MODE_CHANGED", SDL_EVENT_DISPLAY_CURRENT_MODE_CHANGED,
+            "Current display mode changed"
+        )
+        .value(
+            "DISPLAY_CONTENT_SCALE_CHANGED", SDL_EVENT_DISPLAY_CONTENT_SCALE_CHANGED,
+            "Display content scale changed"
+        )
+        .value(
+            "DISPLAY_USABLE_BOUNDS_CHANGED", SDL_EVENT_DISPLAY_USABLE_BOUNDS_CHANGED,
+            "Usable display bounds changed"
+        )
 
         // Window events
         .value("WINDOW_SHOWN", SDL_EVENT_WINDOW_SHOWN, "Window shown")
@@ -74,8 +136,14 @@ SDL event type constants for input and system events.
         .value("WINDOW_HIT_TEST", SDL_EVENT_WINDOW_HIT_TEST, "Window hit test request")
         .value("WINDOW_ICCPROF_CHANGED", SDL_EVENT_WINDOW_ICCPROF_CHANGED, "ICC profile changed")
         .value("WINDOW_DISPLAY_CHANGED", SDL_EVENT_WINDOW_DISPLAY_CHANGED, "Window display changed")
-        .value("WINDOW_DISPLAY_SCALE_CHANGED", SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED, "Window display scale changed")
-        .value("WINDOW_SAFE_AREA_CHANGED", SDL_EVENT_WINDOW_SAFE_AREA_CHANGED, "Window safe area changed")
+        .value(
+            "WINDOW_DISPLAY_SCALE_CHANGED", SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED,
+            "Window display scale changed"
+        )
+        .value(
+            "WINDOW_SAFE_AREA_CHANGED", SDL_EVENT_WINDOW_SAFE_AREA_CHANGED,
+            "Window safe area changed"
+        )
         .value("WINDOW_OCCLUDED", SDL_EVENT_WINDOW_OCCLUDED, "Window occluded")
         .value("WINDOW_ENTER_FULLSCREEN", SDL_EVENT_WINDOW_ENTER_FULLSCREEN, "Entered fullscreen")
         .value("WINDOW_LEAVE_FULLSCREEN", SDL_EVENT_WINDOW_LEAVE_FULLSCREEN, "Left fullscreen")
@@ -90,9 +158,14 @@ SDL event type constants for input and system events.
         .value("KEYMAP_CHANGED", SDL_EVENT_KEYMAP_CHANGED, "Keymap changed")
         .value("KEYBOARD_ADDED", SDL_EVENT_KEYBOARD_ADDED, "Keyboard connected")
         .value("KEYBOARD_REMOVED", SDL_EVENT_KEYBOARD_REMOVED, "Keyboard disconnected")
-        .value("TEXT_EDITING_CANDIDATES", SDL_EVENT_TEXT_EDITING_CANDIDATES, "IME candidate list updated")
+        .value(
+            "TEXT_EDITING_CANDIDATES", SDL_EVENT_TEXT_EDITING_CANDIDATES,
+            "IME candidate list updated"
+        )
         .value("SCREEN_KEYBOARD_SHOWN", SDL_EVENT_SCREEN_KEYBOARD_SHOWN, "On-screen keyboard shown")
-        .value("SCREEN_KEYBOARD_HIDDEN", SDL_EVENT_SCREEN_KEYBOARD_HIDDEN, "On-screen keyboard hidden")
+        .value(
+            "SCREEN_KEYBOARD_HIDDEN", SDL_EVENT_SCREEN_KEYBOARD_HIDDEN, "On-screen keyboard hidden"
+        )
 
         // Mouse events
         .value("MOUSE_MOTION", SDL_EVENT_MOUSE_MOTION, "Mouse moved")
@@ -113,8 +186,13 @@ SDL event type constants for input and system events.
         .value("GAMEPAD_TOUCHPAD_MOTION", SDL_EVENT_GAMEPAD_TOUCHPAD_MOTION, "Touchpad moved")
         .value("GAMEPAD_TOUCHPAD_UP", SDL_EVENT_GAMEPAD_TOUCHPAD_UP, "Touchpad released")
         .value("GAMEPAD_SENSOR_UPDATE", SDL_EVENT_GAMEPAD_SENSOR_UPDATE, "Gamepad sensor updated")
-        .value("GAMEPAD_UPDATE_COMPLETE", SDL_EVENT_GAMEPAD_UPDATE_COMPLETE, "Gamepad update complete")
-        .value("GAMEPAD_STEAM_HANDLE_UPDATED", SDL_EVENT_GAMEPAD_STEAM_HANDLE_UPDATED, "Steam handle updated")
+        .value(
+            "GAMEPAD_UPDATE_COMPLETE", SDL_EVENT_GAMEPAD_UPDATE_COMPLETE, "Gamepad update complete"
+        )
+        .value(
+            "GAMEPAD_STEAM_HANDLE_UPDATED", SDL_EVENT_GAMEPAD_STEAM_HANDLE_UPDATED,
+            "Steam handle updated"
+        )
 
         // Touch events
         .value("FINGER_DOWN", SDL_EVENT_FINGER_DOWN, "Finger touch began")
@@ -133,7 +211,10 @@ SDL event type constants for input and system events.
         // Audio device events
         .value("AUDIO_DEVICE_ADDED", SDL_EVENT_AUDIO_DEVICE_ADDED, "Audio device connected")
         .value("AUDIO_DEVICE_REMOVED", SDL_EVENT_AUDIO_DEVICE_REMOVED, "Audio device disconnected")
-        .value("AUDIO_DEVICE_FORMAT_CHANGED", SDL_EVENT_AUDIO_DEVICE_FORMAT_CHANGED, "Audio device format changed")
+        .value(
+            "AUDIO_DEVICE_FORMAT_CHANGED", SDL_EVENT_AUDIO_DEVICE_FORMAT_CHANGED,
+            "Audio device format changed"
+        )
 
         // Sensor events
         .value("SENSOR_UPDATE", SDL_EVENT_SENSOR_UPDATE, "Sensor data updated")
@@ -335,13 +416,21 @@ Keyboard scancodes representing physical key locations.
         .value("S_MEDIA_PLAY", SDL_SCANCODE_MEDIA_PLAY, "The physical Media Play key")
         .value("S_MEDIA_PAUSE", SDL_SCANCODE_MEDIA_PAUSE, "The physical Media Pause key")
         .value("S_MEDIA_REC", SDL_SCANCODE_MEDIA_RECORD, "The physical Media Record key")
-        .value("S_MEDIA_FAST_FORWARD", SDL_SCANCODE_MEDIA_FAST_FORWARD, "The physical Media Fast Forward key")
+        .value(
+            "S_MEDIA_FAST_FORWARD", SDL_SCANCODE_MEDIA_FAST_FORWARD,
+            "The physical Media Fast Forward key"
+        )
         .value("S_MEDIA_REWIND", SDL_SCANCODE_MEDIA_REWIND, "The physical Media Rewind key")
         .value("S_MEDIA_NEXT", SDL_SCANCODE_MEDIA_NEXT_TRACK, "The physical Media Next Track key")
-        .value("S_MEDIA_PREV", SDL_SCANCODE_MEDIA_PREVIOUS_TRACK, "The physical Media Previous Track key")
+        .value(
+            "S_MEDIA_PREV", SDL_SCANCODE_MEDIA_PREVIOUS_TRACK,
+            "The physical Media Previous Track key"
+        )
         .value("S_MEDIA_STOP", SDL_SCANCODE_MEDIA_STOP, "The physical Media Stop key")
         .value("S_MEDIA_EJECT", SDL_SCANCODE_MEDIA_EJECT, "The physical Media Eject key")
-        .value("S_MEDIA_PLAY_PAUSE", SDL_SCANCODE_MEDIA_PLAY_PAUSE, "The physical Media Play/Pause key")
+        .value(
+            "S_MEDIA_PLAY_PAUSE", SDL_SCANCODE_MEDIA_PLAY_PAUSE, "The physical Media Play/Pause key"
+        )
         .value("S_MEDIA_SELECT", SDL_SCANCODE_MEDIA_SELECT, "The physical Media Select key")
 
         .value("S_SOFTLEFT", SDL_SCANCODE_SOFTLEFT, "The physical Soft Left key")
@@ -514,7 +603,9 @@ Keyboard keycodes representing logical keys.
         .value("K_MEDIA_PREV", Keycode::K_MEDIA_PREV, "The symbolic Media Previous Track key")
         .value("K_MEDIA_STOP", Keycode::K_MEDIA_STOP, "The symbolic Media Stop key")
         .value("K_MEDIA_EJECT", Keycode::K_MEDIA_EJECT, "The symbolic Media Eject key")
-        .value("K_MEDIA_PLAY_PAUSE", Keycode::K_MEDIA_PLAY_PAUSE, "The symbolic Media Play/Pause key")
+        .value(
+            "K_MEDIA_PLAY_PAUSE", Keycode::K_MEDIA_PLAY_PAUSE, "The symbolic Media Play/Pause key"
+        )
         .value("K_MEDIA_SELECT", Keycode::K_MEDIA_SELECT, "The symbolic Media Select key")
         .value("K_SOFTLEFT", Keycode::K_SOFTLEFT, "The symbolic Soft Left key")
         .value("K_SOFTRIGHT", Keycode::K_SOFTRIGHT, "The symbolic Soft Right key")
@@ -568,10 +659,21 @@ Gamepad device type identifiers.
         .value("C_PS3", SDL_GAMEPAD_TYPE_PS3, "PlayStation 3 gamepad")
         .value("C_PS4", SDL_GAMEPAD_TYPE_PS4, "PlayStation 4 gamepad")
         .value("C_PS5", SDL_GAMEPAD_TYPE_PS5, "PlayStation 5 gamepad")
-        .value("C_SWITCH_PRO", SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_PRO, "Nintendo Switch Pro controller")
-        .value("C_SWITCH_JOYCON_LEFT", SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_LEFT, "Nintendo Switch Joy-Con left")
-        .value("C_SWITCH_JOYCON_RIGHT", SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_RIGHT, "Nintendo Switch Joy-Con right")
-        .value("C_SWITCH_JOYCON_PAIR", SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_PAIR, "Nintendo Switch Joy-Con pair")
+        .value(
+            "C_SWITCH_PRO", SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_PRO, "Nintendo Switch Pro controller"
+        )
+        .value(
+            "C_SWITCH_JOYCON_LEFT", SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_LEFT,
+            "Nintendo Switch Joy-Con left"
+        )
+        .value(
+            "C_SWITCH_JOYCON_RIGHT", SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_RIGHT,
+            "Nintendo Switch Joy-Con right"
+        )
+        .value(
+            "C_SWITCH_JOYCON_PAIR", SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_PAIR,
+            "Nintendo Switch Joy-Con pair"
+        )
         .export_values()
         .finalize();
 }

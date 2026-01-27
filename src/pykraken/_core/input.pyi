@@ -10,7 +10,7 @@ def bind(name: str, actions: pykraken._core.InputActionList) -> None:
     
     Args:
         name (str): The identifier for this binding (e.g. "jump").
-        actions (list[InputAction]): One or more InputActions to bind.
+        actions (InputActionList): One or more InputActions to bind.
     """
 def get_axis(negative: str, positive: str) -> float:
     """

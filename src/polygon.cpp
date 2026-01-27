@@ -177,7 +177,7 @@ Create an empty polygon with no points.
 Create a polygon from a vector of Vec2 points.
 
 Args:
-    points (list[Vec2]): List of Vec2 points defining the polygon vertices.
+    points (Vec2List): List of Vec2 points defining the polygon vertices.
         )doc")
 
         .def_readwrite("points", &Polygon::points, R"doc(

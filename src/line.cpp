@@ -85,7 +85,7 @@ Return a copy of this line.
 Move this line by a Vec2 or 2-element sequence.
 
 Args:
-    offset (Vec2 | list[float]): The amount to move.
+    offset (Vec2): The amount to move.
     )doc")
 
         .def(
@@ -122,7 +122,7 @@ Args:
 Move the given line by a Vec2 or 2-element sequence.
 
 Args:
-    offset (Vec2 | list[float]): The amount to move.
+    offset (Vec2): The amount to move.
         )doc");
 }
 }  // namespace line

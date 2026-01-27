@@ -559,40 +559,40 @@ Returns:
     Vec2: Vector composed of (y, y).
         )doc"
         )
-        .def_property_static(
-            "ZERO", [](const py::object&) -> Vec2 { return Vec2::ZERO(); }, nullptr, R"doc(
+        .def_property_readonly_static(
+            "ZERO", [](const py::object&) -> Vec2 { return Vec2::ZERO(); }, R"doc(
 Return a Vec2 with both components set to zero.
 
 Returns:
     Vec2: A zero vector (0, 0).
         )doc"
         )
-        .def_property_static(
-            "LEFT", [](const py::object&) -> Vec2 { return Vec2::LEFT(); }, nullptr, R"doc(
+        .def_property_readonly_static(
+            "LEFT", [](const py::object&) -> Vec2 { return Vec2::LEFT(); }, R"doc(
 Return a Vec2 representing the left direction.
 
 Returns:
     Vec2: A leftward unit vector (-1, 0).
         )doc"
         )
-        .def_property_static(
-            "RIGHT", [](const py::object&) -> Vec2 { return Vec2::RIGHT(); }, nullptr, R"doc(
+        .def_property_readonly_static(
+            "RIGHT", [](const py::object&) -> Vec2 { return Vec2::RIGHT(); }, R"doc(
 Return a Vec2 representing the right direction.
 
 Returns:
     Vec2: A rightward unit vector (1, 0).
         )doc"
         )
-        .def_property_static(
-            "UP", [](const py::object&) -> Vec2 { return Vec2::UP(); }, nullptr, R"doc(
+        .def_property_readonly_static(
+            "UP", [](const py::object&) -> Vec2 { return Vec2::UP(); }, R"doc(
 Return a Vec2 representing the upward direction.
 
 Returns:
     Vec2: An upward unit vector (0, -1).
         )doc"
         )
-        .def_property_static(
-            "DOWN", [](const py::object&) -> Vec2 { return Vec2::DOWN(); }, nullptr, R"doc(
+        .def_property_readonly_static(
+            "DOWN", [](const py::object&) -> Vec2 { return Vec2::DOWN(); }, R"doc(
 Return a Vec2 representing the downward direction.
 
 Returns:

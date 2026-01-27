@@ -39,28 +39,21 @@ class Align(enum.IntEnum):
         """
         Convert to a string according to format_spec.
         """
-class Anchor(enum.IntEnum):
+class Anchor:
     """
     
-    Anchor positions used for aligning elements within a rectangle.
+    Anchor positions returning Vec2 values for alignment.
         
     """
-    BOTTOM_LEFT: typing.ClassVar[Anchor]  # value = <Anchor.BOTTOM_LEFT: 6>
-    BOTTOM_MID: typing.ClassVar[Anchor]  # value = <Anchor.BOTTOM_MID: 7>
-    BOTTOM_RIGHT: typing.ClassVar[Anchor]  # value = <Anchor.BOTTOM_RIGHT: 8>
-    CENTER: typing.ClassVar[Anchor]  # value = <Anchor.CENTER: 4>
-    MID_LEFT: typing.ClassVar[Anchor]  # value = <Anchor.MID_LEFT: 3>
-    MID_RIGHT: typing.ClassVar[Anchor]  # value = <Anchor.MID_RIGHT: 5>
-    TOP_LEFT: typing.ClassVar[Anchor]  # value = <Anchor.TOP_LEFT: 0>
-    TOP_MID: typing.ClassVar[Anchor]  # value = <Anchor.TOP_MID: 1>
-    TOP_RIGHT: typing.ClassVar[Anchor]  # value = <Anchor.TOP_RIGHT: 2>
-    @classmethod
-    def __new__(cls, value):
-        ...
-    def __format__(self, format_spec):
-        """
-        Convert to a string according to format_spec.
-        """
+    BOTTOM_LEFT: typing.ClassVar[Vec2]  # value = Vec2(0.000000, 1.000000)
+    BOTTOM_MID: typing.ClassVar[Vec2]  # value = Vec2(0.500000, 1.000000)
+    BOTTOM_RIGHT: typing.ClassVar[Vec2]  # value = Vec2(1.000000, 1.000000)
+    CENTER: typing.ClassVar[Vec2]  # value = Vec2(0.500000, 0.500000)
+    MID_LEFT: typing.ClassVar[Vec2]  # value = Vec2(0.000000, 0.500000)
+    MID_RIGHT: typing.ClassVar[Vec2]  # value = Vec2(1.000000, 0.500000)
+    TOP_LEFT: typing.ClassVar[Vec2]  # value = Vec2(0.000000, 0.000000)
+    TOP_MID: typing.ClassVar[Vec2]  # value = Vec2(0.500000, 0.000000)
+    TOP_RIGHT: typing.ClassVar[Vec2]  # value = Vec2(1.000000, 0.000000)
 class AnimationController:
     """
     
@@ -72,6 +65,22 @@ class AnimationController:
     """
     def __init__(self) -> None:
         ...
+    def add_sheet(self, frame_size: Vec2, strips: SheetStripList) -> None:
+        """
+        Add animations from a sprite sheet definition.
+        
+        Divides an atlas into horizontal strips, where each strip represents a different animation.
+        Each strip is divided into equal-sized frames based on the specified frame size.
+        Frames are read left-to-right within each strip, and strips are read top-to-bottom.
+        
+        Args:
+            frame_size (Vec2): Size of each frame as (width, height).
+            strips (SheetStripList): List of strip definitions.
+        
+        Raises:
+            ValueError: If frame size is not positive, no strips provided, frame count is not positive.
+            RuntimeError: If duplicate animation names exist.
+        """
     def is_finished(self) -> bool:
         """
         Check if the animation completed a full loop during the last update.
@@ -82,22 +91,6 @@ class AnimationController:
         
         Returns:
             bool: True if the animation completed a loop during the last update.
-        """
-    def load_sprite_sheet(self, frame_size: Vec2, strips: SheetStripList) -> None:
-        """
-        Load one or more animations for a sprite sheet texture.
-        
-        Divides the sprite sheet into horizontal strips, where each strip represents a different
-        animation. Each strip is divided into equal-sized frames based on the specified frame size.
-        Frames are read left-to-right within each strip, and strips are read top-to-bottom.
-        
-        Args:
-            frame_size (Vec2): Size of each frame as (width, height).
-            strips (list[SheetStrip]): List of strip definitions.
-        
-        Raises:
-            ValueError: If frame size is not positive, no strips provided, frame count is not positive.
-            RuntimeError: If duplicate animation names exist.
         """
     def pause(self) -> None:
         """
@@ -157,23 +150,23 @@ class AnimationController:
             ValueError: If the specified animation name is not found.
         """
     @property
-    def clip(self) -> Rect:
-        """
-        The source rectangle (clip) for the current animation frame.
-        
-        Returns:
-            Rect: The source rectangle defining which portion of the texture to display.
-        
-        Raises:
-            RuntimeError: If no animation is currently set or the animation has no frames.
-        """
-    @property
     def current_animation_name(self) -> str:
         """
         The name of the currently active animation.
         
         Returns:
             str: The name of the current animation, or empty string if none is set.
+        """
+    @property
+    def frame_area(self) -> Rect:
+        """
+        The clip area (atlas region) for the current animation frame.
+        
+        Returns:
+            Rect: The source rectangle defining which portion of the texture to display.
+        
+        Raises:
+            RuntimeError: If no animation is currently set or the animation has no frames.
         """
     @property
     def frame_index(self) -> int:
@@ -1543,7 +1536,7 @@ class Line:
         Move this line by a Vec2 or 2-element sequence.
         
         Args:
-            offset (Vec2 | list[float]): The amount to move.
+            offset (Vec2): The amount to move.
         """
     @property
     def a(self) -> Vec2:
@@ -1982,14 +1975,14 @@ class PixelArray:
             RuntimeError: If the file cannot be loaded or doesn't exist.
         """
     @typing.overload
-    def blit(self, pixel_array: PixelArray, pos: Vec2, anchor: Anchor = Anchor.CENTER, src: typing.Any = None) -> None:
+    def blit(self, pixel_array: PixelArray, pos: Vec2, anchor: typing.Any = None, src: typing.Any = None) -> None:
         """
         Blit (copy) another pixel array onto this pixel array at the specified position with anchor alignment.
         
         Args:
             pixel_array (PixelArray): The source pixel array to blit from.
             pos (Vec2): The position to blit to.
-            anchor (Anchor, optional): The anchor point for positioning. Defaults to CENTER.
+            anchor (Vec2, optional): The anchor point for positioning. Defaults to (0,0) TopLeft.
             src (Rect, optional): The source rectangle to blit from. Defaults to entire source pixel array.
         
         Raises:
@@ -2216,7 +2209,7 @@ class Polygon:
         Create a polygon from a vector of Vec2 points.
         
         Args:
-            points (list[Vec2]): List of Vec2 points defining the polygon vertices.
+            points (Vec2List): List of Vec2 points defining the polygon vertices.
         """
     def __iter__(self) -> collections.abc.Iterator:
         ...
@@ -3090,14 +3083,6 @@ class Sprite:
         Update the sprite state (must be overridden).
         """
     @property
-    def clip(self) -> typing.Any:
-        """
-        Source rectangle for texture sampling (None = full texture).
-        """
-    @clip.setter
-    def clip(self, arg1: typing.Any) -> None:
-        ...
-    @property
     def texture(self) -> Texture:
         """
         The sprite's texture.
@@ -3152,14 +3137,14 @@ class Text:
         Raises:
             RuntimeError: If text creation fails.
         """
-    def draw(self, pos: typing.Any = None, anchor: Anchor = Anchor.TOP_LEFT) -> None:
+    def draw(self, pos: typing.Any = None, anchor: typing.Any = None) -> None:
         """
         Draw the text to the renderer at the specified position with alignment.
         A shadow is drawn if shadow_color.a > 0 and shadow_offset is not (0, 0).
         
         Args:
             pos (Vec2 | None): The position in pixels. Defaults to (0, 0).
-            anchor (Anchor): The anchor point for alignment. Defaults to TopLeft.
+            anchor (Vec2 | None): The anchor point for alignment (0.0-1.0). Defaults to top left (0, 0).
         
         Raises:
             RuntimeError: If the renderer is not initialized or text drawing fails.
@@ -3326,13 +3311,6 @@ class Texture:
         Raises:
             RuntimeError: If texture creation fails.
         """
-    def get_rect(self) -> Rect:
-        """
-        Get a rectangle representing the texture bounds.
-        
-        Returns:
-            Rect: A rectangle with position (0, 0) and the texture's dimensions.
-        """
     def make_additive(self) -> None:
         """
         Set the texture to use additive blending mode.
@@ -3362,6 +3340,14 @@ class Texture:
     def alpha(self, arg1: typing.SupportsFloat) -> None:
         ...
     @property
+    def clip_area(self) -> Rect:
+        """
+        Get or set the clip area (atlas region) of the texture.
+        """
+    @clip_area.setter
+    def clip_area(self, arg1: Rect) -> None:
+        ...
+    @property
     def flip(self) -> Texture.Flip:
         """
         The flip settings for horizontal and vertical mirroring.
@@ -3370,19 +3356,6 @@ class Texture:
         """
     @flip.setter
     def flip(self, arg0: Texture.Flip) -> None:
-        ...
-    @property
-    def size(self) -> Vec2:
-        """
-        Get the dimensions of the texture as a Vec2 (width, height).
-        """
-    @property
-    def tint(self) -> Color:
-        """
-        Get or set the color tint applied to the texture during rendering.
-        """
-    @tint.setter
-    def tint(self, arg1: Color) -> None:
         ...
 class TextureAccess(enum.IntEnum):
     """
@@ -3500,37 +3473,23 @@ class Timer:
 class Transform:
     """
     
-    Transform represents a 2D transformation with position, size, rotation, and scale.
+    Transform represents a 2D transformation with position, rotation, and scale.
     
     Attributes:
         pos (Vec2): Position component.
-        size (Vec2): Explicit size (empty = use texture/srcRect size).
         angle (float): Rotation component in radians.
         scale (Vec2): Scale component.
-        anchor (Anchor): Anchor point for positioning.
-        pivot (Vec2): Normalized pivot point for rotation.
         
     """
-    def __init__(self, pos: typing.Any = None, size: typing.Any = None, angle: typing.SupportsFloat = 0.0, scale: typing.Any = None, anchor: Anchor = Anchor.TOP_LEFT, pivot: typing.Any = None) -> None:
+    def __init__(self, pos: typing.Any = None, angle: typing.SupportsFloat = 0.0, scale: typing.Any = None) -> None:
         """
         Initialize a Transform with optional keyword arguments.
         
         Args:
             pos (Vec2): Position component. Defaults to (0, 0).
-            size (Vec2): Explicit size. Defaults to empty (auto-detect).
             angle (float): Rotation in radians. Defaults to 0.
             scale (Vec2): Scale multiplier. Defaults to (1, 1).
-            anchor (Anchor): Anchor point for positioning. Defaults to TOP_LEFT.
-            pivot (Vec2): Normalized rotation pivot. Defaults to (0.5, 0.5) for center.
         """
-    @property
-    def anchor(self) -> Anchor:
-        """
-        The anchor point for positioning.
-        """
-    @anchor.setter
-    def anchor(self, arg0: Anchor) -> None:
-        ...
     @property
     def angle(self) -> float:
         """
@@ -3538,14 +3497,6 @@ class Transform:
         """
     @angle.setter
     def angle(self, arg0: typing.SupportsFloat) -> None:
-        ...
-    @property
-    def pivot(self) -> Vec2:
-        """
-        The normalized pivot point for rotation.
-        """
-    @pivot.setter
-    def pivot(self, arg0: Vec2) -> None:
         ...
     @property
     def pos(self) -> Vec2:
@@ -3562,14 +3513,6 @@ class Transform:
         """
     @scale.setter
     def scale(self, arg0: Vec2) -> None:
-        ...
-    @property
-    def size(self) -> Vec2:
-        """
-        The explicit size as a Vec2. If zero/empty, uses texture or source rect size.
-        """
-    @size.setter
-    def size(self, arg0: Vec2) -> None:
         ...
 class Vec2:
     """

@@ -14,11 +14,8 @@ namespace kn
 struct Transform
 {
     Vec2 pos{0.0, 0.0};
-    Vec2 size{};         // Explicit size (empty = use texture/srcRect size)
     double angle = 0.0;  // In radians
     Vec2 scale{1.0, 1.0};
-    Anchor anchor = Anchor::TopLeft;
-    Vec2 pivot{0.5, 0.5};  // Normalized pivot point, centered by default
 };
 
 namespace transform

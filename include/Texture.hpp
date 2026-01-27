@@ -55,7 +55,8 @@ class Texture
 
     [[nodiscard]] Vec2 getSize() const;
 
-    [[nodiscard]] Rect getRect() const;
+    [[nodiscard]] Rect getClipArea() const;
+    void setClipArea(const Rect& area);
 
     void setTint(const Color& tint) const;
 
@@ -77,6 +78,7 @@ class Texture
     SDL_Texture* m_texPtr = nullptr;
     double m_width = 0.0;
     double m_height = 0.0;
+    Rect m_clipArea{};
 };
 
 namespace texture

@@ -561,7 +561,8 @@ void TileLayer::render()
             setTexture->flip.h = flipInfo.h;
             setTexture->flip.v = flipInfo.v;
 
-            renderer::draw(setTexture, renderTransform, setTile->getClipRect());
+            setTexture->setClipArea(setTile->getClipArea());
+            renderer::draw(setTexture, renderTransform);
         }
     }
 }
@@ -761,7 +762,8 @@ void ObjectGroup::render()
             {
                 Transform renderTransform = obj.transform;
                 renderTransform.pos += offset;
-                renderer::draw(setTexture, renderTransform, tile->getClipRect());
+                setTexture->setClipArea(tile->getClipArea());
+                renderer::draw(setTexture, renderTransform);
             }
 
             continue;
@@ -985,7 +987,7 @@ Terrain indices for each corner of the tile.
         .def_property_readonly("probability", &TileSet::Tile::getProbability, R"doc(
 Probability used for weighted/random tile placement.
     )doc")
-        .def_property_readonly("clip_rect", &TileSet::Tile::getClipRect, R"doc(
+        .def_property_readonly("clip_area", &TileSet::Tile::getClipArea, R"doc(
 Source rectangle of the tile within the tileset texture.
     )doc");
     py::bind_vector<std::vector<TileSet::Tile>>(tileSetClass, "TileSetTileList");

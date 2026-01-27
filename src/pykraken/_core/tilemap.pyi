@@ -1106,7 +1106,7 @@ class TileSet:
             def __str__(self) -> str:
                 ...
         @property
-        def clip_rect(self) -> pykraken._core.Rect:
+        def clip_area(self) -> pykraken._core.Rect:
             """
             Source rectangle of the tile within the tileset texture.
             """

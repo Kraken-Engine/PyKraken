@@ -20,7 +20,7 @@ void Sprite::draw() const
     if (!visible || !texture)
         return;
 
-    renderer::draw(texture, transform, clip.value_or(Rect{}));
+    renderer::draw(texture, transform);
 }
 
 void Sprite::move()
@@ -87,33 +87,6 @@ void _bind(py::module_& module)
         .def_readwrite("velocity", &Sprite::velocity, "The sprite's velocity.")
         .def_readwrite("texture", &Sprite::texture, "The sprite's texture.")
         .def_readwrite("visible", &Sprite::visible, "Whether the sprite is visible.")
-
-        .def_property(
-            "clip",
-            [](const Sprite& self) -> py::object
-            {
-                if (self.clip.has_value())
-                    return py::cast(self.clip.value());
-                return py::none();
-            },
-            [](Sprite& self, const py::object& value) -> void
-            {
-                if (value.is_none())
-                {
-                    self.clip = std::nullopt;
-                    return;
-                }
-                try
-                {
-                    self.clip = value.cast<Rect>();
-                }
-                catch (const py::cast_error&)
-                {
-                    throw py::type_error("clip must be a Rect or None");
-                }
-            },
-            "Source rectangle for texture sampling (None = full texture)."
-        )
 
         .def("draw", &Sprite::draw, "Draw the sprite to the screen with its current transform.")
         .def("update", &Sprite::update, "Update the sprite state (must be overridden).")
