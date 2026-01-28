@@ -1,6 +1,6 @@
 #include "Transform.hpp"
 
-#include <pybind11/stl_bind.h>
+#include <pybind11/stl.h>
 
 namespace kn::transform
 {
@@ -107,7 +107,6 @@ Returns:
         )doc"
     );
 
-    py::bind_vector<std::vector<Transform>>(subTransform, "TransformList");
     subTransform.def(
         "compose_chain",
         [](const py::args& args) -> std::vector<Transform>
@@ -137,7 +136,7 @@ Args:
     *transforms: Two or more Transform objects to compose.
 
 Returns:
-    TransformList: The composed Transforms for inputs 2..N in world space.
+    list[Transform]: The composed Transforms for inputs 2..N in world space.
         )doc"
     );
 }

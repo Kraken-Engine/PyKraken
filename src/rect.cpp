@@ -1,7 +1,5 @@
 #include "Rect.hpp"
 
-#include <pybind11/stl_bind.h>
-
 namespace kn
 {
 
@@ -533,7 +531,6 @@ Raises:
             },
             py::arg("index")
         );
-    py::bind_vector<std::vector<kn::Rect>>(module, "RectList");
 
     auto subRect = module.def_submodule("rect", "Rectangle related functions");
 

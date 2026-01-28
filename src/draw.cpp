@@ -1,6 +1,9 @@
 #include "Draw.hpp"
 
 #include <gfx/SDL3_gfxPrimitives.h>
+#include <pybind11/stl.h>
+
+#include <mapbox/earcut.hpp>
 
 #include "Camera.hpp"
 #include "Circle.hpp"
@@ -11,17 +14,37 @@
 #include "Rect.hpp"
 #include "Renderer.hpp"
 
-static Uint64 packPoint(int x, int y);
+namespace mapbox
+{
+namespace util
+{
+template <>
+struct nth<0, kn::Vec2>
+{
+    inline static float get(const kn::Vec2& v)
+    {
+        return v.x;
+    }
+};
+template <>
+struct nth<1, kn::Vec2>
+{
+    inline static float get(const kn::Vec2& v)
+    {
+        return v.y;
+    }
+};
+}  // namespace util
+}  // namespace mapbox
 
 namespace kn::draw
 {
-void _circleFilled(
-    SDL_Renderer* r, const Circle& circle, const Color& color, const int numSegments
-);
+void _circleFilled(SDL_Renderer* r, const Circle& circle, const Color& color, int numSegments);
 void _circleOutline(
-    SDL_Renderer* r, const Circle& circle, const Color& color, const double thickness,
-    const int numSegments
+    SDL_Renderer* r, const Circle& circle, const Color& color, double thickness, int numSegments
 );
+
+void _polygonFilled(SDL_Renderer* r, const Polygon& polygon, const Color& color);
 
 void circle(const Circle& circle, const Color& color, const double thickness, const int numSegments)
 {
@@ -232,7 +255,10 @@ void line(const Line& line, const Color& color, const int thickness)
 
     if (thickness <= 1)
     {
-        if (!lineColor(rend, x1, y1, x2, y2, static_cast<Uint32>(color)))
+        if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+            throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
+
+        if (!SDL_RenderLine(rend, x1, y1, x2, y2))
             throw std::runtime_error("Failed to render line: " + std::string(SDL_GetError()));
     }
     else
@@ -365,32 +391,161 @@ void polygon(const Polygon& polygon, const Color& color, const bool filled)
     const size_t size = polygon.points.size();
     if (size == 0)
         return;
+
+    const Vec2 cameraPos = camera::getActivePos();
     if (size == 1)
     {
-        point(polygon.points.at(0), color);
+        if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+            throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
+
+        const auto [x, y] = static_cast<SDL_FPoint>(polygon.points.at(0) - cameraPos);
+        if (!SDL_RenderPoint(rend, x, y))
+            throw std::runtime_error("Failed to render point: " + std::string(SDL_GetError()));
+
         return;
     }
     if (size == 2)
     {
-        line({polygon.points.at(0), polygon.points.at(1)}, color);
+        const auto [x1, y1] = static_cast<SDL_FPoint>(polygon.points.at(0) - cameraPos);
+        const auto [x2, y2] = static_cast<SDL_FPoint>(polygon.points.at(1) - cameraPos);
+
+        if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+            throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
+
+        if (!SDL_RenderLine(rend, x1, y1, x2, y2))
+            throw std::runtime_error("Failed to render line: " + std::string(SDL_GetError()));
+
         return;
     }
 
-    const Vec2 cameraPos = camera::getActivePos();
+    Polygon cameraPolygon = polygon;
+    cameraPolygon.translate(-cameraPos);
 
-    std::vector<Sint16> vx(size), vy(size);
-    for (size_t i = 0; i < size; ++i)
+    // Just draw lines if not filled
+    if (!filled)
     {
-        const auto& p = polygon.points[i];
-        vx[i] = static_cast<Sint16>(p.x - cameraPos.x);
-        vy[i] = static_cast<Sint16>(p.y - cameraPos.y);
+        if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+            throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
+
+        std::vector<SDL_FPoint> points;
+        points.reserve(cameraPolygon.points.size() + 1);
+        for (const auto& p : cameraPolygon.points)
+            points.push_back(static_cast<SDL_FPoint>(p));
+        points.push_back(points.front());
+
+        if (!SDL_RenderLines(rend, points.data(), static_cast<int>(points.size())))
+        {
+            throw std::runtime_error(
+                "Failed to render polygon outline: " + std::string(SDL_GetError())
+            );
+        }
+
+        return;
     }
 
-    using PolyFn = bool (*)(SDL_Renderer*, const Sint16*, const Sint16*, int, Uint32);
-    PolyFn drawFn = filled ? filledPolygonColor : polygonColor;
+    _polygonFilled(rend, cameraPolygon, color);
+}
 
-    if (!drawFn(rend, vx.data(), vy.data(), static_cast<int>(size), static_cast<Uint32>(color)))
-        throw std::runtime_error(std::string("Failed to render polygon: ") + SDL_GetError());
+void polygons(const std::vector<Polygon>& polygons, const Color& color, const bool filled)
+{
+    SDL_Renderer* rend = renderer::_get();
+    if (!rend)
+        throw std::runtime_error("Renderer not yet initialized");
+
+    if (color.a == 0)
+        return;
+
+    const Vec2 cameraPos = camera::getActivePos();
+
+    for (const Polygon& polygon : polygons)
+    {
+        const size_t size = polygon.points.size();
+        if (size == 0)
+            continue;
+        if (size == 1)
+        {
+            if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+                throw std::runtime_error(
+                    "Failed to set draw color: " + std::string(SDL_GetError())
+                );
+
+            const auto [x, y] = static_cast<SDL_FPoint>(polygon.points.at(0) - cameraPos);
+            if (!SDL_RenderPoint(rend, x, y))
+                throw std::runtime_error("Failed to render point: " + std::string(SDL_GetError()));
+
+            continue;
+        }
+        if (size == 2)
+        {
+            const auto [x1, y1] = static_cast<SDL_FPoint>(polygon.points.at(0) - cameraPos);
+            const auto [x2, y2] = static_cast<SDL_FPoint>(polygon.points.at(1) - cameraPos);
+
+            if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+                throw std::runtime_error(
+                    "Failed to set draw color: " + std::string(SDL_GetError())
+                );
+
+            if (!SDL_RenderLine(rend, x1, y1, x2, y2))
+                throw std::runtime_error("Failed to render line: " + std::string(SDL_GetError()));
+
+            continue;
+        }
+
+        Polygon cameraPolygon = polygon;
+        cameraPolygon.translate(-cameraPos);
+
+        if (!filled)
+        {
+            if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+                throw std::runtime_error(
+                    "Failed to set draw color: " + std::string(SDL_GetError())
+                );
+
+            std::vector<SDL_FPoint> points;
+            points.reserve(cameraPolygon.points.size() + 1);
+            for (const auto& p : cameraPolygon.points)
+                points.push_back(static_cast<SDL_FPoint>(p));
+            points.push_back(points.front());
+
+            if (!SDL_RenderLines(rend, points.data(), static_cast<int>(points.size())))
+            {
+                throw std::runtime_error(
+                    "Failed to render polygon outline: " + std::string(SDL_GetError())
+                );
+            }
+
+            continue;
+        }
+
+        _polygonFilled(rend, cameraPolygon, color);
+    }
+}
+
+void _polygonFilled(SDL_Renderer* r, const Polygon& polygon, const Color& color)
+{
+    std::vector<std::vector<kn::Vec2>> vertices;
+    vertices.push_back(polygon.points);
+
+    std::vector<uint32_t> indices = mapbox::earcut<uint32_t>(vertices);
+
+    const auto fColor = static_cast<SDL_FColor>(color);
+    std::vector<SDL_Vertex> sdlVertices;
+    sdlVertices.reserve(polygon.points.size());
+
+    for (const auto& point : polygon.points)
+    {
+        sdlVertices.push_back({static_cast<SDL_FPoint>(point), fColor, {}});
+    }
+
+    if (!SDL_RenderGeometry(
+            r, nullptr, sdlVertices.data(), static_cast<int>(sdlVertices.size()),
+            reinterpret_cast<const int*>(indices.data()), static_cast<int>(indices.size())
+        ))
+    {
+        throw std::runtime_error(
+            std::string("Failed to render polygon geometry: ") + SDL_GetError()
+        );
+    }
 }
 
 void _circleFilled(SDL_Renderer* r, const Circle& circle, const Color& color, const int numSegments)
@@ -621,7 +776,7 @@ Args:
     );
 
     subDraw.def(
-        "polygon", &polygon, py::arg("polygon"), py::arg("color"), py::arg("filled") = false,
+        "polygon", &polygon, py::arg("polygon"), py::arg("color"), py::arg("filled") = true,
         R"doc(
 Draw a polygon to the renderer.
 
@@ -632,11 +787,18 @@ Args:
                              Defaults to False (outline). Works with both convex and concave polygons.
     )doc"
     );
+
+    subDraw.def(
+        "polygons", &polygons, py::arg("polygons"), py::arg("color"), py::arg("filled") = true,
+        R"doc(
+Draw an array of polygons in bulk to the renderer.
+
+Args:
+    polygons (Sequence[Polygon]): The polygons to draw in bulk.
+    color (Color): The color of the polygons.
+    filled (bool, optional): Whether to draw filled polygons or just the outlines.
+                             Defaults to True (filled). Works with both convex and concave polygons.
+    )doc"
+    );
 }
 }  // namespace kn::draw
-
-Uint64 packPoint(const int x, const int y)
-{
-    return static_cast<uint64_t>(static_cast<uint32_t>(x + 32768)) << 32 |
-           static_cast<uint32_t>(y + 32768);
-}

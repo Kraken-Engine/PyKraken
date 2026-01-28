@@ -1,7 +1,5 @@
 #include "Circle.hpp"
 
-#include <pybind11/stl_bind.h>
-
 #include "Line.hpp"
 #include "Rect.hpp"
 
@@ -146,8 +144,6 @@ Return a copy of the circle.
         .def("__eq__", &Circle::operator==, py::arg("other"))
 
         .def("__ne__", &Circle::operator!=, py::arg("other"));
-
-    py::bind_vector<std::vector<kn::Circle>>(module, "CircleList");
 }
 }  // namespace circle
 }  // namespace kn

@@ -103,7 +103,7 @@ Args:
                               Defaults to VERTICAL.
 
 Returns:
-    RectList: A list of Rects representing the viewports.
+    list[Rect]: A list of Rects representing the viewports.
                     )doc"
     );
 

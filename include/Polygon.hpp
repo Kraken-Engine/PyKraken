@@ -4,12 +4,12 @@
 
 #include <vector>
 
+#include "Math.hpp"
+
 namespace py = pybind11;
 
 namespace kn
 {
-class Vec2;
-
 class Polygon
 {
   public:
@@ -24,12 +24,12 @@ class Polygon
     [[nodiscard]] double getPerimeter() const;
     [[nodiscard]] double getArea() const;
     [[nodiscard]] Vec2 getCentroid() const;
-    [[nodiscard]] class Rect getBounds() const;
+    [[nodiscard]] class Rect getRect() const;
 
-    void rotate(double angle, const Vec2& pivot);
+    void rotate(double angle, const Vec2& pivot = {0.5, 0.5});
     void translate(const Vec2& offset);
-    void scale(double factor, const Vec2& pivot);
-    void scale(const Vec2& factor, const Vec2& pivot);
+    void scale(double factor, const Vec2& pivot = {0.5, 0.5});
+    void scale(const Vec2& factor, const Vec2& pivot = {0.5, 0.5});
 };
 
 namespace polygon

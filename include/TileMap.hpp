@@ -219,7 +219,7 @@ class MapObject
     [[nodiscard]] Rect getRect() const;
     [[nodiscard]] uint32_t getTileID() const;
     [[nodiscard]] tmx::Object::Shape getShapeType() const;
-    [[nodiscard]] const std::vector<Vec2>& getVertices() const;
+    [[nodiscard]] std::vector<Vec2> getVertices() const;
     [[nodiscard]] const TextProperties& getTextProperties() const;
 
   private:

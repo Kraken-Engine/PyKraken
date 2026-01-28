@@ -30,7 +30,7 @@ SDL_Window* _get()
     return _window;
 }
 
-void create(const std::string& title, const Vec2& size)
+void create(const std::string& title, const int width, const int height)
 {
     if (_window)
         throw std::runtime_error("Window already created");
@@ -40,13 +40,10 @@ void create(const std::string& title, const Vec2& size)
     if (title.size() > 255)
         throw std::invalid_argument("Title cannot exceed 255 characters");
 
-    if (size.x <= 0 || size.y <= 0)
+    if (width <= 0 || height <= 0)
         throw std::invalid_argument("Window size values must be greater than 0");
 
-    auto winW = static_cast<int>(size.x);
-    auto winH = static_cast<int>(size.y);
-
-    _window = SDL_CreateWindow(title.c_str(), winW, winH, SDL_WINDOW_RESIZABLE);
+    _window = SDL_CreateWindow(title.c_str(), width, height, SDL_WINDOW_RESIZABLE);
     if (!_window)
         throw std::runtime_error(SDL_GetError());
 
@@ -63,7 +60,7 @@ void create(const std::string& title, const Vec2& size)
 
     _isOpen = true;
 
-    renderer::_init(_window, winW, winH);
+    renderer::_init(_window, width, height);
 
     log::info("SDL version: {}.{}.{}", SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_MICRO_VERSION);
     log::info(
@@ -195,12 +192,13 @@ void _bind(py::module_& module)
 {
     auto subWindow = module.def_submodule("window", "Window related functions");
 
-    subWindow.def("create", &create, py::arg("title"), py::arg("size"), R"doc(
+    subWindow.def("create", &create, py::arg("title"), py::arg("width"), py::arg("height"), R"doc(
 Create a window with the requested title and resolution.
 
 Args:
     title (str): Non-empty title no longer than 255 characters.
-    size (Vec2): The window size (width, height), both values must be positive.
+    width (int): The window width, must be positive.
+    height (int): The window height, must be positive.
 
 Raises:
     RuntimeError: If a window already exists or SDL window creation fails.

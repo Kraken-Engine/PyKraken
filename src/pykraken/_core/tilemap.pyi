@@ -93,100 +93,100 @@ class Layer:
         ...
 class LayerList:
     __hash__: typing.ClassVar[None] = None
-    def __bool__(self) -> bool:
+    def __bool__(self: collections.abc.Sequence[Layer]) -> bool:
         """
         Check whether the list is nonempty
         """
-    def __contains__(self, x: Layer) -> bool:
+    def __contains__(self: collections.abc.Sequence[Layer], x: Layer) -> bool:
         """
         Return true the container contains ``x``
         """
     @typing.overload
-    def __delitem__(self, arg0: typing.SupportsInt) -> None:
+    def __delitem__(self: collections.abc.Sequence[Layer], arg0: typing.SupportsInt) -> None:
         """
         Delete the list elements at index ``i``
         """
     @typing.overload
-    def __delitem__(self, arg0: slice) -> None:
+    def __delitem__(self: collections.abc.Sequence[Layer], arg0: slice) -> None:
         """
         Delete list elements using a slice object
         """
-    def __eq__(self, arg0: LayerList) -> bool:
+    def __eq__(self: collections.abc.Sequence[Layer], arg0: collections.abc.Sequence[Layer]) -> bool:
         ...
     @typing.overload
-    def __getitem__(self, s: slice) -> LayerList:
+    def __getitem__(self: collections.abc.Sequence[Layer], s: slice) -> list[Layer]:
         """
         Retrieve list elements using a slice object
         """
     @typing.overload
-    def __getitem__(self, arg0: typing.SupportsInt) -> Layer:
+    def __getitem__(self: collections.abc.Sequence[Layer], arg0: typing.SupportsInt) -> Layer:
         ...
     @typing.overload
     def __init__(self) -> None:
         ...
     @typing.overload
-    def __init__(self, arg0: LayerList) -> None:
+    def __init__(self, arg0: collections.abc.Sequence[Layer]) -> None:
         """
         Copy constructor
         """
     @typing.overload
     def __init__(self, arg0: collections.abc.Iterable) -> None:
         ...
-    def __iter__(self) -> collections.abc.Iterator[Layer]:
+    def __iter__(self: collections.abc.Sequence[Layer]) -> collections.abc.Iterator[Layer]:
         ...
-    def __len__(self) -> int:
+    def __len__(self: collections.abc.Sequence[Layer]) -> int:
         ...
-    def __ne__(self, arg0: LayerList) -> bool:
+    def __ne__(self: collections.abc.Sequence[Layer], arg0: collections.abc.Sequence[Layer]) -> bool:
         ...
-    def __repr__(self) -> str:
+    def __repr__(self: collections.abc.Sequence[Layer]) -> str:
         """
         Return the canonical string representation of this list.
         """
     @typing.overload
-    def __setitem__(self, arg0: typing.SupportsInt, arg1: Layer) -> None:
+    def __setitem__(self: collections.abc.Sequence[Layer], arg0: typing.SupportsInt, arg1: Layer) -> None:
         ...
     @typing.overload
-    def __setitem__(self, arg0: slice, arg1: LayerList) -> None:
+    def __setitem__(self: collections.abc.Sequence[Layer], arg0: slice, arg1: collections.abc.Sequence[Layer]) -> None:
         """
         Assign list elements using a slice object
         """
-    def append(self, x: Layer) -> None:
+    def append(self: collections.abc.Sequence[Layer], x: Layer) -> None:
         """
         Add an item to the end of the list
         """
-    def clear(self) -> None:
+    def clear(self: collections.abc.Sequence[Layer]) -> None:
         """
         Clear the contents
         """
-    def count(self, x: Layer) -> int:
+    def count(self: collections.abc.Sequence[Layer], x: Layer) -> int:
         """
         Return the number of times ``x`` appears in the list
         """
     @typing.overload
-    def extend(self, L: LayerList) -> None:
+    def extend(self: collections.abc.Sequence[Layer], L: collections.abc.Sequence[Layer]) -> None:
         """
         Extend the list by appending all the items in the given list
         """
     @typing.overload
-    def extend(self, L: collections.abc.Iterable) -> None:
+    def extend(self: collections.abc.Sequence[Layer], L: collections.abc.Iterable) -> None:
         """
         Extend the list by appending all the items in the given list
         """
-    def insert(self, i: typing.SupportsInt, x: Layer) -> None:
+    def insert(self: collections.abc.Sequence[Layer], i: typing.SupportsInt, x: Layer) -> None:
         """
         Insert an item at a given position.
         """
     @typing.overload
-    def pop(self) -> Layer:
+    def pop(self: collections.abc.Sequence[Layer]) -> Layer:
         """
         Remove and return the last item
         """
     @typing.overload
-    def pop(self, i: typing.SupportsInt) -> Layer:
+    def pop(self: collections.abc.Sequence[Layer], i: typing.SupportsInt) -> Layer:
         """
         Remove and return the item at index ``i``
         """
-    def remove(self, x: Layer) -> None:
+    def remove(self: collections.abc.Sequence[Layer], x: Layer) -> None:
         """
         Remove the first item from the list whose value is x. It is an error if there is no such item.
         """
@@ -261,7 +261,7 @@ class Map:
         Hex side length for hex maps.
         """
     @property
-    def layers(self) -> LayerList:
+    def layers(self) -> list[Layer]:
         """
         LayerList of layers in the map.
         """
@@ -291,7 +291,7 @@ class Map:
         Stagger index enum for staggered/hex maps.
         """
     @property
-    def tile_sets(self) -> TileSetList:
+    def tile_sets(self) -> list[TileSet]:
         """
         TileSetList of tilesets used by the map.
         """
@@ -314,7 +314,7 @@ class MapObject:
         rect (Rect): Bounding rectangle.
         tile_id (int): Associated tile id if the object is a tile.
         shape_type (ShapeType): The shape enum for the object.
-        vertices (Vec2List): Vertex list for polygon/polyline shapes.
+        vertices (list[Vec2]): Vertex list for polygon/polyline shapes.
         text (TextProperties): Text properties when shape is text.
         
     """
@@ -381,9 +381,9 @@ class MapObject:
         Unique object identifier.
         """
     @property
-    def vertices(self) -> pykraken._core.Vec2List:
+    def vertices(self) -> list[pykraken._core.Vec2]:
         """
-        Vec2List of vertices for polygon/polyline shapes.
+        List of vertices for polygon/polyline shapes.
         """
     @property
     def visible(self) -> bool:
@@ -394,80 +394,80 @@ class MapObject:
     def visible(self, arg0: bool) -> None:
         ...
 class MapObjectList:
-    def __bool__(self) -> bool:
+    def __bool__(self: collections.abc.Sequence[MapObject]) -> bool:
         """
         Check whether the list is nonempty
         """
     @typing.overload
-    def __delitem__(self, arg0: typing.SupportsInt) -> None:
+    def __delitem__(self: collections.abc.Sequence[MapObject], arg0: typing.SupportsInt) -> None:
         """
         Delete the list elements at index ``i``
         """
     @typing.overload
-    def __delitem__(self, arg0: slice) -> None:
+    def __delitem__(self: collections.abc.Sequence[MapObject], arg0: slice) -> None:
         """
         Delete list elements using a slice object
         """
     @typing.overload
-    def __getitem__(self, s: slice) -> MapObjectList:
+    def __getitem__(self: collections.abc.Sequence[MapObject], s: slice) -> list[MapObject]:
         """
         Retrieve list elements using a slice object
         """
     @typing.overload
-    def __getitem__(self, arg0: typing.SupportsInt) -> MapObject:
+    def __getitem__(self: collections.abc.Sequence[MapObject], arg0: typing.SupportsInt) -> MapObject:
         ...
     @typing.overload
     def __init__(self) -> None:
         ...
     @typing.overload
-    def __init__(self, arg0: MapObjectList) -> None:
+    def __init__(self, arg0: collections.abc.Sequence[MapObject]) -> None:
         """
         Copy constructor
         """
     @typing.overload
     def __init__(self, arg0: collections.abc.Iterable) -> None:
         ...
-    def __iter__(self) -> collections.abc.Iterator[MapObject]:
+    def __iter__(self: collections.abc.Sequence[MapObject]) -> collections.abc.Iterator[MapObject]:
         ...
-    def __len__(self) -> int:
-        ...
-    @typing.overload
-    def __setitem__(self, arg0: typing.SupportsInt, arg1: MapObject) -> None:
+    def __len__(self: collections.abc.Sequence[MapObject]) -> int:
         ...
     @typing.overload
-    def __setitem__(self, arg0: slice, arg1: MapObjectList) -> None:
+    def __setitem__(self: collections.abc.Sequence[MapObject], arg0: typing.SupportsInt, arg1: MapObject) -> None:
+        ...
+    @typing.overload
+    def __setitem__(self: collections.abc.Sequence[MapObject], arg0: slice, arg1: collections.abc.Sequence[MapObject]) -> None:
         """
         Assign list elements using a slice object
         """
-    def append(self, x: MapObject) -> None:
+    def append(self: collections.abc.Sequence[MapObject], x: MapObject) -> None:
         """
         Add an item to the end of the list
         """
-    def clear(self) -> None:
+    def clear(self: collections.abc.Sequence[MapObject]) -> None:
         """
         Clear the contents
         """
     @typing.overload
-    def extend(self, L: MapObjectList) -> None:
+    def extend(self: collections.abc.Sequence[MapObject], L: collections.abc.Sequence[MapObject]) -> None:
         """
         Extend the list by appending all the items in the given list
         """
     @typing.overload
-    def extend(self, L: collections.abc.Iterable) -> None:
+    def extend(self: collections.abc.Sequence[MapObject], L: collections.abc.Iterable) -> None:
         """
         Extend the list by appending all the items in the given list
         """
-    def insert(self, i: typing.SupportsInt, x: MapObject) -> None:
+    def insert(self: collections.abc.Sequence[MapObject], i: typing.SupportsInt, x: MapObject) -> None:
         """
         Insert an item at a given position.
         """
     @typing.overload
-    def pop(self) -> MapObject:
+    def pop(self: collections.abc.Sequence[MapObject]) -> MapObject:
         """
         Remove and return the last item
         """
     @typing.overload
-    def pop(self, i: typing.SupportsInt) -> MapObject:
+    def pop(self: collections.abc.Sequence[MapObject], i: typing.SupportsInt) -> MapObject:
         """
         Remove and return the item at index ``i``
         """
@@ -587,7 +587,7 @@ class ObjectGroup(Layer):
         Drawing order for objects in the group.
         """
     @property
-    def objects(self) -> MapObjectList:
+    def objects(self) -> list[MapObject]:
         """
         MapObjectList of objects in the group.
         """
@@ -748,80 +748,80 @@ class TileLayer(Layer):
             Index of the tileset used by this tile.
             """
     class TileLayerTileList:
-        def __bool__(self) -> bool:
+        def __bool__(self: collections.abc.Sequence[TileLayer.Tile]) -> bool:
             """
             Check whether the list is nonempty
             """
         @typing.overload
-        def __delitem__(self, arg0: typing.SupportsInt) -> None:
+        def __delitem__(self: collections.abc.Sequence[TileLayer.Tile], arg0: typing.SupportsInt) -> None:
             """
             Delete the list elements at index ``i``
             """
         @typing.overload
-        def __delitem__(self, arg0: slice) -> None:
+        def __delitem__(self: collections.abc.Sequence[TileLayer.Tile], arg0: slice) -> None:
             """
             Delete list elements using a slice object
             """
         @typing.overload
-        def __getitem__(self, s: slice) -> TileLayer.TileLayerTileList:
+        def __getitem__(self: collections.abc.Sequence[TileLayer.Tile], s: slice) -> list[TileLayer.Tile]:
             """
             Retrieve list elements using a slice object
             """
         @typing.overload
-        def __getitem__(self, arg0: typing.SupportsInt) -> TileLayer.Tile:
+        def __getitem__(self: collections.abc.Sequence[TileLayer.Tile], arg0: typing.SupportsInt) -> TileLayer.Tile:
             ...
         @typing.overload
         def __init__(self) -> None:
             ...
         @typing.overload
-        def __init__(self, arg0: TileLayer.TileLayerTileList) -> None:
+        def __init__(self, arg0: collections.abc.Sequence[TileLayer.Tile]) -> None:
             """
             Copy constructor
             """
         @typing.overload
         def __init__(self, arg0: collections.abc.Iterable) -> None:
             ...
-        def __iter__(self) -> collections.abc.Iterator[TileLayer.Tile]:
+        def __iter__(self: collections.abc.Sequence[TileLayer.Tile]) -> collections.abc.Iterator[TileLayer.Tile]:
             ...
-        def __len__(self) -> int:
-            ...
-        @typing.overload
-        def __setitem__(self, arg0: typing.SupportsInt, arg1: TileLayer.Tile) -> None:
+        def __len__(self: collections.abc.Sequence[TileLayer.Tile]) -> int:
             ...
         @typing.overload
-        def __setitem__(self, arg0: slice, arg1: TileLayer.TileLayerTileList) -> None:
+        def __setitem__(self: collections.abc.Sequence[TileLayer.Tile], arg0: typing.SupportsInt, arg1: TileLayer.Tile) -> None:
+            ...
+        @typing.overload
+        def __setitem__(self: collections.abc.Sequence[TileLayer.Tile], arg0: slice, arg1: collections.abc.Sequence[TileLayer.Tile]) -> None:
             """
             Assign list elements using a slice object
             """
-        def append(self, x: TileLayer.Tile) -> None:
+        def append(self: collections.abc.Sequence[TileLayer.Tile], x: TileLayer.Tile) -> None:
             """
             Add an item to the end of the list
             """
-        def clear(self) -> None:
+        def clear(self: collections.abc.Sequence[TileLayer.Tile]) -> None:
             """
             Clear the contents
             """
         @typing.overload
-        def extend(self, L: TileLayer.TileLayerTileList) -> None:
+        def extend(self: collections.abc.Sequence[TileLayer.Tile], L: collections.abc.Sequence[TileLayer.Tile]) -> None:
             """
             Extend the list by appending all the items in the given list
             """
         @typing.overload
-        def extend(self, L: collections.abc.Iterable) -> None:
+        def extend(self: collections.abc.Sequence[TileLayer.Tile], L: collections.abc.Iterable) -> None:
             """
             Extend the list by appending all the items in the given list
             """
-        def insert(self, i: typing.SupportsInt, x: TileLayer.Tile) -> None:
+        def insert(self: collections.abc.Sequence[TileLayer.Tile], i: typing.SupportsInt, x: TileLayer.Tile) -> None:
             """
             Insert an item at a given position.
             """
         @typing.overload
-        def pop(self) -> TileLayer.Tile:
+        def pop(self: collections.abc.Sequence[TileLayer.Tile]) -> TileLayer.Tile:
             """
             Remove and return the last item
             """
         @typing.overload
-        def pop(self, i: typing.SupportsInt) -> TileLayer.Tile:
+        def pop(self: collections.abc.Sequence[TileLayer.Tile], i: typing.SupportsInt) -> TileLayer.Tile:
             """
             Remove and return the item at index ``i``
             """
@@ -845,85 +845,7 @@ class TileLayer(Layer):
             """
             The tile entry.
             """
-    class TileResultList:
-        def __bool__(self) -> bool:
-            """
-            Check whether the list is nonempty
-            """
-        @typing.overload
-        def __delitem__(self, arg0: typing.SupportsInt) -> None:
-            """
-            Delete the list elements at index ``i``
-            """
-        @typing.overload
-        def __delitem__(self, arg0: slice) -> None:
-            """
-            Delete list elements using a slice object
-            """
-        @typing.overload
-        def __getitem__(self, s: slice) -> TileLayer.TileResultList:
-            """
-            Retrieve list elements using a slice object
-            """
-        @typing.overload
-        def __getitem__(self, arg0: typing.SupportsInt) -> TileLayer.TileResult:
-            ...
-        @typing.overload
-        def __init__(self) -> None:
-            ...
-        @typing.overload
-        def __init__(self, arg0: TileLayer.TileResultList) -> None:
-            """
-            Copy constructor
-            """
-        @typing.overload
-        def __init__(self, arg0: collections.abc.Iterable) -> None:
-            ...
-        def __iter__(self) -> collections.abc.Iterator[TileLayer.TileResult]:
-            ...
-        def __len__(self) -> int:
-            ...
-        @typing.overload
-        def __setitem__(self, arg0: typing.SupportsInt, arg1: TileLayer.TileResult) -> None:
-            ...
-        @typing.overload
-        def __setitem__(self, arg0: slice, arg1: TileLayer.TileResultList) -> None:
-            """
-            Assign list elements using a slice object
-            """
-        def append(self, x: TileLayer.TileResult) -> None:
-            """
-            Add an item to the end of the list
-            """
-        def clear(self) -> None:
-            """
-            Clear the contents
-            """
-        @typing.overload
-        def extend(self, L: TileLayer.TileResultList) -> None:
-            """
-            Extend the list by appending all the items in the given list
-            """
-        @typing.overload
-        def extend(self, L: collections.abc.Iterable) -> None:
-            """
-            Extend the list by appending all the items in the given list
-            """
-        def insert(self, i: typing.SupportsInt, x: TileLayer.TileResult) -> None:
-            """
-            Insert an item at a given position.
-            """
-        @typing.overload
-        def pop(self) -> TileLayer.TileResult:
-            """
-            Remove and return the last item
-            """
-        @typing.overload
-        def pop(self, i: typing.SupportsInt) -> TileLayer.TileResult:
-            """
-            Remove and return the item at index ``i``
-            """
-    def get_from_area(self, area: pykraken._core.Rect) -> TileLayer.TileResultList:
+    def get_from_area(self, area: pykraken._core.Rect) -> list[TileLayer.TileResult]:
         """
         Return tiles intersecting a Rect area.
         
@@ -931,7 +853,7 @@ class TileLayer(Layer):
             area (Rect): World-space area to query.
         
         Returns:
-            TileResultList: List of TileResult entries for tiles intersecting the area.
+            list[TileLayer.TileResult]: List of TileResult entries for tiles intersecting the area.
         """
     def get_from_point(self, position: pykraken._core.Vec2) -> typing.Any:
         """
@@ -956,7 +878,7 @@ class TileLayer(Layer):
     def opacity(self, arg1: typing.SupportsFloat) -> None:
         ...
     @property
-    def tiles(self) -> TileLayer.TileLayerTileList:
+    def tiles(self) -> list[TileLayer.Tile]:
         """
         TileLayerTileList of tiles in the layer grid.
         """
@@ -1005,80 +927,80 @@ class TileSet:
             Representative tile id for the terrain.
             """
     class TerrainList:
-        def __bool__(self) -> bool:
+        def __bool__(self: collections.abc.Sequence[TileSet.Terrain]) -> bool:
             """
             Check whether the list is nonempty
             """
         @typing.overload
-        def __delitem__(self, arg0: typing.SupportsInt) -> None:
+        def __delitem__(self: collections.abc.Sequence[TileSet.Terrain], arg0: typing.SupportsInt) -> None:
             """
             Delete the list elements at index ``i``
             """
         @typing.overload
-        def __delitem__(self, arg0: slice) -> None:
+        def __delitem__(self: collections.abc.Sequence[TileSet.Terrain], arg0: slice) -> None:
             """
             Delete list elements using a slice object
             """
         @typing.overload
-        def __getitem__(self, s: slice) -> TileSet.TerrainList:
+        def __getitem__(self: collections.abc.Sequence[TileSet.Terrain], s: slice) -> list[TileSet.Terrain]:
             """
             Retrieve list elements using a slice object
             """
         @typing.overload
-        def __getitem__(self, arg0: typing.SupportsInt) -> TileSet.Terrain:
+        def __getitem__(self: collections.abc.Sequence[TileSet.Terrain], arg0: typing.SupportsInt) -> TileSet.Terrain:
             ...
         @typing.overload
         def __init__(self) -> None:
             ...
         @typing.overload
-        def __init__(self, arg0: TileSet.TerrainList) -> None:
+        def __init__(self, arg0: collections.abc.Sequence[TileSet.Terrain]) -> None:
             """
             Copy constructor
             """
         @typing.overload
         def __init__(self, arg0: collections.abc.Iterable) -> None:
             ...
-        def __iter__(self) -> collections.abc.Iterator[TileSet.Terrain]:
+        def __iter__(self: collections.abc.Sequence[TileSet.Terrain]) -> collections.abc.Iterator[TileSet.Terrain]:
             ...
-        def __len__(self) -> int:
-            ...
-        @typing.overload
-        def __setitem__(self, arg0: typing.SupportsInt, arg1: TileSet.Terrain) -> None:
+        def __len__(self: collections.abc.Sequence[TileSet.Terrain]) -> int:
             ...
         @typing.overload
-        def __setitem__(self, arg0: slice, arg1: TileSet.TerrainList) -> None:
+        def __setitem__(self: collections.abc.Sequence[TileSet.Terrain], arg0: typing.SupportsInt, arg1: TileSet.Terrain) -> None:
+            ...
+        @typing.overload
+        def __setitem__(self: collections.abc.Sequence[TileSet.Terrain], arg0: slice, arg1: collections.abc.Sequence[TileSet.Terrain]) -> None:
             """
             Assign list elements using a slice object
             """
-        def append(self, x: TileSet.Terrain) -> None:
+        def append(self: collections.abc.Sequence[TileSet.Terrain], x: TileSet.Terrain) -> None:
             """
             Add an item to the end of the list
             """
-        def clear(self) -> None:
+        def clear(self: collections.abc.Sequence[TileSet.Terrain]) -> None:
             """
             Clear the contents
             """
         @typing.overload
-        def extend(self, L: TileSet.TerrainList) -> None:
+        def extend(self: collections.abc.Sequence[TileSet.Terrain], L: collections.abc.Sequence[TileSet.Terrain]) -> None:
             """
             Extend the list by appending all the items in the given list
             """
         @typing.overload
-        def extend(self, L: collections.abc.Iterable) -> None:
+        def extend(self: collections.abc.Sequence[TileSet.Terrain], L: collections.abc.Iterable) -> None:
             """
             Extend the list by appending all the items in the given list
             """
-        def insert(self, i: typing.SupportsInt, x: TileSet.Terrain) -> None:
+        def insert(self: collections.abc.Sequence[TileSet.Terrain], i: typing.SupportsInt, x: TileSet.Terrain) -> None:
             """
             Insert an item at a given position.
             """
         @typing.overload
-        def pop(self) -> TileSet.Terrain:
+        def pop(self: collections.abc.Sequence[TileSet.Terrain]) -> TileSet.Terrain:
             """
             Remove and return the last item
             """
         @typing.overload
-        def pop(self, i: typing.SupportsInt) -> TileSet.Terrain:
+        def pop(self: collections.abc.Sequence[TileSet.Terrain], i: typing.SupportsInt) -> TileSet.Terrain:
             """
             Remove and return the item at index ``i``
             """
@@ -1095,15 +1017,15 @@ class TileSet:
             
         """
         class TerrainIndices:
-            def __getitem__(self, arg0: typing.SupportsInt) -> int:
+            def __getitem__(self: typing.Annotated[collections.abc.Sequence[typing.SupportsInt], "FixedSize(4)"], arg0: typing.SupportsInt) -> int:
                 ...
-            def __iter__(self) -> collections.abc.Iterator[int]:
+            def __iter__(self: typing.Annotated[collections.abc.Sequence[typing.SupportsInt], "FixedSize(4)"]) -> collections.abc.Iterator[int]:
                 ...
-            def __len__(self) -> int:
+            def __len__(self: typing.Annotated[collections.abc.Sequence[typing.SupportsInt], "FixedSize(4)"]) -> int:
                 ...
-            def __repr__(self) -> str:
+            def __repr__(self: typing.Annotated[collections.abc.Sequence[typing.SupportsInt], "FixedSize(4)"]) -> str:
                 ...
-            def __str__(self) -> str:
+            def __str__(self: typing.Annotated[collections.abc.Sequence[typing.SupportsInt], "FixedSize(4)"]) -> str:
                 ...
         @property
         def clip_area(self) -> pykraken._core.Rect:
@@ -1121,85 +1043,85 @@ class TileSet:
             Probability used for weighted/random tile placement.
             """
         @property
-        def terrain_indices(self) -> TileSet.Tile.TerrainIndices:
+        def terrain_indices(self) -> typing.Annotated[list[int], "FixedSize(4)"]:
             """
-            Terrain indices for each corner of the tile.
+            TerrainIndices for each corner of the tile.
             """
     class TileSetTileList:
-        def __bool__(self) -> bool:
+        def __bool__(self: collections.abc.Sequence[TileSet.Tile]) -> bool:
             """
             Check whether the list is nonempty
             """
         @typing.overload
-        def __delitem__(self, arg0: typing.SupportsInt) -> None:
+        def __delitem__(self: collections.abc.Sequence[TileSet.Tile], arg0: typing.SupportsInt) -> None:
             """
             Delete the list elements at index ``i``
             """
         @typing.overload
-        def __delitem__(self, arg0: slice) -> None:
+        def __delitem__(self: collections.abc.Sequence[TileSet.Tile], arg0: slice) -> None:
             """
             Delete list elements using a slice object
             """
         @typing.overload
-        def __getitem__(self, s: slice) -> TileSet.TileSetTileList:
+        def __getitem__(self: collections.abc.Sequence[TileSet.Tile], s: slice) -> list[TileSet.Tile]:
             """
             Retrieve list elements using a slice object
             """
         @typing.overload
-        def __getitem__(self, arg0: typing.SupportsInt) -> TileSet.Tile:
+        def __getitem__(self: collections.abc.Sequence[TileSet.Tile], arg0: typing.SupportsInt) -> TileSet.Tile:
             ...
         @typing.overload
         def __init__(self) -> None:
             ...
         @typing.overload
-        def __init__(self, arg0: TileSet.TileSetTileList) -> None:
+        def __init__(self, arg0: collections.abc.Sequence[TileSet.Tile]) -> None:
             """
             Copy constructor
             """
         @typing.overload
         def __init__(self, arg0: collections.abc.Iterable) -> None:
             ...
-        def __iter__(self) -> collections.abc.Iterator[TileSet.Tile]:
+        def __iter__(self: collections.abc.Sequence[TileSet.Tile]) -> collections.abc.Iterator[TileSet.Tile]:
             ...
-        def __len__(self) -> int:
-            ...
-        @typing.overload
-        def __setitem__(self, arg0: typing.SupportsInt, arg1: TileSet.Tile) -> None:
+        def __len__(self: collections.abc.Sequence[TileSet.Tile]) -> int:
             ...
         @typing.overload
-        def __setitem__(self, arg0: slice, arg1: TileSet.TileSetTileList) -> None:
+        def __setitem__(self: collections.abc.Sequence[TileSet.Tile], arg0: typing.SupportsInt, arg1: TileSet.Tile) -> None:
+            ...
+        @typing.overload
+        def __setitem__(self: collections.abc.Sequence[TileSet.Tile], arg0: slice, arg1: collections.abc.Sequence[TileSet.Tile]) -> None:
             """
             Assign list elements using a slice object
             """
-        def append(self, x: TileSet.Tile) -> None:
+        def append(self: collections.abc.Sequence[TileSet.Tile], x: TileSet.Tile) -> None:
             """
             Add an item to the end of the list
             """
-        def clear(self) -> None:
+        def clear(self: collections.abc.Sequence[TileSet.Tile]) -> None:
             """
             Clear the contents
             """
         @typing.overload
-        def extend(self, L: TileSet.TileSetTileList) -> None:
+        def extend(self: collections.abc.Sequence[TileSet.Tile], L: collections.abc.Sequence[TileSet.Tile]) -> None:
             """
             Extend the list by appending all the items in the given list
             """
         @typing.overload
-        def extend(self, L: collections.abc.Iterable) -> None:
+        def extend(self: collections.abc.Sequence[TileSet.Tile], L: collections.abc.Iterable) -> None:
             """
             Extend the list by appending all the items in the given list
             """
-        def insert(self, i: typing.SupportsInt, x: TileSet.Tile) -> None:
+        def insert(self: collections.abc.Sequence[TileSet.Tile], i: typing.SupportsInt, x: TileSet.Tile) -> None:
             """
             Insert an item at a given position.
             """
         @typing.overload
-        def pop(self) -> TileSet.Tile:
+        def pop(self: collections.abc.Sequence[TileSet.Tile]) -> TileSet.Tile:
             """
             Remove and return the last item
             """
         @typing.overload
-        def pop(self, i: typing.SupportsInt) -> TileSet.Tile:
+        def pop(self: collections.abc.Sequence[TileSet.Tile], i: typing.SupportsInt) -> TileSet.Tile:
             """
             Remove and return the item at index ``i``
             """
@@ -1226,138 +1148,138 @@ class TileSet:
     @property
     def columns(self) -> int:
         """
-            Number of tile columns in the source image.
+        Number of tile columns in the source image.
         """
     @property
     def first_gid(self) -> int:
         """
-            First global tile id (GID) in this tileset.
+        First global tile id (GID) in this tileset.
         """
     @property
     def last_gid(self) -> int:
         """
-            Last global tile id (GID) in this tileset.
+        Last global tile id (GID) in this tileset.
         """
     @property
     def margin(self) -> int:
         """
-            Pixel margin around the source image.
+        Pixel margin around the source image.
         """
     @property
     def name(self) -> str:
         """
-            Tileset name.
+        Tileset name.
         """
     @property
     def spacing(self) -> int:
         """
-            Pixel spacing between tiles in the source image.
+        Pixel spacing between tiles in the source image.
         """
     @property
-    def terrains(self) -> TileSet.TerrainList:
+    def terrains(self) -> list[TileSet.Terrain]:
         """
-            TerrainList of terrain definitions.
+        TerrainList of terrain definitions.
         """
     @property
     def texture(self) -> pykraken._core.Texture:
         """
-            Source texture for the tileset.
+        Source texture for the tileset.
         """
     @property
     def tile_count(self) -> int:
         """
-            Total number of tiles in the tileset.
+        Total number of tiles in the tileset.
         """
     @property
     def tile_offset(self) -> pykraken._core.Vec2:
         """
-            Per-tile offset applied when rendering.
+        Per-tile offset applied when rendering.
         """
     @property
     def tile_size(self) -> pykraken._core.Vec2:
         """
-            Size of tiles in pixels.
+        Size of tiles in pixels.
         """
     @property
-    def tiles(self) -> TileSet.TileSetTileList:
+    def tiles(self) -> list[TileSet.Tile]:
         """
-            TileSetTileList of tile metadata entries.
+        TileSetTileList of tile metadata entries.
         """
 class TileSetList:
-    def __bool__(self) -> bool:
+    def __bool__(self: collections.abc.Sequence[TileSet]) -> bool:
         """
         Check whether the list is nonempty
         """
     @typing.overload
-    def __delitem__(self, arg0: typing.SupportsInt) -> None:
+    def __delitem__(self: collections.abc.Sequence[TileSet], arg0: typing.SupportsInt) -> None:
         """
         Delete the list elements at index ``i``
         """
     @typing.overload
-    def __delitem__(self, arg0: slice) -> None:
+    def __delitem__(self: collections.abc.Sequence[TileSet], arg0: slice) -> None:
         """
         Delete list elements using a slice object
         """
     @typing.overload
-    def __getitem__(self, s: slice) -> TileSetList:
+    def __getitem__(self: collections.abc.Sequence[TileSet], s: slice) -> list[TileSet]:
         """
         Retrieve list elements using a slice object
         """
     @typing.overload
-    def __getitem__(self, arg0: typing.SupportsInt) -> TileSet:
+    def __getitem__(self: collections.abc.Sequence[TileSet], arg0: typing.SupportsInt) -> TileSet:
         ...
     @typing.overload
     def __init__(self) -> None:
         ...
     @typing.overload
-    def __init__(self, arg0: TileSetList) -> None:
+    def __init__(self, arg0: collections.abc.Sequence[TileSet]) -> None:
         """
         Copy constructor
         """
     @typing.overload
     def __init__(self, arg0: collections.abc.Iterable) -> None:
         ...
-    def __iter__(self) -> collections.abc.Iterator[TileSet]:
+    def __iter__(self: collections.abc.Sequence[TileSet]) -> collections.abc.Iterator[TileSet]:
         ...
-    def __len__(self) -> int:
-        ...
-    @typing.overload
-    def __setitem__(self, arg0: typing.SupportsInt, arg1: TileSet) -> None:
+    def __len__(self: collections.abc.Sequence[TileSet]) -> int:
         ...
     @typing.overload
-    def __setitem__(self, arg0: slice, arg1: TileSetList) -> None:
+    def __setitem__(self: collections.abc.Sequence[TileSet], arg0: typing.SupportsInt, arg1: TileSet) -> None:
+        ...
+    @typing.overload
+    def __setitem__(self: collections.abc.Sequence[TileSet], arg0: slice, arg1: collections.abc.Sequence[TileSet]) -> None:
         """
         Assign list elements using a slice object
         """
-    def append(self, x: TileSet) -> None:
+    def append(self: collections.abc.Sequence[TileSet], x: TileSet) -> None:
         """
         Add an item to the end of the list
         """
-    def clear(self) -> None:
+    def clear(self: collections.abc.Sequence[TileSet]) -> None:
         """
         Clear the contents
         """
     @typing.overload
-    def extend(self, L: TileSetList) -> None:
+    def extend(self: collections.abc.Sequence[TileSet], L: collections.abc.Sequence[TileSet]) -> None:
         """
         Extend the list by appending all the items in the given list
         """
     @typing.overload
-    def extend(self, L: collections.abc.Iterable) -> None:
+    def extend(self: collections.abc.Sequence[TileSet], L: collections.abc.Iterable) -> None:
         """
         Extend the list by appending all the items in the given list
         """
-    def insert(self, i: typing.SupportsInt, x: TileSet) -> None:
+    def insert(self: collections.abc.Sequence[TileSet], i: typing.SupportsInt, x: TileSet) -> None:
         """
         Insert an item at a given position.
         """
     @typing.overload
-    def pop(self) -> TileSet:
+    def pop(self: collections.abc.Sequence[TileSet]) -> TileSet:
         """
         Remove and return the last item
         """
     @typing.overload
-    def pop(self, i: typing.SupportsInt) -> TileSet:
+    def pop(self: collections.abc.Sequence[TileSet], i: typing.SupportsInt) -> TileSet:
         """
         Remove and return the item at index ``i``
         """

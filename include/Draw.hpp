@@ -18,8 +18,11 @@ namespace draw
 {
 void _bind(py::module_& module);
 
-void circle(const Circle& circle, const Color& color, double thickness = 0, int numSegments = 36);
-void circles(const std::vector<Circle>& circles, const Color& color, double thickness = 0, int numSegments = 36);
+void circle(const Circle& circle, const Color& color, double thickness = 0.0, int numSegments = 36);
+void circles(
+    const std::vector<Circle>& circles, const Color& color, double thickness = 0.0,
+    int numSegments = 36
+);
 
 void ellipse(Rect bounds, const Color& color, bool filled = false);
 
@@ -30,12 +33,12 @@ void pointsFromNDArray(
 );
 
 void line(const Line& line, const Color& color, int thickness = 1);
-// void drawLines(const std::vector<Line>& lines, const Color& color, int thickness = 1);
+// void lines(const std::vector<Line>& lines, const Color& color, int thickness = 1);
 
 void rect(Rect rect, const Color& color, int thickness = 0);
 void rects(const std::vector<Rect>& rects, const Color& color, int thickness = 0);
 
-void polygon(const Polygon& polygon, const Color& color, bool filled = false);
-// void drawPolygons(const std::vector<Polygon>& polygons, const Color& color, bool filled = false);
+void polygon(const Polygon& polygon, const Color& color, bool filled = true);
+void polygons(const std::vector<Polygon>& polygons, const Color& color, bool filled = true);
 }  // namespace draw
 }  // namespace kn

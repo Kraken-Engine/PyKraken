@@ -1,6 +1,6 @@
 #include "Input.hpp"
 
-#include <pybind11/stl_bind.h>
+#include <pybind11/stl.h>
 
 #include <algorithm>
 #include <unordered_map>
@@ -326,8 +326,6 @@ Args:
         )doc"
         );
 
-    py::bind_vector<std::vector<InputAction>>(module, "InputActionList");
-
     auto subInput = module.def_submodule("input", "Input handling and action binding");
 
     subInput.def("bind", &bind, py::arg("name"), py::arg("actions"), R"doc(
@@ -335,7 +333,7 @@ Bind a name to a list of InputActions.
 
 Args:
     name (str): The identifier for this binding (e.g. "jump").
-    actions (InputActionList): One or more InputActions to bind.
+    actions (Sequence[InputAction]): One or more InputActions to bind.
         )doc");
 
     subInput.def("unbind", &unbind, py::arg("name"), R"doc(

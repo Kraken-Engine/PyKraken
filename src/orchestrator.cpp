@@ -1,7 +1,6 @@
 #include "Orchestrator.hpp"
 
 #include <pybind11/functional.h>
-#include <pybind11/stl.h>
 
 #include <cmath>
 #include <random>

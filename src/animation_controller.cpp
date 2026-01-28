@@ -1,4 +1,4 @@
-#include <pybind11/stl_bind.h>
+#include <pybind11/stl.h>
 
 #include <algorithm>
 #include <filesystem>
@@ -260,8 +260,6 @@ Type:
     float: The frames per second for this animation.
         )doc");
 
-    py::bind_vector<std::vector<SheetStrip>>(module, "SheetStripList");
-
     py::classh<AnimationController>(module, "AnimationController", R"doc(
 Manages and controls sprite animations with multiple animation sequences.
 
@@ -340,7 +338,7 @@ Frames are read left-to-right within each strip, and strips are read top-to-bott
 
 Args:
     frame_size (Vec2): Size of each frame as (width, height).
-    strips (SheetStripList): List of strip definitions.
+    strips (Sequence[SheetStrip]): List of strip definitions.
 
 Raises:
     ValueError: If frame size is not positive, no strips provided, frame count is not positive.

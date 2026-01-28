@@ -16,7 +16,7 @@ void _quit();
 
 SDL_Window* _get();
 
-void create(const std::string& title, const Vec2& size);
+void create(const std::string& title, int width, int height);
 
 bool isOpen();
 

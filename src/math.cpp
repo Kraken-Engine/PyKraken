@@ -1,7 +1,6 @@
 #include "Math.hpp"
 
 #include <SDL3/SDL.h>
-#include <pybind11/stl_bind.h>
 
 #include <algorithm>
 
@@ -372,8 +371,6 @@ Methods:
     distance_to: Measure distance to another Vec2.
     distance_squared_to: Measure squared distance to another Vec2.
         )doc");
-
-    py::bind_vector<std::vector<kn::Vec2>>(module, "Vec2List");
 
     // -------------- PolarCoordinate ----------------
     py::classh<PolarCoordinate>(module, "PolarCoordinate", R"doc(

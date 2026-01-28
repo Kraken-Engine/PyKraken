@@ -1,4 +1,5 @@
 #include <pybind11/native_enum.h>
+#include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
 #include <tmxlite/ImageLayer.hpp>
@@ -695,7 +696,7 @@ tmx::Object::Shape MapObject::getShapeType() const
     return m_shape;
 }
 
-const std::vector<Vec2>& MapObject::getVertices() const
+std::vector<Vec2> MapObject::getVertices() const
 {
     return m_vertices;
 }
@@ -812,11 +813,8 @@ void ObjectGroup::render()
                 break;
 
             for (size_t i = 1; i < verts.size(); ++i)
-            {
-                const Vec2 start = renderOffset + verts[i - 1];
-                const Vec2 end = renderOffset + verts[i];
-                draw::line(Line{start, end}, drawColor);
-            }
+                draw::line({renderOffset + verts[i - 1], renderOffset + verts[i]}, drawColor);
+
             break;
         }
 
@@ -977,13 +975,16 @@ Attributes:
                 return str;
             }
         );
+
     tileSetTileClass
         .def_property_readonly("id", &TileSet::Tile::getID, R"doc(
 Local tile id within the tileset.
     )doc")
-        .def_property_readonly("terrain_indices", &TileSet::Tile::getTerrainIndices, R"doc(
-Terrain indices for each corner of the tile.
-    )doc")
+        .def_property_readonly(
+            "terrain_indices", &TileSet::Tile::getTerrainIndices,
+            py::return_value_policy::reference_internal,
+            R"doc(TerrainIndices for each corner of the tile.)doc"
+        )
         .def_property_readonly("probability", &TileSet::Tile::getProbability, R"doc(
 Probability used for weighted/random tile placement.
     )doc")
@@ -1030,42 +1031,45 @@ Returns:
         )doc"
         )
 
-        .def_property_readonly("first_gid", &TileSet::getFirstGID, R"doc(
-    First global tile id (GID) in this tileset.
-        )doc")
-        .def_property_readonly("last_gid", &TileSet::getLastGID, R"doc(
-    Last global tile id (GID) in this tileset.
-        )doc")
-        .def_property_readonly("name", &TileSet::getName, R"doc(
-    Tileset name.
-        )doc")
-        .def_property_readonly("tile_size", &TileSet::getTileSize, R"doc(
-    Size of tiles in pixels.
-        )doc")
-        .def_property_readonly("spacing", &TileSet::getSpacing, R"doc(
-    Pixel spacing between tiles in the source image.
-        )doc")
-        .def_property_readonly("margin", &TileSet::getMargin, R"doc(
-    Pixel margin around the source image.
-        )doc")
-        .def_property_readonly("tile_count", &TileSet::getTileCount, R"doc(
-    Total number of tiles in the tileset.
-        )doc")
-        .def_property_readonly("columns", &TileSet::getColumns, R"doc(
-    Number of tile columns in the source image.
-        )doc")
-        .def_property_readonly("tile_offset", &TileSet::getTileOffset, R"doc(
-    Per-tile offset applied when rendering.
-        )doc")
-        .def_property_readonly("terrains", &TileSet::getTerrains, R"doc(
-    TerrainList of terrain definitions.
-        )doc")
-        .def_property_readonly("tiles", &TileSet::getTiles, R"doc(
-    TileSetTileList of tile metadata entries.
-        )doc")
-        .def_property_readonly("texture", &TileSet::getTexture, R"doc(
-    Source texture for the tileset.
-        )doc");
+        .def_property_readonly(
+            "first_gid", &TileSet::getFirstGID,
+            R"doc(First global tile id (GID) in this tileset.)doc"
+        )
+        .def_property_readonly(
+            "last_gid", &TileSet::getLastGID, R"doc(Last global tile id (GID) in this tileset.)doc"
+        )
+        .def_property_readonly("name", &TileSet::getName, R"doc(Tileset name.)doc")
+        .def_property_readonly(
+            "tile_size", &TileSet::getTileSize, R"doc(Size of tiles in pixels.)doc"
+        )
+        .def_property_readonly(
+            "spacing", &TileSet::getSpacing,
+            R"doc(Pixel spacing between tiles in the source image.)doc"
+        )
+        .def_property_readonly(
+            "margin", &TileSet::getMargin, R"doc(Pixel margin around the source image.)doc"
+        )
+        .def_property_readonly(
+            "tile_count", &TileSet::getTileCount, R"doc(Total number of tiles in the tileset.)doc"
+        )
+        .def_property_readonly(
+            "columns", &TileSet::getColumns, R"doc(Number of tile columns in the source image.)doc"
+        )
+        .def_property_readonly(
+            "tile_offset", &TileSet::getTileOffset,
+            R"doc(Per-tile offset applied when rendering.)doc"
+        )
+        .def_property_readonly(
+            "terrains", &TileSet::getTerrains, py::return_value_policy::reference_internal,
+            R"doc(TerrainList of terrain definitions.)doc"
+        )
+        .def_property_readonly(
+            "tiles", &TileSet::getTiles, py::return_value_policy::reference_internal,
+            R"doc(TileSetTileList of tile metadata entries.)doc"
+        )
+        .def_property_readonly(
+            "texture", &TileSet::getTexture, R"doc(Source texture for the tileset.)doc"
+        );
     py::bind_vector<std::vector<TileSet>>(subTilemap, "TileSetList");
 
     // ----- Layer -----
@@ -1151,15 +1155,16 @@ The tile entry.
         .def_readonly("rect", &TileLayer::TileResult::rect, R"doc(
 World-space rectangle covered by the tile.
     )doc");
-    py::bind_vector<std::vector<TileLayer::TileResult>>(tileLayerClass, "TileResultList");
 
     tileLayerClass
-        .def_property("opacity", &TileLayer::getOpacity, &TileLayer::setOpacity, R"doc(
-Layer opacity from 0.0 to 1.0.
-    )doc")
-        .def_property_readonly("tiles", &TileLayer::getTiles, R"doc(
-TileLayerTileList of tiles in the layer grid.
-    )doc")
+        .def_property(
+            "opacity", &TileLayer::getOpacity, &TileLayer::setOpacity,
+            R"doc(Layer opacity from 0.0 to 1.0.)doc"
+        )
+        .def_property_readonly(
+            "tiles", &TileLayer::getTiles, py::return_value_policy::reference_internal,
+            R"doc(TileLayerTileList of tiles in the layer grid.)doc"
+        )
 
         .def("get_from_area", &TileLayer::getFromArea, py::arg("area"), R"doc(
 Return tiles intersecting a Rect area.
@@ -1168,7 +1173,7 @@ Args:
     area (Rect): World-space area to query.
 
 Returns:
-    TileResultList: List of TileResult entries for tiles intersecting the area.
+    list[TileLayer.TileResult]: List of TileResult entries for tiles intersecting the area.
         )doc")
         .def(
             "get_from_point",
@@ -1254,7 +1259,7 @@ Attributes:
     rect (Rect): Bounding rectangle.
     tile_id (int): Associated tile id if the object is a tile.
     shape_type (ShapeType): The shape enum for the object.
-    vertices (Vec2List): Vertex list for polygon/polyline shapes.
+    vertices (list[Vec2]): Vertex list for polygon/polyline shapes.
     text (TextProperties): Text properties when shape is text.
     )doc");
 
@@ -1296,11 +1301,12 @@ Associated tile id when the object is a tile.
 Shape type enum for the object.
     )doc")
         .def_property_readonly("vertices", &MapObject::getVertices, R"doc(
-Vec2List of vertices for polygon/polyline shapes.
+List of vertices for polygon/polyline shapes.
     )doc")
         .def_property_readonly("text", &MapObject::getTextProperties, R"doc(
 Text properties if the object is text.
     )doc");
+
     py::bind_vector<std::vector<MapObject>>(subTilemap, "MapObjectList");
 
     // ----- ObjectGroup -----
@@ -1325,9 +1331,7 @@ Object drawing order for object layers.
         .finalize();
 
     objGroupClass
-        .def_readwrite("color", &ObjectGroup::color, R"doc(
-Tint color for non-tile objects.
-    )doc")
+        .def_readwrite("color", &ObjectGroup::color, R"doc(Tint color for non-tile objects.)doc")
 
         .def_property("opacity", &ObjectGroup::getOpacity, &ObjectGroup::setOpacity, R"doc(
 Layer opacity from 0.0 to 1.0.
@@ -1336,9 +1340,10 @@ Layer opacity from 0.0 to 1.0.
         .def_property_readonly("draw_order", &ObjectGroup::getDrawOrder, R"doc(
 Drawing order for objects in the group.
     )doc")
-        .def_property_readonly("objects", &ObjectGroup::getObjects, R"doc(
-MapObjectList of objects in the group.
-    )doc")
+        .def_property_readonly(
+            "objects", &ObjectGroup::getObjects, py::return_value_policy::reference_internal,
+            R"doc(MapObjectList of objects in the group.)doc"
+        )
 
         .def("render", &ObjectGroup::render, R"doc(
 Draw the object group.
@@ -1431,9 +1436,10 @@ Stagger index enum for staggered/hex maps.
         .def_property_readonly("tile_sets", &Map::getTileSets, R"doc(
 TileSetList of tilesets used by the map.
     )doc")
-        .def_property_readonly("layers", &Map::getLayers, R"doc(
-LayerList of layers in the map.
-    )doc");
+        .def_property_readonly(
+            "layers", &Map::getLayers, py::return_value_policy::reference_internal,
+            R"doc(LayerList of layers in the map.)doc"
+        );
 }
 }  // namespace tilemap
 }  // namespace kn

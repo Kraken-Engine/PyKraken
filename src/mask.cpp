@@ -323,7 +323,7 @@ void _bind(const py::module_& module)
     py::classh<Mask>(module, "Mask", R"doc(
 A collision mask for pixel-perfect collision detection.
 
-A Mask represents a 2D bitmap, typically used for precise collision detection based on 
+A Mask represents a 2D bitmap, typically used for precise collision detection based on
 non-transparent pixels.
     )doc")
         .def(py::init(), R"doc(
@@ -531,13 +531,13 @@ Get the outline points of the mask.
 Returns a list of points that form the outline of all solid regions.
 
 Returns:
-    Vec2List: A list of outline points.
+    list[Vec2]: A list of outline points.
         )doc")
         .def("get_bounding_rect", &Mask::getBoundingRect, R"doc(
 Get the bounding rectangle that contains all solid pixels.
 
 Returns:
-    Rect: The smallest rectangle containing all solid pixels. 
+    Rect: The smallest rectangle containing all solid pixels.
           Returns empty rect if mask has no solid pixels.
         )doc")
         .def(
@@ -594,7 +594,7 @@ Args:
     offset (Vec2): Position offset between the masks. Defaults to (0, 0).
 
 Returns:
-    Vec2List: A list of collision points.
+    list[Vec2]: A list of collision points.
         )doc"
         )
         .def("is_empty", &Mask::isEmpty, R"doc(
