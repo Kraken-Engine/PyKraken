@@ -521,25 +521,19 @@ Args:
             "yy", [](const Vec2& self) -> Vec2 { return {self.y, self.y}; },
             "Return a Vec2 with both components set to y."
         )
+
         .def_property_readonly_static(
-            "ZERO", [](const py::object&) -> Vec2 { return Vec2::ZERO(); },
-            "Return a Vec2 with both components set to zero."
+            "ZERO", [](const py::object&) -> Vec2 { return Vec2::ZERO(); }
         )
         .def_property_readonly_static(
-            "LEFT", [](const py::object&) -> Vec2 { return Vec2::LEFT(); },
-            "Return a Vec2 representing the left direction."
+            "LEFT", [](const py::object&) -> Vec2 { return Vec2::LEFT(); }
         )
         .def_property_readonly_static(
-            "RIGHT", [](const py::object&) -> Vec2 { return Vec2::RIGHT(); },
-            "Return a Vec2 representing the right direction."
+            "RIGHT", [](const py::object&) -> Vec2 { return Vec2::RIGHT(); }
         )
+        .def_property_readonly_static("UP", [](const py::object&) -> Vec2 { return Vec2::UP(); })
         .def_property_readonly_static(
-            "UP", [](const py::object&) -> Vec2 { return Vec2::UP(); },
-            "Return a Vec2 representing the upward direction."
-        )
-        .def_property_readonly_static(
-            "DOWN", [](const py::object&) -> Vec2 { return Vec2::DOWN(); },
-            "Return a Vec2 representing the downward direction."
+            "DOWN", [](const py::object&) -> Vec2 { return Vec2::DOWN(); }
         )
 
         // Methods

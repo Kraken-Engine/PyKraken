@@ -25,49 +25,27 @@ void _bind(const py::module_& module)
 Anchor positions returning Vec2 values for alignment.
     )doc")
         .def_property_readonly_static(
-            "TOP_LEFT", [](const py::object&) { return Anchor::TOP_LEFT; }, R"doc(
-Vec2 representing top-left anchor point.
-        )doc"
+            "TOP_LEFT", [](const py::object&) { return Anchor::TOP_LEFT; }
+        )
+        .def_property_readonly_static("TOP_MID", [](const py::object&) { return Anchor::TOP_MID; })
+        .def_property_readonly_static(
+            "TOP_RIGHT", [](const py::object&) { return Anchor::TOP_RIGHT; }
         )
         .def_property_readonly_static(
-            "TOP_MID", [](const py::object&) { return Anchor::TOP_MID; }, R"doc(
-Vec2 representing top-middle anchor point.
-        )doc"
+            "MID_LEFT", [](const py::object&) { return Anchor::MID_LEFT; }
+        )
+        .def_property_readonly_static("CENTER", [](const py::object&) { return Anchor::CENTER; })
+        .def_property_readonly_static(
+            "MID_RIGHT", [](const py::object&) { return Anchor::MID_RIGHT; }
         )
         .def_property_readonly_static(
-            "TOP_RIGHT", [](const py::object&) { return Anchor::TOP_RIGHT; }, R"doc(
-Vec2 representing top-right anchor point.
-        )doc"
+            "BOTTOM_LEFT", [](const py::object&) { return Anchor::BOTTOM_LEFT; }
         )
         .def_property_readonly_static(
-            "MID_LEFT", [](const py::object&) { return Anchor::MID_LEFT; }, R"doc(
-Vec2 representing middle-left anchor point.
-        )doc"
+            "BOTTOM_MID", [](const py::object&) { return Anchor::BOTTOM_MID; }
         )
         .def_property_readonly_static(
-            "CENTER", [](const py::object&) { return Anchor::CENTER; }, R"doc(
-Vec2 representing center anchor point.
-        )doc"
-        )
-        .def_property_readonly_static(
-            "MID_RIGHT", [](const py::object&) { return Anchor::MID_RIGHT; }, R"doc(
-Vec2 representing middle-right anchor point.
-        )doc"
-        )
-        .def_property_readonly_static(
-            "BOTTOM_LEFT", [](const py::object&) { return Anchor::BOTTOM_LEFT; }, R"doc(
-Vec2 representing bottom-left anchor point.
-        )doc"
-        )
-        .def_property_readonly_static(
-            "BOTTOM_MID", [](const py::object&) { return Anchor::BOTTOM_MID; }, R"doc(
-Vec2 representing bottom-middle anchor point.
-        )doc"
-        )
-        .def_property_readonly_static(
-            "BOTTOM_RIGHT", [](const py::object&) { return Anchor::BOTTOM_RIGHT; }, R"doc(
-Vec2 representing bottom-right anchor point.
-        )doc"
+            "BOTTOM_RIGHT", [](const py::object&) { return Anchor::BOTTOM_RIGHT; }
         );
 
     // Define Align enum

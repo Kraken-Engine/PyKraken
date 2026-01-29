@@ -500,6 +500,28 @@ class Color:
     Each channel (r, g, b, a) is an 8-bit unsigned integer.
         
     """
+    BLACK: typing.ClassVar[Color]  # value = Color(0, 0, 0, 255)
+    BLUE: typing.ClassVar[Color]  # value = Color(0, 0, 255, 255)
+    BROWN: typing.ClassVar[Color]  # value = Color(139, 69, 19, 255)
+    CYAN: typing.ClassVar[Color]  # value = Color(0, 255, 255, 255)
+    DARK_GRAY: typing.ClassVar[Color]  # value = Color(64, 64, 64, 255)
+    DARK_GREY: typing.ClassVar[Color]  # value = Color(64, 64, 64, 255)
+    GRAY: typing.ClassVar[Color]  # value = Color(128, 128, 128, 255)
+    GREEN: typing.ClassVar[Color]  # value = Color(0, 255, 0, 255)
+    GREY: typing.ClassVar[Color]  # value = Color(128, 128, 128, 255)
+    LIGHT_GRAY: typing.ClassVar[Color]  # value = Color(192, 192, 192, 255)
+    LIGHT_GREY: typing.ClassVar[Color]  # value = Color(192, 192, 192, 255)
+    MAGENTA: typing.ClassVar[Color]  # value = Color(255, 0, 255, 255)
+    MAROON: typing.ClassVar[Color]  # value = Color(128, 0, 0, 255)
+    NAVY: typing.ClassVar[Color]  # value = Color(0, 0, 128, 255)
+    OLIVE: typing.ClassVar[Color]  # value = Color(128, 128, 0, 255)
+    ORANGE: typing.ClassVar[Color]  # value = Color(255, 165, 0, 255)
+    PINK: typing.ClassVar[Color]  # value = Color(255, 192, 203, 255)
+    PURPLE: typing.ClassVar[Color]  # value = Color(128, 0, 128, 255)
+    RED: typing.ClassVar[Color]  # value = Color(255, 0, 0, 255)
+    TEAL: typing.ClassVar[Color]  # value = Color(0, 128, 128, 255)
+    WHITE: typing.ClassVar[Color]  # value = Color(255, 255, 255, 255)
+    YELLOW: typing.ClassVar[Color]  # value = Color(255, 255, 0, 255)
     __hash__: typing.ClassVar[None] = None
     def __eq__(self, other: Color) -> bool:
         ...
