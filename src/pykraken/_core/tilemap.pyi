@@ -17,10 +17,10 @@ class ImageLayer(Layer):
         texture (Texture): The layer image texture.
     
     Methods:
-        render: Draw the image layer.
+        draw: Draw the image layer.
         
     """
-    def render(self) -> None:
+    def draw(self) -> None:
         """
         Draw the image layer.
         """
@@ -50,10 +50,10 @@ class Layer:
         type (LayerType): Layer type enum.
     
     Methods:
-        render: Draw the layer to the current renderer.
+        draw: Draw the layer to the current renderer.
         
     """
-    def render(self) -> None:
+    def draw(self) -> None:
         """
         Draw the layer to the current renderer.
         """
@@ -209,7 +209,7 @@ class LayerType(enum.IntEnum):
 class Map:
     """
     
-    Map represents a loaded TMX map and provides access to its layers and tilesets.
+    A TMX map with access to its layers and tilesets.
     
     Attributes:
         background_color (Color): Map background color.
@@ -226,21 +226,21 @@ class Map:
     
     Methods:
         load: Load a TMX file from path.
-        render: Render all layers.
+        draw: Draw all layers.
         
     """
     def __init__(self) -> None:
         ...
+    def draw(self) -> None:
+        """
+        Draw all layers.
+        """
     def load(self, tmx_path: str) -> None:
         """
         Load a TMX file from path.
         
         Args:
             tmx_path (str): Path to the TMX file to load.
-        """
-    def render(self) -> None:
-        """
-        Render all layers.
         """
     @property
     def background_color(self) -> pykraken._core.Color:
@@ -551,7 +551,7 @@ class ObjectGroup(Layer):
         objects (MapObjectList): List of contained MapObject instances.
     
     Methods:
-        render: Draw the object group.
+        draw: Draw the object group.
         
     """
     class DrawOrder(enum.IntEnum):
@@ -569,7 +569,7 @@ class ObjectGroup(Layer):
             """
             Convert to a string according to format_spec.
             """
-    def render(self) -> None:
+    def draw(self) -> None:
         """
         Draw the object group.
         """
@@ -718,7 +718,7 @@ class TileLayer(Layer):
     Methods:
         get_from_area: Return tiles intersecting a Rect area.
         get_from_point: Return the tile at a given world position.
-        render: Draw the tile layer.
+        draw: Draw the tile layer.
         
     """
     class Tile:
@@ -845,6 +845,10 @@ class TileLayer(Layer):
             """
             The tile entry.
             """
+    def draw(self) -> None:
+        """
+        Draw the tile layer.
+        """
     def get_from_area(self, area: pykraken._core.Rect) -> list[TileLayer.TileResult]:
         """
         Return tiles intersecting a Rect area.
@@ -864,10 +868,6 @@ class TileLayer(Layer):
         
         Returns:
             Optional[TileLayer.TileResult]: TileResult entry if a tile exists at the position, None otherwise.
-        """
-    def render(self) -> None:
-        """
-        Draw the tile layer.
         """
     @property
     def opacity(self) -> float:

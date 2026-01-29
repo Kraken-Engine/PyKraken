@@ -3,16 +3,28 @@
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 
+#include <memory>
+#include <vector>
+
+#include "Color.hpp"
+#include "Math.hpp"
+
 namespace py = pybind11;
 
 namespace kn
 {
 class Circle;
-class Vec2;
 class Line;
-struct Color;
 class Polygon;
 class Rect;
+class Texture;
+
+struct Vertex
+{
+    Vec2 pos;
+    Color color;
+    Vec2 texCoord;
+};
 
 namespace draw
 {
@@ -40,5 +52,10 @@ void rects(const std::vector<Rect>& rects, const Color& color, int thickness = 0
 
 void polygon(const Polygon& polygon, const Color& color, bool filled = true);
 void polygons(const std::vector<Polygon>& polygons, const Color& color, bool filled = true);
+
+void geometry(
+    const std::shared_ptr<Texture>& texture, const std::vector<Vertex>& vertices,
+    const std::vector<int>& indices = {}
+);
 }  // namespace draw
 }  // namespace kn

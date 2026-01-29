@@ -4,15 +4,15 @@
 #include <pybind11/stl.h>
 
 #include <mapbox/earcut.hpp>
+#include <sstream>
 
 #include "Camera.hpp"
 #include "Circle.hpp"
-#include "Color.hpp"
 #include "Line.hpp"
-#include "Math.hpp"
 #include "Polygon.hpp"
 #include "Rect.hpp"
 #include "Renderer.hpp"
+#include "Texture.hpp"
 
 namespace mapbox
 {
@@ -521,6 +521,43 @@ void polygons(const std::vector<Polygon>& polygons, const Color& color, const bo
     }
 }
 
+void geometry(
+    const std::shared_ptr<Texture>& texture, const std::vector<Vertex>& vertices,
+    const std::vector<int>& indices
+)
+{
+    SDL_Renderer* rend = renderer::_get();
+    if (!rend)
+        throw std::runtime_error("Renderer not yet initialized");
+
+    if (vertices.empty())
+        return;
+
+    const Vec2 cameraPos = camera::getActivePos();
+
+    std::vector<SDL_Vertex> sdlVertices;
+    sdlVertices.reserve(vertices.size());
+
+    for (const auto& v : vertices)
+    {
+        const SDL_Vertex vert{
+            static_cast<SDL_FPoint>(v.pos - cameraPos),
+            static_cast<SDL_FColor>(v.color),
+            static_cast<SDL_FPoint>(v.texCoord),
+        };
+        sdlVertices.push_back(vert);
+    }
+
+    if (!SDL_RenderGeometry(
+            rend, texture ? texture->getSDL() : nullptr, sdlVertices.data(),
+            static_cast<int>(sdlVertices.size()), indices.empty() ? nullptr : indices.data(),
+            static_cast<int>(indices.size())
+        ))
+    {
+        throw std::runtime_error("Failed to draw geometry: " + std::string(SDL_GetError()));
+    }
+}
+
 void _polygonFilled(SDL_Renderer* r, const Polygon& polygon, const Color& color)
 {
     std::vector<std::vector<kn::Vec2>> vertices;
@@ -656,6 +693,44 @@ void _circleOutline(
 
 void _bind(py::module_& module)
 {
+    py::classh<Vertex>(module, "Vertex", "A vertex with position, color, and texture coordinates.")
+        .def(
+            py::init(
+                [](const Vec2& position, py::object colorObj, py::object texCoordObj) -> Vertex
+                {
+                    const auto color = colorObj.is_none() ? WHITE : colorObj.cast<Color>();
+                    const auto texCoord = texCoordObj.is_none() ? Vec2::ZERO()
+                                                                : texCoordObj.cast<Vec2>();
+
+                    return {position, color, texCoord};
+                }
+            ),
+            py::arg("position"), py::arg("color") = py::none(), py::arg("tex_coord") = py::none(),
+            R"doc(
+Create a new Vertex.
+
+Args:
+    position (Vec2): The position of the vertex in world space.
+    color (Color | None): The color of the vertex. Defaults to White.
+    tex_coord (Vec2 | None): The texture coordinate of the vertex. Defaults to (0, 0).
+            )doc"
+        )
+        .def_readwrite("position", &Vertex::pos, "Position of the vertex in world space.")
+        .def_readwrite("color", &Vertex::color, "Color of the vertex.")
+        .def_readwrite("tex_coord", &Vertex::texCoord, "Texture coordinate of the vertex.")
+        .def(
+            "__repr__",
+            [](const Vertex& self)
+            {
+                std::stringstream ss;
+                ss << "Vertex(pos=(" << self.pos.x << ", " << self.pos.y << "), color=("
+                   << self.color.r << ", " << self.color.g << ", " << self.color.b << ", "
+                   << self.color.a << "), tex_coord=(" << self.texCoord.x << ", " << self.texCoord.y
+                   << "))";
+                return ss.str();
+            }
+        );
+
     auto subDraw = module.def_submodule("draw", "Functions for drawing shape objects");
 
     subDraw.def("point", &point, py::arg("point"), py::arg("color"), R"doc(
@@ -798,6 +873,29 @@ Args:
     color (Color): The color of the polygons.
     filled (bool, optional): Whether to draw filled polygons or just the outlines.
                              Defaults to True (filled). Works with both convex and concave polygons.
+    )doc"
+    );
+
+    subDraw.def(
+        "geometry",
+        [](const std::shared_ptr<Texture>& texture, const std::vector<Vertex>& vertices,
+           const py::object& indicesObj)
+        {
+            std::vector<int> indices;
+            if (!indicesObj.is_none())
+                indices = indicesObj.cast<std::vector<int>>();
+
+            geometry(texture, vertices, indices);
+        },
+        py::arg("texture").none(true), py::arg("vertices"), py::arg("indices") = py::none(),
+        R"doc(
+Draw arbitrary geometry using vertices and optional indices.
+
+Args:
+    texture (Texture | None): The texture to apply to the geometry. Can be None.
+    vertices (Sequence[Vertex]): A list of Vertex objects.
+    indices (Sequence[int] | None): A list of indices defining the primitives.
+                                   If None or empty, vertices are drawn sequentially.
     )doc"
     );
 }

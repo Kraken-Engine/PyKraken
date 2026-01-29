@@ -357,8 +357,10 @@ Read pixel data from the renderer within the specified rectangle.
 
 Args:
     src (Rect, optional): The rectangle area to read pixels from. Defaults to entire renderer if None.
+
 Returns:
     PixelArray: An array containing the pixel data.
+
 Raises:
     RuntimeError: If reading pixels fails.
         )doc"

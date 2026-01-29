@@ -281,11 +281,11 @@ tmx::Orientation Map::getOrientation() const
     return m_orient;
 }
 
-void Map::render()
+void Map::draw()
 {
     for (const auto& layer : m_layers)
     {
-        layer->render();
+        layer->draw();
     }
 }
 
@@ -456,7 +456,7 @@ static constexpr FlipInfo kFlipLUT[8] = {
     {-float(M_PI_2), false, true},   // 7: D|H|V
 };
 
-void TileLayer::render()
+void TileLayer::draw()
 {
     if (!visible)
         return;
@@ -726,7 +726,7 @@ double ObjectGroup::getOpacity() const
     return m_opacity;
 }
 
-void ObjectGroup::render()
+void ObjectGroup::draw()
 {
     if (!visible)
         return;
@@ -829,7 +829,7 @@ std::shared_ptr<Texture> ImageLayer::getTexture() const
     return m_texture;
 }
 
-void ImageLayer::render()
+void ImageLayer::draw()
 {
     if (!visible)
         return;
@@ -1084,7 +1084,7 @@ Attributes:
     type (LayerType): Layer type enum.
 
 Methods:
-    render: Draw the layer to the current renderer.
+    draw: Draw the layer to the current renderer.
     )doc")
         .def_readwrite("visible", &Layer::visible, R"doc(
 Whether the layer is visible.
@@ -1104,7 +1104,7 @@ Layer name.
 Layer type enum.
     )doc")
 
-        .def("render", &Layer::render, R"doc(
+        .def("draw", &Layer::draw, R"doc(
 Draw the layer to the current renderer.
         )doc");
     py::bind_vector<std::vector<std::shared_ptr<Layer>>>(subTilemap, "LayerList");
@@ -1120,7 +1120,7 @@ Attributes:
 Methods:
     get_from_area: Return tiles intersecting a Rect area.
     get_from_point: Return the tile at a given world position.
-    render: Draw the tile layer.
+    draw: Draw the tile layer.
     )doc");
 
     py::classh<TileLayer::Tile>(tileLayerClass, "Tile", R"doc(
@@ -1192,7 +1192,7 @@ Returns:
     Optional[TileLayer.TileResult]: TileResult entry if a tile exists at the position, None otherwise.
         )doc"
         )
-        .def("render", &TileLayer::render, R"doc(
+        .def("draw", &TileLayer::draw, R"doc(
 Draw the tile layer.
         )doc");
 
@@ -1320,7 +1320,7 @@ Attributes:
     objects (MapObjectList): List of contained MapObject instances.
 
 Methods:
-    render: Draw the object group.
+    draw: Draw the object group.
     )doc");
 
     py::native_enum<tmx::ObjectGroup::DrawOrder>(objGroupClass, "DrawOrder", "enum.IntEnum", R"doc(
@@ -1345,7 +1345,7 @@ Drawing order for objects in the group.
             R"doc(MapObjectList of objects in the group.)doc"
         )
 
-        .def("render", &ObjectGroup::render, R"doc(
+        .def("draw", &ObjectGroup::draw, R"doc(
 Draw the object group.
         )doc");
 
@@ -1358,7 +1358,7 @@ Attributes:
     texture (Texture): The layer image texture.
 
 Methods:
-    render: Draw the image layer.
+    draw: Draw the image layer.
     )doc")
         .def_property("opacity", &ImageLayer::getOpacity, &ImageLayer::setOpacity, R"doc(
 Layer opacity from 0.0 to 1.0.
@@ -1368,13 +1368,13 @@ Layer opacity from 0.0 to 1.0.
 Texture used by the image layer.
     )doc")
 
-        .def("render", &ImageLayer::render, R"doc(
+        .def("draw", &ImageLayer::draw, R"doc(
 Draw the image layer.
         )doc");
 
     // ----- Map -----
     py::classh<Map>(subTilemap, "Map", R"doc(
-Map represents a loaded TMX map and provides access to its layers and tilesets.
+A TMX map with access to its layers and tilesets.
 
 Attributes:
     background_color (Color): Map background color.
@@ -1391,7 +1391,7 @@ Attributes:
 
 Methods:
     load: Load a TMX file from path.
-    render: Render all layers.
+    draw: Draw all layers.
     )doc")
         .def(py::init<>())
 
@@ -1405,8 +1405,8 @@ Load a TMX file from path.
 Args:
     tmx_path (str): Path to the TMX file to load.
         )doc")
-        .def("render", &Map::render, R"doc(
-Render all layers.
+        .def("draw", &Map::draw, R"doc(
+Draw all layers.
         )doc")
 
         .def_property_readonly("orientation", &Map::getOrientation, R"doc(

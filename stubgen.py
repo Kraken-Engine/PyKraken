@@ -45,4 +45,22 @@ if result.returncode == 0:
             print(f"Removing {pyi_file.relative_to(root_dir)} (shadows existing source)")
             pyi_file.unlink()
 
+    # Post-process draw.pyi to fix geometry signature
+    draw_pyi = src_dir / "pykraken" / "_core" / "draw.pyi"
+    if draw_pyi.exists():
+        content = draw_pyi.read_text(encoding="utf-8")
+        # Fix geometry signature to allow None for texture
+        if "def geometry(" in content:
+            # We look for the texture argument in the geometry function and make it optional
+            # Default generation might be "texture: pykraken._core.Texture"
+            # We want "texture: pykraken._core.Texture | None"
+            updated_content = content.replace(
+                "texture: pykraken._core.Texture,", 
+                "texture: pykraken._core.Texture | None,"
+            )
+            
+            if content != updated_content:
+                print(f"Patching geometry signature in {draw_pyi.relative_to(root_dir)}")
+                draw_pyi.write_text(updated_content, encoding="utf-8")
+
 sys.exit(result.returncode)

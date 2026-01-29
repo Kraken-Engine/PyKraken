@@ -352,7 +352,7 @@ double angleBetween(const Vec2& a, const Vec2& b)
 void _bind(py::module_& module)
 {
     auto vec2PyClass = py::classh<Vec2>(module, "Vec2", R"doc(
-Vec2 represents a 2D vector.
+A 2D vector representing Cartesian coordinates.
 
 Attributes:
     x (float): Horizontal component.
@@ -486,39 +486,19 @@ Args:
         )doc")
 
         // Properties
-        .def_readwrite("x", &Vec2::x, R"doc(
-The x component of the vector.
-        )doc")
-        .def_readwrite("y", &Vec2::y, R"doc(
-The y component of the vector.
-        )doc")
-        .def_property_readonly("length", &Vec2::getLength, R"doc(
-Return the magnitude of this Vec2.
+        .def_readwrite("x", &Vec2::x, R"doc(The x component of the vector.)doc")
+        .def_readwrite("y", &Vec2::y, R"doc(The y component of the vector.)doc")
 
-Returns:
-    float: Euclidean length of the vector.
-        )doc")
-        .def_property_readonly("length_squared", &Vec2::getLengthSquared, R"doc(
-Return the squared magnitude of this Vec2.
-
-Returns:
-    float: Squared Euclidean length.
-        )doc")
-        .def_property_readonly("angle", &Vec2::getAngle, R"doc(
-Return the vector angle in radians.
-
-Returns:
-    float: Angle measured from the positive x-axis.
-        )doc")
+        .def_property_readonly("length", &Vec2::getLength, "Return the magnitude of this Vec2.")
+        .def_property_readonly(
+            "length_squared", &Vec2::getLengthSquared, "Return the squared magnitude of this Vec2."
+        )
+        .def_property_readonly("angle", &Vec2::getAngle, "Return the vector angle in radians.")
         .def_property_readonly(
             "xx", [](const Vec2& self) -> Vec2 { return {self.x, self.x}; },
-            R"doc(
-Return a Vec2 with both components set to x.
-
-Returns:
-    Vec2: Vector composed of (x, x).
-        )doc"
+            "Return a Vec2 with both components set to x."
         )
+
         .def_property(
             "xy", [](const Vec2& self) -> Vec2 { return {self.x, self.y}; },
             [](Vec2& self, const double lhs, const double rhs)
@@ -526,12 +506,7 @@ Returns:
                 self.x = lhs;
                 self.y = rhs;
             },
-            R"doc(
-Access or assign the (x, y) components as a Vec2.
-
-Returns:
-    Vec2: Current (x, y) components.
-        )doc"
+            "Access or assign the (x, y) components as a Vec2."
         )
         .def_property(
             "yx", [](const Vec2& self) -> Vec2 { return {self.y, self.x}; },
@@ -540,61 +515,31 @@ Returns:
                 self.x = lhs;
                 self.y = rhs;
             },
-            R"doc(
-Access or assign the (y, x) components as a Vec2.
-
-Returns:
-    Vec2: Current (y, x) components.
-        )doc"
+            "Access or assign the (y, x) components as a Vec2."
         )
         .def_property_readonly(
             "yy", [](const Vec2& self) -> Vec2 { return {self.y, self.y}; },
-            R"doc(
-Return a Vec2 with both components set to y.
-
-Returns:
-    Vec2: Vector composed of (y, y).
-        )doc"
+            "Return a Vec2 with both components set to y."
         )
         .def_property_readonly_static(
-            "ZERO", [](const py::object&) -> Vec2 { return Vec2::ZERO(); }, R"doc(
-Return a Vec2 with both components set to zero.
-
-Returns:
-    Vec2: A zero vector (0, 0).
-        )doc"
+            "ZERO", [](const py::object&) -> Vec2 { return Vec2::ZERO(); },
+            "Return a Vec2 with both components set to zero."
         )
         .def_property_readonly_static(
-            "LEFT", [](const py::object&) -> Vec2 { return Vec2::LEFT(); }, R"doc(
-Return a Vec2 representing the left direction.
-
-Returns:
-    Vec2: A leftward unit vector (-1, 0).
-        )doc"
+            "LEFT", [](const py::object&) -> Vec2 { return Vec2::LEFT(); },
+            "Return a Vec2 representing the left direction."
         )
         .def_property_readonly_static(
-            "RIGHT", [](const py::object&) -> Vec2 { return Vec2::RIGHT(); }, R"doc(
-Return a Vec2 representing the right direction.
-
-Returns:
-    Vec2: A rightward unit vector (1, 0).
-        )doc"
+            "RIGHT", [](const py::object&) -> Vec2 { return Vec2::RIGHT(); },
+            "Return a Vec2 representing the right direction."
         )
         .def_property_readonly_static(
-            "UP", [](const py::object&) -> Vec2 { return Vec2::UP(); }, R"doc(
-Return a Vec2 representing the upward direction.
-
-Returns:
-    Vec2: An upward unit vector (0, -1).
-        )doc"
+            "UP", [](const py::object&) -> Vec2 { return Vec2::UP(); },
+            "Return a Vec2 representing the upward direction."
         )
         .def_property_readonly_static(
-            "DOWN", [](const py::object&) -> Vec2 { return Vec2::DOWN(); }, R"doc(
-Return a Vec2 representing the downward direction.
-
-Returns:
-    Vec2: A downward unit vector (0, 1).
-        )doc"
+            "DOWN", [](const py::object&) -> Vec2 { return Vec2::DOWN(); },
+            "Return a Vec2 representing the downward direction."
         )
 
         // Methods

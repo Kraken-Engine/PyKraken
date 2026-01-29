@@ -7,7 +7,7 @@ import numpy
 import numpy.typing
 import pykraken._core
 import typing
-__all__: list[str] = ['circle', 'circles', 'ellipse', 'line', 'point', 'points', 'points_from_ndarray', 'polygon', 'polygons', 'rect', 'rects']
+__all__: list[str] = ['circle', 'circles', 'ellipse', 'geometry', 'line', 'point', 'points', 'points_from_ndarray', 'polygon', 'polygons', 'rect', 'rects']
 def circle(circle: pykraken._core.Circle, color: pykraken._core.Color, thickness: typing.SupportsFloat = 0, num_segments: typing.SupportsInt = 36) -> None:
     """
     Draw a circle to the renderer.
@@ -39,6 +39,16 @@ def ellipse(bounds: pykraken._core.Rect, color: pykraken._core.Color, filled: bo
         color (Color): The color of the ellipse.
         filled (bool, optional): Whether to draw a filled ellipse or just the outline.
                                  Defaults to False (outline).
+    """
+def geometry(texture: pykraken._core.Texture | None, vertices: collections.abc.Sequence[pykraken._core.Vertex], indices: typing.Any = None) -> None:
+    """
+    Draw arbitrary geometry using vertices and optional indices.
+    
+    Args:
+        texture (Texture | None): The texture to apply to the geometry. Can be None.
+        vertices (Sequence[Vertex]): A list of Vertex objects.
+        indices (Sequence[int] | None): A list of indices defining the primitives.
+                                       If None or empty, vertices are drawn sequentially.
     """
 def line(line: pykraken._core.Line, color: pykraken._core.Color, thickness: typing.SupportsInt = 1) -> None:
     """
