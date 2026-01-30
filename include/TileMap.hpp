@@ -12,6 +12,7 @@
 #include "Math.hpp"
 #include "Rect.hpp"
 #include "Texture.hpp"
+#include "Transform.hpp"
 #include "_globals.hpp"
 
 namespace py = pybind11;
@@ -52,7 +53,7 @@ class TileSet
         uint32_t m_id = 0;
         std::array<int, 4> m_terrainIndices{};
         uint32_t m_probability = 100;
-        Rect m_clipRect{};
+        Rect m_clipArea{};
 
       public:
         [[nodiscard]] uint32_t getID() const
@@ -70,9 +71,9 @@ class TileSet
             return m_probability;
         }
 
-        [[nodiscard]] Rect getClipRect() const
+        [[nodiscard]] Rect getClipArea() const
         {
-            return m_clipRect;
+            return m_clipArea;
         }
     };
 
@@ -121,7 +122,7 @@ class Layer
     Layer() = default;
     virtual ~Layer() = default;
 
-    virtual void render() = 0;
+    virtual void draw() = 0;
     virtual void setOpacity(double value) = 0;
     virtual double getOpacity() const = 0;
 
@@ -178,7 +179,7 @@ class TileLayer : public Layer
     [[nodiscard]] std::vector<TileResult> getFromArea(const Rect& area) const;
     [[nodiscard]] std::optional<TileResult> getFromPoint(const Vec2& position) const;
 
-    void render() override;
+    void draw() override;
     void setOpacity(double value) override;
     double getOpacity() const override;
 
@@ -218,7 +219,7 @@ class MapObject
     [[nodiscard]] Rect getRect() const;
     [[nodiscard]] uint32_t getTileID() const;
     [[nodiscard]] tmx::Object::Shape getShapeType() const;
-    [[nodiscard]] const std::vector<Vec2>& getVertices() const;
+    [[nodiscard]] std::vector<Vec2> getVertices() const;
     [[nodiscard]] const TextProperties& getTextProperties() const;
 
   private:
@@ -244,7 +245,7 @@ class ObjectGroup : public Layer
 
     [[nodiscard]] tmx::ObjectGroup::DrawOrder getDrawOrder() const;
     [[nodiscard]] const std::vector<MapObject>& getObjects() const;
-    void render() override;
+    void draw() override;
     void setOpacity(double value) override;
     double getOpacity() const override;
 
@@ -264,7 +265,7 @@ class ImageLayer : public Layer
     ~ImageLayer() = default;
 
     [[nodiscard]] std::shared_ptr<Texture> getTexture() const;
-    void render() override;
+    void draw() override;
     void setOpacity(double value) override;
     double getOpacity() const override;
 
@@ -282,7 +283,7 @@ class Map
     Map() = default;
     ~Map() = default;
 
-    void render();
+    void draw();
     void load(const std::string& tmxPath);
 
     [[nodiscard]] tmx::Orientation getOrientation() const;

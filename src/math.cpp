@@ -1,7 +1,6 @@
 #include "Math.hpp"
 
 #include <SDL3/SDL.h>
-#include <pybind11/stl_bind.h>
 
 #include <algorithm>
 
@@ -11,6 +10,31 @@
 
 namespace kn
 {
+Vec2 Vec2::ZERO()
+{
+    return {};
+}
+
+Vec2 Vec2::LEFT()
+{
+    return {-1.0, 0.0};
+}
+
+Vec2 Vec2::RIGHT()
+{
+    return {1.0, 0.0};
+}
+
+Vec2 Vec2::UP()
+{
+    return {0.0, -1.0};
+}
+
+Vec2 Vec2::DOWN()
+{
+    return {0.0, 1.0};
+}
+
 Vec2 PolarCoordinate::toCartesian() const
 {
     return {radius * std::cos(angle), radius * std::sin(angle)};
@@ -192,6 +216,11 @@ Vec2 Vec2::operator/(const double scalar) const
     return {x / scalar, y / scalar};
 }
 
+Vec2 Vec2::operator*(const Vec2& other) const
+{
+    return {x * other.x, y * other.y};
+}
+
 Vec2& Vec2::operator+=(const Vec2& other)
 {
     x += other.x;
@@ -210,6 +239,13 @@ Vec2& Vec2::operator*=(const double scalar)
 {
     x *= scalar;
     y *= scalar;
+    return *this;
+}
+
+Vec2& Vec2::operator*=(const Vec2& other)
+{
+    x *= other.x;
+    y *= other.y;
     return *this;
 }
 
@@ -232,6 +268,11 @@ bool Vec2::operator==(const Vec2& other) const
 bool Vec2::operator!=(const Vec2& other) const
 {
     return !(*this == other);
+}
+
+Vec2::operator bool() const
+{
+    return !(x == 0.0 && y == 0.0);
 }
 
 Vec2::operator SDL_Point() const
@@ -311,7 +352,7 @@ double angleBetween(const Vec2& a, const Vec2& b)
 void _bind(py::module_& module)
 {
     auto vec2PyClass = py::classh<Vec2>(module, "Vec2", R"doc(
-Vec2 represents a 2D vector.
+A 2D vector representing Cartesian coordinates.
 
 Attributes:
     x (float): Horizontal component.
@@ -329,83 +370,6 @@ Methods:
     normalize: Normalize the vector in place.
     distance_to: Measure distance to another Vec2.
     distance_squared_to: Measure squared distance to another Vec2.
-        )doc");
-
-    py::bind_vector<std::vector<kn::Vec2>>(module, "Vec2List");
-
-    py::classh<Transform>(module, "Transform", R"doc(
-Transform represents a 2D transformation with position, size, rotation, and scale.
-
-Attributes:
-    pos (Vec2): Position component.
-    size (Vec2): Explicit size (empty = use texture/srcRect size).
-    angle (float): Rotation component in radians.
-    scale (Vec2): Scale component.
-    anchor (Anchor): Anchor point for positioning.
-    pivot (Vec2): Normalized pivot point for rotation.
-    )doc")
-        .def(
-            py::init(
-                [](const py::object& posObj, const py::object& sizeObj, double angle,
-                   const py::object& scaleObj, Anchor anchor,
-                   const py::object& pivotObj) -> Transform
-                {
-                    try
-                    {
-                        const auto pos = posObj.is_none() ? Vec2{} : posObj.cast<Vec2>();
-                        const auto size = sizeObj.is_none() ? Vec2{} : sizeObj.cast<Vec2>();
-                        Vec2 scale{1.0};
-                        if (!scaleObj.is_none())
-                        {
-                            const bool isNumeric = py::isinstance<py::int_>(scaleObj) ||
-                                                   py::isinstance<py::float_>(scaleObj);
-                            scale = isNumeric ? Vec2{scaleObj.cast<double>()}
-                                              : scaleObj.cast<Vec2>();
-                        }
-                        const auto pivot = pivotObj.is_none() ? Vec2{0.5} : pivotObj.cast<Vec2>();
-                        return {pos, size, angle, scale, anchor, pivot};
-                    }
-                    catch (const py::cast_error&)
-                    {
-                        throw py::type_error(
-                            "Invalid type for Transform arguments, expected Vec2 for pos, size, "
-                            "scale, and pivot"
-                        );
-                    }
-                }
-            ),
-            py::arg("pos") = py::none(), py::arg("size") = py::none(), py::arg("angle") = 0.0,
-            py::arg("scale") = py::none(), py::arg("anchor") = Anchor::TopLeft,
-            py::arg("pivot") = py::none(),
-            R"doc(
-Initialize a Transform with optional keyword arguments.
-
-Args:
-    pos (Vec2): Position component. Defaults to (0, 0).
-    size (Vec2): Explicit size. Defaults to empty (auto-detect).
-    angle (float): Rotation in radians. Defaults to 0.
-    scale (Vec2): Scale multiplier. Defaults to (1, 1).
-    anchor (Anchor): Anchor point for positioning. Defaults to TOP_LEFT.
-    pivot (Vec2): Normalized rotation pivot. Defaults to (0.5, 0.5) for center.
-        )doc"
-        )
-        .def_readwrite("pos", &Transform::pos, R"doc(
-The position component as a Vec2.
-        )doc")
-        .def_readwrite("size", &Transform::size, R"doc(
-The explicit size as a Vec2. If zero/empty, uses texture or source rect size.
-        )doc")
-        .def_readwrite("angle", &Transform::angle, R"doc(
-The rotation component in radians.
-        )doc")
-        .def_readwrite("scale", &Transform::scale, R"doc(
-The scale component as a Vec2.
-        )doc")
-        .def_readwrite("anchor", &Transform::anchor, R"doc(
-The anchor point for positioning.
-        )doc")
-        .def_readwrite("pivot", &Transform::pivot, R"doc(
-The normalized pivot point for rotation.
         )doc");
 
     // -------------- PolarCoordinate ----------------
@@ -429,25 +393,6 @@ Args:
     angle (float): Angle in radians.
     radius (float): Distance from the origin.
         )doc")
-        .def(
-            py::init(
-                [](const py::sequence& s) -> PolarCoordinate
-                {
-                    if (s.size() != 2)
-                        throw std::runtime_error("PolarCoordinate expects a 2-element sequence");
-                    return {s[0].cast<double>(), s[1].cast<double>()};
-                }
-            ),
-            R"doc(
-Initialize a PolarCoordinate from a two-item sequence.
-
-Args:
-    sequence (Sequence[float]): Iterable containing [angle, radius].
-
-Raises:
-    RuntimeError: If the sequence does not contain exactly two elements.
-        )doc"
-        )
 
         // Properties
         .def_readwrite("angle", &PolarCoordinate::angle, R"doc(
@@ -519,7 +464,6 @@ Returns:
                 return ha ^ hr << 1;
             }
         );
-    py::implicitly_convertible<py::sequence, PolarCoordinate>();
 
     // -------------- Vec2 ----------------
 
@@ -540,60 +484,21 @@ Args:
     x (float): Horizontal component.
     y (float): Vertical component.
         )doc")
-        .def(
-            py::init(
-                [](const py::sequence& s) -> Vec2
-                {
-                    if (s.size() != 2)
-                        throw std::runtime_error("Vec2 requires a 2-element sequence");
-                    return {s[0].cast<double>(), s[1].cast<double>()};
-                }
-            ),
-            R"doc(
-Initialize a Vec2 from a two-item sequence.
-
-Args:
-    sequence (Sequence[float]): Iterable containing [x, y].
-
-Raises:
-    RuntimeError: If the sequence does not contain exactly two elements.
-        )doc"
-        )
 
         // Properties
-        .def_readwrite("x", &Vec2::x, R"doc(
-The x component of the vector.
-        )doc")
-        .def_readwrite("y", &Vec2::y, R"doc(
-The y component of the vector.
-        )doc")
-        .def_property_readonly("length", &Vec2::getLength, R"doc(
-Return the magnitude of this Vec2.
+        .def_readwrite("x", &Vec2::x, R"doc(The x component of the vector.)doc")
+        .def_readwrite("y", &Vec2::y, R"doc(The y component of the vector.)doc")
 
-Returns:
-    float: Euclidean length of the vector.
-        )doc")
-        .def_property_readonly("length_squared", &Vec2::getLengthSquared, R"doc(
-Return the squared magnitude of this Vec2.
-
-Returns:
-    float: Squared Euclidean length.
-        )doc")
-        .def_property_readonly("angle", &Vec2::getAngle, R"doc(
-Return the vector angle in radians.
-
-Returns:
-    float: Angle measured from the positive x-axis.
-        )doc")
+        .def_property_readonly("length", &Vec2::getLength, "Return the magnitude of this Vec2.")
+        .def_property_readonly(
+            "length_squared", &Vec2::getLengthSquared, "Return the squared magnitude of this Vec2."
+        )
+        .def_property_readonly("angle", &Vec2::getAngle, "Return the vector angle in radians.")
         .def_property_readonly(
             "xx", [](const Vec2& self) -> Vec2 { return {self.x, self.x}; },
-            R"doc(
-Return a Vec2 with both components set to x.
-
-Returns:
-    Vec2: Vector composed of (x, x).
-        )doc"
+            "Return a Vec2 with both components set to x."
         )
+
         .def_property(
             "xy", [](const Vec2& self) -> Vec2 { return {self.x, self.y}; },
             [](Vec2& self, const double lhs, const double rhs)
@@ -601,12 +506,7 @@ Returns:
                 self.x = lhs;
                 self.y = rhs;
             },
-            R"doc(
-Access or assign the (x, y) components as a Vec2.
-
-Returns:
-    Vec2: Current (x, y) components.
-        )doc"
+            "Access or assign the (x, y) components as a Vec2."
         )
         .def_property(
             "yx", [](const Vec2& self) -> Vec2 { return {self.y, self.x}; },
@@ -615,21 +515,25 @@ Returns:
                 self.x = lhs;
                 self.y = rhs;
             },
-            R"doc(
-Access or assign the (y, x) components as a Vec2.
-
-Returns:
-    Vec2: Current (y, x) components.
-        )doc"
+            "Access or assign the (y, x) components as a Vec2."
         )
         .def_property_readonly(
             "yy", [](const Vec2& self) -> Vec2 { return {self.y, self.y}; },
-            R"doc(
-Return a Vec2 with both components set to y.
+            "Return a Vec2 with both components set to y."
+        )
 
-Returns:
-    Vec2: Vector composed of (y, y).
-        )doc"
+        .def_property_readonly_static(
+            "ZERO", [](const py::object&) -> Vec2 { return Vec2::ZERO(); }
+        )
+        .def_property_readonly_static(
+            "LEFT", [](const py::object&) -> Vec2 { return Vec2::LEFT(); }
+        )
+        .def_property_readonly_static(
+            "RIGHT", [](const py::object&) -> Vec2 { return Vec2::RIGHT(); }
+        )
+        .def_property_readonly_static("UP", [](const py::object&) -> Vec2 { return Vec2::UP(); })
+        .def_property_readonly_static(
+            "DOWN", [](const py::object&) -> Vec2 { return Vec2::DOWN(); }
         )
 
         // Methods
@@ -811,14 +715,22 @@ Returns:
         )
         .def("__isub__", &Vec2::operator-=, py::arg("other"))
         .def("__neg__", py::overload_cast<>(&Vec2::operator-, py::const_))
-        .def("__bool__", [](const Vec2& v) -> bool { return !v.isZero(); })
+        .def("__bool__", [](const Vec2& v) -> bool { return static_cast<bool>(v); })
         .def("__truediv__", &Vec2::operator/, py::arg("scalar"))
         .def("__itruediv__", &Vec2::operator/=, py::arg("scalar"))
-        .def("__mul__", &Vec2::operator*, py::arg("scalar"))
+        .def(
+            "__mul__", py::overload_cast<const Vec2&>(&Vec2::operator*, py::const_),
+            py::arg("other")
+        )
+        .def(
+            "__mul__", py::overload_cast<const double>(&Vec2::operator*, py::const_),
+            py::arg("scalar")
+        )
         .def(
             "__rmul__", [](const Vec2& self, const double s) { return self * s; }, py::arg("scalar")
         )
-        .def("__imul__", &Vec2::operator*=, py::arg("scalar"))
+        .def("__imul__", py::overload_cast<const Vec2&>(&Vec2::operator*=), py::arg("other"))
+        .def("__imul__", py::overload_cast<const double>(&Vec2::operator*=), py::arg("scalar"))
 
         // Hash and comparison dunder methods
         .def(
@@ -832,7 +744,6 @@ Returns:
         )
         .def("__eq__", &Vec2::operator==, py::arg("other"))
         .def("__ne__", &Vec2::operator!=, py::arg("other"));
-    py::implicitly_convertible<py::sequence, Vec2>();
 
     auto subMath = module.def_submodule("math", "Math related functions");
 

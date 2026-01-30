@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "kraken-engine"
-version = "1.5.0"
+version = "1.6.0"
 dependencies = [
   "pydantic==2.12.3",
 ]

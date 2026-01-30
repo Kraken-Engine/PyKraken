@@ -3,6 +3,7 @@ Window related functions
 """
 from __future__ import annotations
 import pykraken._core
+import typing
 __all__: list[str] = ['close', 'create', 'get_scale', 'get_size', 'get_title', 'is_fullscreen', 'is_open', 'save_screenshot', 'set_fullscreen', 'set_icon', 'set_title']
 def close() -> None:
     """
@@ -11,13 +12,14 @@ def close() -> None:
     Marks the window as closed, typically used to signal the main loop to exit.
     This doesn't destroy the window immediately but sets the close flag.
     """
-def create(title: str, size: pykraken._core.Vec2) -> None:
+def create(title: str, width: typing.SupportsInt, height: typing.SupportsInt) -> None:
     """
     Create a window with the requested title and resolution.
     
     Args:
         title (str): Non-empty title no longer than 255 characters.
-        size (Vec2): The window size (width, height), both values must be positive.
+        width (int): The window width, must be positive.
+        height (int): The window height, must be positive.
     
     Raises:
         RuntimeError: If a window already exists or SDL window creation fails.

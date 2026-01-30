@@ -35,7 +35,8 @@ class PixelArray
     void fill(const Color& color) const;
 
     void blit(
-        const PixelArray& other, const Vec2& pos, Anchor anchor, const Rect& srcRect = {}
+        const PixelArray& other, const Vec2& pos, const Vec2& anchor = Anchor::TOP_LEFT,
+        const Rect& srcRect = {}
     ) const;
 
     void blit(const PixelArray& other, const Rect& dstRect, const Rect& srcRect = {}) const;

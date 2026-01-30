@@ -5,7 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) when possible.
 
-## [1.5.0] - 2025-12-30
+## [1.6.0] - 2026-01-29
+
+### Added
+- Added `Vec2.ZERO`, `Vec2.UP`, `Vec2.DOWN`, `Vec2.LEFT`, and `Vec2.RIGHT` constants for common vector directions.
+- Added the ability to multiply two `Vec2` objects element-wise using the `*` operator.
+- New `transform` submodule with `compose` and `compose_chain` functions for parenting transforms.
+- New `draw.circles` function for drawing multiple circles in a single call (~3.5x faster than multiple `draw.circle` calls in testing).
+- New `draw.polygons` function for drawing multiple polygons in a single call.
+- Added `texture.clip_area` property for getting/setting the texture's clipping area.
+- Added `draw.geometry` function for drawing arbitrary vertex geometry, optionally with a texture.
+- New `Vertex` class representing a single vertex with position, color, and texture coordinate attributes.
+
+### Changed
+- `Vec2` boolean conversion now checks for both components being exactly zero, rather than using a tolerance.
+- `fx.move_to` function now requires a `Vec2` for the `pos` parameter instead of accepting an optional argument of any object type.
+- Greatly improved quality and performance of `draw.circle` and `draw.polygon` by switching to a GPU-based rendering approach.
+- Animation controller's `load_sprite_sheet` method renamed to `add_sheet` and `clip` property renamed to `frame_area`.
+- `renderer.draw` function now accepts optional `anchor` and `pivot` parameters for specifying the drawing anchor and pivot points, both of `Vec2` type.
+- Both text and pixel array drawing functions now accept an optional `anchor` parameter of `Vec2` type for specifying the drawing anchor point.
+- `Anchor` enum changed to a class with static constants for common anchor points represented as `Vec2` objects.
+- Renamed tilemap layer `render` methods to `draw` for consistency with other drawing functions.
+
+### Removed
+- Implicit conversians from sequences to `Vec2`, `Rect`, `Line`, `Color`, and `PolarCoordinate` have been removed for better type safety. Use explicit constructors instead.
+- Removed `src` parameter from `renderer.draw` function.
+- Removed `clip` attribute from `Sprite` class.
+- `Transform` class no longer contains `pivot`, `size`, or `anchor` attributes.
+- Removed most opaque list types except for tilemap related ones due to... uselessness.
+
+## [1.5.0] - 2025-12-31
 
 ### Added
 - Added `build.py` script for automating build and compilation tasks.

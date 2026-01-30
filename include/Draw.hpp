@@ -3,22 +3,38 @@
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 
+#include <memory>
+#include <vector>
+
+#include "Color.hpp"
+#include "Math.hpp"
+
 namespace py = pybind11;
 
 namespace kn
 {
 class Circle;
-class Vec2;
 class Line;
-struct Color;
 class Polygon;
 class Rect;
+class Texture;
+
+struct Vertex
+{
+    Vec2 pos;
+    Color color;
+    Vec2 texCoord;
+};
 
 namespace draw
 {
 void _bind(py::module_& module);
 
-void circle(const Circle& circle, const Color& color, int thickness = 0);
+void circle(const Circle& circle, const Color& color, double thickness = 0.0, int numSegments = 36);
+void circles(
+    const std::vector<Circle>& circles, const Color& color, double thickness = 0.0,
+    int numSegments = 36
+);
 
 void ellipse(Rect bounds, const Color& color, bool filled = false);
 
@@ -29,12 +45,17 @@ void pointsFromNDArray(
 );
 
 void line(const Line& line, const Color& color, int thickness = 1);
-// void drawLines(const std::vector<Line>& lines, const Color& color, int thickness = 1);
+// void lines(const std::vector<Line>& lines, const Color& color, int thickness = 1);
 
 void rect(Rect rect, const Color& color, int thickness = 0);
 void rects(const std::vector<Rect>& rects, const Color& color, int thickness = 0);
 
-void polygon(const Polygon& polygon, const Color& color, bool filled = false);
-// void drawPolygons(const std::vector<Polygon>& polygons, const Color& color, bool filled = false);
+void polygon(const Polygon& polygon, const Color& color, bool filled = true);
+void polygons(const std::vector<Polygon>& polygons, const Color& color, bool filled = true);
+
+void geometry(
+    const std::shared_ptr<Texture>& texture, const std::vector<Vertex>& vertices,
+    const std::vector<int>& indices = {}
+);
 }  // namespace draw
 }  // namespace kn

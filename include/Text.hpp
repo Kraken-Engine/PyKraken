@@ -33,7 +33,7 @@ class Text
     Text(const Font& font);
     ~Text();
 
-    void draw(Vec2 pos = {}, Anchor anchor = Anchor::TopLeft) const;
+    void draw(Vec2 pos = {}, const Vec2& anchor = Anchor::TOP_LEFT) const;
 
     void setFont(const Font& font) const;
 

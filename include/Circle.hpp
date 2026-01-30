@@ -19,6 +19,8 @@ class Circle
 
     Circle() = default;
     Circle(const Vec2& center, double radius);
+    Circle(double x, double y, double radius);
+
     ~Circle() = default;
 
     [[nodiscard]] double getArea() const;

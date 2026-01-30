@@ -1,7 +1,6 @@
 #include "Orchestrator.hpp"
 
 #include <pybind11/functional.h>
-#include <pybind11/stl.h>
 
 #include <cmath>
 #include <random>
@@ -465,21 +464,10 @@ Whether the animation should loop when finished.
     // ----- fx functions (private, accessed via pykraken/fx.py) -----
     module.def(
         "_fx_move_to",
-        [](const py::object& posObj, double dur,
-           const py::object& easeObj) -> std::shared_ptr<Effect>
+        [](const Vec2& pos, double dur, const py::object& easeObj) -> std::shared_ptr<Effect>
         {
             auto effect = std::make_shared<MoveToEffect>();
-            if (!posObj.is_none())
-            {
-                try
-                {
-                    effect->targetPos = posObj.cast<Vec2>();
-                }
-                catch (const py::cast_error&)
-                {
-                    throw py::type_error("pos must be a Vec2");
-                }
-            }
+            effect->targetPos = pos;
             effect->duration = dur;
             if (!easeObj.is_none())
             {
@@ -494,7 +482,7 @@ Whether the animation should loop when finished.
             }
             return effect;
         },
-        py::arg("pos") = py::none(), py::arg("dur") = 0.0, py::arg("ease") = py::none(),
+        py::arg("pos"), py::arg("dur") = 0.0, py::arg("ease") = py::none(),
         R"doc(
 Create a move-to effect.
 
@@ -628,7 +616,7 @@ Returns:
 Create a rotate-by effect.
 
 Args:
-    delta (float): Delta angle in radians to rotate by.
+    delta (float): Delta angle in radians to rotate by in radians.
     clockwise (bool): Direction of rotation. True for clockwise, False for counterclockwise.
     dur (float): Duration in seconds.
     ease (callable): Easing function (t -> t).

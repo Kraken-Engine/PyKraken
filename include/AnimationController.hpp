@@ -38,7 +38,7 @@ class AnimationController
     AnimationController();
     ~AnimationController();
 
-    void loadSpriteSheet(const Vec2& frameSize, const std::vector<SheetStrip>& strips);
+    void addSheet(const Vec2& frameSize, const std::vector<SheetStrip>& strips);
 
     void set(const std::string& name);
     void play(const std::string& name);

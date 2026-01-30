@@ -15,6 +15,12 @@ Circle::Circle(const Vec2& center, const double radius)
 {
 }
 
+Circle::Circle(const double x, const double y, const double radius)
+    : pos({x, y}),
+      radius(radius)
+{
+}
+
 double Circle::getArea() const
 {
     return M_PI * radius * radius;
@@ -65,30 +71,15 @@ Args:
     pos (Vec2): Center position of the circle.
     radius (float): Radius of the circle.
         )doc")
-
         .def(
-            py::init(
-                [](const py::sequence& prSeq) -> Circle
-                {
-                    if (prSeq.size() != 2)
-                        throw std::invalid_argument("Circle expects a 2-element sequence");
-
-                    if (!py::isinstance<py::sequence>(prSeq[0]))
-                        throw std::invalid_argument("Position must be a sequence");
-                    if (!py::isinstance<double>(prSeq[1]))
-                        throw std::invalid_argument("Radius must be an int or float");
-
-                    const auto posSeq = prSeq[0].cast<py::sequence>();
-                    auto radius = prSeq[1].cast<double>();
-
-                    if (posSeq.size() != 2)
-                        throw std::invalid_argument("Position must be a 2-element sequence");
-
-                    return {{posSeq[0].cast<double>(), posSeq[1].cast<double>()}, radius};
-                }
-            ),
+            py::init<double, double, double>(), py::arg("x"), py::arg("y"), py::arg("radius"),
             R"doc(
-Create a circle from a nested sequence: ([x, y], radius).
+Create a circle at given x and y coordinates with a specified radius.
+
+Args:
+    x (float): X coordinate of the circle's center.
+    y (float): Y coordinate of the circle's center.
+    radius (float): Radius of the circle.
         )doc"
         )
 
@@ -153,8 +144,6 @@ Return a copy of the circle.
         .def("__eq__", &Circle::operator==, py::arg("other"))
 
         .def("__ne__", &Circle::operator!=, py::arg("other"));
-
-    py::implicitly_convertible<py::sequence, Circle>();
 }
 }  // namespace circle
 }  // namespace kn

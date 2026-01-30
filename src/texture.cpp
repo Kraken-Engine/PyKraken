@@ -33,6 +33,7 @@ Texture::Texture(const Vec2& size, const TextureScaleMode scaleMode)
 
     m_width = size.x;
     m_height = size.y;
+    m_clipArea = {0.0, 0.0, m_width, m_height};
 }
 
 Texture::Texture(
@@ -77,6 +78,7 @@ Texture::Texture(
     SDL_GetTextureSize(m_texPtr, &w, &h);
     m_width = static_cast<double>(w);
     m_height = static_cast<double>(h);
+    m_clipArea = {0.0, 0.0, m_width, m_height};
 }
 
 Texture::Texture(
@@ -144,6 +146,7 @@ Texture::Texture(
         throw std::runtime_error("Failed to get texture size: " + std::string(SDL_GetError()));
     }
     m_width = static_cast<double>(w);
+    m_clipArea = {0.0, 0.0, m_width, m_height};
     m_height = static_cast<double>(h);
 }
 
@@ -171,9 +174,14 @@ Vec2 Texture::getSize() const
     return {m_width, m_height};
 }
 
-Rect Texture::getRect() const
+Rect Texture::getClipArea() const
 {
-    return {0.0, 0.0, m_width, m_height};
+    return m_clipArea;
+}
+
+void Texture::setClipArea(const Rect& area)
+{
+    m_clipArea = area;
 }
 
 void Texture::setTint(const Color& tint) const
@@ -230,16 +238,20 @@ namespace texture
 {
 void _bind(const py::module_& module)
 {
-    py::native_enum<TextureAccess>(module, "TextureAccess", "enum.IntEnum")
-        .value("STATIC", TextureAccess::STATIC)
-        .value("TARGET", TextureAccess::TARGET)
+    py::native_enum<TextureAccess>(module, "TextureAccess", "enum.IntEnum", R"doc(
+Texture access mode for GPU textures.
+    )doc")
+        .value("STATIC", TextureAccess::STATIC, "Static texture")
+        .value("TARGET", TextureAccess::TARGET, "Render target texture")
         .finalize();
 
-    py::native_enum<TextureScaleMode>(module, "TextureScaleMode", "enum.IntEnum")
-        .value("NEAREST", TextureScaleMode::NEAREST)
-        .value("LINEAR", TextureScaleMode::LINEAR)
-        .value("PIXEL_ART", TextureScaleMode::PIXELART)
-        .value("DEFAULT", TextureScaleMode::DEFAULT)
+    py::native_enum<TextureScaleMode>(module, "TextureScaleMode", "enum.IntEnum", R"doc(
+Texture scaling and filtering modes.
+    )doc")
+        .value("NEAREST", TextureScaleMode::NEAREST, "Nearest-neighbor scaling")
+        .value("LINEAR", TextureScaleMode::LINEAR, "Linear filtering")
+        .value("PIXEL_ART", TextureScaleMode::PIXELART, "Pixel-art friendly scaling")
+        .value("DEFAULT", TextureScaleMode::DEFAULT, "Renderer default scaling")
         .finalize();
 
     py::classh<Texture> texture(module, "Texture", R"doc(
@@ -325,19 +337,10 @@ Controls whether the texture is flipped horizontally and/or vertically during re
         .def_property("alpha", &Texture::getAlpha, &Texture::setAlpha, R"doc(
 Get or set the alpha modulation of the texture as a float between `0.0` and `1.0`.
         )doc")
-        .def_property("tint", &Texture::getTint, &Texture::setTint, R"doc(
-Get or set the color tint applied to the texture during rendering.
-        )doc")
-        .def_property_readonly("size", &Texture::getSize, R"doc(
-Get the dimensions of the texture as a Vec2 (width, height).
+        .def_property("clip_area", &Texture::getClipArea, &Texture::setClipArea, R"doc(
+Get or set the clip area (atlas region) of the texture.
         )doc")
 
-        .def("get_rect", &Texture::getRect, R"doc(
-Get a rectangle representing the texture bounds.
-
-Returns:
-    Rect: A rectangle with position (0, 0) and the texture's dimensions.
-        )doc")
         .def("make_additive", &Texture::makeAdditive, R"doc(
 Set the texture to use additive blending mode.
 

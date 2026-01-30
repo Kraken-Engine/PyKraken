@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "Math.hpp"
+#include "Transform.hpp"
 
 namespace py = pybind11;
 

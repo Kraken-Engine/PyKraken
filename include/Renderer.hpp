@@ -6,8 +6,8 @@
 #include <memory>
 
 #include "Color.hpp"
-#include "Math.hpp"
 #include "Rect.hpp"
+#include "Transform.hpp"
 #include "_globals.hpp"
 
 namespace py = pybind11;
@@ -39,7 +39,7 @@ void setTarget(const std::shared_ptr<Texture>& target);
 
 void draw(
     const std::shared_ptr<Texture>& texture, const Transform& transform = {},
-    const Rect& srcRect = {}
+    const Vec2& anchor = Anchor::TOP_LEFT, const Vec2& pivot = Anchor::CENTER
 );
 }  // namespace renderer
 }  // namespace kn

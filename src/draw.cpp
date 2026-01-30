@@ -1,25 +1,115 @@
 #include "Draw.hpp"
 
 #include <gfx/SDL3_gfxPrimitives.h>
-#include <pybind11/stl_bind.h>
+#include <pybind11/stl.h>
 
-#include <set>
+#include <mapbox/earcut.hpp>
+#include <sstream>
 
 #include "Camera.hpp"
 #include "Circle.hpp"
-#include "Color.hpp"
 #include "Line.hpp"
-#include "Math.hpp"
 #include "Polygon.hpp"
 #include "Rect.hpp"
 #include "Renderer.hpp"
+#include "Texture.hpp"
 
-static Uint64 packPoint(int x, int y);
+namespace mapbox
+{
+namespace util
+{
+template <>
+struct nth<0, kn::Vec2>
+{
+    inline static float get(const kn::Vec2& v)
+    {
+        return v.x;
+    }
+};
+template <>
+struct nth<1, kn::Vec2>
+{
+    inline static float get(const kn::Vec2& v)
+    {
+        return v.y;
+    }
+};
+}  // namespace util
+}  // namespace mapbox
 
 namespace kn::draw
 {
-static void _circleThin(SDL_Renderer* renderer, const Vec2& center, int radius);
-static void _circle(SDL_Renderer* renderer, const Vec2& center, int radius, int thickness);
+void _circleFilled(SDL_Renderer* r, const Circle& circle, const Color& color, int numSegments);
+void _circleOutline(
+    SDL_Renderer* r, const Circle& circle, const Color& color, double thickness, int numSegments
+);
+
+void _polygonFilled(SDL_Renderer* r, const Polygon& polygon, const Color& color);
+
+void circle(const Circle& circle, const Color& color, const double thickness, const int numSegments)
+{
+    SDL_Renderer* rend = renderer::_get();
+    if (!rend)
+        throw std::runtime_error("Renderer not yet initialized");
+
+    if (circle.radius < 1.0 || color.a == 0)
+        return;
+
+    const Vec2 cameraPos = camera::getActivePos();
+    const Vec2 targetRes = renderer::getTargetResolution();
+
+    const Vec2 center = circle.pos - cameraPos;
+    if (center.x + circle.radius < 0.0 || center.y + circle.radius < 0.0 ||
+        center.x - circle.radius >= targetRes.x || center.y - circle.radius >= targetRes.y)
+    {
+        return;
+    }
+
+    Circle cameraCircle = circle;
+    cameraCircle.pos = center;
+
+    if (thickness <= 0.0 || thickness >= circle.radius)
+        _circleFilled(rend, cameraCircle, color, numSegments);
+    else
+        _circleOutline(rend, cameraCircle, color, thickness, numSegments);
+}
+
+void circles(
+    const std::vector<Circle>& circles, const Color& color, const double thickness,
+    const int numSegments
+)
+{
+    SDL_Renderer* rend = renderer::_get();
+    if (!rend)
+        throw std::runtime_error("Renderer not yet initialized");
+
+    if (circles.empty() || color.a == 0)
+        return;
+
+    const Vec2 cameraPos = camera::getActivePos();
+    const Vec2 targetRes = renderer::getTargetResolution();
+
+    for (const Circle& circle : circles)
+    {
+        if (circle.radius < 1.0)
+            continue;
+
+        const Vec2 center = circle.pos - cameraPos;
+        if (center.x + circle.radius < 0.0 || center.y + circle.radius < 0.0 ||
+            center.x - circle.radius >= targetRes.x || center.y - circle.radius >= targetRes.y)
+        {
+            continue;
+        }
+
+        Circle cameraCircle = circle;
+        cameraCircle.pos = center;
+
+        if (thickness <= 0.0 || thickness >= circle.radius)
+            _circleFilled(rend, cameraCircle, color, numSegments);
+        else
+            _circleOutline(rend, cameraCircle, color, thickness, numSegments);
+    }
+}
 
 void point(Vec2 point, const Color& color)
 {
@@ -111,30 +201,6 @@ void pointsFromNDArray(
         throw std::runtime_error("Failed to render points: " + std::string(SDL_GetError()));
 }
 
-void circle(const Circle& circle, const Color& color, const int thickness)
-{
-    SDL_Renderer* rend = renderer::_get();
-    if (!rend)
-        throw std::runtime_error("Renderer not yet initialized");
-
-    if (circle.radius < 1.0 || color.a == 0)
-        return;
-
-    if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
-        throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
-
-    if (thickness == 1)
-    {
-        _circleThin(rend, circle.pos - camera::getActivePos(), static_cast<int>(circle.radius));
-    }
-    else
-    {
-        _circle(
-            rend, circle.pos - camera::getActivePos(), static_cast<int>(circle.radius), thickness
-        );
-    }
-}
-
 void ellipse(Rect bounds, const Color& color, const bool filled)
 {
     SDL_Renderer* rend = renderer::_get();
@@ -189,7 +255,10 @@ void line(const Line& line, const Color& color, const int thickness)
 
     if (thickness <= 1)
     {
-        if (!lineColor(rend, x1, y1, x2, y2, static_cast<Uint32>(color)))
+        if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+            throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
+
+        if (!SDL_RenderLine(rend, x1, y1, x2, y2))
             throw std::runtime_error("Failed to render line: " + std::string(SDL_GetError()));
     }
     else
@@ -322,172 +391,346 @@ void polygon(const Polygon& polygon, const Color& color, const bool filled)
     const size_t size = polygon.points.size();
     if (size == 0)
         return;
+
+    const Vec2 cameraPos = camera::getActivePos();
     if (size == 1)
     {
-        point(polygon.points.at(0), color);
+        if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+            throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
+
+        const auto [x, y] = static_cast<SDL_FPoint>(polygon.points.at(0) - cameraPos);
+        if (!SDL_RenderPoint(rend, x, y))
+            throw std::runtime_error("Failed to render point: " + std::string(SDL_GetError()));
+
         return;
     }
     if (size == 2)
     {
-        line({polygon.points.at(0), polygon.points.at(1)}, color);
+        const auto [x1, y1] = static_cast<SDL_FPoint>(polygon.points.at(0) - cameraPos);
+        const auto [x2, y2] = static_cast<SDL_FPoint>(polygon.points.at(1) - cameraPos);
+
+        if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+            throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
+
+        if (!SDL_RenderLine(rend, x1, y1, x2, y2))
+            throw std::runtime_error("Failed to render line: " + std::string(SDL_GetError()));
+
         return;
     }
 
+    Polygon cameraPolygon = polygon;
+    cameraPolygon.translate(-cameraPos);
+
+    // Just draw lines if not filled
+    if (!filled)
+    {
+        if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+            throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
+
+        std::vector<SDL_FPoint> points;
+        points.reserve(cameraPolygon.points.size() + 1);
+        for (const auto& p : cameraPolygon.points)
+            points.push_back(static_cast<SDL_FPoint>(p));
+        points.push_back(points.front());
+
+        if (!SDL_RenderLines(rend, points.data(), static_cast<int>(points.size())))
+        {
+            throw std::runtime_error(
+                "Failed to render polygon outline: " + std::string(SDL_GetError())
+            );
+        }
+
+        return;
+    }
+
+    _polygonFilled(rend, cameraPolygon, color);
+}
+
+void polygons(const std::vector<Polygon>& polygons, const Color& color, const bool filled)
+{
+    SDL_Renderer* rend = renderer::_get();
+    if (!rend)
+        throw std::runtime_error("Renderer not yet initialized");
+
+    if (color.a == 0)
+        return;
+
     const Vec2 cameraPos = camera::getActivePos();
 
-    std::vector<Sint16> vx(size), vy(size);
-    for (size_t i = 0; i < size; ++i)
+    for (const Polygon& polygon : polygons)
     {
-        const auto& p = polygon.points[i];
-        vx[i] = static_cast<Sint16>(p.x - cameraPos.x);
-        vy[i] = static_cast<Sint16>(p.y - cameraPos.y);
+        const size_t size = polygon.points.size();
+        if (size == 0)
+            continue;
+        if (size == 1)
+        {
+            if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+                throw std::runtime_error(
+                    "Failed to set draw color: " + std::string(SDL_GetError())
+                );
+
+            const auto [x, y] = static_cast<SDL_FPoint>(polygon.points.at(0) - cameraPos);
+            if (!SDL_RenderPoint(rend, x, y))
+                throw std::runtime_error("Failed to render point: " + std::string(SDL_GetError()));
+
+            continue;
+        }
+        if (size == 2)
+        {
+            const auto [x1, y1] = static_cast<SDL_FPoint>(polygon.points.at(0) - cameraPos);
+            const auto [x2, y2] = static_cast<SDL_FPoint>(polygon.points.at(1) - cameraPos);
+
+            if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+                throw std::runtime_error(
+                    "Failed to set draw color: " + std::string(SDL_GetError())
+                );
+
+            if (!SDL_RenderLine(rend, x1, y1, x2, y2))
+                throw std::runtime_error("Failed to render line: " + std::string(SDL_GetError()));
+
+            continue;
+        }
+
+        Polygon cameraPolygon = polygon;
+        cameraPolygon.translate(-cameraPos);
+
+        if (!filled)
+        {
+            if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+                throw std::runtime_error(
+                    "Failed to set draw color: " + std::string(SDL_GetError())
+                );
+
+            std::vector<SDL_FPoint> points;
+            points.reserve(cameraPolygon.points.size() + 1);
+            for (const auto& p : cameraPolygon.points)
+                points.push_back(static_cast<SDL_FPoint>(p));
+            points.push_back(points.front());
+
+            if (!SDL_RenderLines(rend, points.data(), static_cast<int>(points.size())))
+            {
+                throw std::runtime_error(
+                    "Failed to render polygon outline: " + std::string(SDL_GetError())
+                );
+            }
+
+            continue;
+        }
+
+        _polygonFilled(rend, cameraPolygon, color);
     }
-
-    using PolyFn = bool (*)(SDL_Renderer*, const Sint16*, const Sint16*, int, Uint32);
-    PolyFn drawFn = filled ? filledPolygonColor : polygonColor;
-
-    if (!drawFn(rend, vx.data(), vy.data(), static_cast<int>(size), static_cast<Uint32>(color)))
-        throw std::runtime_error(std::string("Failed to render polygon: ") + SDL_GetError());
 }
 
-void _circleThin(SDL_Renderer* renderer, const Vec2& center, const int radius)
+void geometry(
+    const std::shared_ptr<Texture>& texture, const std::vector<Vertex>& vertices,
+    const std::vector<int>& indices
+)
 {
-    int f = 1 - radius;
-    int ddF_x = 0;
-    int ddF_y = -2 * radius;
-    int x = 0;
-    int y = radius;
+    SDL_Renderer* rend = renderer::_get();
+    if (!rend)
+        throw std::runtime_error("Renderer not yet initialized");
 
-    std::set<Uint64> pointSet;
+    if (vertices.empty())
+        return;
 
-    auto emit = [&](const int dx, const int dy)
+    const Vec2 cameraPos = camera::getActivePos();
+
+    std::vector<SDL_Vertex> sdlVertices;
+    sdlVertices.reserve(vertices.size());
+
+    for (const auto& v : vertices)
     {
-        pointSet.insert(
-            packPoint(static_cast<int>(center.x) + dx, static_cast<int>(center.y) + dy)
+        const SDL_Vertex vert{
+            static_cast<SDL_FPoint>(v.pos - cameraPos),
+            static_cast<SDL_FColor>(v.color),
+            static_cast<SDL_FPoint>(v.texCoord),
+        };
+        sdlVertices.push_back(vert);
+    }
+
+    if (!SDL_RenderGeometry(
+            rend, texture ? texture->getSDL() : nullptr, sdlVertices.data(),
+            static_cast<int>(sdlVertices.size()), indices.empty() ? nullptr : indices.data(),
+            static_cast<int>(indices.size())
+        ))
+    {
+        throw std::runtime_error("Failed to draw geometry: " + std::string(SDL_GetError()));
+    }
+}
+
+void _polygonFilled(SDL_Renderer* r, const Polygon& polygon, const Color& color)
+{
+    std::vector<std::vector<kn::Vec2>> vertices;
+    vertices.push_back(polygon.points);
+
+    std::vector<uint32_t> indices = mapbox::earcut<uint32_t>(vertices);
+
+    const auto fColor = static_cast<SDL_FColor>(color);
+    std::vector<SDL_Vertex> sdlVertices;
+    sdlVertices.reserve(polygon.points.size());
+
+    for (const auto& point : polygon.points)
+    {
+        sdlVertices.push_back({static_cast<SDL_FPoint>(point), fColor, {}});
+    }
+
+    if (!SDL_RenderGeometry(
+            r, nullptr, sdlVertices.data(), static_cast<int>(sdlVertices.size()),
+            reinterpret_cast<const int*>(indices.data()), static_cast<int>(indices.size())
+        ))
+    {
+        throw std::runtime_error(
+            std::string("Failed to render polygon geometry: ") + SDL_GetError()
         );
-    };
-
-    while (x <= y)
-    {
-        emit(x, y);
-        emit(-x, y);
-        emit(x, -y);
-        emit(-x, -y);
-        emit(y, x);
-        emit(-y, x);
-        emit(y, -x);
-        emit(-y, -x);
-
-        if (f >= 0)
-        {
-            y--;
-            ddF_y += 2;
-            f += ddF_y;
-        }
-        x++;
-        ddF_x += 2;
-        f += ddF_x + 1;
     }
-
-    // Convert to SDL_FPoint vector
-    std::vector<SDL_FPoint> points;
-    points.reserve(pointSet.size());
-    for (const auto packed : pointSet)
-    {
-        const auto px = static_cast<int>(packed >> 32) - 32768;
-        const auto py = static_cast<int>(packed & 0xFFFFFFFF) - 32768;
-        points.emplace_back(static_cast<float>(px), static_cast<float>(py));
-    }
-
-    if (!SDL_RenderPoints(renderer, points.data(), static_cast<int>(points.size())))
-        throw std::runtime_error("Failed to render circle points: " + std::string(SDL_GetError()));
 }
 
-void _circle(SDL_Renderer* renderer, const Vec2& center, const int radius, const int thickness)
+void _circleFilled(SDL_Renderer* r, const Circle& circle, const Color& color, const int numSegments)
 {
-    const int innerRadius = thickness <= 0 || thickness >= radius ? -1 : radius - thickness;
+    std::vector<SDL_Vertex> vertices;
+    vertices.reserve(numSegments + 2);
 
-    auto hLine = [&](const int x1, const int y, const int x2)
+    const auto fColor = static_cast<SDL_FColor>(color);
+
+    // Center point
+    vertices.push_back({static_cast<SDL_FPoint>(circle.pos), fColor, {0.0f, 0.0f}});
+
+    // Edge points
+    for (int i = 0; i <= numSegments; ++i)
     {
-        if (!SDL_RenderLine(
-                renderer, static_cast<float>(x1), static_cast<float>(y), static_cast<float>(x2),
-                static_cast<float>(y)
-            ))
-        {
-            throw std::runtime_error("Failed to render line: " + std::string(SDL_GetError()));
-        }
-    };
-
-    using LineSpan = std::pair<int, int>;
-    using BoundsMap = std::unordered_map<int, LineSpan>;
-
-    auto drawCircleSpan = [&](const int r, BoundsMap& bounds)
-    {
-        int x = 0;
-        int y = r;
-        int d = 3 - 2 * r;
-
-        while (x <= y)
-        {
-            auto update = [&](const int yOffset, const int xVal)
-            {
-                const auto yPos = static_cast<int>(center.y) + yOffset;
-                const auto minX = static_cast<int>(center.x) - xVal;
-                const auto maxX = static_cast<int>(center.x) + xVal;
-                bounds[yPos].first = std::min(bounds[yPos].first, minX);
-                bounds[yPos].second = std::max(bounds[yPos].second, maxX);
-            };
-
-            for (const int sign : {-1, 1})
-            {
-                update(sign * y, x);
-                update(sign * x, y);
-            }
-
-            if (d < 0)
-                d += 4 * x + 6;
-            else
-            {
-                d += 4 * (x - y) + 10;
-                y--;
-            }
-            x++;
-        }
-    };
-
-    BoundsMap outerBounds, innerBounds;
-
-    // Initialize bounds with max/mins
-    for (int i = -radius; i <= radius; ++i)
-    {
-        outerBounds[static_cast<int>(center.y) + i] = {INT_MAX, INT_MIN};
-        innerBounds[static_cast<int>(center.y) + i] = {INT_MAX, INT_MIN};
+        auto theta = 2.0 * M_PI * static_cast<double>(i) / static_cast<double>(numSegments);
+        Vec2 p{
+            circle.pos.x + circle.radius * cos(theta),
+            circle.pos.y + circle.radius * sin(theta),
+        };
+        vertices.push_back({static_cast<SDL_FPoint>(p), fColor, {}});
     }
 
-    drawCircleSpan(radius, outerBounds);
-    drawCircleSpan(innerRadius, innerBounds);
-
-    for (const auto& [y, outer] : outerBounds)
+    // Create triangle fan
+    std::vector<int> indices;
+    indices.reserve(numSegments * 3);
+    for (int i = 1; i <= numSegments; ++i)
     {
-        if (const auto& [fst, snd] = innerBounds[y]; fst == INT_MAX || snd == INT_MIN)
-        {
-            // No inner circle on this line → full span
-            hLine(outer.first, y, outer.second);
-        }
-        else
-        {
-            // Left ring
-            if (outer.first < fst)
-                hLine(outer.first, y, fst - 1);
-            // Right ring
-            if (outer.second > snd)
-                hLine(snd + 1, y, outer.second);
-        }
+        indices.push_back(0);      // Center
+        indices.push_back(i);      // Current edge
+        indices.push_back(i + 1);  // Next edge
+    }
+
+    if (!SDL_RenderGeometry(
+            r, nullptr, vertices.data(), static_cast<int>(vertices.size()), indices.data(),
+            static_cast<int>(indices.size())
+        ))
+    {
+        throw std::runtime_error(
+            std::string("Failed to render circle geometry: ") + SDL_GetError()
+        );
+    }
+}
+
+void _circleOutline(
+    SDL_Renderer* r, const Circle& circle, const Color& color, const double thickness,
+    const int numSegments
+)
+{
+    const double innerRadius = circle.radius - thickness;
+    const auto fColor = static_cast<SDL_FColor>(color);
+
+    // We need 2 vertices per segment (inner and outer)
+    std::vector<SDL_Vertex> vertices;
+    vertices.reserve((numSegments + 1) * 2);
+
+    for (int i = 0; i <= numSegments; ++i)
+    {
+        auto theta = 2.0 * M_PI * static_cast<double>(i) / static_cast<double>(numSegments);
+        double cosT = cos(theta);
+        double sinT = sin(theta);
+
+        // Outer vertex
+        Vec2 outerPoint{
+            circle.pos.x + circle.radius * cosT,
+            circle.pos.y + circle.radius * sinT,
+        };
+        vertices.push_back({static_cast<SDL_FPoint>(outerPoint), fColor, {}});
+
+        // Inner vertex
+        Vec2 innerPoint{
+            circle.pos.x + innerRadius * cosT,
+            circle.pos.y + innerRadius * sinT,
+        };
+        vertices.push_back({static_cast<SDL_FPoint>(innerPoint), fColor, {}});
+    }
+
+    // Indices for the triangles (forming a quad between each segment)
+    std::vector<int> indices;
+    indices.reserve(numSegments * 6);
+
+    for (int i = 0; i < numSegments; ++i)
+    {
+        int topL = i * 2;
+        int botL = i * 2 + 1;
+        int topR = (i + 1) * 2;
+        int botR = (i + 1) * 2 + 1;
+
+        // Triangle 1
+        indices.push_back(topL);
+        indices.push_back(topR);
+        indices.push_back(botL);
+
+        // Triangle 2
+        indices.push_back(topR);
+        indices.push_back(botR);
+        indices.push_back(botL);
+    }
+
+    if (!SDL_RenderGeometry(
+            r, nullptr, vertices.data(), static_cast<int>(vertices.size()), indices.data(),
+            static_cast<int>(indices.size())
+        ))
+    {
+        throw std::runtime_error(std::string("Failed to render circle outline: ") + SDL_GetError());
     }
 }
 
 void _bind(py::module_& module)
 {
+    py::classh<Vertex>(module, "Vertex", "A vertex with position, color, and texture coordinates.")
+        .def(
+            py::init(
+                [](const Vec2& position, py::object colorObj, py::object texCoordObj) -> Vertex
+                {
+                    const auto color = colorObj.is_none() ? WHITE : colorObj.cast<Color>();
+                    const auto texCoord = texCoordObj.is_none() ? Vec2::ZERO()
+                                                                : texCoordObj.cast<Vec2>();
+
+                    return {position, color, texCoord};
+                }
+            ),
+            py::arg("position"), py::arg("color") = py::none(), py::arg("tex_coord") = py::none(),
+            R"doc(
+Create a new Vertex.
+
+Args:
+    position (Vec2): The position of the vertex in world space.
+    color (Color | None): The color of the vertex. Defaults to White.
+    tex_coord (Vec2 | None): The texture coordinate of the vertex. Defaults to (0, 0).
+            )doc"
+        )
+        .def_readwrite("position", &Vertex::pos, "Position of the vertex in world space.")
+        .def_readwrite("color", &Vertex::color, "Color of the vertex.")
+        .def_readwrite("tex_coord", &Vertex::texCoord, "Texture coordinate of the vertex.")
+        .def(
+            "__repr__",
+            [](const Vertex& self)
+            {
+                std::stringstream ss;
+                ss << "Vertex(pos=(" << self.pos.x << ", " << self.pos.y << "), color=("
+                   << self.color.r << ", " << self.color.g << ", " << self.color.b << ", "
+                   << self.color.a << "), tex_coord=(" << self.texCoord.x << ", " << self.texCoord.y
+                   << "))";
+                return ss.str();
+            }
+        );
+
     auto subDraw = module.def_submodule("draw", "Functions for drawing shape objects");
 
     subDraw.def("point", &point, py::arg("point"), py::arg("color"), R"doc(
@@ -533,20 +776,34 @@ Raises:
 
     subDraw.def(
         "circle", &circle, py::arg("circle"), py::arg("color"), py::arg("thickness") = 0,
-        R"doc(
+        py::arg("num_segments") = 36, R"doc(
 Draw a circle to the renderer.
 
 Args:
     circle (Circle): The circle to draw.
     color (Color): The color of the circle.
-    thickness (int, optional): The line thickness. If 0 or >= radius, draws filled circle.
-                              Defaults to 0 (filled).
+    thickness (float, optional): The line thickness. If <= 0 or >= radius, draws filled circle. Defaults to 0 (filled).
+    num_segments (int, optional): Number of segments to approximate the circle.
+                                  Higher values yield smoother circles. Defaults to 36.
     )doc"
     );
 
     subDraw.def(
-        "ellipse", &ellipse, py::arg("bounds"), py::arg("color"), py::arg("filled") = false,
-        R"doc(
+        "circles", &circles, py::arg("circles"), py::arg("color"), py::arg("thickness") = 0,
+        py::arg("num_segments") = 36, R"doc(
+Draw an array of circles in bulk to the renderer.
+
+Args:
+    circles (Sequence[Circle]): The circles to draw in bulk.
+    color (Color): The color of the circles.
+    thickness (float, optional): The line thickness. If <= 0 or >= radius, draws filled circle. Defaults to 0 (filled).
+    num_segments (int, optional): Number of segments to approximate each circle.
+                                  Higher values yield smoother circles. Defaults to 36.
+    )doc"
+    );
+
+    subDraw.def(
+        "ellipse", &ellipse, py::arg("bounds"), py::arg("color"), py::arg("filled") = false, R"doc(
 Draw an ellipse to the renderer.
 
 Args:
@@ -594,7 +851,7 @@ Args:
     );
 
     subDraw.def(
-        "polygon", &polygon, py::arg("polygon"), py::arg("color"), py::arg("filled") = false,
+        "polygon", &polygon, py::arg("polygon"), py::arg("color"), py::arg("filled") = true,
         R"doc(
 Draw a polygon to the renderer.
 
@@ -605,11 +862,41 @@ Args:
                              Defaults to False (outline). Works with both convex and concave polygons.
     )doc"
     );
+
+    subDraw.def(
+        "polygons", &polygons, py::arg("polygons"), py::arg("color"), py::arg("filled") = true,
+        R"doc(
+Draw an array of polygons in bulk to the renderer.
+
+Args:
+    polygons (Sequence[Polygon]): The polygons to draw in bulk.
+    color (Color): The color of the polygons.
+    filled (bool, optional): Whether to draw filled polygons or just the outlines.
+                             Defaults to True (filled). Works with both convex and concave polygons.
+    )doc"
+    );
+
+    subDraw.def(
+        "geometry",
+        [](const std::shared_ptr<Texture>& texture, const std::vector<Vertex>& vertices,
+           const py::object& indicesObj)
+        {
+            std::vector<int> indices;
+            if (!indicesObj.is_none())
+                indices = indicesObj.cast<std::vector<int>>();
+
+            geometry(texture, vertices, indices);
+        },
+        py::arg("texture").none(true), py::arg("vertices"), py::arg("indices") = py::none(),
+        R"doc(
+Draw arbitrary geometry using vertices and optional indices.
+
+Args:
+    texture (Texture | None): The texture to apply to the geometry. Can be None.
+    vertices (Sequence[Vertex]): A list of Vertex objects.
+    indices (Sequence[int] | None): A list of indices defining the primitives.
+                                   If None or empty, vertices are drawn sequentially.
+    )doc"
+    );
 }
 }  // namespace kn::draw
-
-Uint64 packPoint(const int x, const int y)
-{
-    return static_cast<uint64_t>(static_cast<uint32_t>(x + 32768)) << 32 |
-           static_cast<uint32_t>(y + 32768);
-}

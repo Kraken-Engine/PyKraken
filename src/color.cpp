@@ -276,7 +276,6 @@ Each channel (r, g, b, a) is an 8-bit unsigned integer.
         .def(py::init(), R"doc(
 Create a Color with default values (0, 0, 0, 255).
         )doc")
-
         .def(
             py::init<uint8_t, uint8_t, uint8_t, uint8_t>(), py::arg("r"), py::arg("g"),
             py::arg("b"), py::arg("a") = 255, R"doc(
@@ -289,7 +288,6 @@ Args:
     a (int, optional): Alpha value [0-255]. Defaults to 255.
         )doc"
         )
-
         .def(
             py::init([](const std::string& hex) -> Color { return fromHex(hex); }), py::arg("hex"),
             R"doc(
@@ -297,39 +295,6 @@ Create a Color from a hex string.
 
 Args:
     hex (str): Hex color string (with or without '#' prefix).
-        )doc"
-        )
-
-        .def(
-            py::init(
-                [](const py::sequence& seq) -> Color
-                {
-                    if (seq.size() == 3)
-                    {
-                        return {
-                            seq[0].cast<uint8_t>(), seq[1].cast<uint8_t>(), seq[2].cast<uint8_t>(),
-                            255
-                        };
-                    }
-                    if (seq.size() == 4)
-                    {
-                        return {
-                            seq[0].cast<uint8_t>(), seq[1].cast<uint8_t>(), seq[2].cast<uint8_t>(),
-                            seq[3].cast<uint8_t>()
-                        };
-                    }
-                    throw std::invalid_argument(
-                        "Sequence must contain 3 (RGB) or 4 (RGBA) integer values."
-                    );
-                }
-            ),
-            py::arg("sequence"), R"doc(
-Create a Color from a sequence of RGB(A) integers.
-
-Args:
-    sequence (list or tuple): A sequence of 3 or 4 integers [0-255].
-        - 3 values: RGB (alpha defaults to 255)
-        - 4 values: RGBA
         )doc"
         )
 
@@ -471,10 +436,30 @@ Returns:
 
         .def("__mul__", &Color::operator*, py::arg("scalar"))
         .def("__rmul__", &Color::operator*, py::arg("scalar"))
-        .def("__truediv__", &Color::operator/, py::arg("scalar"));
+        .def("__truediv__", &Color::operator/, py::arg("scalar"))
 
-    py::implicitly_convertible<py::sequence, Color>();
-    py::implicitly_convertible<py::str, Color>();
+        .def_property_readonly_static("BLACK", [](const py::object&) { return BLACK; })
+        .def_property_readonly_static("WHITE", [](const py::object&) { return WHITE; })
+        .def_property_readonly_static("RED", [](const py::object&) { return RED; })
+        .def_property_readonly_static("GREEN", [](const py::object&) { return GREEN; })
+        .def_property_readonly_static("BLUE", [](const py::object&) { return BLUE; })
+        .def_property_readonly_static("YELLOW", [](const py::object&) { return YELLOW; })
+        .def_property_readonly_static("MAGENTA", [](const py::object&) { return MAGENTA; })
+        .def_property_readonly_static("CYAN", [](const py::object&) { return CYAN; })
+        .def_property_readonly_static("GRAY", [](const py::object&) { return GRAY; })
+        .def_property_readonly_static("GREY", [](const py::object&) { return GRAY; })
+        .def_property_readonly_static("DARK_GRAY", [](const py::object&) { return DARK_GRAY; })
+        .def_property_readonly_static("DARK_GREY", [](const py::object&) { return DARK_GRAY; })
+        .def_property_readonly_static("LIGHT_GRAY", [](const py::object&) { return LIGHT_GRAY; })
+        .def_property_readonly_static("LIGHT_GREY", [](const py::object&) { return LIGHT_GRAY; })
+        .def_property_readonly_static("ORANGE", [](const py::object&) { return ORANGE; })
+        .def_property_readonly_static("BROWN", [](const py::object&) { return BROWN; })
+        .def_property_readonly_static("PINK", [](const py::object&) { return PINK; })
+        .def_property_readonly_static("PURPLE", [](const py::object&) { return PURPLE; })
+        .def_property_readonly_static("NAVY", [](const py::object&) { return NAVY; })
+        .def_property_readonly_static("TEAL", [](const py::object&) { return TEAL; })
+        .def_property_readonly_static("OLIVE", [](const py::object&) { return OLIVE; })
+        .def_property_readonly_static("MAROON", [](const py::object&) { return MAROON; });
 
     auto subColor = module.def_submodule("color", R"doc(
 Color utility functions and predefined color constants.
@@ -565,29 +550,6 @@ Returns:
 Example:
     grayscale(Color(255, 0, 0))  # Returns Color(76, 76, 76, 255)
         )doc");
-
-    subColor.attr("BLACK") = BLACK;
-    subColor.attr("WHITE") = WHITE;
-    subColor.attr("RED") = RED;
-    subColor.attr("GREEN") = GREEN;
-    subColor.attr("BLUE") = BLUE;
-    subColor.attr("YELLOW") = YELLOW;
-    subColor.attr("MAGENTA") = MAGENTA;
-    subColor.attr("CYAN") = CYAN;
-    subColor.attr("GRAY") = GRAY;
-    subColor.attr("GREY") = GRAY;
-    subColor.attr("DARK_GRAY") = DARK_GRAY;
-    subColor.attr("DARK_GREY") = DARK_GRAY;
-    subColor.attr("LIGHT_GRAY") = LIGHT_GRAY;
-    subColor.attr("LIGHT_GREY") = LIGHT_GRAY;
-    subColor.attr("ORANGE") = ORANGE;
-    subColor.attr("BROWN") = BROWN;
-    subColor.attr("PINK") = PINK;
-    subColor.attr("PURPLE") = PURPLE;
-    subColor.attr("NAVY") = NAVY;
-    subColor.attr("TEAL") = TEAL;
-    subColor.attr("OLIVE") = OLIVE;
-    subColor.attr("MAROON") = MAROON;
 }
 }  // namespace color
 }  // namespace kn

@@ -22,7 +22,6 @@ class Sprite
   public:
     Transform transform{};
     Vec2 velocity{0.0f, 0.0f};
-    std::optional<Rect> clip{};  // Source rectangle for texture sampling (nullopt = full texture)
     std::shared_ptr<Texture> texture = nullptr;
     bool visible = true;
 

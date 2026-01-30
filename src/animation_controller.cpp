@@ -1,4 +1,4 @@
-#include <pybind11/stl_bind.h>
+#include <pybind11/stl.h>
 
 #include <algorithm>
 #include <filesystem>
@@ -25,19 +25,17 @@ AnimationController::~AnimationController()
     std::erase(_controllers, this);
 }
 
-void AnimationController::loadSpriteSheet(
-    const Vec2& frameSize, const std::vector<SheetStrip>& strips
-)
+void AnimationController::addSheet(const Vec2& frameSize, const std::vector<SheetStrip>& strips)
 {
     if (renderer::_get() == nullptr)
         throw std::runtime_error(
-            "Renderer not initialized; create a window before loading sprite sheets"
+            "Renderer not initialized; create a window before configuring animations"
         );
 
     if (frameSize.x <= 0 || frameSize.y <= 0)
         throw std::invalid_argument("Frame size must be positive non-zero values");
     if (strips.empty())
-        throw std::invalid_argument("No strips provided for sprite sheet");
+        throw std::invalid_argument("No strips provided for animation controller");
 
     const auto frameWidth = static_cast<int>(frameSize.x);
     const auto frameHeight = static_cast<int>(frameSize.y);
@@ -225,6 +223,7 @@ Defines a single animation within a sprite sheet by specifying the animation nam
 the number of frames to extract from the strip, and the playback speed in frames
 per second (FPS).
     )doc")
+
         .def(
             py::init<const std::string&, int, double>(), py::arg("name"), py::arg("frame_count"),
             py::arg("fps"), R"doc(
@@ -236,6 +235,7 @@ Args:
     fps (float): Frames per second for playback timing.
              )doc"
         )
+
         .def_readwrite("name", &SheetStrip::name, R"doc(
 The unique name identifier for this animation strip.
 
@@ -260,8 +260,6 @@ Type:
     float: The frames per second for this animation.
         )doc");
 
-    py::bind_vector<std::vector<SheetStrip>>(module, "SheetStripList");
-
     py::classh<AnimationController>(module, "AnimationController", R"doc(
 Manages and controls sprite animations with multiple animation sequences.
 
@@ -269,25 +267,26 @@ The AnimationController handles loading animations from sprite sheets or image f
 managing playback state, and providing frame-by-frame animation control.
     )doc")
         .def(py::init<>())
+
         .def_property_readonly(
             "current_animation_name", &AnimationController::getCurrentAnimationName, R"doc(
 The name of the currently active animation.
 
 Returns:
     str: The name of the current animation, or empty string if none is set.
-                               )doc"
+    )doc"
         )
         .def_property_readonly(
-            "clip", &AnimationController::getCurrentClip,
+            "frame_area", &AnimationController::getCurrentClip,
             py::return_value_policy::reference_internal, R"doc(
-The source rectangle (clip) for the current animation frame.
+The clip area (atlas region) for the current animation frame.
 
 Returns:
     Rect: The source rectangle defining which portion of the texture to display.
 
 Raises:
     RuntimeError: If no animation is currently set or the animation has no frames.
-                               )doc"
+    )doc"
         )
         .def_property_readonly("frame_index", &AnimationController::getFrameIndex, R"doc(
 The current frame index in the animation sequence.
@@ -296,7 +295,7 @@ Returns the integer frame index (0-based) of the currently displayed frame.
 
 Returns:
     int: The current frame index.
-                               )doc")
+    )doc")
         .def_property_readonly("progress", &AnimationController::getProgress, R"doc(
 The normalized progress through the current animation.
 
@@ -306,7 +305,7 @@ or triggering events at specific points in the animation.
 
 Returns:
     float: The animation progress as a value between 0.0 and 1.0.
-                               )doc")
+    )doc")
         .def_property(
             "playback_speed", &AnimationController::getPlaybackSpeed,
             &AnimationController::setPlaybackSpeed, R"doc(
@@ -317,7 +316,7 @@ Setting to 0 will pause the animation.
 
 Returns:
     float: The current playback speed multiplier.
-                      )doc"
+    )doc"
         )
         .def_property(
             "looping", &AnimationController::isLooping, &AnimationController::setLooping,
@@ -326,25 +325,25 @@ Whether the animation should loop when it reaches the end.
 
 Returns:
     bool: True if the animation is set to loop, False otherwise.
-                      )doc"
+    )doc"
         )
         .def(
-            "load_sprite_sheet", &AnimationController::loadSpriteSheet, py::arg("frame_size"),
-            py::arg("strips"), R"doc(
-Load one or more animations for a sprite sheet texture.
+            "add_sheet", &AnimationController::addSheet, py::arg("frame_size"), py::arg("strips"),
+            R"doc(
+Add animations from a sprite sheet definition.
 
-Divides the sprite sheet into horizontal strips, where each strip represents a different
-animation. Each strip is divided into equal-sized frames based on the specified frame size.
+Divides an atlas into horizontal strips, where each strip represents a different animation.
+Each strip is divided into equal-sized frames based on the specified frame size.
 Frames are read left-to-right within each strip, and strips are read top-to-bottom.
 
 Args:
     frame_size (Vec2): Size of each frame as (width, height).
-    strips (list[SheetStrip]): List of strip definitions.
+    strips (Sequence[SheetStrip]): List of strip definitions.
 
 Raises:
     ValueError: If frame size is not positive, no strips provided, frame count is not positive.
     RuntimeError: If duplicate animation names exist.
-             )doc"
+    )doc"
         )
         .def("set", &AnimationController::set, py::arg("name"), R"doc(
 Set the current active animation by name without affecting playback state.

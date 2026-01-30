@@ -27,18 +27,15 @@ def clear(r: typing.SupportsInt, g: typing.SupportsInt, b: typing.SupportsInt, a
         b (int): Blue component (0-255).
         a (int, optional): Alpha component (0-255). Defaults to 255.
     """
-def draw(texture: pykraken._core.Texture, transform: typing.Any = None, src: typing.Any = None) -> None:
+def draw(texture: pykraken._core.Texture, transform: typing.Any = None, anchor: typing.Any = None, pivot: typing.Any = None) -> None:
     """
-    Render a texture with the specified transform and source rectangle.
+    Render a texture.
     
     Args:
         texture (Texture): The texture to render.
-        transform (Transform, optional): The transform (position, rotation, scale, anchor, pivot). Defaults to identity transform.
-        src (Rect, optional): The source rectangle from the texture. Defaults to entire texture if not specified.
-    
-    Raises:
-        TypeError: If arguments are not of expected types.
-        RuntimeError: If renderer is not initialized.
+        transform (Transform, optional): The transform (position, rotation, scale).
+        anchor (Vec2 | None): The anchor point (0.0-1.0). Defaults to top left (0, 0).
+        pivot (Vec2 | None): The rotation pivot (0.0-1.0). Defaults to center (0.5, 0.5).
     """
 def get_default_scale_mode() -> pykraken._core.TextureScaleMode:
     """
@@ -68,8 +65,10 @@ def read_pixels(src: typing.Any = None) -> pykraken._core.PixelArray:
     
     Args:
         src (Rect, optional): The rectangle area to read pixels from. Defaults to entire renderer if None.
+    
     Returns:
         PixelArray: An array containing the pixel data.
+    
     Raises:
         RuntimeError: If reading pixels fails.
     """

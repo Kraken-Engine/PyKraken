@@ -13,17 +13,18 @@ enum class MouseButton : uint8_t
     Side2 = SDL_BUTTON_X2,
 };
 
-enum class Anchor
+class Vec2;
+struct Anchor
 {
-    TopLeft,
-    TopMid,
-    TopRight,
-    MidLeft,
-    Center,
-    MidRight,
-    BottomLeft,
-    BottomMid,
-    BottomRight,
+    const static Vec2 TOP_LEFT;
+    const static Vec2 TOP_MID;
+    const static Vec2 TOP_RIGHT;
+    const static Vec2 MID_LEFT;
+    const static Vec2 CENTER;
+    const static Vec2 MID_RIGHT;
+    const static Vec2 BOTTOM_LEFT;
+    const static Vec2 BOTTOM_MID;
+    const static Vec2 BOTTOM_RIGHT;
 };
 
 enum class Align
