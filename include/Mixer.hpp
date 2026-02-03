@@ -1,13 +1,10 @@
 #pragma once
 
-#include <miniaudio/miniaudio.h>
+#include <SDL3_mixer/SDL_mixer.h>
 #include <pybind11/pybind11.h>
 
-#include <atomic>
 #include <memory>
-#include <mutex>
 #include <string>
-#include <vector>
 
 namespace py = pybind11;
 
@@ -15,85 +12,97 @@ namespace kn
 {
 namespace mixer
 {
-void _bind(const py::module_& module);
+class Audio;
+class Sample;
+class Stream;
 
+void _bind(py::module_& module);
 void _init();
-
 void _quit();
 
-void _tick();  // Internal cleanup function, not exposed to Python
-}  // namespace mixer
+std::shared_ptr<Sample> loadSample(const std::string& path, bool predecode = true);
+std::shared_ptr<Stream> loadStream(const std::string& path, bool predecode = false);
+void setMasterVolume(float volume);
+float getMasterVolume();
 
-class Audio : public std::enable_shared_from_this<Audio>
+enum class AudioPriority : uint8_t
+{
+    Music = 0,
+    UI = 2,
+    SFX = 6,
+};
+
+class Audio
 {
   public:
-    explicit Audio(const std::string& path, float volume = 1.f);
-    ~Audio();
+    AudioPriority priority = AudioPriority::SFX;
+    bool canSteal = true;
 
-    void play(int fadeInMs = 0, bool loop = false);
+    virtual ~Audio();
 
-    void stop(int fadeOutMs = 0);
+    virtual void setVolume(float volume) = 0;
+    float getVolume() const;
 
-    void setVolume(float volume);
+    virtual bool isPlaying() const = 0;
 
-    [[nodiscard]] float getVolume() const;
+    virtual void play(double fadeInSeconds = 0.0) = 0;
+    virtual void stop(double fadeOutSeconds = 0.0) = 0;
 
-  private:
-    static constexpr ma_uint32 m_flags = MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_NO_SPATIALIZATION |
-                                         MA_SOUND_FLAG_NO_PITCH;
-
-    struct Voice
-    {
-        ma_sound snd;
-        std::atomic<bool> done{false};
-    };
-
-    std::string m_path;
-    ma_sound m_proto{};
-    std::mutex m_mutex;
-    std::vector<std::unique_ptr<Voice>> m_voices;
+  protected:
+    MIX_Audio* m_audio = nullptr;
+    bool m_looping = false;
     float m_volume = 1.0f;
 
-    static ma_uint64 msToFrames(int ms);
-
-    static void doFadeStop(ma_sound& snd, float currentVol, int fadeOutMs);
-
-    void cleanup();  // Internal cleanup method
-
-    friend void mixer::_tick();  // Allow mixer::_tick to access private cleanup
-    friend void mixer::_quit();  // Allow mixer::_quit to access private members for cleanup
+    explicit Audio(MIX_Audio* sdlAudio);
 };
 
-class AudioStream
+class Sample : public Audio
 {
   public:
-    explicit AudioStream(const std::string& filePath, float volume = 1.f);
-    ~AudioStream();
+    ~Sample() override = default;
 
-    void play(int fadeInMs = 0, bool loop = false, float startTimeSeconds = 0.0f);
-    void stop(int fadeOutMs = 0);
-    void pause();
-    void resume();
-    void rewind();
+    void setMaxPolyphony(uint8_t maxPolyphony);
+    uint8_t getMaxPolyphony() const;
 
-    void seek(float timeSeconds);
+    void setVolume(float volume) override;
 
-    float getCurrentTime();
+    bool isPlaying() const override;
 
-    void setVolume(float volume);
-    [[nodiscard]] float getVolume() const;
-
-    void setLooping(bool loop);
+    void play(double fadeInSeconds = 0.0) override;
+    void stop(double fadeOutSeconds = 0.0) override;
 
   private:
-    static constexpr ma_uint32 m_flags = MA_SOUND_FLAG_STREAM | MA_SOUND_FLAG_NO_SPATIALIZATION |
-                                         MA_SOUND_FLAG_NO_PITCH;
+    uint8_t m_maxPolyphony = 1;
 
-    ma_sound m_snd{};
-    float m_volume = 1.f;
+    explicit Sample(MIX_Audio* sdlAudio);
 
-    [[nodiscard]] static ma_uint64 msToFrames(int ms);
-
-    friend void mixer::_quit();  // Allow mixer::_quit to access private members for cleanup
+    friend std::shared_ptr<Sample> loadSample(const std::string& path, bool predecode);
 };
+
+class Stream : public Audio
+{
+  public:
+    Stream(MIX_Audio* sdlAudio);
+    ~Stream() override;
+
+    void setLooping(bool looping);
+    bool getLooping() const;
+    void setVolume(float volume) override;
+
+    bool isPlaying() const override;
+    double getPlaybackPos() const;
+
+    void play(double fadeInSeconds = 0.0) override;
+    void pause();
+    void resume(double fadeInSeconds = 0.0);
+    void stop(double fadeOutSeconds = 0.0) override;
+    void seek(double seconds);
+
+  private:
+    int m_trackIndex = -1;     // -1 means not attached to a track (stopped/paused)
+    Sint64 m_savedFrames = 0;  // remembered playback position when paused
+
+    friend std::shared_ptr<Stream> loadStream(const std::string& path, bool predecode);
+};
+}  // namespace mixer
 }  // namespace kn

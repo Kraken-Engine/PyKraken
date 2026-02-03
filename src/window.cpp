@@ -75,7 +75,6 @@ bool isOpen()
 {
     time::_tick();
 
-    mixer::_tick();
     animation_controller::_tick();
     orchestrator::_tick();
 

@@ -1,5 +1,6 @@
 // clang-format off
 #include "opaque_types.hpp"
+#include "pykraken_version.hpp"
 // clang-format on
 
 #include "AnimationController.hpp"
@@ -35,10 +36,6 @@
 #include "Transform.hpp"
 #include "Viewport.hpp"
 #include "Window.hpp"
-
-constexpr int KRAKEN_MAJOR_VERSION = 1;
-constexpr int KRAKEN_MINOR_VERSION = 5;
-constexpr int KRAKEN_MICRO_VERSION = 1;
 
 constexpr const char* getPlatform();
 constexpr const char* getArchitecture();

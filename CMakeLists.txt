@@ -3,6 +3,58 @@ project(pykraken LANGUAGES CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# -------------------------
+# Project Version (from pyproject.toml)
+# -------------------------
+# SDL projects commonly generate version headers via CMake; we do the same,
+# but source the version from Python packaging metadata.
+# Use the unified FindPython module; request Development.Module so CMake defines
+# the add-library helper needed by newer pybind11 toolchains.
+find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
+
+# Compatibility: pybind11's newer CMake files may call python_add_library()/python3_add_library(),
+# while some CMake versions only provide Python_add_library()/Python3_add_library().
+if (COMMAND Python_add_library AND NOT COMMAND python_add_library)
+  function(python_add_library)
+    Python_add_library(${ARGV})
+  endfunction()
+endif()
+if (COMMAND Python3_add_library AND NOT COMMAND python3_add_library)
+  function(python3_add_library)
+    Python3_add_library(${ARGV})
+  endfunction()
+endif()
+execute_process(
+  COMMAND ${Python_EXECUTABLE} -c [=[
+import pathlib
+try:
+    import tomllib as _toml  # py>=3.11
+except ModuleNotFoundError:
+    import tomli as _toml
+
+with open("pyproject.toml", "rb") as f:
+    data = _toml.load(f)
+print(data["project"]["version"])
+]=]
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  OUTPUT_VARIABLE PYK_PROJECT_VERSION
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+if (NOT PYK_PROJECT_VERSION)
+  message(FATAL_ERROR "Failed to read [project].version from pyproject.toml")
+endif()
+
+# Extract numeric MAJOR.MINOR.MICRO (e.g. 1.6.1). If you later use pre-releases
+# like 1.6.1rc1, the regex still captures 1.6.1.
+string(REGEX MATCH "^([0-9]+)\\.([0-9]+)\\.([0-9]+)" _ver_match "${PYK_PROJECT_VERSION}")
+if (NOT _ver_match)
+  message(FATAL_ERROR "pyproject.toml version must start with MAJOR.MINOR.MICRO, got: ${PYK_PROJECT_VERSION}")
+endif()
+set(PYK_VERSION_MAJOR "${CMAKE_MATCH_1}")
+set(PYK_VERSION_MINOR "${CMAKE_MATCH_2}")
+set(PYK_VERSION_MICRO "${CMAKE_MATCH_3}")
+
 if(CMAKE_VERSION VERSION_GREATER_EQUAL "4.0")
   set(CMAKE_POLICY_VERSION_MINIMUM "3.5" CACHE STRING "" FORCE)
 endif()
@@ -13,7 +65,7 @@ endif()
 set(PYK_MODULE_NAME    "_core"    CACHE STRING "Python extension module name")
 set(PYK_PACKAGE_DIR    "pykraken" CACHE STRING "Where to install the module inside the wheel")
 set(PYK_SOURCES_GLOB   "src/*.cpp;src/**/*.cpp" CACHE STRING "Glob(s) for C++ sources")
-option(PYK_VENDOR_SDL  "Vendor SDL3, SDL_image, SDL_ttf (static) via FetchContent" ON)
+option(PYK_VENDOR_SDL  "Vendor SDL3, SDL_image, SDL_ttf, SDL_mixer (static) via FetchContent" ON)
 option(PYK_VENDOR_TMXLITE "Vendor tmxlite (static) via FetchContent" ON)
 option(PYK_VENDOR_PYBIND11 "Vendor pybind11 via FetchContent" OFF)
 
@@ -50,9 +102,19 @@ if (PYK_SOURCES STREQUAL "")
 endif()
 pybind11_add_module(${PYK_MODULE_NAME} MODULE ${PYK_SOURCES})
 
+# Generate version header (available to all translation units)
+set(_pyk_generated_dir "${CMAKE_CURRENT_BINARY_DIR}/generated")
+file(MAKE_DIRECTORY "${_pyk_generated_dir}")
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/pykraken_version.hpp.in
+  ${_pyk_generated_dir}/pykraken_version_generated.hpp
+  @ONLY
+)
+
 # Include project headers
 target_include_directories(${PYK_MODULE_NAME} PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/include
+  ${_pyk_generated_dir}
 )
 
 # On Windows, Python extensions are DLLs; on *nix they're .so
@@ -74,30 +136,49 @@ if (PYK_VENDOR_SDL)
   set(SDL_SHARED OFF CACHE BOOL "" FORCE)
 
   # SDL_image options (static, prune heavy codecs unless you need them)
-  set(SDLIMAGE_VENDORED ON CACHE BOOL "" FORCE)
-  set(SDLIMAGE_SHARED   OFF CACHE BOOL "" FORCE)
-  set(SDLIMAGE_AVIF     OFF CACHE BOOL "" FORCE)
-  set(SDLIMAGE_BMP      ON  CACHE BOOL "" FORCE)
-  set(SDLIMAGE_GIF      ON  CACHE BOOL "" FORCE)
-  set(SDLIMAGE_JPG      ON  CACHE BOOL "" FORCE)
-  set(SDLIMAGE_PNG      ON  CACHE BOOL "" FORCE)
-  set(SDLIMAGE_TIF      OFF CACHE BOOL "" FORCE)
-  set(SDLIMAGE_WEBP     OFF CACHE BOOL "" FORCE)
-  set(SDLIMAGE_JXL      OFF CACHE BOOL "" FORCE)
-  set(SDLIMAGE_QOI      ON  CACHE BOOL "" FORCE)
+  option(SDLIMAGE_ANI  "Support loading ANI animations" OFF)
+  option(SDLIMAGE_AVIF "Support loading AVIF images"    OFF)
+  option(SDLIMAGE_BMP  "Support loading BMP images"     ON)
+  option(SDLIMAGE_GIF  "Support loading GIF images"     OFF)
+  option(SDLIMAGE_JPG  "Support loading JPEG images"    ON)
+  option(SDLIMAGE_JXL  "Support loading JXL images"     OFF)
+  option(SDLIMAGE_LBM  "Support loading LBM images"     OFF)
+  option(SDLIMAGE_PCX  "Support loading PCX images"     OFF)
+  option(SDLIMAGE_PNG  "Support loading PNG images"     ON)
+  option(SDLIMAGE_PNM  "Support loading PNM images"     OFF)
+  option(SDLIMAGE_QOI  "Support loading QOI images"     ON)
+  option(SDLIMAGE_SVG  "Support loading SVG images"     ON)
+  option(SDLIMAGE_TGA  "Support loading TGA images"     ON)
+  option(SDLIMAGE_TIF  "Support loading TIFF images"    OFF)
+  option(SDLIMAGE_WEBP "Support loading WEBP images"    OFF)
+  option(SDLIMAGE_XCF  "Support loading XCF images"     OFF)
+  option(SDLIMAGE_XPM  "Support loading XPM images"     OFF)
+  option(SDLIMAGE_XV   "Support loading XV images"      OFF)
 
   # SDL_ttf options (static, vendored FreeType)
   set(SDLTTF_SHARED   OFF CACHE BOOL "" FORCE)
   set(SDLTTF_VENDORED ON  CACHE BOOL "" FORCE)
 
+  # SDL_mixer options
+  set(SDLMIXER_MIDI_NATIVE       OFF)
+  set(SDLMIXER_GME               OFF)
+  set(SDLMIXER_WAVPACK           OFF)
+  set(SDLMIXER_MOD               OFF)
+  set(SDLMIXER_MOD_XMP           OFF)
+  set(SDLMIXER_OPUS              OFF)
+  set(SDLMIXER_MP3_MPG123        ON)
+  set(SDLMIXER_VORBIS_VORBISFILE ON)
+  set(SDLMIXER_FLAC_LIBFLAC      ON)
+  set(SDLMIXER_VENDORED ON CACHE BOOL "" FORCE)
+
   FetchContent_Declare(SDL3
     GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-    GIT_TAG        prerelease-3.3.4
+    GIT_TAG        release-3.4.0
     GIT_SHALLOW    TRUE
   )
   FetchContent_Declare(SDL_image
     GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
-    GIT_TAG        release-3.2.4
+    GIT_TAG        release-3.4.0
     GIT_SHALLOW    TRUE
   )
   FetchContent_Declare(SDL_ttf
@@ -105,17 +186,23 @@ if (PYK_VENDOR_SDL)
     GIT_TAG        release-3.2.2
     GIT_SHALLOW    TRUE
   )
+  FetchContent_Declare(SDL_mixer
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer.git
+    GIT_TAG        prerelease-3.1.2
+    GIT_SHALLOW    TRUE
+  )
 
-  FetchContent_MakeAvailable(SDL3 SDL_image SDL_ttf)
+  FetchContent_MakeAvailable(SDL3 SDL_image SDL_ttf SDL_mixer)
 else()
   find_package(SDL3       CONFIG REQUIRED)
   find_package(SDL3_image CONFIG REQUIRED)
   find_package(SDL3_ttf   CONFIG REQUIRED)
+  find_package(SDL3_mixer CONFIG REQUIRED)
 endif()
 
 # Prefer static targets when they exist; else use shared
 set(_sdl_targets)
-foreach(lib SDL3 SDL3_image SDL3_ttf)
+foreach(lib SDL3 SDL3_image SDL3_ttf SDL3_mixer)
   if (TARGET ${lib}::${lib}-static)
     list(APPEND _sdl_targets ${lib}::${lib}-static)
   elseif (TARGET ${lib}::${lib})

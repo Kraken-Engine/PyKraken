@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) when possible.
 
+## [1.6.1] - No Release Date
+
+### Added
+- New `mixer` submodule for advanced audio management.
+- `AudioPriority` enum for managing hardware track acquisition (MUSIC, UI, SFX).
+- Support for polyphonic sound effects via the `Sample` class and `max_polyphony` attribute.
+- Priority-based track stealing: high-priority sounds can now interrupt lower-priority ones if the 64-track limit is reached.
+- Global master volume control via `mixer.set_master_volume`.
+
+### Changed
+- Refactored the audio backend to use SDL3_mixer.
+    - Renamed `Audio` class to `Sample` (for short sound effects).
+    - Renamed `AudioStream` class to `Stream` (for long music files).
+- Audio loading functions moved to `mixer.load_sample` and `mixer.load_stream`.
+- `Stream.looping` is now an RW property instead of just a setter method.
+- `Stream` playback position renamed from `current_time` to `playback_pos`.
+
+### Removed
+- Removed `rewind` method from audio stream class (use `seek(0)` or restart playback).
+- Removed `miniaudio` dependency.
+
 ## [1.6.0] - 2026-01-29
 
 ### Added

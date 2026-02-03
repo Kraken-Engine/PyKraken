@@ -13,6 +13,7 @@ from . import key
 from . import line
 from . import log
 from . import math
+from . import mixer
 from . import mouse
 from . import pixel_array
 from . import rect
@@ -22,7 +23,7 @@ from . import time
 from . import transform
 from . import viewport
 from . import window
-__all__: list[str] = ['AUDIO_DEVICE_ADDED', 'AUDIO_DEVICE_FORMAT_CHANGED', 'AUDIO_DEVICE_REMOVED', 'Align', 'Anchor', 'AnimationController', 'Audio', 'AudioStream', 'CAMERA_DEVICE_ADDED', 'CAMERA_DEVICE_APPROVED', 'CAMERA_DEVICE_DENIED', 'CAMERA_DEVICE_REMOVED', 'CLIPBOARD_UPDATE', 'C_BACK', 'C_DPAD_DOWN', 'C_DPAD_LEFT', 'C_DPAD_RIGHT', 'C_DPAD_UP', 'C_EAST', 'C_GUIDE', 'C_LSHOULDER', 'C_LSTICK', 'C_LTRIGGER', 'C_LX', 'C_LY', 'C_NORTH', 'C_PS3', 'C_PS4', 'C_PS5', 'C_RSHOULDER', 'C_RSTICK', 'C_RTRIGGER', 'C_RX', 'C_RY', 'C_SOUTH', 'C_STANDARD', 'C_START', 'C_SWITCH_JOYCON_LEFT', 'C_SWITCH_JOYCON_PAIR', 'C_SWITCH_JOYCON_RIGHT', 'C_SWITCH_PRO', 'C_WEST', 'C_XBOX_360', 'C_XBOX_ONE', 'Camera', 'Circle', 'Color', 'DID_ENTER_BACKGROUND', 'DID_ENTER_FOREGROUND', 'DISPLAY_ADDED', 'DISPLAY_CONTENT_SCALE_CHANGED', 'DISPLAY_CURRENT_MODE_CHANGED', 'DISPLAY_DESKTOP_MODE_CHANGED', 'DISPLAY_MOVED', 'DISPLAY_ORIENTATION', 'DISPLAY_REMOVED', 'DISPLAY_USABLE_BOUNDS_CHANGED', 'DROP_BEGIN', 'DROP_COMPLETE', 'DROP_FILE', 'DROP_POSITION', 'DROP_TEXT', 'EasingAnimation', 'Effect', 'Event', 'EventType', 'FINGER_CANCELED', 'FINGER_DOWN', 'FINGER_MOTION', 'FINGER_UP', 'Font', 'FontHint', 'GAMEPAD_ADDED', 'GAMEPAD_AXIS_MOTION', 'GAMEPAD_BUTTON_DOWN', 'GAMEPAD_BUTTON_UP', 'GAMEPAD_REMAPPED', 'GAMEPAD_REMOVED', 'GAMEPAD_SENSOR_UPDATE', 'GAMEPAD_STEAM_HANDLE_UPDATED', 'GAMEPAD_TOUCHPAD_DOWN', 'GAMEPAD_TOUCHPAD_MOTION', 'GAMEPAD_TOUCHPAD_UP', 'GAMEPAD_UPDATE_COMPLETE', 'GamepadAxis', 'GamepadButton', 'GamepadType', 'InputAction', 'KEYBOARD_ADDED', 'KEYBOARD_REMOVED', 'KEYMAP_CHANGED', 'KEY_DOWN', 'KEY_UP', 'K_0', 'K_1', 'K_2', 'K_3', 'K_4', 'K_5', 'K_6', 'K_7', 'K_8', 'K_9', 'K_AGAIN', 'K_AMPERSAND', 'K_APPLICATION', 'K_ASTERISK', 'K_AT', 'K_BACKSLASH', 'K_BACKSPACE', 'K_CALL', 'K_CAPS', 'K_CARET', 'K_CHANNEL_DEC', 'K_CHANNEL_INC', 'K_COLON', 'K_COMMA', 'K_COPY', 'K_CUT', 'K_DBLQUOTE', 'K_DEL', 'K_DOLLAR', 'K_DOWN', 'K_END', 'K_ENDCALL', 'K_EQ', 'K_ESC', 'K_EXCLAIM', 'K_EXECUTE', 'K_F1', 'K_F10', 'K_F11', 'K_F12', 'K_F13', 'K_F14', 'K_F15', 'K_F2', 'K_F3', 'K_F4', 'K_F5', 'K_F6', 'K_F7', 'K_F8', 'K_F9', 'K_FIND', 'K_GRAVE', 'K_GT', 'K_HASH', 'K_HELP', 'K_HOME', 'K_INS', 'K_KP_0', 'K_KP_1', 'K_KP_2', 'K_KP_3', 'K_KP_4', 'K_KP_5', 'K_KP_6', 'K_KP_7', 'K_KP_8', 'K_KP_9', 'K_KP_DIV', 'K_KP_ENTER', 'K_KP_MINUS', 'K_KP_MULT', 'K_KP_PERIOD', 'K_KP_PLUS', 'K_LALT', 'K_LBRACE', 'K_LBRACKET', 'K_LCTRL', 'K_LEFT', 'K_LGUI', 'K_LPAREN', 'K_LSHIFT', 'K_LT', 'K_MEDIA_EJECT', 'K_MEDIA_FF', 'K_MEDIA_NEXT', 'K_MEDIA_PAUSE', 'K_MEDIA_PLAY', 'K_MEDIA_PLAY_PAUSE', 'K_MEDIA_PREV', 'K_MEDIA_REC', 'K_MEDIA_REWIND', 'K_MEDIA_SELECT', 'K_MEDIA_STOP', 'K_MENU', 'K_MINUS', 'K_MODE', 'K_MUTE', 'K_NUMLOCK', 'K_PASTE', 'K_PAUSE', 'K_PERCENT', 'K_PERIOD', 'K_PGDOWN', 'K_PGUP', 'K_PIPE', 'K_PLUS', 'K_POWER', 'K_PRTSCR', 'K_QUESTION', 'K_RALT', 'K_RBRACE', 'K_RBRACKET', 'K_RCTRL', 'K_RETURN', 'K_RGUI', 'K_RIGHT', 'K_RPAREN', 'K_RSHIFT', 'K_SCRLK', 'K_SELECT', 'K_SEMICOLON', 'K_SGLQUOTE', 'K_SLASH', 'K_SLEEP', 'K_SOFTLEFT', 'K_SOFTRIGHT', 'K_SPACE', 'K_STOP', 'K_TAB', 'K_TILDE', 'K_UNDERSCORE', 'K_UNDO', 'K_UNKNOWN', 'K_UP', 'K_VOLDOWN', 'K_VOLUP', 'K_WAKE', 'K_a', 'K_b', 'K_c', 'K_d', 'K_e', 'K_f', 'K_g', 'K_h', 'K_i', 'K_j', 'K_k', 'K_l', 'K_m', 'K_n', 'K_o', 'K_p', 'K_q', 'K_r', 'K_s', 'K_t', 'K_u', 'K_v', 'K_w', 'K_x', 'K_y', 'K_z', 'Keycode', 'LOCALE_CHANGED', 'LOW_MEMORY', 'Line', 'MOUSE_ADDED', 'MOUSE_BUTTON_DOWN', 'MOUSE_BUTTON_UP', 'MOUSE_MOTION', 'MOUSE_REMOVED', 'MOUSE_WHEEL', 'M_LEFT', 'M_MIDDLE', 'M_RIGHT', 'M_SIDE1', 'M_SIDE2', 'Mask', 'MouseButton', 'Orchestrator', 'PEN_AXIS', 'PEN_BUTTON_DOWN', 'PEN_BUTTON_UP', 'PEN_DOWN', 'PEN_MOTION', 'PEN_PROXIMITY_IN', 'PEN_PROXIMITY_OUT', 'PEN_UP', 'PINCH_BEGIN', 'PINCH_END', 'PINCH_UPDATE', 'P_DISTANCE', 'P_PRESSURE', 'P_ROTATION', 'P_SLIDER', 'P_TANGENTIAL_PRESSURE', 'P_TILT_X', 'P_TILT_Y', 'PenAxis', 'PixelArray', 'PolarCoordinate', 'Polygon', 'QUIT', 'RENDER_DEVICE_LOST', 'RENDER_DEVICE_RESET', 'RENDER_TARGETS_RESET', 'Rect', 'SCREEN_KEYBOARD_HIDDEN', 'SCREEN_KEYBOARD_SHOWN', 'SENSOR_UPDATE', 'SYSTEM_THEME_CHANGED', 'S_0', 'S_1', 'S_2', 'S_3', 'S_4', 'S_5', 'S_6', 'S_7', 'S_8', 'S_9', 'S_AGAIN', 'S_APOSTROPHE', 'S_APPLICATION', 'S_BACKSLASH', 'S_BACKSPACE', 'S_CALL', 'S_CAPS', 'S_CHANNEL_DEC', 'S_CHANNEL_INC', 'S_COMMA', 'S_COPY', 'S_CUT', 'S_DEL', 'S_DOWN', 'S_END', 'S_ENDCALL', 'S_EQ', 'S_ESC', 'S_EXECUTE', 'S_F1', 'S_F10', 'S_F11', 'S_F12', 'S_F13', 'S_F14', 'S_F15', 'S_F2', 'S_F3', 'S_F4', 'S_F5', 'S_F6', 'S_F7', 'S_F8', 'S_F9', 'S_FIND', 'S_GRAVE', 'S_HELP', 'S_HOME', 'S_INS', 'S_KP_0', 'S_KP_1', 'S_KP_2', 'S_KP_3', 'S_KP_4', 'S_KP_5', 'S_KP_6', 'S_KP_7', 'S_KP_8', 'S_KP_9', 'S_KP_DIV', 'S_KP_ENTER', 'S_KP_MINUS', 'S_KP_MULT', 'S_KP_PERIOD', 'S_KP_PLUS', 'S_LALT', 'S_LBRACKET', 'S_LCTRL', 'S_LEFT', 'S_LGUI', 'S_LSHIFT', 'S_MEDIA_EJECT', 'S_MEDIA_FAST_FORWARD', 'S_MEDIA_NEXT', 'S_MEDIA_PAUSE', 'S_MEDIA_PLAY', 'S_MEDIA_PLAY_PAUSE', 'S_MEDIA_PREV', 'S_MEDIA_REC', 'S_MEDIA_REWIND', 'S_MEDIA_SELECT', 'S_MEDIA_STOP', 'S_MENU', 'S_MINUS', 'S_MODE', 'S_MUTE', 'S_NUMLOCK', 'S_PASTE', 'S_PAUSE', 'S_PERIOD', 'S_PGDOWN', 'S_PGUP', 'S_POWER', 'S_PRTSCR', 'S_RALT', 'S_RBRACKET', 'S_RCTRL', 'S_RETURN', 'S_RGUI', 'S_RIGHT', 'S_RSHIFT', 'S_SCRLK', 'S_SELECT', 'S_SEMICOLON', 'S_SLASH', 'S_SLEEP', 'S_SOFTLEFT', 'S_SOFTRIGHT', 'S_SPACE', 'S_STOP', 'S_TAB', 'S_UNDO', 'S_UP', 'S_VOLDOWN', 'S_VOLUP', 'S_WAKE', 'S_a', 'S_b', 'S_c', 'S_d', 'S_e', 'S_f', 'S_g', 'S_h', 'S_i', 'S_j', 'S_k', 'S_l', 'S_m', 'S_n', 'S_o', 'S_p', 'S_q', 'S_r', 'S_s', 'S_t', 'S_u', 'S_v', 'S_w', 'S_x', 'S_y', 'S_z', 'Scancode', 'ScrollMode', 'ShaderState', 'SheetStrip', 'Sprite', 'TERMINATING', 'TEXT_EDITING', 'TEXT_EDITING_CANDIDATES', 'TEXT_INPUT', 'Text', 'Texture', 'TextureAccess', 'TextureScaleMode', 'Timer', 'Transform', 'Vec2', 'Vertex', 'ViewportMode', 'WILL_ENTER_BACKGROUND', 'WILL_ENTER_FOREGROUND', 'WINDOW_CLOSE_REQUESTED', 'WINDOW_DESTROYED', 'WINDOW_DISPLAY_CHANGED', 'WINDOW_DISPLAY_SCALE_CHANGED', 'WINDOW_ENTER_FULLSCREEN', 'WINDOW_EXPOSED', 'WINDOW_FOCUS_GAINED', 'WINDOW_FOCUS_LOST', 'WINDOW_HDR_STATE_CHANGED', 'WINDOW_HIDDEN', 'WINDOW_HIT_TEST', 'WINDOW_ICCPROF_CHANGED', 'WINDOW_LEAVE_FULLSCREEN', 'WINDOW_MAXIMIZED', 'WINDOW_MINIMIZED', 'WINDOW_MOUSE_ENTER', 'WINDOW_MOUSE_LEAVE', 'WINDOW_MOVED', 'WINDOW_OCCLUDED', 'WINDOW_RESIZED', 'WINDOW_RESTORED', 'WINDOW_SAFE_AREA_CHANGED', 'WINDOW_SHOWN', 'collision', 'color', 'draw', 'ease', 'event', 'gamepad', 'init', 'input', 'key', 'line', 'log', 'math', 'mouse', 'pixel_array', 'quit', 'rect', 'renderer', 'tilemap', 'time', 'transform', 'viewport', 'window']
+__all__: list[str] = ['AUDIO_DEVICE_ADDED', 'AUDIO_DEVICE_FORMAT_CHANGED', 'AUDIO_DEVICE_REMOVED', 'Align', 'Anchor', 'AnimationController', 'CAMERA_DEVICE_ADDED', 'CAMERA_DEVICE_APPROVED', 'CAMERA_DEVICE_DENIED', 'CAMERA_DEVICE_REMOVED', 'CLIPBOARD_UPDATE', 'C_BACK', 'C_DPAD_DOWN', 'C_DPAD_LEFT', 'C_DPAD_RIGHT', 'C_DPAD_UP', 'C_EAST', 'C_GUIDE', 'C_LSHOULDER', 'C_LSTICK', 'C_LTRIGGER', 'C_LX', 'C_LY', 'C_NORTH', 'C_PS3', 'C_PS4', 'C_PS5', 'C_RSHOULDER', 'C_RSTICK', 'C_RTRIGGER', 'C_RX', 'C_RY', 'C_SOUTH', 'C_STANDARD', 'C_START', 'C_SWITCH_JOYCON_LEFT', 'C_SWITCH_JOYCON_PAIR', 'C_SWITCH_JOYCON_RIGHT', 'C_SWITCH_PRO', 'C_WEST', 'C_XBOX_360', 'C_XBOX_ONE', 'Camera', 'Circle', 'Color', 'DID_ENTER_BACKGROUND', 'DID_ENTER_FOREGROUND', 'DISPLAY_ADDED', 'DISPLAY_CONTENT_SCALE_CHANGED', 'DISPLAY_CURRENT_MODE_CHANGED', 'DISPLAY_DESKTOP_MODE_CHANGED', 'DISPLAY_MOVED', 'DISPLAY_ORIENTATION', 'DISPLAY_REMOVED', 'DISPLAY_USABLE_BOUNDS_CHANGED', 'DROP_BEGIN', 'DROP_COMPLETE', 'DROP_FILE', 'DROP_POSITION', 'DROP_TEXT', 'EasingAnimation', 'Effect', 'Event', 'EventType', 'FINGER_CANCELED', 'FINGER_DOWN', 'FINGER_MOTION', 'FINGER_UP', 'Font', 'FontHint', 'GAMEPAD_ADDED', 'GAMEPAD_AXIS_MOTION', 'GAMEPAD_BUTTON_DOWN', 'GAMEPAD_BUTTON_UP', 'GAMEPAD_REMAPPED', 'GAMEPAD_REMOVED', 'GAMEPAD_SENSOR_UPDATE', 'GAMEPAD_STEAM_HANDLE_UPDATED', 'GAMEPAD_TOUCHPAD_DOWN', 'GAMEPAD_TOUCHPAD_MOTION', 'GAMEPAD_TOUCHPAD_UP', 'GAMEPAD_UPDATE_COMPLETE', 'GamepadAxis', 'GamepadButton', 'GamepadType', 'InputAction', 'KEYBOARD_ADDED', 'KEYBOARD_REMOVED', 'KEYMAP_CHANGED', 'KEY_DOWN', 'KEY_UP', 'K_0', 'K_1', 'K_2', 'K_3', 'K_4', 'K_5', 'K_6', 'K_7', 'K_8', 'K_9', 'K_AGAIN', 'K_AMPERSAND', 'K_APPLICATION', 'K_ASTERISK', 'K_AT', 'K_BACKSLASH', 'K_BACKSPACE', 'K_CALL', 'K_CAPS', 'K_CARET', 'K_CHANNEL_DEC', 'K_CHANNEL_INC', 'K_COLON', 'K_COMMA', 'K_COPY', 'K_CUT', 'K_DBLQUOTE', 'K_DEL', 'K_DOLLAR', 'K_DOWN', 'K_END', 'K_ENDCALL', 'K_EQ', 'K_ESC', 'K_EXCLAIM', 'K_EXECUTE', 'K_F1', 'K_F10', 'K_F11', 'K_F12', 'K_F13', 'K_F14', 'K_F15', 'K_F2', 'K_F3', 'K_F4', 'K_F5', 'K_F6', 'K_F7', 'K_F8', 'K_F9', 'K_FIND', 'K_GRAVE', 'K_GT', 'K_HASH', 'K_HELP', 'K_HOME', 'K_INS', 'K_KP_0', 'K_KP_1', 'K_KP_2', 'K_KP_3', 'K_KP_4', 'K_KP_5', 'K_KP_6', 'K_KP_7', 'K_KP_8', 'K_KP_9', 'K_KP_DIV', 'K_KP_ENTER', 'K_KP_MINUS', 'K_KP_MULT', 'K_KP_PERIOD', 'K_KP_PLUS', 'K_LALT', 'K_LBRACE', 'K_LBRACKET', 'K_LCTRL', 'K_LEFT', 'K_LGUI', 'K_LPAREN', 'K_LSHIFT', 'K_LT', 'K_MEDIA_EJECT', 'K_MEDIA_FF', 'K_MEDIA_NEXT', 'K_MEDIA_PAUSE', 'K_MEDIA_PLAY', 'K_MEDIA_PLAY_PAUSE', 'K_MEDIA_PREV', 'K_MEDIA_REC', 'K_MEDIA_REWIND', 'K_MEDIA_SELECT', 'K_MEDIA_STOP', 'K_MENU', 'K_MINUS', 'K_MODE', 'K_MUTE', 'K_NUMLOCK', 'K_PASTE', 'K_PAUSE', 'K_PERCENT', 'K_PERIOD', 'K_PGDOWN', 'K_PGUP', 'K_PIPE', 'K_PLUS', 'K_POWER', 'K_PRTSCR', 'K_QUESTION', 'K_RALT', 'K_RBRACE', 'K_RBRACKET', 'K_RCTRL', 'K_RETURN', 'K_RGUI', 'K_RIGHT', 'K_RPAREN', 'K_RSHIFT', 'K_SCRLK', 'K_SELECT', 'K_SEMICOLON', 'K_SGLQUOTE', 'K_SLASH', 'K_SLEEP', 'K_SOFTLEFT', 'K_SOFTRIGHT', 'K_SPACE', 'K_STOP', 'K_TAB', 'K_TILDE', 'K_UNDERSCORE', 'K_UNDO', 'K_UNKNOWN', 'K_UP', 'K_VOLDOWN', 'K_VOLUP', 'K_WAKE', 'K_a', 'K_b', 'K_c', 'K_d', 'K_e', 'K_f', 'K_g', 'K_h', 'K_i', 'K_j', 'K_k', 'K_l', 'K_m', 'K_n', 'K_o', 'K_p', 'K_q', 'K_r', 'K_s', 'K_t', 'K_u', 'K_v', 'K_w', 'K_x', 'K_y', 'K_z', 'Keycode', 'LOCALE_CHANGED', 'LOW_MEMORY', 'Line', 'MOUSE_ADDED', 'MOUSE_BUTTON_DOWN', 'MOUSE_BUTTON_UP', 'MOUSE_MOTION', 'MOUSE_REMOVED', 'MOUSE_WHEEL', 'M_LEFT', 'M_MIDDLE', 'M_RIGHT', 'M_SIDE1', 'M_SIDE2', 'Mask', 'MouseButton', 'Orchestrator', 'PEN_AXIS', 'PEN_BUTTON_DOWN', 'PEN_BUTTON_UP', 'PEN_DOWN', 'PEN_MOTION', 'PEN_PROXIMITY_IN', 'PEN_PROXIMITY_OUT', 'PEN_UP', 'PINCH_BEGIN', 'PINCH_END', 'PINCH_UPDATE', 'P_DISTANCE', 'P_PRESSURE', 'P_ROTATION', 'P_SLIDER', 'P_TANGENTIAL_PRESSURE', 'P_TILT_X', 'P_TILT_Y', 'PenAxis', 'PixelArray', 'PolarCoordinate', 'Polygon', 'QUIT', 'RENDER_DEVICE_LOST', 'RENDER_DEVICE_RESET', 'RENDER_TARGETS_RESET', 'Rect', 'SCREEN_KEYBOARD_HIDDEN', 'SCREEN_KEYBOARD_SHOWN', 'SENSOR_UPDATE', 'SYSTEM_THEME_CHANGED', 'S_0', 'S_1', 'S_2', 'S_3', 'S_4', 'S_5', 'S_6', 'S_7', 'S_8', 'S_9', 'S_AGAIN', 'S_APOSTROPHE', 'S_APPLICATION', 'S_BACKSLASH', 'S_BACKSPACE', 'S_CALL', 'S_CAPS', 'S_CHANNEL_DEC', 'S_CHANNEL_INC', 'S_COMMA', 'S_COPY', 'S_CUT', 'S_DEL', 'S_DOWN', 'S_END', 'S_ENDCALL', 'S_EQ', 'S_ESC', 'S_EXECUTE', 'S_F1', 'S_F10', 'S_F11', 'S_F12', 'S_F13', 'S_F14', 'S_F15', 'S_F2', 'S_F3', 'S_F4', 'S_F5', 'S_F6', 'S_F7', 'S_F8', 'S_F9', 'S_FIND', 'S_GRAVE', 'S_HELP', 'S_HOME', 'S_INS', 'S_KP_0', 'S_KP_1', 'S_KP_2', 'S_KP_3', 'S_KP_4', 'S_KP_5', 'S_KP_6', 'S_KP_7', 'S_KP_8', 'S_KP_9', 'S_KP_DIV', 'S_KP_ENTER', 'S_KP_MINUS', 'S_KP_MULT', 'S_KP_PERIOD', 'S_KP_PLUS', 'S_LALT', 'S_LBRACKET', 'S_LCTRL', 'S_LEFT', 'S_LGUI', 'S_LSHIFT', 'S_MEDIA_EJECT', 'S_MEDIA_FAST_FORWARD', 'S_MEDIA_NEXT', 'S_MEDIA_PAUSE', 'S_MEDIA_PLAY', 'S_MEDIA_PLAY_PAUSE', 'S_MEDIA_PREV', 'S_MEDIA_REC', 'S_MEDIA_REWIND', 'S_MEDIA_SELECT', 'S_MEDIA_STOP', 'S_MENU', 'S_MINUS', 'S_MODE', 'S_MUTE', 'S_NUMLOCK', 'S_PASTE', 'S_PAUSE', 'S_PERIOD', 'S_PGDOWN', 'S_PGUP', 'S_POWER', 'S_PRTSCR', 'S_RALT', 'S_RBRACKET', 'S_RCTRL', 'S_RETURN', 'S_RGUI', 'S_RIGHT', 'S_RSHIFT', 'S_SCRLK', 'S_SELECT', 'S_SEMICOLON', 'S_SLASH', 'S_SLEEP', 'S_SOFTLEFT', 'S_SOFTRIGHT', 'S_SPACE', 'S_STOP', 'S_TAB', 'S_UNDO', 'S_UP', 'S_VOLDOWN', 'S_VOLUP', 'S_WAKE', 'S_a', 'S_b', 'S_c', 'S_d', 'S_e', 'S_f', 'S_g', 'S_h', 'S_i', 'S_j', 'S_k', 'S_l', 'S_m', 'S_n', 'S_o', 'S_p', 'S_q', 'S_r', 'S_s', 'S_t', 'S_u', 'S_v', 'S_w', 'S_x', 'S_y', 'S_z', 'Scancode', 'ScrollMode', 'ShaderState', 'SheetStrip', 'Sprite', 'TERMINATING', 'TEXT_EDITING', 'TEXT_EDITING_CANDIDATES', 'TEXT_INPUT', 'Text', 'Texture', 'TextureAccess', 'TextureScaleMode', 'Timer', 'Transform', 'Vec2', 'Vertex', 'ViewportMode', 'WILL_ENTER_BACKGROUND', 'WILL_ENTER_FOREGROUND', 'WINDOW_CLOSE_REQUESTED', 'WINDOW_DESTROYED', 'WINDOW_DISPLAY_CHANGED', 'WINDOW_DISPLAY_SCALE_CHANGED', 'WINDOW_ENTER_FULLSCREEN', 'WINDOW_EXPOSED', 'WINDOW_FOCUS_GAINED', 'WINDOW_FOCUS_LOST', 'WINDOW_HDR_STATE_CHANGED', 'WINDOW_HIDDEN', 'WINDOW_HIT_TEST', 'WINDOW_ICCPROF_CHANGED', 'WINDOW_LEAVE_FULLSCREEN', 'WINDOW_MAXIMIZED', 'WINDOW_MINIMIZED', 'WINDOW_MOUSE_ENTER', 'WINDOW_MOUSE_LEAVE', 'WINDOW_MOVED', 'WINDOW_OCCLUDED', 'WINDOW_RESIZED', 'WINDOW_RESTORED', 'WINDOW_SAFE_AREA_CHANGED', 'WINDOW_SHOWN', 'collision', 'color', 'draw', 'ease', 'event', 'gamepad', 'init', 'input', 'key', 'line', 'log', 'math', 'mixer', 'mouse', 'pixel_array', 'quit', 'rect', 'renderer', 'tilemap', 'time', 'transform', 'viewport', 'window']
 class Align(enum.IntEnum):
     """
     
@@ -215,159 +216,6 @@ class AnimationController:
         Returns:
             float: The animation progress as a value between 0.0 and 1.0.
         """
-class Audio:
-    """
-    
-    A decoded audio object that supports multiple simultaneous playbacks.
-    
-    Audio objects decode the entire file into memory for low-latency playback. They support
-    multiple concurrent playbacks of the same sound. Use this for short sound effects that may need to overlap.
-        
-    """
-    def __init__(self, file_path: str, volume: typing.SupportsFloat = 1.0) -> None:
-        """
-        Create an Audio object from a file path with optional volume.
-        
-        Args:
-            file_path (str): Path to the audio file to load.
-            volume (float, optional): Initial volume level (0.0 to 1.0+). Defaults to 1.0.
-        
-        Raises:
-            RuntimeError: If the audio file cannot be loaded or decoded.
-        """
-    def play(self, fade_in_ms: typing.SupportsInt = 0, loop: bool = False) -> None:
-        """
-        Play the audio with optional fade-in time and loop setting.
-        
-        Creates a new voice for playback, allowing multiple simultaneous plays of the same audio.
-        Each play instance is independent and can have different fade and loop settings.
-        
-        Args:
-            fade_in_ms (int, optional): Fade-in duration in milliseconds. Defaults to 0.
-            loop (bool, optional): Whether to loop the audio continuously. Defaults to False.
-        
-        Raises:
-            RuntimeError: If audio playback initialization fails.
-        """
-    def stop(self, fade_out_ms: typing.SupportsInt = 0) -> None:
-        """
-        Stop all active playbacks of this audio.
-        
-        Stops all currently playing voices associated with this Audio object. If a fade-out
-        time is specified, all voices will fade out over that duration before stopping.
-        
-        Args:
-            fade_out_ms (int, optional): Fade-out duration in milliseconds. Defaults to 0.
-        """
-    @property
-    def volume(self) -> float:
-        """
-        The volume level for new and existing playbacks.
-        
-        Setting this property affects all currently playing voices and sets the default
-        volume for future playbacks. Volume can exceed 1.0 for amplification.
-        
-        Type:
-            float: Volume level (0.0 = silent, 1.0 = original volume, >1.0 = amplified).
-        """
-    @volume.setter
-    def volume(self, arg1: typing.SupportsFloat) -> None:
-        ...
-class AudioStream:
-    """
-    
-    A streaming audio object for single-instance playback of large audio files.
-    
-    AudioStream objects stream audio data from disk during playback, using minimal memory.
-    They support only one playback instance at a time, making them ideal for background
-    music, long audio tracks, or when memory usage is a concern.
-        
-    """
-    def __init__(self, file_path: str, volume: typing.SupportsFloat = 1.0) -> None:
-        """
-        Create an AudioStream object from a file path with optional volume.
-        
-        Args:
-            file_path (str): Path to the audio file to stream.
-            volume (float, optional): Initial volume level (0.0 to 1.0+). Defaults to 1.0.
-        
-        Raises:
-            RuntimeError: If the audio file cannot be opened for streaming.
-        """
-    def pause(self) -> None:
-        """
-        Pause the audio stream playback.
-        
-        The stream position is preserved and can be resumed with resume().
-        """
-    def play(self, fade_in_ms: typing.SupportsInt = 0, loop: bool = False, start_time_seconds: typing.SupportsFloat = 0.0) -> None:
-        """
-        Play the audio stream with optional fade-in time, loop setting, and start position.
-        
-        Starts playback from the specified time position. If the stream is already
-        playing, it will restart from the specified position.
-        
-        Args:
-            fade_in_ms (int, optional): Fade-in duration in milliseconds. Defaults to 0.
-            loop (bool, optional): Whether to loop the audio continuously. Defaults to False.
-            start_time_seconds (float, optional): Time position in seconds to start playback from. Defaults to 0.0.
-        """
-    def resume(self) -> None:
-        """
-        Resume paused audio stream playback.
-        
-        Continues playback from the current stream position.
-        """
-    def rewind(self) -> None:
-        """
-        Rewind the audio stream to the beginning.
-        
-        Sets the playback position back to the start of the audio file. Does not affect
-        the current play state (playing/paused).
-        """
-    def seek(self, time_seconds: typing.SupportsFloat) -> None:
-        """
-        Seek to a specific time position in the audio stream.
-        
-        Sets the playback position to the specified time in seconds. Does not affect
-        the current play state (playing/paused).
-        
-        Args:
-            time_seconds (float): The time position in seconds to seek to.
-        """
-    def set_looping(self, loop: bool) -> None:
-        """
-        Set whether the audio stream loops continuously.
-        
-        Args:
-            loop (bool): True to enable looping, False to disable.
-        """
-    def stop(self, fade_out_ms: typing.SupportsInt = 0) -> None:
-        """
-        Stop the audio stream playback.
-        
-        Args:
-            fade_out_ms (int, optional): Fade-out duration in milliseconds. If 0, stops immediately.
-                                      If > 0, fades out over the specified duration. Defaults to 0.
-        """
-    @property
-    def current_time(self) -> float:
-        """
-        The current playback time position in seconds.
-        """
-    @property
-    def volume(self) -> float:
-        """
-        The volume level of the audio stream.
-        
-        Volume can exceed 1.0 for amplification.
-        
-        Type:
-            float: Volume level (0.0 = silent, 1.0 = original volume, >1.0 = amplified).
-        """
-    @volume.setter
-    def volume(self, arg1: typing.SupportsFloat) -> None:
-        ...
 class Camera:
     """
     
