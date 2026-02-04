@@ -18,14 +18,14 @@ static TTF_TextEngine* _textEngine = nullptr;
 static std::vector<Text*> _textInstances;
 static std::mutex _textsMutex;
 
-Text::Text(const Font& font)
+Text::Text(const Font& font, const std::string& text)
 {
     if (!_textEngine)
     {
         throw std::runtime_error("Text engine not initialized; create a window first");
     }
 
-    m_text = TTF_CreateText(_textEngine, font._get(), "", 0);
+    m_text = TTF_CreateText(_textEngine, font._get(), text.c_str(), 0);
     if (!m_text)
     {
         throw std::runtime_error(std::string("Failed to create text: ") + SDL_GetError());
@@ -276,12 +276,13 @@ Note:
     call kn.window.create(...) first, which initializes the text engine.
     )doc")
         .def(
-            py::init<const Font&>(), py::arg("font"),
+            py::init<const Font&, const std::string&>(), py::arg("font"), py::arg("text") = "",
             R"doc(
 Create a Text object.
 
 Args:
     font (Font): The font to use for rendering this text.
+    text (str): The initial text string (optional, defaults to empty).
 
 Raises:
     RuntimeError: If text creation fails.

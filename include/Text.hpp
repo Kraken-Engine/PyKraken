@@ -30,7 +30,7 @@ class Text
     Color shadowColor{};
     Vec2 shadowOffset{};
 
-    Text(const Font& font);
+    Text(const Font& font, const std::string& text = "");
     ~Text();
 
     void draw(Vec2 pos = {}, const Vec2& anchor = Anchor::TOP_LEFT) const;

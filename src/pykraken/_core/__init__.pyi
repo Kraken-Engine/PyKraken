@@ -2649,12 +2649,13 @@ class Text:
         call kn.window.create(...) first, which initializes the text engine.
         
     """
-    def __init__(self, font: Font) -> None:
+    def __init__(self, font: Font, text: str = '') -> None:
         """
         Create a Text object.
         
         Args:
             font (Font): The font to use for rendering this text.
+            text (str): The initial text string (optional, defaults to empty).
         
         Raises:
             RuntimeError: If text creation fails.

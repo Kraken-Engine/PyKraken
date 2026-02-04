@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for polyphonic sound effects via the `Sample` class and `max_polyphony` attribute.
 - Priority-based track stealing: high-priority sounds can now interrupt lower-priority ones if the 64-track limit is reached.
 - Global master volume control via `mixer.set_master_volume`.
+- `draw.ellipses` and `draw.lines` functions for drawing multiple ellipses or lines in a single call.
 
 ### Changed
 - Refactored the audio backend to use SDL3_mixer.
@@ -21,10 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Audio loading functions moved to `mixer.load_sample` and `mixer.load_stream`.
 - `Stream.looping` is now an RW property instead of just a setter method.
 - `Stream` playback position renamed from `current_time` to `playback_pos`.
+- Circle drawing (and now ellipses) default segment count reduced from 36 to 24.
+- Line drawing thickess can now be a float
 
 ### Removed
 - Removed `rewind` method from audio stream class (use `seek(0)` or restart playback).
 - Removed `miniaudio` dependency.
+- Removed `SGL_gfx` dependency.
 
 ## [1.6.0] - 2026-01-29
 
