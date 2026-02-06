@@ -17,29 +17,6 @@
 #define M_PI 3.1415926535897932384626433832795
 #endif
 
-namespace mapbox
-{
-namespace util
-{
-template <>
-struct nth<0, kn::Vec2>
-{
-    inline static float get(const kn::Vec2& v)
-    {
-        return v.x;
-    }
-};
-template <>
-struct nth<1, kn::Vec2>
-{
-    inline static float get(const kn::Vec2& v)
-    {
-        return v.y;
-    }
-};
-}  // namespace util
-}  // namespace mapbox
-
 namespace kn::draw
 {
 void _ellipseFilled(

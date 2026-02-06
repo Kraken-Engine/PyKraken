@@ -65,8 +65,9 @@ endif()
 set(PYK_MODULE_NAME    "_core"    CACHE STRING "Python extension module name")
 set(PYK_PACKAGE_DIR    "pykraken" CACHE STRING "Where to install the module inside the wheel")
 set(PYK_SOURCES_GLOB   "src/*.cpp;src/**/*.cpp" CACHE STRING "Glob(s) for C++ sources")
-option(PYK_VENDOR_SDL  "Vendor SDL3, SDL_image, SDL_ttf, SDL_mixer (static) via FetchContent" ON)
+option(PYK_VENDOR_SDL  "Vendor SDL3, SDL_image, SDL_ttf, SDL_mixer (static) via FetchContent" OFF)
 option(PYK_VENDOR_TMXLITE "Vendor tmxlite (static) via FetchContent" ON)
+option(PYK_VENDOR_BOX2D   "Vendor Box2D (static) via FetchContent"    ON)
 option(PYK_VENDOR_PYBIND11 "Vendor pybind11 via FetchContent" OFF)
 
 # -------------------------
@@ -237,11 +238,28 @@ else()
 endif()
 
 # -------------------------
+# Box2D
+# -------------------------
+if (PYK_VENDOR_BOX2D)
+  set(BOX2D_SAMPLES OFF CACHE BOOL "" FORCE)
+  set(BOX2D_UNIT_TESTS OFF CACHE BOOL "" FORCE)
+  FetchContent_Declare(box2d
+      GIT_REPOSITORY https://github.com/erincatto/box2d.git
+      GIT_TAG        v3.1.1
+      GIT_SHALLOW    TRUE
+  )
+  FetchContent_MakeAvailable(box2d)
+else()
+  find_package(box2d CONFIG REQUIRED)
+endif()
+
+# -------------------------
 # Link libraries
 # -------------------------
 target_link_libraries(${PYK_MODULE_NAME} PRIVATE
   ${_sdl_targets}
   tmxlite
+  box2d
 )
 
 # -------------------------

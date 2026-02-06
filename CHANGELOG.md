@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Priority-based track stealing: high-priority sounds can now interrupt lower-priority ones if the 64-track limit is reached.
 - Global master volume control via `mixer.set_master_volume`.
 - `draw.ellipses` and `draw.lines` functions for drawing multiple ellipses or lines in a single call.
+- Added `is_convex` and `is_concave` methods to the `Polygon` class for checking polygon convexity.
+- Added `Circle` default constructor and another accepting just a radius.
+- New `physics` submodule with `World` and `Body` classes for basic 2D physics simulation.
+- `BodyType` enum for specifying physics body types (STATIC, DYNAMIC, KINEMATIC).
 
 ### Changed
 - Refactored the audio backend to use SDL3_mixer.
@@ -23,7 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Stream.looping` is now an RW property instead of just a setter method.
 - `Stream` playback position renamed from `current_time` to `playback_pos`.
 - Circle drawing (and now ellipses) default segment count reduced from 36 to 24.
-- Line drawing thickess can now be a float
+- Line drawing thickess can now be a float.
+
+### Fixed
+- Fixed a bug where textures wouldn't render at all (hopefully).
 
 ### Removed
 - Removed `rewind` method from audio stream class (use `seek(0)` or restart playback).

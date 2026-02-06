@@ -18,6 +18,7 @@ class Circle
     double radius = 0.0;
 
     Circle() = default;
+    Circle(double radius);
     Circle(const Vec2& center, double radius);
     Circle(double x, double y, double radius);
 

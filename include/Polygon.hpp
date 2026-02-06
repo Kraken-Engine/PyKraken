@@ -25,6 +25,8 @@ class Polygon
     [[nodiscard]] double getArea() const;
     [[nodiscard]] Vec2 getCentroid() const;
     [[nodiscard]] class Rect getRect() const;
+    [[nodiscard]] bool isConvex() const;
+    [[nodiscard]] bool isConcave() const;
 
     void rotate(double angle, const Vec2& pivot = {0.5, 0.5});
     void translate(const Vec2& offset);

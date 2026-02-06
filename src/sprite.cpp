@@ -20,7 +20,7 @@ void Sprite::draw() const
     if (!visible || !texture)
         return;
 
-    renderer::draw(texture, transform);
+    renderer::draw(*texture, transform);
 }
 
 void Sprite::move()

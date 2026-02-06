@@ -9,6 +9,11 @@
 
 namespace kn
 {
+Circle::Circle(const double radius)
+    : radius(radius)
+{
+}
+
 Circle::Circle(const Vec2& center, const double radius)
     : pos(center),
       radius(radius)
@@ -64,6 +69,15 @@ Represents a circle shape with position and radius.
 Supports collision detection with points, rectangles, other circles, and lines.
     )doc")
 
+        .def(py::init<>(), R"doc(
+Create a circle with default position (0, 0) and radius 0.
+        )doc")
+        .def(py::init<double>(), py::arg("radius"), R"doc(
+Create a circle with a specified radius at the default position (0, 0).
+
+Args:
+    radius (float): The radius of the circle.
+        )doc")
         .def(py::init<const Vec2&, double>(), py::arg("pos"), py::arg("radius"), R"doc(
 Create a circle at a given position and radius.
 

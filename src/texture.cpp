@@ -146,8 +146,8 @@ Texture::Texture(
         throw std::runtime_error("Failed to get texture size: " + std::string(SDL_GetError()));
     }
     m_width = static_cast<double>(w);
-    m_clipArea = {0.0, 0.0, m_width, m_height};
     m_height = static_cast<double>(h);
+    m_clipArea = {0.0, 0.0, m_width, m_height};
 }
 
 Texture::~Texture()
@@ -339,6 +339,18 @@ Get or set the alpha modulation of the texture as a float between `0.0` and `1.0
         )doc")
         .def_property("clip_area", &Texture::getClipArea, &Texture::setClipArea, R"doc(
 Get or set the clip area (atlas region) of the texture.
+        )doc")
+        .def_property("tint", &Texture::getTint, &Texture::setTint, R"doc(
+Get or set the color tint applied to the texture.
+        )doc")
+        .def_property_readonly("width", &Texture::getWidth, R"doc(
+The width of the texture in pixels.
+        )doc")
+        .def_property_readonly("height", &Texture::getHeight, R"doc(
+The height of the texture in pixels.
+        )doc")
+        .def_property_readonly("size", &Texture::getSize, R"doc(
+The dimensions of the texture as a `Vec2`.
         )doc")
 
         .def("make_additive", &Texture::makeAdditive, R"doc(

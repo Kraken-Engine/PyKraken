@@ -563,7 +563,7 @@ void TileLayer::draw()
             setTexture->flip.v = flipInfo.v;
 
             setTexture->setClipArea(setTile->getClipArea());
-            renderer::draw(setTexture, renderTransform);
+            renderer::draw(*setTexture, renderTransform);
         }
     }
 }
@@ -764,7 +764,7 @@ void ObjectGroup::draw()
                 Transform renderTransform = obj.transform;
                 renderTransform.pos += offset;
                 setTexture->setClipArea(tile->getClipArea());
-                renderer::draw(setTexture, renderTransform);
+                renderer::draw(*setTexture, renderTransform);
             }
 
             continue;
@@ -834,7 +834,7 @@ void ImageLayer::draw()
     if (!visible)
         return;
 
-    renderer::draw(m_texture, transform);
+    renderer::draw(*m_texture, transform);
 }
 
 void ImageLayer::setOpacity(const double value)

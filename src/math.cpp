@@ -279,7 +279,13 @@ Vec2::operator SDL_Point() const
 {
     return {static_cast<int>(x), static_cast<int>(y)};
 }
+
 Vec2::operator SDL_FPoint() const
+{
+    return {static_cast<float>(x), static_cast<float>(y)};
+}
+
+Vec2::operator b2Vec2() const
 {
     return {static_cast<float>(x), static_cast<float>(y)};
 }
