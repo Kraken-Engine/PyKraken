@@ -18,6 +18,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `Circle` default constructor and another accepting just a radius.
 - New `physics` submodule with `World` and `Body` classes for basic 2D physics simulation.
 - `BodyType` enum for specifying physics body types (STATIC, DYNAMIC, KINEMATIC).
+- `Joint` abstract class for the following joint types:
+    - `DistanceJoint` for maintaining a fixed distance between two bodies.
+    - `FilterJoint` for filtering collisions between two bodies.
+    - `MotorJoint` for applying a motor force to maintain a relative position between two bodies.
+    - `PrismaticJoint` for allowing relative movement along a specified axis between two bodies.
+    - `RevoluteJoint` for allowing relative rotation between two bodies.
+    - `TargetJoint` for pulling a body towards a target position in world space.
+    - `WeldJoint` for rigidly connecting two bodies together.
+    - `WheelJoint` for allowing relative rotation and translation along a specified axis between two bodies.
+- `Collision` class for representing collision information between two bodies. Provided via `World.get_collisions()` method.
 
 ### Changed
 - Refactored the audio backend to use SDL3_mixer.

@@ -1,19 +1,19 @@
 #pragma once
 
 #include <box2d/box2d.h>
-#include <pybind11/pybind11.h>
 
 #include <variant>
 #include <vector>
+
+#include "Circle.hpp"
+#include "Polygon.hpp"
+#include "Rect.hpp"
 
 namespace py = pybind11;
 
 namespace kn
 {
 class Vec2;
-class Circle;
-class Polygon;
-class Rect;
 struct Color;
 
 namespace physics
@@ -34,14 +34,16 @@ class Body
     ~Body() = default;
 
     void addCollider(
-        const Circle& circle, float density = 1.0f, float friction = 0.2f, float restitution = 0.0f
+        const Circle& circle, float density = 1.0f, float friction = 0.2f, float restitution = 0.0f,
+        bool enableEvents = false, bool isSensor = false
     );
     void addCollider(
         const Polygon& polygon, float density = 1.0f, float friction = 0.2f,
-        float restitution = 0.0f
+        float restitution = 0.0f, bool enableEvents = false, bool isSensor = false
     );
     void addCollider(
-        const Rect& rect, float density = 1.0f, float friction = 0.2f, float restitution = 0.0f
+        const Rect& rect, float density = 1.0f, float friction = 0.2f, float restitution = 0.0f,
+        bool enableEvents = false, bool isSensor = false
     );
 
     void setType(BodyType type);
@@ -59,6 +61,18 @@ class Body
     void setAngularVelocity(float velocity);
     float getAngularVelocity() const;
 
+    void setLinearDamping(float damping);
+    float getLinearDamping() const;
+
+    void setAngularDamping(float damping);
+    float getAngularDamping() const;
+
+    void setFixedRotation(bool fixed);
+    bool isFixedRotation() const;
+
+    bool isAwake() const;
+    void wake();
+
     void applyForce(const Vec2& force, const Vec2& point, bool wake = true);
     void applyForceToCenter(const Vec2& force, bool wake = true);
     void applyTorque(float torque, bool wake = true);
@@ -70,8 +84,12 @@ class Body
 
     bool isValid() const;
 
+    void destroy();
+
+    bool operator==(const Body& other) const;
+    bool operator!=(const Body& other) const;
+
     void draw(const Color& color) const;
-    std::vector<std::variant<Circle, Polygon, Rect>> getShapes() const;
 
   private:
     b2BodyId m_bodyId = b2_nullBodyId;
@@ -81,7 +99,8 @@ class Body
 
     void _checkValid() const;
 
-    friend World;
+    friend class World;
+    friend class Joint;
 };
 }  // namespace physics
 }  // namespace kn

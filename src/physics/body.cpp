@@ -2,11 +2,9 @@
 
 #include <mapbox/earcut.hpp>
 
-#include "Circle.hpp"
 #include "Color.hpp"
 #include "Draw.hpp"
-#include "Polygon.hpp"
-#include "Rect.hpp"
+#include "Line.hpp"
 
 namespace kn::physics
 {
@@ -15,7 +13,19 @@ Body::Body(b2BodyId bodyId)
 {
 }
 
-void Body::addCollider(const Circle& circle, float density, float friction, float restitution)
+void Body::destroy()
+{
+    if (b2Body_IsValid(m_bodyId))
+    {
+        b2DestroyBody(m_bodyId);
+        m_bodyId = b2_nullBodyId;
+    }
+}
+
+void Body::addCollider(
+    const Circle& circle, float density, float friction, float restitution, bool enableEvents,
+    bool isSensor
+)
 {
     _checkValid();
     b2Circle b2c;
@@ -26,12 +36,17 @@ void Body::addCollider(const Circle& circle, float density, float friction, floa
     shapeDef.density = density;
     shapeDef.material.friction = friction;
     shapeDef.material.restitution = restitution;
+    shapeDef.enableHitEvents = enableEvents;
+    shapeDef.isSensor = isSensor;
 
     b2CreateCircleShape(m_bodyId, &shapeDef, &b2c);
     m_shapes.emplace_back(circle);
 }
 
-void Body::addCollider(const Polygon& polygon, float density, float friction, float restitution)
+void Body::addCollider(
+    const Polygon& polygon, float density, float friction, float restitution, bool enableEvents,
+    bool isSensor
+)
 {
     _checkValid();
     const size_t numPoints = polygon.points.size();
@@ -52,6 +67,8 @@ void Body::addCollider(const Polygon& polygon, float density, float friction, fl
         shapeDef.density = density;
         shapeDef.material.friction = friction;
         shapeDef.material.restitution = restitution;
+        shapeDef.enableHitEvents = enableEvents;
+        shapeDef.isSensor = isSensor;
 
         b2CreatePolygonShape(m_bodyId, &shapeDef, &poly);
     }
@@ -75,6 +92,8 @@ void Body::addCollider(const Polygon& polygon, float density, float friction, fl
             shapeDef.density = density;
             shapeDef.material.friction = friction;
             shapeDef.material.restitution = restitution;
+            shapeDef.enableHitEvents = enableEvents;
+            shapeDef.isSensor = isSensor;
 
             b2CreatePolygonShape(m_bodyId, &shapeDef, &poly);
         }
@@ -82,7 +101,10 @@ void Body::addCollider(const Polygon& polygon, float density, float friction, fl
     m_shapes.emplace_back(polygon);
 }
 
-void Body::addCollider(const Rect& rect, float density, float friction, float restitution)
+void Body::addCollider(
+    const Rect& rect, float density, float friction, float restitution, bool enableEvents,
+    bool isSensor
+)
 {
     _checkValid();
 
@@ -100,6 +122,8 @@ void Body::addCollider(const Rect& rect, float density, float friction, float re
     shapeDef.density = density;
     shapeDef.material.friction = friction;
     shapeDef.material.restitution = restitution;
+    shapeDef.enableHitEvents = enableEvents;
+    shapeDef.isSensor = isSensor;
 
     b2CreatePolygonShape(m_bodyId, &shapeDef, &box);
     m_shapes.emplace_back(rect);
@@ -169,6 +193,54 @@ float Body::getAngularVelocity() const
     return b2Body_GetAngularVelocity(m_bodyId);
 }
 
+void Body::setLinearDamping(float damping)
+{
+    _checkValid();
+    b2Body_SetLinearDamping(m_bodyId, damping);
+}
+
+float Body::getLinearDamping() const
+{
+    _checkValid();
+    return b2Body_GetLinearDamping(m_bodyId);
+}
+
+void Body::setAngularDamping(float damping)
+{
+    _checkValid();
+    b2Body_SetAngularDamping(m_bodyId, damping);
+}
+
+float Body::getAngularDamping() const
+{
+    _checkValid();
+    return b2Body_GetAngularDamping(m_bodyId);
+}
+
+void Body::setFixedRotation(bool fixed)
+{
+    _checkValid();
+    b2Body_SetFixedRotation(m_bodyId, fixed);
+}
+
+bool Body::isFixedRotation() const
+{
+    _checkValid();
+    return b2Body_IsFixedRotation(m_bodyId);
+}
+
+bool Body::isAwake() const
+{
+    _checkValid();
+    return b2Body_IsAwake(m_bodyId);
+}
+
+void Body::wake()
+{
+    _checkValid();
+    b2Body_SetAwake(m_bodyId, true);
+}
+
 void Body::applyForce(const Vec2& force, const Vec2& point, bool wake)
 {
     _checkValid();
@@ -218,6 +290,17 @@ bool Body::isValid() const
     return b2Body_IsValid(m_bodyId);
 }
 
+bool Body::operator==(const Body& other) const
+{
+    return m_bodyId.index1 == other.m_bodyId.index1 && m_bodyId.world0 == other.m_bodyId.world0 &&
+           m_bodyId.generation == other.m_bodyId.generation;
+}
+
+bool Body::operator!=(const Body& other) const
+{
+    return !(*this == other);
+}
+
 void Body::_checkValid() const
 {
     if (!b2Body_IsValid(m_bodyId))
@@ -230,6 +313,9 @@ void Body::draw(const Color& color) const
     const Vec2 bodyPos = getPos();
     const float bodyRot = getRotation();
 
+    const double luminance = 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
+    const auto lineColor = luminance > 128.0 ? Color{0, 0, 0, 255} : Color{255, 255, 255, 255};
+
     for (const auto& shapeVariant : m_shapes)
     {
         if (std::holds_alternative<Circle>(shapeVariant))
@@ -237,6 +323,9 @@ void Body::draw(const Color& color) const
             Circle circle = std::get<Circle>(shapeVariant);
             circle.pos = bodyPos + circle.pos.rotated(bodyRot);
             kn::draw::circle(circle, color);
+
+            const Vec2 corner = circle.pos + Vec2(circle.radius, 0.0).rotated(bodyRot);
+            kn::draw::line(Line(circle.pos, corner), lineColor);
         }
         else if (std::holds_alternative<Polygon>(shapeVariant))
         {
@@ -248,17 +337,19 @@ void Body::draw(const Color& color) const
         else if (std::holds_alternative<Rect>(shapeVariant))
         {
             const Rect& rect = std::get<Rect>(shapeVariant);
-            const Vec2 center = {rect.x + rect.w / 2.0, rect.y + rect.h / 2.0};
-            const Vec2 hSize = {rect.w / 2.0, rect.h / 2.0};
             std::vector<Vec2> points = {
-                Vec2(center.x - hSize.x, center.y - hSize.y),
-                Vec2(center.x + hSize.x, center.y - hSize.y),
-                Vec2(center.x + hSize.x, center.y + hSize.y),
-                Vec2(center.x - hSize.x, center.y + hSize.y),
+                rect.getTopLeft(),
+                rect.getTopRight(),
+                rect.getBottomRight(),
+                rect.getBottomLeft(),
             };
             for (auto& p : points)
                 p = bodyPos + p.rotated(bodyRot);
             kn::draw::polygon(Polygon(points), color);
+
+            const Vec2 localCenter = rect.getCenter();
+            const Vec2 worldCenter = bodyPos + localCenter.rotated(bodyRot);
+            kn::draw::line(Line(worldCenter, points[0]), lineColor);
         }
     }
 }

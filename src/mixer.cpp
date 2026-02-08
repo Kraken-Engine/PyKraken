@@ -683,29 +683,6 @@ void _quit()
     }
 }
 
-class PyAudio : public Audio, public py::trampoline_self_life_support
-{
-  public:
-    using Audio::Audio;
-
-    void setVolume(float volume) override
-    {
-        PYBIND11_OVERRIDE_PURE(void, Audio, setVolume, volume);
-    }
-    bool isPlaying() const override
-    {
-        PYBIND11_OVERRIDE_PURE(bool, Audio, isPlaying);
-    }
-    void play(double fadeInSeconds) override
-    {
-        PYBIND11_OVERRIDE_PURE(void, Audio, play, fadeInSeconds);
-    }
-    void stop(double fadeOutSeconds) override
-    {
-        PYBIND11_OVERRIDE_PURE(void, Audio, stop, fadeOutSeconds);
-    }
-};
-
 void _bind(py::module_& module)
 {
     auto subMixer = module.def_submodule("mixer", R"doc(
@@ -728,7 +705,7 @@ void _bind(py::module_& module)
         .value("SFX", AudioPriority::SFX, "Standard priority level.")
         .finalize();
 
-    py::classh<Audio, PyAudio>(subMixer, "Audio", R"doc(
+    py::classh<Audio>(subMixer, "Audio", R"doc(
         Abstract base class for all audio resources.
 
         Common interface for local volume and playback status. Local volume
