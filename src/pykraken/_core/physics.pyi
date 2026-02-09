@@ -2,10 +2,9 @@
 Physics engine related classes and functions
 """
 from __future__ import annotations
-import enum
 import pykraken._core
 import typing
-__all__: list[str] = ['Body', 'BodyType', 'Collision', 'DistanceJoint', 'FilterJoint', 'Joint', 'MotorJoint', 'PrismaticJoint', 'RevoluteJoint', 'TargetJoint', 'WeldJoint', 'WheelJoint', 'World']
+__all__: list[str] = ['Body', 'CastHit', 'CharacterBody', 'Collision', 'DistanceJoint', 'FilterJoint', 'Joint', 'MotorJoint', 'MouseJoint', 'PrismaticJoint', 'RevoluteJoint', 'RigidBody', 'StaticBody', 'WeldJoint', 'WheelJoint', 'World', 'get_fixed_delta', 'get_max_substeps', 'set_fixed_delta', 'set_max_substeps']
 class Body:
     __hash__: typing.ClassVar[None] = None
     def __eq__(self, arg0: Body) -> bool:
@@ -51,125 +50,38 @@ class Body:
             enable_events (bool, optional): Whether to enable hit events for this collider. Defaults to False.
             is_sensor (bool, optional): Whether the collider is a sensor. Defaults to False.
         """
-    def apply_angular_impulse(self, impulse: typing.SupportsFloat, wake: bool = True) -> None:
+    @typing.overload
+    def add_collider(self, capsule: pykraken._core.Capsule, density: typing.SupportsFloat = 1.0, friction: typing.SupportsFloat = 0.20000000298023224, restitution: typing.SupportsFloat = 0.0, enable_events: bool = False, is_sensor: bool = False) -> None:
         """
-        Apply an angular impulse to the body.
+        Add a capsule collider to the body.
         
         Args:
-            impulse (float): The angular impulse to apply.
-            wake (bool, optional): Whether to wake the body if it's sleeping. Defaults to True.
+            capsule (Capsule): The capsule shape to add as a collider.
+            density (float, optional): The density of the collider. Defaults to 1.0.
+            friction (float, optional): The friction coefficient of the collider. Defaults to 0.2.
+            restitution (float, optional): The restitution (bounciness) of the collider. Defaults to 0.0.
+            enable_events (bool, optional): Whether to enable hit events for this collider. Defaults to False.
+            is_sensor (bool, optional): Whether the collider is a sensor. Defaults to False.
         """
-    def apply_force(self, force: pykraken._core.Vec2, point: pykraken._core.Vec2, wake: bool = True) -> None:
+    def debug_draw(self) -> None:
         """
-        Apply a force to the body at a specific point.
-        
-        Args:
-            force (Vec2): The force vector to apply.
-            point (Vec2): The point (in world coordinates) where the force is applied.
-            wake (bool, optional): Whether to wake the body if it's sleeping. Defaults to True.
-        """
-    def apply_force_to_center(self, force: pykraken._core.Vec2, wake: bool = True) -> None:
-        """
-        Apply a force to the center of mass of the body.
-        
-        Args:
-            force (Vec2): The force vector to apply.
-            wake (bool, optional): Whether to wake the body if it's sleeping. Defaults to True.
-        """
-    def apply_linear_impulse(self, impulse: pykraken._core.Vec2, point: pykraken._core.Vec2, wake: bool = True) -> None:
-        """
-        Apply a linear impulse to the body at a specific point.
-        
-        Args:
-            impulse (Vec2): The impulse vector to apply.
-            point (Vec2): The point (in world coordinates) where the impulse is applied.
-            wake (bool, optional): Whether to wake the body if it's sleeping. Defaults to True.
-        """
-    def apply_linear_impulse_to_center(self, impulse: pykraken._core.Vec2, wake: bool = True) -> None:
-        """
-        Apply a linear impulse to the center of mass of the body.
-        
-        Args:
-            impulse (Vec2): The impulse vector to apply.
-            wake (bool, optional): Whether to wake the body if it's sleeping. Defaults to True.
-        """
-    def apply_torque(self, torque: typing.SupportsFloat, wake: bool = True) -> None:
-        """
-        Apply a torque to the body.
-        
-        Args:
-            torque (float): The torque to apply.
-            wake (bool, optional): Whether to wake the body if it's sleeping. Defaults to True.
+        Draw all colliders attached to the body (debug/development only).
         """
     def destroy(self) -> None:
         """
         Destroy the body manually.
         """
-    def draw(self, color: pykraken._core.Color) -> None:
+    def get_transform(self) -> pykraken._core.Transform:
         """
-        Draw all colliders attached to the body.
+                    Get the current transform of the body (position, rotation, and scale).
         
-        Args:
-            color (Color): The color to draw the colliders with.
+                    Returns:
+                        Transform: The current transform of the body.
         """
-    def wake(self) -> None:
-        """
-        Manually wake the body from sleep.
-        """
-    @property
-    def angular_damping(self) -> float:
-        """
-        The angular damping of the body.
-        """
-    @angular_damping.setter
-    def angular_damping(self, arg1: typing.SupportsFloat) -> None:
-        ...
-    @property
-    def angular_velocity(self) -> float:
-        """
-        The angular velocity of the body.
-        """
-    @angular_velocity.setter
-    def angular_velocity(self, arg1: typing.SupportsFloat) -> None:
-        ...
-    @property
-    def awake(self) -> bool:
-        """
-        Whether the body is currently awake and participating in simulation.
-        """
-    @property
-    def fixed_rotation(self) -> bool:
-        """
-        Whether the body has fixed rotation.
-        """
-    @fixed_rotation.setter
-    def fixed_rotation(self, arg1: bool) -> None:
-        ...
     @property
     def is_valid(self) -> bool:
         """
         Indicates whether the body is not destroyed.
-        """
-    @property
-    def linear_damping(self) -> float:
-        """
-        The linear damping of the body.
-        """
-    @linear_damping.setter
-    def linear_damping(self, arg1: typing.SupportsFloat) -> None:
-        ...
-    @property
-    def linear_velocity(self) -> pykraken._core.Vec2:
-        """
-        The linear velocity of the body.
-        """
-    @linear_velocity.setter
-    def linear_velocity(self, arg1: pykraken._core.Vec2) -> None:
-        ...
-    @property
-    def mass(self) -> float:
-        """
-        The mass of the body.
         """
     @property
     def pos(self) -> pykraken._core.Vec2:
@@ -187,28 +99,86 @@ class Body:
     @rotation.setter
     def rotation(self, arg1: typing.SupportsFloat) -> None:
         ...
+class CastHit:
     @property
-    def type(self) -> BodyType:
+    def body(self) -> Body:
         """
-        The simulation type of the body.
+        The body that was hit.
         """
-    @type.setter
-    def type(self, arg1: BodyType) -> None:
+    @property
+    def fraction(self) -> float:
+        """
+        The fraction along the cast path at which the hit occurred.
+        """
+    @property
+    def normal(self) -> pykraken._core.Vec2:
+        """
+        The normal vector of the hit surface.
+        """
+    @property
+    def point(self) -> pykraken._core.Vec2:
+        """
+        The point of the hit in world coordinates.
+        """
+class CharacterBody(Body):
+    def __init__(self, world: World) -> None:
         ...
-class BodyType(enum.IntEnum):
-    """
-    Body simulation types in the physics engine.
-    """
-    DYNAMIC: typing.ClassVar[BodyType]  # value = <BodyType.DYNAMIC: 2>
-    KINEMATIC: typing.ClassVar[BodyType]  # value = <BodyType.KINEMATIC: 1>
-    STATIC: typing.ClassVar[BodyType]  # value = <BodyType.STATIC: 0>
-    @classmethod
-    def __new__(cls, value):
+    def is_on_ceiling(self) -> bool:
+        """
+        Whether the character is currently touching a ceiling.
+        """
+    def is_on_floor(self) -> bool:
+        """
+        Whether the character is currently on a floor surface.
+        """
+    def is_on_wall(self) -> bool:
+        """
+        Whether the character is currently touching a wall.
+        """
+    def move_and_slide(self, delta: typing.SupportsFloat = -1.0) -> None:
+        """
+        Perform movement and collision resolution for the character.
+        
+        This method moves the character according to the velocity property and resolves
+        collisions by sliding along surfaces. It also updates the floor/ceiling/wall
+        contact states.
+        
+        Args:
+            delta (float, optional): The time step to use for movement.
+                                     Defaults to -1.0, which uses the frame delta.
+        """
+    @property
+    def floor_max_angle(self) -> float:
+        """
+        Maximum angle (in radians) to consider a surface as a floor. Default is ~45 degrees.
+        """
+    @floor_max_angle.setter
+    def floor_max_angle(self, arg0: typing.SupportsFloat) -> None:
         ...
-    def __format__(self, format_spec):
+    @property
+    def floor_snap_distance(self) -> float:
         """
-        Convert to a string according to format_spec.
+        Distance in pixels to probe downward for floor detection. Default is 5.0.
         """
+    @floor_snap_distance.setter
+    def floor_snap_distance(self, arg0: typing.SupportsFloat) -> None:
+        ...
+    @property
+    def mass(self) -> float:
+        """
+        The mass of the character body. Default is 80.0.
+        """
+    @mass.setter
+    def mass(self, arg0: typing.SupportsFloat) -> None:
+        ...
+    @property
+    def velocity(self) -> pykraken._core.Vec2:
+        """
+        The velocity of the character body.
+        """
+    @velocity.setter
+    def velocity(self, arg0: pykraken._core.Vec2) -> None:
+        ...
 class Collision:
     @property
     def approach_speed(self) -> float:
@@ -417,6 +387,39 @@ class MotorJoint(Joint):
     @max_torque.setter
     def max_torque(self, arg1: typing.SupportsFloat) -> None:
         ...
+class MouseJoint(Joint):
+    @property
+    def max_force(self) -> float:
+        """
+        The maximum constraint force.
+        """
+    @max_force.setter
+    def max_force(self, arg1: typing.SupportsFloat) -> None:
+        ...
+    @property
+    def spring_damping_ratio(self) -> float:
+        """
+        The spring damping ratio.
+        """
+    @spring_damping_ratio.setter
+    def spring_damping_ratio(self, arg1: typing.SupportsFloat) -> None:
+        ...
+    @property
+    def spring_hz(self) -> float:
+        """
+        The spring frequency in Hertz.
+        """
+    @spring_hz.setter
+    def spring_hz(self, arg1: typing.SupportsFloat) -> None:
+        ...
+    @property
+    def target(self) -> pykraken._core.Vec2:
+        """
+        The target point in world coordinates.
+        """
+    @target.setter
+    def target(self, arg1: pykraken._core.Vec2) -> None:
+        ...
 class PrismaticJoint(Joint):
     def set_limits(self, lower: typing.SupportsFloat, upper: typing.SupportsFloat) -> None:
         """
@@ -608,38 +611,115 @@ class RevoluteJoint(Joint):
         """
         The upper angle limit in radians.
         """
-class TargetJoint(Joint):
+class RigidBody(Body):
+    def __init__(self, world: World) -> None:
+        ...
+    def apply_angular_impulse(self, impulse: typing.SupportsFloat, wake: bool = True) -> None:
+        """
+        Apply an angular impulse to the body.
+        
+        Args:
+            impulse (float): The angular impulse to apply.
+            wake (bool, optional): Whether to wake the body if it's sleeping. Defaults to True.
+        """
+    def apply_force(self, force: pykraken._core.Vec2, point: pykraken._core.Vec2, wake: bool = True) -> None:
+        """
+        Apply a force to the body at a specific point.
+        
+        Args:
+            force (Vec2): The force vector to apply.
+            point (Vec2): The point (in world coordinates) where the force is applied.
+            wake (bool, optional): Whether to wake the body if it's sleeping. Defaults to True.
+        """
+    def apply_force_to_center(self, force: pykraken._core.Vec2, wake: bool = True) -> None:
+        """
+        Apply a force to the center of mass of the body.
+        
+        Args:
+            force (Vec2): The force vector to apply.
+            wake (bool, optional): Whether to wake the body if it's sleeping. Defaults to True.
+        """
+    def apply_linear_impulse(self, impulse: pykraken._core.Vec2, point: pykraken._core.Vec2, wake: bool = True) -> None:
+        """
+        Apply a linear impulse to the body at a specific point.
+        
+        Args:
+            impulse (Vec2): The impulse vector to apply.
+            point (Vec2): The point (in world coordinates) where the impulse is applied.
+            wake (bool, optional): Whether to wake the body if it's sleeping. Defaults to True.
+        """
+    def apply_linear_impulse_to_center(self, impulse: pykraken._core.Vec2, wake: bool = True) -> None:
+        """
+        Apply a linear impulse to the center of mass of the body.
+        
+        Args:
+            impulse (Vec2): The impulse vector to apply.
+            wake (bool, optional): Whether to wake the body if it's sleeping. Defaults to True.
+        """
+    def apply_torque(self, torque: typing.SupportsFloat, wake: bool = True) -> None:
+        """
+        Apply a torque to the body.
+        
+        Args:
+            torque (float): The torque to apply.
+            wake (bool, optional): Whether to wake the body if it's sleeping. Defaults to True.
+        """
+    def wake(self) -> None:
+        """
+        Manually wake the body from sleep.
+        """
     @property
-    def max_force(self) -> float:
+    def angular_damping(self) -> float:
         """
-        The maximum constraint force.
+        The angular damping of the body.
         """
-    @max_force.setter
-    def max_force(self, arg1: typing.SupportsFloat) -> None:
+    @angular_damping.setter
+    def angular_damping(self, arg1: typing.SupportsFloat) -> None:
         ...
     @property
-    def spring_damping_ratio(self) -> float:
+    def angular_velocity(self) -> float:
         """
-        The spring damping ratio.
+        The angular velocity of the body.
         """
-    @spring_damping_ratio.setter
-    def spring_damping_ratio(self, arg1: typing.SupportsFloat) -> None:
+    @angular_velocity.setter
+    def angular_velocity(self, arg1: typing.SupportsFloat) -> None:
         ...
     @property
-    def spring_hz(self) -> float:
+    def awake(self) -> bool:
         """
-        The spring frequency in Hertz.
+        Whether the body is currently awake and participating in simulation.
         """
-    @spring_hz.setter
-    def spring_hz(self, arg1: typing.SupportsFloat) -> None:
+    @property
+    def fixed_rotation(self) -> bool:
+        """
+        Whether the body has fixed rotation.
+        """
+    @fixed_rotation.setter
+    def fixed_rotation(self, arg1: bool) -> None:
         ...
     @property
-    def target(self) -> pykraken._core.Vec2:
+    def linear_damping(self) -> float:
         """
-        The target point in world coordinates.
+        The linear damping of the body.
         """
-    @target.setter
-    def target(self, arg1: pykraken._core.Vec2) -> None:
+    @linear_damping.setter
+    def linear_damping(self, arg1: typing.SupportsFloat) -> None:
+        ...
+    @property
+    def linear_velocity(self) -> pykraken._core.Vec2:
+        """
+        The linear velocity of the body.
+        """
+    @linear_velocity.setter
+    def linear_velocity(self, arg1: pykraken._core.Vec2) -> None:
+        ...
+    @property
+    def mass(self) -> float:
+        """
+        The mass of the body.
+        """
+class StaticBody(Body):
+    def __init__(self, world: World) -> None:
         ...
 class WeldJoint(Joint):
     @property
@@ -762,15 +842,13 @@ class World:
         Args:
             gravity (Vec2): The gravity vector for the world.
         """
-    def create_body(self, type: BodyType) -> Body:
+    def add_fixed_update(self, callback: typing.Any) -> None:
         """
-        Create a new body in the world.
-        
-        Args:
-            type (BodyType): The simulation type of the body to create.
-        
-        Returns:
-            Body: The created body instance.
+        Add a callback function to be executed during each physics step.
+        """
+    def clear_fixed_updates(self) -> None:
+        """
+        Remove all registered fixed update callbacks.
         """
     def create_distance_joint(self, body_a: Body, body_b: Body, anchor_a: pykraken._core.Vec2, anchor_b: pykraken._core.Vec2) -> DistanceJoint:
         """
@@ -807,6 +885,18 @@ class World:
         Returns:
             MotorJoint: The created joint.
         """
+    def create_mouse_joint(self, ground_body: Body, pulled_body: Body, target: pykraken._core.Vec2) -> MouseJoint:
+        """
+        Create a mouse joint between a ground body and a target body.
+        
+        Args:
+            ground_body (Body): The ground body (usually a static body).
+            pulled_body (Body): The body to be pulled and moved to the target.
+            target (Vec2): The initial target point in world coordinates.
+        
+        Returns:
+            MouseJoint: The created joint.
+        """
     def create_prismatic_joint(self, body_a: Body, body_b: Body, anchor: pykraken._core.Vec2, axis: pykraken._core.Vec2) -> PrismaticJoint:
         """
         Create a prismatic joint between two bodies.
@@ -832,18 +922,6 @@ class World:
         Returns:
             RevoluteJoint: The created joint.
         """
-    def create_target_joint(self, ground_body: Body, pulled_body: Body, target: pykraken._core.Vec2) -> TargetJoint:
-        """
-        Create a target joint between a ground body and a target body.
-        
-        Args:
-            ground_body (Body): The ground body (usually a static body).
-            pulled_body (Body): The body to be pulled and moved to the target.
-            target (Vec2): The initial target point in world coordinates.
-        
-        Returns:
-            TargetJoint: The created joint.
-        """
     def create_weld_joint(self, body_a: Body, body_b: Body, anchor: pykraken._core.Vec2) -> WeldJoint:
         """
         Create a weld joint between two bodies.
@@ -868,6 +946,10 @@ class World:
         
         Returns:
             WheelJoint: The created joint.
+        """
+    def fixed_callback(self, callback: typing.Any) -> typing.Any:
+        """
+        A decorator to register a function as a physics update callback.
         """
     def get_collisions(self) -> list[Collision]:
         """
@@ -899,13 +981,68 @@ class World:
         Returns:
             list[Body]: A list of bodies at the point.
         """
-    def step(self, time_step: typing.SupportsFloat, sub_step_count: typing.SupportsInt) -> None:
+    def ray_cast(self, origin: pykraken._core.Vec2, translation: pykraken._core.Vec2) -> list[CastHit]:
         """
-        Advance the physics simulation by a time step.
+        Cast a ray into the world and find all bodies that intersect it.
         
         Args:
-            time_step (float): The time step to advance the simulation.
-            sub_step_count (int): The number of sub steps to take.
+            origin (Vec2): The starting point of the ray.
+            translation (Vec2): The direction and length of the ray.
+        
+        Returns:
+            list[RayCastHit]: A list of hits, sorted by distance (fraction).
+        """
+    @typing.overload
+    def shape_cast(self, circle: pykraken._core.Circle, transform: pykraken._core.Transform, translation: pykraken._core.Vec2) -> list[CastHit]:
+        """
+        Cast a circular shape into the world.
+        
+        Args:
+            circle (Circle): The circular shape.
+            transform (Transform): The initial transform of the shape.
+            translation (Vec2): The movement vector.
+        
+        Returns:
+            list[ShapeCastHit]: A list of hits, sorted by distance.
+        """
+    @typing.overload
+    def shape_cast(self, capsule: pykraken._core.Capsule, transform: pykraken._core.Transform, translation: pykraken._core.Vec2) -> list[CastHit]:
+        """
+        Cast a capsule shape into the world.
+        
+        Args:
+            capsule (Capsule): The capsule shape.
+            transform (Transform): The initial transform of the shape.
+            translation (Vec2): The movement vector.
+        
+        Returns:
+            list[ShapeCastHit]: A list of hits, sorted by distance.
+        """
+    @typing.overload
+    def shape_cast(self, polygon: pykraken._core.Polygon, transform: pykraken._core.Transform, translation: pykraken._core.Vec2) -> list[CastHit]:
+        """
+        Cast a polygonal shape into the world.
+        
+        Args:
+            polygon (Polygon): The polygonal shape.
+            transform (Transform): The initial transform of the shape.
+            translation (Vec2): The movement vector.
+        
+        Returns:
+            list[ShapeCastHit]: A list of hits, sorted by distance.
+        """
+    @typing.overload
+    def shape_cast(self, rect: pykraken._core.Rect, transform: pykraken._core.Transform, translation: pykraken._core.Vec2) -> list[CastHit]:
+        """
+        Cast a rectangular shape into the world.
+        
+        Args:
+            rect (Rect): The rectangular shape.
+            transform (Transform): The initial transform of the shape.
+            translation (Vec2): The movement vector.
+        
+        Returns:
+            list[ShapeCastHit]: A list of hits, sorted by distance.
         """
     @property
     def gravity(self) -> pykraken._core.Vec2:
@@ -915,8 +1052,36 @@ class World:
     @gravity.setter
     def gravity(self, arg1: pykraken._core.Vec2) -> None:
         ...
-    @property
-    def is_valid(self) -> bool:
-        """
-        Indicates whether the world is not destroyed.
-        """
+def get_fixed_delta() -> float:
+    """
+    Get the current fixed delta time for physics stepping.
+    
+    Returns:
+        float: The fixed time step in seconds.
+    """
+def get_max_substeps() -> int:
+    """
+    Get the current maximum number of substeps for physics stepping.
+    
+    Returns:
+        int: The number of substeps per time step.
+    """
+def set_fixed_delta(fixed_delta: typing.SupportsFloat) -> None:
+    """
+    Set the fixed delta time for automatic physics stepping. Default is 1/60 seconds (60 FPS).
+    
+    Setting this to a value greater than 0.0 enables automatic physics stepping
+    in the engine backend. The physics will be updated with this fixed time step,
+    using an accumulator to handle variable frame rates.
+    
+    Args:
+        fixed_delta (float): The fixed time step in seconds (e.g., 1.0/60.0).
+                             Set to 0.0 to disable automatic stepping.
+    """
+def set_max_substeps(max_substeps: typing.SupportsInt) -> None:
+    """
+    Set the maximum number of substeps for physics stepping.
+    
+    Args:
+        max_substeps (int): The number of substeps per time step.
+    """

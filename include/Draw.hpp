@@ -13,6 +13,7 @@ namespace py = pybind11;
 
 namespace kn
 {
+class Capsule;
 class Circle;
 class Line;
 class Polygon;
@@ -33,6 +34,12 @@ void _bind(py::module_& module);
 void circle(const Circle& circle, const Color& color, double thickness = 0.0, int numSegments = 24);
 void circles(
     const std::vector<Circle>& circles, const Color& color, double thickness = 0.0,
+    int numSegments = 24
+);
+
+void capsule(const Capsule& capsule, const Color& color, double thickness = 0.0, int numSegments = 24);
+void capsules(
+    const std::vector<Capsule>& capsules, const Color& color, double thickness = 0.0,
     int numSegments = 24
 );
 

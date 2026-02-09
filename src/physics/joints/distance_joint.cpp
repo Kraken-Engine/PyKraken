@@ -1,4 +1,4 @@
-#include "physics/DistanceJoint.hpp"
+#include "physics/joints/DistanceJoint.hpp"
 
 namespace kn::physics
 {

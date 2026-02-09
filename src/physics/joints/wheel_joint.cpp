@@ -1,4 +1,4 @@
-#include "physics/WheelJoint.hpp"
+#include "physics/joints/WheelJoint.hpp"
 
 namespace kn::physics
 {

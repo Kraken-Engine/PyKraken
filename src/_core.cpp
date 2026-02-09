@@ -5,6 +5,7 @@
 
 #include "AnimationController.hpp"
 #include "Camera.hpp"
+#include "Capsule.hpp"
 #include "Circle.hpp"
 #include "Collision.hpp"
 #include "Color.hpp"
@@ -111,6 +112,7 @@ Tear down the Kraken engine subsystems.
     kn::camera::_bind(m);
     kn::line::_bind(m);
     kn::circle::_bind(m);
+    kn::capsule::_bind(m);
     kn::physics::_bind(m);
     kn::collision::_bind(m);
     kn::ease::_bind(m);

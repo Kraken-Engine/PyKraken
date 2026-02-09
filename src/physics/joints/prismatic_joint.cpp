@@ -1,4 +1,4 @@
-#include "physics/PrismaticJoint.hpp"
+#include "physics/joints/PrismaticJoint.hpp"
 
 namespace kn::physics
 {

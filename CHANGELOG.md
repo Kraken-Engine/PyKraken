@@ -16,18 +16,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `draw.ellipses` and `draw.lines` functions for drawing multiple ellipses or lines in a single call.
 - Added `is_convex` and `is_concave` methods to the `Polygon` class for checking polygon convexity.
 - Added `Circle` default constructor and another accepting just a radius.
-- New `physics` submodule with `World` and `Body` classes for basic 2D physics simulation.
-- `BodyType` enum for specifying physics body types (STATIC, DYNAMIC, KINEMATIC).
-- `Joint` abstract class for the following joint types:
-    - `DistanceJoint` for maintaining a fixed distance between two bodies.
-    - `FilterJoint` for filtering collisions between two bodies.
-    - `MotorJoint` for applying a motor force to maintain a relative position between two bodies.
-    - `PrismaticJoint` for allowing relative movement along a specified axis between two bodies.
-    - `RevoluteJoint` for allowing relative rotation between two bodies.
-    - `TargetJoint` for pulling a body towards a target position in world space.
-    - `WeldJoint` for rigidly connecting two bodies together.
-    - `WheelJoint` for allowing relative rotation and translation along a specified axis between two bodies.
+- New `physics` submodule with a `World` class, bodies, and joints for basic 2D physics simulation.
+    - `Body` abstract class for physics bodies:
+        - `RigidBody` for simulating solid objects with mass, velocity, and forces.
+        - `CharacterBody` for simulating character-like movement with floor detection and snapping.
+        - `StaticBody` for immovable objects that can still collide with other bodies.
+    - `Joint` abstract class for the following joint types:
+        - `DistanceJoint` for maintaining a fixed distance between two bodies.
+        - `FilterJoint` for filtering collisions between two bodies.
+        - `MotorJoint` for applying a motor force to maintain a relative position between two bodies.
+        - `PrismaticJoint` for allowing relative movement along a specified axis between two bodies.
+        - `RevoluteJoint` for allowing relative rotation between two bodies.
+        - `TargetJoint` for pulling a body towards a target position in world space.
+        - `WeldJoint` for rigidly connecting two bodies together.
+        - `WheelJoint` for allowing relative rotation and translation along a specified axis between two bodies.
 - `Collision` class for representing collision information between two bodies. Provided via `World.get_collisions()` method.
+- `CastHit` class for representing the result of a ray or shape cast in the physics world.
+- Added `Capsule` shape class for physics bodies, defined by a line segment and a radius.
+- Added `draw.capsule` and `draw.capsules` functions for drawing capsules.
+- `get/set_fixed_delta` and `get/set_max_substeps` functions for managing physics stepping parameters.
+- `add_fixed_update` and `clear_fixed_updates` functions and `fixed_callback` decorator for registering functions to be called at a fixed interval during the automatic physics update loop.
 
 ### Changed
 - Refactored the audio backend to use SDL3_mixer.

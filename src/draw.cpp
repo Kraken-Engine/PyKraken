@@ -6,6 +6,7 @@
 #include <sstream>
 
 #include "Camera.hpp"
+#include "Capsule.hpp"
 #include "Circle.hpp"
 #include "Line.hpp"
 #include "Polygon.hpp"
@@ -26,6 +27,11 @@ void _ellipseFilled(
 void _ellipseOutline(
     SDL_Renderer* r, const Vec2& center, double radiusX, double radiusY, const Color& color,
     double thickness, int numSegments
+);
+
+void _capsuleFilled(SDL_Renderer* r, const Capsule& capsule, const Color& color, int numSegments);
+void _capsuleOutline(
+    SDL_Renderer* r, const Capsule& capsule, const Color& color, double thickness, int numSegments
 );
 
 void _thickLine(SDL_Renderer* r, const Line& line, const Color& color, double thickness);
@@ -91,6 +97,34 @@ void circles(
                 rend, center, circle.radius, circle.radius, color, thickness, numSegments
             );
     }
+}
+
+void capsule(
+    const Capsule& capsule, const Color& color, const double thickness, const int numSegments
+)
+{
+    SDL_Renderer* rend = renderer::_get();
+    if (!rend)
+        throw std::runtime_error("Renderer not yet initialized");
+
+    if (capsule.radius < 1.0 || color.a == 0)
+        return;
+
+    const double radius = capsule.radius;
+
+    if (thickness <= 0.0 || thickness >= radius)
+        _capsuleFilled(rend, capsule, color, numSegments);
+    else
+        _capsuleOutline(rend, capsule, color, thickness, numSegments);
+}
+
+void capsules(
+    const std::vector<Capsule>& capsules, const Color& color, const double thickness,
+    const int numSegments
+)
+{
+    for (const auto& c : capsules)
+        capsule(c, color, thickness, numSegments);
 }
 
 void point(Vec2 point, const Color& color)
@@ -726,6 +760,120 @@ void _ellipseOutline(
     }
 }
 
+void _capsuleFilled(SDL_Renderer* r, const Capsule& capsule, const Color& color, int numSegments)
+{
+    const Vec2 cameraPos = camera::getActivePos();
+    const Vec2 p1 = capsule.p1 - cameraPos;
+    const Vec2 p2 = capsule.p2 - cameraPos;
+    const double radius = capsule.radius;
+    const auto fColor = static_cast<SDL_FColor>(color);
+
+    const double angle = atan2(p2.y - p1.y, p2.x - p1.x);
+
+    std::vector<Vec2> points;
+    points.reserve(numSegments + 2);
+
+    // Semicircle around p1
+    for (int i = 0; i <= numSegments / 2; ++i)
+    {
+        double theta = angle + M_PI / 2.0 + (M_PI * i) / (numSegments / 2.0);
+        points.push_back(p1 + Vec2(cos(theta), sin(theta)) * radius);
+    }
+
+    // Semicircle around p2
+    for (int i = 0; i <= numSegments / 2; ++i)
+    {
+        double theta = angle - M_PI / 2.0 + (M_PI * i) / (numSegments / 2.0);
+        points.push_back(p2 + Vec2(cos(theta), sin(theta)) * radius);
+    }
+
+    std::vector<std::vector<Vec2>> polygon = {points};
+    std::vector<uint32_t> indices = mapbox::earcut<uint32_t>(polygon);
+
+    std::vector<SDL_Vertex> vertices;
+    vertices.reserve(points.size());
+    for (const auto& p : points)
+        vertices.push_back({static_cast<SDL_FPoint>(p), fColor, {}});
+
+    if (!SDL_RenderGeometry(
+            r, nullptr, vertices.data(), static_cast<int>(vertices.size()),
+            reinterpret_cast<const int*>(indices.data()), static_cast<int>(indices.size())
+        ))
+    {
+        throw std::runtime_error(
+            std::string("Failed to render capsule geometry: ") + SDL_GetError()
+        );
+    }
+}
+
+void _capsuleOutline(
+    SDL_Renderer* r, const Capsule& capsule, const Color& color, double thickness, int numSegments
+)
+{
+    const Vec2 cameraPos = camera::getActivePos();
+    const Vec2 p1 = capsule.p1 - cameraPos;
+    const Vec2 p2 = capsule.p2 - cameraPos;
+    const double radius = capsule.radius;
+    const auto fColor = static_cast<SDL_FColor>(color);
+
+    const double angle = atan2(p2.y - p1.y, p2.x - p1.x);
+
+    std::vector<SDL_Vertex> vertices;
+    vertices.reserve((numSegments + 2) * 2);
+
+    auto addPoints = [&](const Vec2& center, double startAngle)
+    {
+        for (int i = 0; i <= numSegments / 2; ++i)
+        {
+            double theta = startAngle + (M_PI * i) / (numSegments / 2.0);
+            double cosT = cos(theta);
+            double sinT = sin(theta);
+
+            vertices.push_back(
+                {static_cast<SDL_FPoint>(center + Vec2(cosT, sinT) * radius), fColor, {}}
+            );
+            vertices.push_back(
+                {static_cast<SDL_FPoint>(center + Vec2(cosT, sinT) * (radius - thickness)),
+                 fColor,
+                 {}}
+            );
+        }
+    };
+
+    addPoints(p1, angle + M_PI / 2.0);
+    addPoints(p2, angle - M_PI / 2.0);
+
+    std::vector<int> indices;
+    const int numVerts = static_cast<int>(vertices.size());
+    for (int i = 0; i < numVerts - 2; i += 2)
+    {
+        indices.push_back(i);
+        indices.push_back(i + 2);
+        indices.push_back(i + 1);
+
+        indices.push_back(i + 2);
+        indices.push_back(i + 3);
+        indices.push_back(i + 1);
+    }
+    // Close the loop
+    indices.push_back(numVerts - 2);
+    indices.push_back(0);
+    indices.push_back(numVerts - 1);
+    indices.push_back(0);
+    indices.push_back(1);
+    indices.push_back(numVerts - 1);
+
+    if (!SDL_RenderGeometry(
+            r, nullptr, vertices.data(), static_cast<int>(vertices.size()), indices.data(),
+            static_cast<int>(indices.size())
+        ))
+    {
+        throw std::runtime_error(
+            std::string("Failed to render capsule outline: ") + SDL_GetError()
+        );
+    }
+}
+
 void _thickLine(SDL_Renderer* r, const Line& line, const Color& color, double thickness)
 {
     const Vec2 a = line.getA();
@@ -868,6 +1016,34 @@ Args:
     );
 
     subDraw.def(
+        "capsule", &capsule, py::arg("capsule"), py::arg("color"), py::arg("thickness") = 0,
+        py::arg("num_segments") = 24, R"doc(
+Draw a capsule to the renderer.
+
+Args:
+    capsule (Capsule): The capsule to draw.
+    color (Color): The color of the capsule.
+    thickness (float, optional): The line thickness. If <= 0 or >= radius, draws filled capsule. Defaults to 0 (filled).
+    num_segments (int, optional): Number of segments to approximate the capsule ends.
+                                  Higher values yield smoother capsules. Defaults to 24.
+    )doc"
+    );
+
+    subDraw.def(
+        "capsules", &capsules, py::arg("capsules"), py::arg("color"), py::arg("thickness") = 0,
+        py::arg("num_segments") = 24, R"doc(
+Draw an array of capsules in bulk to the renderer.
+
+Args:
+    capsules (Sequence[Capsule]): The capsules to draw in bulk.
+    color (Color): The color of the capsules.
+    thickness (float, optional): The line thickness. If <= 0 or >= radius, draws filled capsules. Defaults to 0 (filled).
+    num_segments (int, optional): Number of segments to approximate each capsule end.
+                                  Higher values yield smoother capsules. Defaults to 24.
+    )doc"
+    );
+
+    subDraw.def(
         "ellipse", &ellipse, py::arg("bounds"), py::arg("color"), py::arg("thickness") = 0.0,
         py::arg("num_segments") = 24, R"doc(
 Draw an ellipse to the renderer.
@@ -951,8 +1127,7 @@ Draw a polygon to the renderer.
 Args:
     polygon (Polygon): The polygon to draw.
     color (Color): The color of the polygon.
-    filled (bool, optional): Whether to draw a filled polygon or just the outline.
-                             Defaults to False (outline). Works with both convex and concave polygons.
+    filled (bool, optional): Whether to draw a filled polygon or just the outline. Defaults to False (outline).
     )doc"
     );
 
@@ -964,8 +1139,7 @@ Draw an array of polygons in bulk to the renderer.
 Args:
     polygons (Sequence[Polygon]): The polygons to draw in bulk.
     color (Color): The color of the polygons.
-    filled (bool, optional): Whether to draw filled polygons or just the outlines.
-                             Defaults to True (filled). Works with both convex and concave polygons.
+    filled (bool, optional): Whether to draw filled polygons or just the outlines. Defaults to True (filled).
     )doc"
     );
 

@@ -1,4 +1,4 @@
-#include "physics/FilterJoint.hpp"
+#include "physics/joints/FilterJoint.hpp"
 
 namespace kn::physics
 {

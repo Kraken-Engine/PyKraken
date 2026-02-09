@@ -1,6 +1,6 @@
 #pragma once
 
-#include "physics/Joint.hpp"
+#include "physics/joints/Joint.hpp"
 
 namespace kn::physics
 {

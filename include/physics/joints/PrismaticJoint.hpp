@@ -1,16 +1,13 @@
 #pragma once
 
-#include "physics/Joint.hpp"
+#include "physics/joints/Joint.hpp"
 
 namespace kn::physics
 {
-class DistanceJoint : public Joint
+class PrismaticJoint : public Joint
 {
   public:
-    DistanceJoint() = default;
-
-    void setLength(float length);
-    float getLength() const;
+    PrismaticJoint() = default;
 
     void enableSpring(bool enable);
     bool isSpringEnabled() const;
@@ -21,14 +18,15 @@ class DistanceJoint : public Joint
     void setSpringDampingRatio(float dampingRatio);
     float getSpringDampingRatio() const;
 
+    void setTargetTranslation(float translation);
+    float getTargetTranslation() const;
+
     void enableLimit(bool enable);
     bool isLimitEnabled() const;
 
-    void setLengthRange(float minLength, float maxLength);
-    float getMinLength() const;
-    float getMaxLength() const;
-
-    float getCurrentLength() const;
+    float getLowerLimit() const;
+    float getUpperLimit() const;
+    void setLimits(float lower, float upper);
 
     void enableMotor(bool enable);
     bool isMotorEnabled() const;
@@ -41,8 +39,11 @@ class DistanceJoint : public Joint
 
     float getMotorForce() const;
 
+    float getTranslation() const;
+    float getSpeed() const;
+
   protected:
-    DistanceJoint(b2JointId jointId);
+    PrismaticJoint(b2JointId jointId);
 
     friend class World;
 };

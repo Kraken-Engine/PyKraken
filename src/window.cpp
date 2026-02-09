@@ -15,6 +15,7 @@
 #include "ShaderState.hpp"
 #include "Text.hpp"
 #include "Time.hpp"
+#include "physics/World.hpp"
 #include "misc/kraken_icon.h"
 
 namespace kn
@@ -77,6 +78,7 @@ bool isOpen()
 
     animation_controller::_tick();
     orchestrator::_tick();
+    physics::_tick();
 
     return _isOpen;
 }

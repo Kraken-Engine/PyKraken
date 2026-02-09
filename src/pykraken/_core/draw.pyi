@@ -7,7 +7,29 @@ import numpy
 import numpy.typing
 import pykraken._core
 import typing
-__all__: list[str] = ['circle', 'circles', 'ellipse', 'ellipses', 'geometry', 'line', 'lines', 'point', 'points', 'points_from_ndarray', 'polygon', 'polygons', 'rect', 'rects']
+__all__: list[str] = ['capsule', 'capsules', 'circle', 'circles', 'ellipse', 'ellipses', 'geometry', 'line', 'lines', 'point', 'points', 'points_from_ndarray', 'polygon', 'polygons', 'rect', 'rects']
+def capsule(capsule: pykraken._core.Capsule, color: pykraken._core.Color, thickness: typing.SupportsFloat = 0, num_segments: typing.SupportsInt = 24) -> None:
+    """
+    Draw a capsule to the renderer.
+    
+    Args:
+        capsule (Capsule): The capsule to draw.
+        color (Color): The color of the capsule.
+        thickness (float, optional): The line thickness. If <= 0 or >= radius, draws filled capsule. Defaults to 0 (filled).
+        num_segments (int, optional): Number of segments to approximate the capsule ends.
+                                      Higher values yield smoother capsules. Defaults to 24.
+    """
+def capsules(capsules: collections.abc.Sequence[pykraken._core.Capsule], color: pykraken._core.Color, thickness: typing.SupportsFloat = 0, num_segments: typing.SupportsInt = 24) -> None:
+    """
+    Draw an array of capsules in bulk to the renderer.
+    
+    Args:
+        capsules (Sequence[Capsule]): The capsules to draw in bulk.
+        color (Color): The color of the capsules.
+        thickness (float, optional): The line thickness. If <= 0 or >= radius, draws filled capsules. Defaults to 0 (filled).
+        num_segments (int, optional): Number of segments to approximate each capsule end.
+                                      Higher values yield smoother capsules. Defaults to 24.
+    """
 def circle(circle: pykraken._core.Circle, color: pykraken._core.Color, thickness: typing.SupportsFloat = 0, num_segments: typing.SupportsInt = 24) -> None:
     """
     Draw a circle to the renderer.
@@ -125,8 +147,7 @@ def polygon(polygon: pykraken._core.Polygon, color: pykraken._core.Color, filled
     Args:
         polygon (Polygon): The polygon to draw.
         color (Color): The color of the polygon.
-        filled (bool, optional): Whether to draw a filled polygon or just the outline.
-                                 Defaults to False (outline). Works with both convex and concave polygons.
+        filled (bool, optional): Whether to draw a filled polygon or just the outline. Defaults to False (outline).
     """
 def polygons(polygons: collections.abc.Sequence[pykraken._core.Polygon], color: pykraken._core.Color, filled: bool = True) -> None:
     """
@@ -135,8 +156,7 @@ def polygons(polygons: collections.abc.Sequence[pykraken._core.Polygon], color: 
     Args:
         polygons (Sequence[Polygon]): The polygons to draw in bulk.
         color (Color): The color of the polygons.
-        filled (bool, optional): Whether to draw filled polygons or just the outlines.
-                                 Defaults to True (filled). Works with both convex and concave polygons.
+        filled (bool, optional): Whether to draw filled polygons or just the outlines. Defaults to True (filled).
     """
 def rect(rect: pykraken._core.Rect, color: pykraken._core.Color, thickness: typing.SupportsInt = 0) -> None:
     """

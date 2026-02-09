@@ -1,6 +1,6 @@
 #pragma once
 
-#include "physics/Joint.hpp"
+#include "physics/joints/Joint.hpp"
 
 namespace kn
 {
@@ -8,10 +8,10 @@ class Vec2;
 
 namespace physics
 {
-class TargetJoint : public Joint
+class MouseJoint : public Joint
 {
   public:
-    TargetJoint() = default;
+    MouseJoint() = default;
 
     void setTarget(const Vec2& target);
     Vec2 getTarget() const;
@@ -26,7 +26,7 @@ class TargetJoint : public Joint
     float getMaxForce() const;
 
   protected:
-    TargetJoint(b2JointId jointId);
+    MouseJoint(b2JointId jointId);
 
     friend class World;
 };
