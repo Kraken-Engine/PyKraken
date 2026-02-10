@@ -113,7 +113,6 @@ Tear down the Kraken engine subsystems.
     kn::line::_bind(m);
     kn::circle::_bind(m);
     kn::capsule::_bind(m);
-    kn::physics::_bind(m);
     kn::collision::_bind(m);
     kn::ease::_bind(m);
     kn::event::_bind(m);
@@ -133,6 +132,7 @@ Tear down the Kraken engine subsystems.
     kn::animation_controller::_bind(m);
     kn::orchestrator::_bind(m);
     kn::tilemap::_bind(m);
+    kn::physics::_bind(m);
     kn::shader_state::_bind(m);
     kn::viewport::_bind(m);
 }

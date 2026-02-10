@@ -3,6 +3,7 @@ Physics engine related classes and functions
 """
 from __future__ import annotations
 import pykraken._core
+import pykraken._core.tilemap
 import typing
 __all__: list[str] = ['Body', 'CastHit', 'CharacterBody', 'Collision', 'DistanceJoint', 'FilterJoint', 'Joint', 'MotorJoint', 'MouseJoint', 'PrismaticJoint', 'RevoluteJoint', 'RigidBody', 'StaticBody', 'WeldJoint', 'WheelJoint', 'World', 'get_fixed_delta', 'get_max_substeps', 'set_fixed_delta', 'set_max_substeps']
 class Body:
@@ -78,6 +79,22 @@ class Body:
                     Returns:
                         Transform: The current transform of the body.
         """
+    @property
+    def collision_layer(self) -> int:
+        """
+        The body's collision layer (category bits).
+        """
+    @collision_layer.setter
+    def collision_layer(self, arg1: typing.SupportsInt) -> None:
+        ...
+    @property
+    def collision_mask(self) -> int:
+        """
+        The body's collision mask.
+        """
+    @collision_mask.setter
+    def collision_mask(self, arg1: typing.SupportsInt) -> None:
+        ...
     @property
     def is_valid(self) -> bool:
         """
@@ -950,6 +967,20 @@ class World:
     def fixed_callback(self, callback: typing.Any) -> typing.Any:
         """
         A decorator to register a function as a physics update callback.
+        """
+    def from_map_layer(self, layer: pykraken._core.tilemap.Layer) -> StaticBody:
+        """
+        Create a single StaticBody from a TileMap ObjectGroup layer.
+        
+        This method iterates through all rectangular and polygonal objects in the
+        specified layer and adds them as colliders to a new StaticBody. Points,
+        lines, and ellipses are discarded.
+        
+        Args:
+            layer (Layer): The TileMap ObjectGroup layer.
+        
+        Returns:
+            StaticBody: The created static body with all shapes attached.
         """
     def get_collisions(self) -> list[Collision]:
         """

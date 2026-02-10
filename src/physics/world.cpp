@@ -8,6 +8,7 @@
 #include "Math.hpp"
 #include "Polygon.hpp"
 #include "Rect.hpp"
+#include "TileMap.hpp"
 #include "Time.hpp"
 #include "Transform.hpp"
 #include "physics/bodies/CharacterBody.hpp"
@@ -335,20 +336,6 @@ bool World::QueryCallback(b2ShapeId shapeId, void* context)
     return true;
 }
 
-float World::RayCastCallback(
-    b2ShapeId shapeId, b2Vec2 point, b2Vec2 normal, float fraction, void* context
-)
-{
-    auto* hits = static_cast<std::vector<CastHit>*>(context);
-    CastHit hit;
-    hit.body = Body(b2Shape_GetBody(shapeId));
-    hit.point = {point.x, point.y};
-    hit.normal = {normal.x, normal.y};
-    hit.fraction = fraction;
-    hits->push_back(hit);
-    return 1.0f;
-}
-
 std::vector<Body> World::queryPoint(const Vec2& point)
 {
     _checkValid();
@@ -379,24 +366,7 @@ std::vector<Body> World::queryAABB(const Rect& rect)
     return ctx.bodies;
 }
 
-std::vector<CastHit> World::rayCast(const Vec2& origin, const Vec2& translation)
-{
-    _checkValid();
-    std::vector<CastHit> hits;
-    b2World_CastRay(
-        m_worldId, static_cast<b2Vec2>(origin), static_cast<b2Vec2>(translation),
-        b2DefaultQueryFilter(), RayCastCallback, &hits
-    );
-
-    std::sort(
-        hits.begin(), hits.end(),
-        [](const CastHit& a, const CastHit& b) { return a.fraction < b.fraction; }
-    );
-
-    return hits;
-}
-
-float World::ShapeCastCallback(
+float World::CastCallback(
     b2ShapeId shapeId, b2Vec2 point, b2Vec2 normal, float fraction, void* context
 )
 {
@@ -410,6 +380,23 @@ float World::ShapeCastCallback(
     return 1.0f;
 }
 
+std::vector<CastHit> World::rayCast(const Vec2& origin, const Vec2& translation)
+{
+    _checkValid();
+    std::vector<CastHit> hits;
+    b2World_CastRay(
+        m_worldId, static_cast<b2Vec2>(origin), static_cast<b2Vec2>(translation),
+        b2DefaultQueryFilter(), CastCallback, &hits
+    );
+
+    std::sort(
+        hits.begin(), hits.end(),
+        [](const CastHit& a, const CastHit& b) { return a.fraction < b.fraction; }
+    );
+
+    return hits;
+}
+
 std::vector<CastHit> World::shapeCast(
     const Circle& circle, const Transform& transform, const Vec2& translation
 )
@@ -421,8 +408,8 @@ std::vector<CastHit> World::shapeCast(
 
     std::vector<CastHit> hits;
     b2World_CastShape(
-        m_worldId, &proxy, static_cast<b2Vec2>(translation), b2DefaultQueryFilter(),
-        ShapeCastCallback, &hits
+        m_worldId, &proxy, static_cast<b2Vec2>(translation), b2DefaultQueryFilter(), CastCallback,
+        &hits
     );
 
     std::sort(
@@ -447,8 +434,8 @@ std::vector<CastHit> World::shapeCast(
 
     std::vector<CastHit> hits;
     b2World_CastShape(
-        m_worldId, &proxy, static_cast<b2Vec2>(translation), b2DefaultQueryFilter(),
-        ShapeCastCallback, &hits
+        m_worldId, &proxy, static_cast<b2Vec2>(translation), b2DefaultQueryFilter(), CastCallback,
+        &hits
     );
 
     std::sort(
@@ -484,8 +471,8 @@ std::vector<CastHit> World::shapeCast(
 
     std::vector<CastHit> hits;
     b2World_CastShape(
-        m_worldId, &proxy, static_cast<b2Vec2>(translation), b2DefaultQueryFilter(),
-        ShapeCastCallback, &hits
+        m_worldId, &proxy, static_cast<b2Vec2>(translation), b2DefaultQueryFilter(), CastCallback,
+        &hits
     );
 
     std::sort(
@@ -520,8 +507,8 @@ std::vector<CastHit> World::shapeCast(
 
     std::vector<CastHit> hits;
     b2World_CastShape(
-        m_worldId, &proxy, static_cast<b2Vec2>(translation), b2DefaultQueryFilter(),
-        ShapeCastCallback, &hits
+        m_worldId, &proxy, static_cast<b2Vec2>(translation), b2DefaultQueryFilter(), CastCallback,
+        &hits
     );
 
     std::sort(
@@ -530,6 +517,37 @@ std::vector<CastHit> World::shapeCast(
     );
 
     return hits;
+}
+
+StaticBody World::fromMapLayer(const std::shared_ptr<tilemap::Layer>& layer)
+{
+    _checkValid();
+    if (!layer || layer->getType() != tmx::Layer::Type::Object)
+    {
+        throw std::runtime_error("Layer must be an ObjectGroup to create physics bodies.");
+    }
+
+    auto objGroup = std::static_pointer_cast<tilemap::ObjectGroup>(layer);
+    StaticBody body(*this);
+
+    for (const auto& obj : objGroup->getObjects())
+    {
+        if (!obj.visible)
+            continue;
+
+        const auto shape = obj.getShapeType();
+        if (shape == tmx::Object::Shape::Rectangle)
+        {
+            body.addCollider(obj.getRect());
+        }
+        else if (shape == tmx::Object::Shape::Polygon)
+        {
+            body.addCollider(Polygon(obj.getVertices()));
+        }
+        // Skipping Point, Polyline (Lines), Ellipse, Text
+    }
+
+    return body;
 }
 
 void World::setGravity(const Vec2& gravity)

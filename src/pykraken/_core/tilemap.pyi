@@ -222,11 +222,15 @@ class Map:
         stagger_axis (MapStaggerAxis): Stagger axis enum for staggered/hex maps.
         stagger_index (MapStaggerIndex): Stagger index enum.
         tile_sets (TileSetList): List of TileSet objects.
-        layers (LayerList): List of Layer instances.
+        all_layers (LayerList): List of Layer instances.
+        tile_layers (List[TileLayer]): List of tile layers.
+        object_groups (List[ObjectGroup]): List of object groups.
+        image_layers (List[ImageLayer]): List of image layers.
     
     Methods:
         load: Load a TMX file from path.
         draw: Draw all layers.
+        get_layer: Get a layer by name.
         
     """
     def __init__(self) -> None:
@@ -235,12 +239,24 @@ class Map:
         """
         Draw all layers.
         """
+    def get_layer(self, name: str) -> Layer:
+        """
+        Get a layer by its name.
+        
+        Args:
+            name (str): Name of the layer to retrieve.
+        """
     def load(self, tmx_path: str) -> None:
         """
         Load a TMX file from path.
         
         Args:
             tmx_path (str): Path to the TMX file to load.
+        """
+    @property
+    def all_layers(self) -> list[Layer]:
+        """
+        LayerList of layers in the map.
         """
     @property
     def background_color(self) -> pykraken._core.Color:
@@ -261,14 +277,19 @@ class Map:
         Hex side length for hex maps.
         """
     @property
-    def layers(self) -> list[Layer]:
+    def image_layers(self) -> list[ImageLayer]:
         """
-        LayerList of layers in the map.
+        List of image layers in the map.
         """
     @property
     def map_size(self) -> pykraken._core.Vec2:
         """
         Map dimensions in tiles.
+        """
+    @property
+    def object_groups(self) -> list[ObjectGroup]:
+        """
+        List of object group layers in the map.
         """
     @property
     def orientation(self) -> MapOrientation:
@@ -289,6 +310,11 @@ class Map:
     def stagger_index(self) -> MapStaggerIndex:
         """
         Stagger index enum for staggered/hex maps.
+        """
+    @property
+    def tile_layers(self) -> list[TileLayer]:
+        """
+        List of tile layers in the map.
         """
     @property
     def tile_sets(self) -> list[TileSet]:

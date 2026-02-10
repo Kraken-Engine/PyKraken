@@ -295,7 +295,12 @@ class Map
     [[nodiscard]] tmx::StaggerAxis getStaggerAxis() const;
     [[nodiscard]] tmx::StaggerIndex getStaggerIndex() const;
     [[nodiscard]] const std::vector<TileSet>& getTileSets() const;
-    [[nodiscard]] const std::vector<std::shared_ptr<Layer>>& getLayers() const;
+
+    [[nodiscard]] std::shared_ptr<Layer> getLayer(const std::string& name) const;
+    [[nodiscard]] const std::vector<std::shared_ptr<Layer>>& getAllLayers() const;
+    [[nodiscard]] std::vector<std::shared_ptr<TileLayer>> getTileLayers() const;
+    [[nodiscard]] std::vector<std::shared_ptr<ObjectGroup>> getObjectGroups() const;
+    [[nodiscard]] std::vector<std::shared_ptr<ImageLayer>> getImageLayers() const;
 
   private:
     tmx::Orientation m_orient = tmx::Orientation::None;

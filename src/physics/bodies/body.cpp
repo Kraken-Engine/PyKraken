@@ -43,6 +43,7 @@ void Body::addCollider(
     shapeDef.material.restitution = restitution;
     shapeDef.enableHitEvents = enableEvents;
     shapeDef.isSensor = isSensor;
+    shapeDef.filter = m_filter;
 
     b2ShapeId shapeId = b2CreateCircleShape(m_bodyId, &shapeDef, &b2c);
 }
@@ -73,6 +74,7 @@ void Body::addCollider(
         shapeDef.material.restitution = restitution;
         shapeDef.enableHitEvents = enableEvents;
         shapeDef.isSensor = isSensor;
+        shapeDef.filter = m_filter;
 
         b2ShapeId shapeId = b2CreatePolygonShape(m_bodyId, &shapeDef, &poly);
     }
@@ -98,6 +100,7 @@ void Body::addCollider(
             shapeDef.material.restitution = restitution;
             shapeDef.enableHitEvents = enableEvents;
             shapeDef.isSensor = isSensor;
+            shapeDef.filter = m_filter;
 
             b2ShapeId shapeId = b2CreatePolygonShape(m_bodyId, &shapeDef, &poly);
         }
@@ -127,6 +130,7 @@ void Body::addCollider(
     shapeDef.material.restitution = restitution;
     shapeDef.enableHitEvents = enableEvents;
     shapeDef.isSensor = isSensor;
+    shapeDef.filter = m_filter;
 
     b2ShapeId shapeId = b2CreatePolygonShape(m_bodyId, &shapeDef, &box);
 }
@@ -148,6 +152,7 @@ void Body::addCollider(
     shapeDef.material.restitution = restitution;
     shapeDef.enableHitEvents = enableEvents;
     shapeDef.isSensor = isSensor;
+    shapeDef.filter = m_filter;
 
     b2ShapeId shapeId = b2CreateCapsuleShape(m_bodyId, &shapeDef, &b2c);
 }
@@ -285,5 +290,38 @@ void Body::debugDraw() const
             kn::draw::capsule(drawCapsule, color, 1.0, 16);
         }
     }
+}
+void Body::setCollisionLayer(uint64_t layer)
+{
+    m_filter.categoryBits = layer;
+    if (b2Body_IsValid(m_bodyId))
+    {
+        for (const auto& shapeId : _getShapeIds())
+        {
+            b2Shape_SetFilter(shapeId, m_filter);
+        }
+    }
+}
+
+uint64_t Body::getCollisionLayer() const
+{
+    return m_filter.categoryBits;
+}
+
+void Body::setCollisionMask(uint64_t mask)
+{
+    m_filter.maskBits = mask;
+    if (b2Body_IsValid(m_bodyId))
+    {
+        for (const auto& shapeId : _getShapeIds())
+        {
+            b2Shape_SetFilter(shapeId, m_filter);
+        }
+    }
+}
+
+uint64_t Body::getCollisionMask() const
+{
+    return m_filter.maskBits;
 }
 }  // namespace kn::physics

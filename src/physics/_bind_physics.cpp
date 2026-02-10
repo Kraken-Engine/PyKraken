@@ -6,6 +6,7 @@
 #include "Circle.hpp"
 #include "Polygon.hpp"
 #include "Rect.hpp"
+#include "TileMap.hpp"
 #include "Transform.hpp"
 #include "physics/World.hpp"
 #include "physics/bodies/Body.hpp"
@@ -137,6 +138,14 @@ Args:
         .def_property(
             "rotation", &Body::getRotation, &Body::setRotation,
             R"doc(The rotation of the body in radians.)doc"
+        )
+        .def_property(
+            "collision_layer", &Body::getCollisionLayer, &Body::setCollisionLayer,
+            R"doc(The body's collision layer (category bits).)doc"
+        )
+        .def_property(
+            "collision_mask", &Body::getCollisionMask, &Body::setCollisionMask,
+            R"doc(The body's collision mask.)doc"
         )
         .def_property_readonly(
             "is_valid", &Body::isValid, R"doc(Indicates whether the body is not destroyed.)doc"
@@ -628,6 +637,23 @@ Args:
         .def_property(
             "gravity", &World::getGravity, &World::setGravity,
             R"doc(The gravity vector of the world.)doc"
+        )
+
+        .def(
+            "from_map_layer", &World::fromMapLayer, py::arg("layer"),
+            R"doc(
+Create a single StaticBody from a TileMap ObjectGroup layer.
+
+This method iterates through all rectangular and polygonal objects in the
+specified layer and adds them as colliders to a new StaticBody. Points,
+lines, and ellipses are discarded.
+
+Args:
+    layer (Layer): The TileMap ObjectGroup layer.
+
+Returns:
+    StaticBody: The created static body with all shapes attached.
+            )doc"
         )
 
         .def(

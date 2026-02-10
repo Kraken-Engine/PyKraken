@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.6.1] - No Release Date
 
+### Todo
+- `draw.bezier` function for drawing cubic Bezier curves defined by four control points.
+- `draw.sector` function for drawing circular sectors defined by a center point, radius, start angle, and end angle.
+- A way to set exact sizes for textures without messing up clip areas.
+
 ### Added
 - New `mixer` submodule for advanced audio management.
 - `AudioPriority` enum for managing hardware track acquisition (MUSIC, UI, SFX).
@@ -36,6 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `draw.capsule` and `draw.capsules` functions for drawing capsules.
 - `get/set_fixed_delta` and `get/set_max_substeps` functions for managing physics stepping parameters.
 - `add_fixed_update` and `clear_fixed_updates` functions and `fixed_callback` decorator for registering functions to be called at a fixed interval during the automatic physics update loop.
+- Add `Map.tile_layers`, `Map.object_groups`, and `Map.image_layers` properties for easier access to specific layer types.
+- Add `Map.get_layer(name)` method for retrieving a layer by name.
+- Add `World.from_map_layer(world, layer)` method for creating physics bodies from a tilemap layer.
 
 ### Changed
 - Refactored the audio backend to use SDL3_mixer.
@@ -46,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Stream` playback position renamed from `current_time` to `playback_pos`.
 - Circle drawing (and now ellipses) default segment count reduced from 36 to 24.
 - Line drawing thickess can now be a float.
+- Rename `Map.layers` to `Map.all_layers`
 
 ### Fixed
 - Fixed a bug where textures wouldn't render at all (hopefully).

@@ -60,8 +60,15 @@ class Body
     b2BodyType _getType() const;
     b2BodyId _getBodyId() const;
 
+    void setCollisionLayer(uint64_t layer);
+    uint64_t getCollisionLayer() const;
+
+    void setCollisionMask(uint64_t mask);
+    uint64_t getCollisionMask() const;
+
   protected:
     b2BodyId m_bodyId = b2_nullBodyId;
+    b2Filter m_filter = b2DefaultFilter();
 
     Body(b2BodyId bodyId);
 

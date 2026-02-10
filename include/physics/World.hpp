@@ -22,6 +22,11 @@ class Capsule;
 class Polygon;
 struct Transform;
 
+namespace tilemap
+{
+class Layer;
+}
+
 namespace physics
 {
 void _bind(py::module_& module);
@@ -102,6 +107,8 @@ class World
         const Rect& rect, const Transform& transform, const Vec2& translation
     );
 
+    StaticBody fromMapLayer(const std::shared_ptr<tilemap::Layer>& layer);
+
     void setGravity(const Vec2& gravity);
     Vec2 getGravity() const;
 
@@ -132,10 +139,7 @@ class World
     };
 
     static bool QueryCallback(b2ShapeId shapeId, void* context);
-    static float RayCastCallback(
-        b2ShapeId shapeId, b2Vec2 point, b2Vec2 normal, float fraction, void* context
-    );
-    static float ShapeCastCallback(
+    static float CastCallback(
         b2ShapeId shapeId, b2Vec2 point, b2Vec2 normal, float fraction, void* context
     );
 
