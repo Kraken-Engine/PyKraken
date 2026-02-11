@@ -36,7 +36,8 @@ jobs:
           CIBW_SKIP: "*-musllinux_* *-win32"
           CIBW_BUILD: "cp311-* cp312-* cp313-* cp314-*"
           CIBW_ARCHS_WINDOWS: "AMD64"
-          CIBW_ENVIRONMENT: "CMAKE_GENERATOR=Ninja PYK_VENDOR_SDL=OFF"
+          CIBW_CONFIG_SETTINGS: "cmake.define.PYK_VENDOR_SDL=OFF"
+          CIBW_ENVIRONMENT: "CMAKE_GENERATOR=Ninja"
 
           CIBW_ENVIRONMENT_WINDOWS: 'CC=cl CXX=cl CMAKE_PREFIX_PATH="C:\sdl\SDL3-3.4.0;C:\sdl\SDL3_image-3.4.0;C:\sdl\SDL3_ttf-3.2.2;C:\sdl\SDL3_mixer-3.1.2"'
           CIBW_BEFORE_ALL_WINDOWS: "powershell .github/scripts/download_sdl.ps1"
