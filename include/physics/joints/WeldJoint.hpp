@@ -7,8 +7,6 @@ namespace kn::physics
 class WeldJoint : public Joint
 {
   public:
-    WeldJoint() = default;
-
     void setLinearHertz(float hertz);
     float getLinearHertz() const;
 

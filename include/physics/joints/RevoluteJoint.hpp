@@ -7,8 +7,6 @@ namespace kn::physics
 class RevoluteJoint : public Joint
 {
   public:
-    RevoluteJoint() = default;
-
     void enableSpring(bool enable);
     bool isSpringEnabled() const;
 

@@ -42,6 +42,9 @@ class RigidBody : public Body
     void applyAngularImpulse(float impulse, bool wake = true);
 
     float getMass() const;
+
+    void setBullet(bool isBullet);
+    bool isBullet() const;
 };
 }  // namespace physics
 }  // namespace kn

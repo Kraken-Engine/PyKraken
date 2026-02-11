@@ -7,8 +7,6 @@ namespace kn::physics
 class WheelJoint : public Joint
 {
   public:
-    WheelJoint() = default;
-
     void enableSpring(bool enable);
     bool isSpringEnabled() const;
 

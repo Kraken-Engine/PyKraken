@@ -519,18 +519,18 @@ std::vector<CastHit> World::shapeCast(
     return hits;
 }
 
-StaticBody World::fromMapLayer(const std::shared_ptr<tilemap::Layer>& layer)
+StaticBody World::fromMapLayer(const tilemap::Layer& layer)
 {
     _checkValid();
-    if (!layer || layer->getType() != tmx::Layer::Type::Object)
+    if (layer.getType() != tmx::Layer::Type::Object)
     {
         throw std::runtime_error("Layer must be an ObjectGroup to create physics bodies.");
     }
 
-    auto objGroup = std::static_pointer_cast<tilemap::ObjectGroup>(layer);
+    auto& objGroup = dynamic_cast<const tilemap::ObjectGroup&>(layer);
     StaticBody body(*this);
 
-    for (const auto& obj : objGroup->getObjects())
+    for (const auto& obj : objGroup.getObjects())
     {
         if (!obj.visible)
             continue;

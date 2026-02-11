@@ -38,7 +38,7 @@ class Texture
         bool v = false;
     } flip;
 
-    Texture(const Vec2& size, TextureScaleMode scaleMode = TextureScaleMode::DEFAULT);
+    Texture(int width, int height, TextureScaleMode scaleMode = TextureScaleMode::DEFAULT);
     Texture(
         const PixelArray& pixelArray, TextureScaleMode scaleMode = TextureScaleMode::DEFAULT,
         TextureAccess access = TextureAccess::STATIC
@@ -49,9 +49,9 @@ class Texture
     );
     ~Texture();
 
-    [[nodiscard]] double getWidth() const;
+    [[nodiscard]] int getWidth() const;
 
-    [[nodiscard]] double getHeight() const;
+    [[nodiscard]] int getHeight() const;
 
     [[nodiscard]] Vec2 getSize() const;
 
@@ -76,8 +76,8 @@ class Texture
 
   private:
     SDL_Texture* m_texPtr = nullptr;
-    double m_width = 0.0;
-    double m_height = 0.0;
+    int m_width = 0;
+    int m_height = 0;
     Rect m_clipArea{};
 };
 

@@ -623,6 +623,180 @@ void geometry(
     }
 }
 
+void bezier(
+    const std::vector<Vec2>& controlPoints, const Color& color, const double thickness,
+    const int numSegments
+)
+{
+    SDL_Renderer* rend = renderer::_get();
+    if (!rend)
+        throw std::runtime_error("Renderer not yet initialized");
+
+    if (controlPoints.size() < 3 || controlPoints.size() > 4 || color.a == 0)
+        return;
+
+    std::vector<Vec2> points;
+    points.reserve(numSegments + 1);
+
+    const Vec2 cameraPos = camera::getActivePos();
+
+    for (int i = 0; i <= numSegments; ++i)
+    {
+        const double t = static_cast<double>(i) / static_cast<double>(numSegments);
+        Vec2 p;
+        const double mt = 1.0 - t;
+        if (controlPoints.size() == 3)
+        {
+            p = controlPoints[0] * (mt * mt) + controlPoints[1] * (2.0 * mt * t) +
+                controlPoints[2] * (t * t);
+        }
+        else  // size == 4
+        {
+            p = controlPoints[0] * (mt * mt * mt) + controlPoints[1] * (3.0 * mt * mt * t) +
+                controlPoints[2] * (3.0 * mt * t * t) + controlPoints[3] * (t * t * t);
+        }
+        points.push_back(p - cameraPos);
+    }
+
+    if (thickness <= 1.0)
+    {
+        if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+            throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
+
+        std::vector<SDL_FPoint> sdlPoints;
+        sdlPoints.reserve(points.size());
+        for (const auto& p : points)
+            sdlPoints.push_back(static_cast<SDL_FPoint>(p));
+
+        if (!SDL_RenderLines(rend, sdlPoints.data(), static_cast<int>(sdlPoints.size())))
+            throw std::runtime_error(
+                "Failed to render bezier lines: " + std::string(SDL_GetError())
+            );
+    }
+    else
+    {
+        for (size_t i = 0; i < points.size() - 1; ++i)
+        {
+            _thickLine(rend, Line(points[i], points[i + 1]), color, thickness);
+        }
+    }
+}
+
+void sector(
+    const Circle& circle, double startAngle, double endAngle, const Color& color, double thickness,
+    int numSegments
+)
+{
+    SDL_Renderer* rend = renderer::_get();
+    if (!rend)
+        throw std::runtime_error("Renderer not yet initialized");
+
+    if (circle.radius < 1.0 || color.a == 0)
+        return;
+
+    const Vec2 cameraPos = camera::getActivePos();
+    const Vec2 targetRes = renderer::getTargetResolution();
+    const Vec2 center = circle.pos - cameraPos;
+
+    // Basic culling
+    if (center.x + circle.radius < 0.0 || center.y + circle.radius < 0.0 ||
+        center.x - circle.radius >= targetRes.x || center.y - circle.radius >= targetRes.y)
+    {
+        return;
+    }
+
+    const auto fColor = static_cast<SDL_FColor>(color);
+
+    if (thickness <= 0.0 || thickness >= circle.radius)
+    {
+        // Filled sector (pie slice)
+        std::vector<SDL_Vertex> vertices;
+        vertices.reserve(numSegments + 2);
+
+        // Center point
+        vertices.push_back({static_cast<SDL_FPoint>(center), fColor, {}});
+
+        // Edge points
+        for (int i = 0; i <= numSegments; ++i)
+        {
+            double t = static_cast<double>(i) / static_cast<double>(numSegments);
+            double theta = startAngle + (endAngle - startAngle) * t;
+            Vec2 p = center + Vec2(cos(theta), sin(theta)) * circle.radius;
+            vertices.push_back({static_cast<SDL_FPoint>(p), fColor, {}});
+        }
+
+        std::vector<int> indices;
+        indices.reserve(numSegments * 3);
+        for (int i = 1; i <= numSegments; ++i)
+        {
+            indices.push_back(0);
+            indices.push_back(i);
+            indices.push_back(i + 1);
+        }
+
+        if (!SDL_RenderGeometry(
+                rend, nullptr, vertices.data(), static_cast<int>(vertices.size()), indices.data(),
+                static_cast<int>(indices.size())
+            ))
+            throw std::runtime_error(
+                std::string("Failed to render sector geometry: ") + SDL_GetError()
+            );
+    }
+    else
+    {
+        // Outline arc with thickness
+        std::vector<SDL_Vertex> vertices;
+        vertices.reserve((numSegments + 1) * 2);
+
+        for (int i = 0; i <= numSegments; ++i)
+        {
+            double t = static_cast<double>(i) / static_cast<double>(numSegments);
+            double theta = startAngle + (endAngle - startAngle) * t;
+            double cosT = cos(theta);
+            double sinT = sin(theta);
+
+            // Outer vertex
+            vertices.push_back({
+                static_cast<SDL_FPoint>(center + Vec2(cosT, sinT) * circle.radius),
+                fColor,
+                {},
+            });
+            // Inner vertex
+            vertices.push_back({
+                static_cast<SDL_FPoint>(center + Vec2(cosT, sinT) * (circle.radius - thickness)),
+                fColor,
+                {},
+            });
+        }
+
+        std::vector<int> indices;
+        indices.reserve(numSegments * 6);
+        for (int i = 0; i < numSegments; ++i)
+        {
+            int topL = i * 2;
+            int botL = i * 2 + 1;
+            int topR = (i + 1) * 2;
+            int botR = (i + 1) * 2 + 1;
+
+            indices.push_back(topL);
+            indices.push_back(topR);
+            indices.push_back(botL);
+
+            indices.push_back(topR);
+            indices.push_back(botR);
+            indices.push_back(botL);
+        }
+
+        if (!SDL_RenderGeometry(
+                rend, nullptr, vertices.data(), static_cast<int>(vertices.size()), indices.data(),
+                static_cast<int>(indices.size())
+            ))
+            throw std::runtime_error(
+                std::string("Failed to render sector outline: ") + SDL_GetError()
+            );
+    }
+}
+
 void _polygonFilled(SDL_Renderer* r, const Polygon& polygon, const Color& color)
 {
     std::vector<std::vector<kn::Vec2>> vertices;
@@ -1163,6 +1337,34 @@ Args:
     vertices (Sequence[Vertex]): A list of Vertex objects.
     indices (Sequence[int] | None): A list of indices defining the primitives.
                                    If None or empty, vertices are drawn sequentially.
+    )doc"
+    );
+
+    subDraw.def(
+        "bezier", &bezier, py::arg("control_points"), py::arg("color"), py::arg("thickness") = 1.0,
+        py::arg("num_segments") = 24, R"doc(
+Draw a Bezier curve with 3 or 4 control points.
+
+Args:
+    control_points (Sequence[Vec2]): The control points (3 for quadratic, 4 for cubic).
+    color (Color): The color of the curve.
+    thickness (float, optional): The line thickness. Defaults to 1.0.
+    num_segments (int, optional): Number of segments to approximate the curve. Defaults to 24.
+    )doc"
+    );
+
+    subDraw.def(
+        "sector", &sector, py::arg("circle"), py::arg("start_angle"), py::arg("end_angle"),
+        py::arg("color"), py::arg("thickness") = 0.0, py::arg("num_segments") = 24, R"doc(
+Draw a circular sector or arc.
+
+Args:
+    circle (Circle): The circle defining the sector.
+    start_angle (float): The start angle in radians.
+    end_angle (float): The end angle in radians.
+    color (Color): The color of the sector.
+    thickness (float, optional): The line thickness. If <= 0 or >= radius, draws filled sector. Defaults to 0 (filled).
+    num_segments (int, optional): Number of segments to approximate the arc. Defaults to 24.
     )doc"
     );
 }

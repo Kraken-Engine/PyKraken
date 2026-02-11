@@ -130,4 +130,16 @@ float RigidBody::getMass() const
     _checkValid();
     return b2Body_GetMass(m_bodyId);
 }
+
+void RigidBody::setBullet(bool isBullet)
+{
+    _checkValid();
+    b2Body_SetBullet(m_bodyId, isBullet);
+}
+
+bool RigidBody::isBullet() const
+{
+    _checkValid();
+    return b2Body_IsBullet(m_bodyId);
+}
 }  // namespace kn::physics

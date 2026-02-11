@@ -241,7 +241,7 @@ class Map:
         """
     def get_layer(self, name: str) -> Layer:
         """
-        Get a layer by its name.
+        Get a layer by its name. Will return None if not found.
         
         Args:
             name (str): Name of the layer to retrieve.
@@ -364,6 +364,14 @@ class MapObject:
             Convert to a string according to format_spec.
             """
     @property
+    def is_visible(self) -> bool:
+        """
+        Visibility flag.
+        """
+    @is_visible.setter
+    def is_visible(self, arg0: bool) -> None:
+        ...
+    @property
     def name(self) -> str:
         """
         Object name.
@@ -411,14 +419,6 @@ class MapObject:
         """
         List of vertices for polygon/polyline shapes.
         """
-    @property
-    def visible(self) -> bool:
-        """
-        Visibility flag.
-        """
-    @visible.setter
-    def visible(self, arg0: bool) -> None:
-        ...
 class MapObjectList:
     def __bool__(self: collections.abc.Sequence[MapObject]) -> bool:
         """

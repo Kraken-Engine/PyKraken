@@ -702,17 +702,25 @@ class RigidBody(Body):
     def angular_velocity(self, arg1: typing.SupportsFloat) -> None:
         ...
     @property
-    def awake(self) -> bool:
-        """
-        Whether the body is currently awake and participating in simulation.
-        """
-    @property
     def fixed_rotation(self) -> bool:
         """
         Whether the body has fixed rotation.
         """
     @fixed_rotation.setter
     def fixed_rotation(self, arg1: bool) -> None:
+        ...
+    @property
+    def is_awake(self) -> bool:
+        """
+        Whether the body is currently awake and simulating.
+        """
+    @property
+    def is_bullet(self) -> bool:
+        """
+        Whether CCD is enabled for this body.
+        """
+    @is_bullet.setter
+    def is_bullet(self, arg1: bool) -> None:
         ...
     @property
     def linear_damping(self) -> float:

@@ -11,8 +11,6 @@ namespace physics
 class MouseJoint : public Joint
 {
   public:
-    MouseJoint() = default;
-
     void setTarget(const Vec2& target);
     Vec2 getTarget() const;
 

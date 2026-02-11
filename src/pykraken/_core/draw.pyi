@@ -7,7 +7,17 @@ import numpy
 import numpy.typing
 import pykraken._core
 import typing
-__all__: list[str] = ['capsule', 'capsules', 'circle', 'circles', 'ellipse', 'ellipses', 'geometry', 'line', 'lines', 'point', 'points', 'points_from_ndarray', 'polygon', 'polygons', 'rect', 'rects']
+__all__: list[str] = ['bezier', 'capsule', 'capsules', 'circle', 'circles', 'ellipse', 'ellipses', 'geometry', 'line', 'lines', 'point', 'points', 'points_from_ndarray', 'polygon', 'polygons', 'rect', 'rects', 'sector']
+def bezier(control_points: collections.abc.Sequence[pykraken._core.Vec2], color: pykraken._core.Color, thickness: typing.SupportsFloat = 1.0, num_segments: typing.SupportsInt = 24) -> None:
+    """
+    Draw a Bezier curve with 3 or 4 control points.
+    
+    Args:
+        control_points (Sequence[Vec2]): The control points (3 for quadratic, 4 for cubic).
+        color (Color): The color of the curve.
+        thickness (float, optional): The line thickness. Defaults to 1.0.
+        num_segments (int, optional): Number of segments to approximate the curve. Defaults to 24.
+    """
 def capsule(capsule: pykraken._core.Capsule, color: pykraken._core.Color, thickness: typing.SupportsFloat = 0, num_segments: typing.SupportsInt = 24) -> None:
     """
     Draw a capsule to the renderer.
@@ -175,4 +185,16 @@ def rects(rects: collections.abc.Sequence[pykraken._core.Rect], color: pykraken.
         rects (Sequence[Rect]): The rectangles to batch draw.
         color (Color): The color of the rectangles.
         thickness (int, optional): The border thickness of the rectangles. If 0 or >= half width/height, draws filled rectangles. Defaults to 0 (filled).
+    """
+def sector(circle: pykraken._core.Circle, start_angle: typing.SupportsFloat, end_angle: typing.SupportsFloat, color: pykraken._core.Color, thickness: typing.SupportsFloat = 0.0, num_segments: typing.SupportsInt = 24) -> None:
+    """
+    Draw a circular sector or arc.
+    
+    Args:
+        circle (Circle): The circle defining the sector.
+        start_angle (float): The start angle in radians.
+        end_angle (float): The end angle in radians.
+        color (Color): The color of the sector.
+        thickness (float, optional): The line thickness. If <= 0 or >= radius, draws filled sector. Defaults to 0 (filled).
+        num_segments (int, optional): Number of segments to approximate the arc. Defaults to 24.
     """

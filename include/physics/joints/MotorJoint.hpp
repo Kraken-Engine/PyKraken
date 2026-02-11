@@ -11,8 +11,6 @@ namespace physics
 class MotorJoint : public Joint
 {
   public:
-    MotorJoint() = default;
-
     void setLinearOffset(const Vec2& linearOffset);
     Vec2 getLinearOffset() const;
 

@@ -107,7 +107,7 @@ class World
         const Rect& rect, const Transform& transform, const Vec2& translation
     );
 
-    StaticBody fromMapLayer(const std::shared_ptr<tilemap::Layer>& layer);
+    StaticBody fromMapLayer(const tilemap::Layer& layer);
 
     void setGravity(const Vec2& gravity);
     Vec2 getGravity() const;

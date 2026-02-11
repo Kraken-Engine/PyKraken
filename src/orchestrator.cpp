@@ -345,13 +345,12 @@ Methods:
                 {
                     if (target.is_none())
                         throw py::type_error(
-                            "target must be a Transform or an object with a 'transform' attribute, "
-                            "not None"
+                            "target must be a Transform or an object with a 'transform' attribute, not None"
                         );
 
                     Orchestrator orch;
 
-                    // Try to get transform attribute first (for Sprite-like objects)
+                    // Try to get transform attribute first
                     if (py::hasattr(target, "transform"))
                     {
                         auto transformAttr = target.attr("transform");
@@ -369,8 +368,7 @@ Methods:
                         catch (const py::cast_error&)
                         {
                             throw py::type_error(
-                                "target must be a Transform or an object with a 'transform' "
-                                "attribute"
+                                "target must be a Transform or an object with a 'transform' attribute"
                             );
                         }
                     }
@@ -382,7 +380,7 @@ Methods:
 Create an Orchestrator for animating transforms.
 
 Args:
-    target: Either a Transform object or an object with a 'transform' attribute (like Sprite).
+    target: Either a Transform object or an object with a 'transform' attribute.
              )doc"
         )
         .def(

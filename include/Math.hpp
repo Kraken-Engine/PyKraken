@@ -109,6 +109,8 @@ class Vec2
 
     Vec2 operator*(double scalar) const;
 
+    Vec2 operator/(const Vec2& other) const;
+
     Vec2 operator/(double scalar) const;
 
     Vec2& operator+=(const Vec2& other);
@@ -118,6 +120,8 @@ class Vec2
     Vec2& operator*=(const Vec2& other);
 
     Vec2& operator*=(double scalar);
+
+    Vec2& operator/=(const Vec2& other);
 
     Vec2& operator/=(double scalar);
 

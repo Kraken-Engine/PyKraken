@@ -7,8 +7,6 @@ namespace kn::physics
 class PrismaticJoint : public Joint
 {
   public:
-    PrismaticJoint() = default;
-
     void enableSpring(bool enable);
     bool isSpringEnabled() const;
 

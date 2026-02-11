@@ -7,8 +7,6 @@ namespace kn::physics
 class DistanceJoint : public Joint
 {
   public:
-    DistanceJoint() = default;
-
     void setLength(float length);
     float getLength() const;
 

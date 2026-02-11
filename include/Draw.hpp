@@ -37,7 +37,9 @@ void circles(
     int numSegments = 24
 );
 
-void capsule(const Capsule& capsule, const Color& color, double thickness = 0.0, int numSegments = 24);
+void capsule(
+    const Capsule& capsule, const Color& color, double thickness = 0.0, int numSegments = 24
+);
 void capsules(
     const std::vector<Capsule>& capsules, const Color& color, double thickness = 0.0,
     int numSegments = 24
@@ -45,8 +47,7 @@ void capsules(
 
 void ellipse(Rect bounds, const Color& color, double thickness = 0.0, int numSegments = 24);
 void ellipses(
-    const std::vector<Rect>& rects, const Color& color, double thickness = 0.0,
-    int numSegments = 24
+    const std::vector<Rect>& rects, const Color& color, double thickness = 0.0, int numSegments = 24
 );
 
 void point(Vec2 point, const Color& color);
@@ -67,6 +68,16 @@ void polygons(const std::vector<Polygon>& polygons, const Color& color, bool fil
 void geometry(
     const std::shared_ptr<Texture>& texture, const std::vector<Vertex>& vertices,
     const std::vector<int>& indices = {}
+);
+
+void bezier(
+    const std::vector<Vec2>& controlPoints, const Color& color, double thickness = 1.0,
+    int numSegments = 24
+);
+
+void sector(
+    const Circle& circle, double startAngle, double endAngle, const Color& color,
+    double thickness = 0.0, int numSegments = 24
 );
 }  // namespace draw
 }  // namespace kn

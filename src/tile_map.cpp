@@ -1327,7 +1327,7 @@ TMX object shape types.
         .def_readwrite("transform", &MapObject::transform, R"doc(
 Transform component for the object.
     )doc")
-        .def_readwrite("visible", &MapObject::visible, R"doc(
+        .def_readwrite("is_visible", &MapObject::visible, R"doc(
 Visibility flag.
     )doc")
 
@@ -1500,7 +1500,7 @@ Args:
         .def(
             "get_layer", &Map::getLayer, py::arg("name"),
             py::return_value_policy::reference_internal, R"doc(
-Get a layer by its name.
+Get a layer by its name. Will return None if not found.
 
 Args:
     name (str): Name of the layer to retrieve.

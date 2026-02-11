@@ -7,11 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.6.1] - No Release Date
 
-### Todo
-- `draw.bezier` function for drawing cubic Bezier curves defined by four control points.
-- `draw.sector` function for drawing circular sectors defined by a center point, radius, start angle, and end angle.
-- A way to set exact sizes for textures without messing up clip areas.
-
 ### Added
 - New `mixer` submodule for advanced audio management.
 - `AudioPriority` enum for managing hardware track acquisition (MUSIC, UI, SFX).
@@ -44,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `Map.tile_layers`, `Map.object_groups`, and `Map.image_layers` properties for easier access to specific layer types.
 - Add `Map.get_layer(name)` method for retrieving a layer by name.
 - Add `World.from_map_layer(world, layer)` method for creating physics bodies from a tilemap layer.
+- `Vec2` can be divided by another `Vec2` element-wise using the `/` operator.
+- New `draw.bezier` and `draw.sector` functions for drawing Bezier curves and circular sectors.
 
 ### Changed
 - Refactored the audio backend to use SDL3_mixer.
@@ -55,14 +52,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Circle drawing (and now ellipses) default segment count reduced from 36 to 24.
 - Line drawing thickess can now be a float.
 - Rename `Map.layers` to `Map.all_layers`
+- `Texture` constructor involving a `Vec2` size parameter changed to accept separate `width` and `height` integer parameters for type safety.
+- `AnimationController.add_sheet` method `Vec2` frame size parameter changed to separate `frame_width` and `frame_height` integer parameters for type safety.
 
 ### Fixed
-- Fixed a bug where textures wouldn't render at all (hopefully).
+- Fixed a bug where textures wouldn't render at all (hopefully). Likely related to the internal SDL2->SDL3 transition.
 
 ### Removed
 - Removed `rewind` method from audio stream class (use `seek(0)` or restart playback).
 - Removed `miniaudio` dependency.
 - Removed `SGL_gfx` dependency.
+- Due to the new CharacterBody class, I've decided to remove the `Sprite` class as it become redundant.
 
 ## [1.6.0] - 2026-01-29
 

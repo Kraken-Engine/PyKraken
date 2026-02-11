@@ -187,14 +187,16 @@ Draw all colliders attached to the body (debug/development only).
             R"doc(Whether the body has fixed rotation.)doc"
         )
         .def_property_readonly(
-            "awake", &RigidBody::isAwake,
-            R"doc(Whether the body is currently awake and participating in simulation.)doc"
+            "is_awake", &RigidBody::isAwake,
+            R"doc(Whether the body is currently awake and simulating.)doc"
         )
         .def_property_readonly("mass", &RigidBody::getMass, R"doc(The mass of the body.)doc")
+        .def_property(
+            "is_bullet", &RigidBody::isBullet, &RigidBody::setBullet,
+            R"doc(Whether CCD is enabled for this body.)doc"
+        )
 
-        .def("wake", &RigidBody::wake, R"doc(
-Manually wake the body from sleep.
-            )doc")
+        .def("wake", &RigidBody::wake, R"doc(Manually wake the body from sleep.)doc")
         .def(
             "apply_force", &RigidBody::applyForce, py::arg("force"), py::arg("point"),
             py::arg("wake") = true, R"doc(
