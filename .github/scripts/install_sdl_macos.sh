@@ -17,7 +17,7 @@ cmake -S . -B build -G Ninja \
     -DCMAKE_INSTALL_PREFIX="/usr/local" \
     -DBUILD_SHARED_LIBS=ON
 
-cmake --build build --target install
+sudo cmake --build build --target install
 cd ..
 rm -rf "SDL3_mixer-${MIXER_VER}"
 
