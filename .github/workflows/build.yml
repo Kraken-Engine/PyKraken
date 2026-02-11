@@ -36,20 +36,14 @@ jobs:
           CIBW_SKIP: "*-musllinux_* *-win32"
           CIBW_BUILD: "cp311-* cp312-* cp313-* cp314-*"
           CIBW_ARCHS_WINDOWS: "AMD64"
-          CIBW_ENVIRONMENT: CMAKE_GENERATOR=Ninja
+          CIBW_ENVIRONMENT: "CMAKE_GENERATOR=Ninja PYK_VENDOR_SDL=OFF"
 
-          CIBW_ENVIRONMENT_WINDOWS: "CC=cl CXX=cl"
+          CIBW_ENVIRONMENT_WINDOWS: 'CC=cl CXX=cl CMAKE_PREFIX_PATH="C:\sdl\SDL3-3.4.0;C:\sdl\SDL3_image-3.4.0;C:\sdl\SDL3_ttf-3.2.2;C:\sdl\SDL3_mixer-3.1.2"'
+          CIBW_BEFORE_ALL_WINDOWS: "powershell .github/scripts/download_sdl.ps1"
 
-          # Minimal system headers inside manylinux
-          CIBW_BEFORE_ALL_LINUX: >
-            yum -y install \
-              cmake ninja-build \
-              alsa-lib-devel pipewire-devel pulseaudio-libs-devel \
-              libXrandr-devel libXcursor-devel libXi-devel libXinerama-devel libXfixes-devel libXScrnSaver-devel libXtst-devel \
-              mesa-libEGL-devel mesa-libgbm-devel \
-              wayland-devel wayland-protocols-devel libxkbcommon-devel \
-              dbus-devel ibus-devel systemd-devel \
-              libpng-devel libjpeg-turbo-devel freetype-devel flac-devel
+          CIBW_BEFORE_ALL_LINUX: "bash .github/scripts/install_sdl_linux.sh"
+
+          CIBW_BEFORE_ALL_MACOS: "bash .github/scripts/install_sdl_macos.sh"
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
