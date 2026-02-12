@@ -46,11 +46,11 @@ jobs:
           git clone --depth 1 --branch release-3.4.0 https://github.com/libsdl-org/SDL_image.git
           cmake -S SDL_image -B build_image \
             -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps \
+            -DCMAKE_PREFIX_PATH=$(pwd)/linux_deps \
             -DBUILD_SHARED_LIBS=OFF \
             -DSDLIMAGE_BACKEND_STB=ON \
             -DSDLIMAGE_BUILD_SHARED_LIBS=OFF \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-            -DCMAKE_PREFIX_PATH=$(pwd)/linux_deps \
             -DCMAKE_BUILD_TYPE=Release
           cmake --build build_image --target install --parallel 4
 
@@ -61,18 +61,22 @@ jobs:
           cd ..
           cmake -S SDL_ttf -B build_ttf \
             -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps \
+            -DCMAKE_PREFIX_PATH=$(pwd)/linux_deps \
             -DBUILD_SHARED_LIBS=OFF \
             -DSDLTTF_BUILD_SHARED_LIBS=OFF \
             -DSDLTTF_VENDORED=ON \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-            -DCMAKE_PREFIX_PATH=$(pwd)/linux_deps \
             -DCMAKE_BUILD_TYPE=Release
           cmake --build build_ttf --target install --parallel 4
 
           # Build SDL3_mixer
-          git clone --depth 1 --branch prerelease-3.1.2 https://github.com/libsdl-org/SDL_mixer.git
+          git clone --depth 1 --branch prerelease-3.1.2 --recurse-submodules https://github.com/libsdl-org/SDL_mixer.git
+          cd SDL_mixer
+          git submodule update --init --recursive
+          cd ..
           cmake -S SDL_mixer -B build_mixer \
             -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps \
+            -DCMAKE_PREFIX_PATH=$(pwd)/linux_deps \
             -DBUILD_SHARED_LIBS=OFF \
             -DSDLMIXER_BUILD_SHARED_LIBS=OFF \
             -DSDLMIXER_VENDORED=ON \
@@ -80,7 +84,6 @@ jobs:
             -DSDLMIXER_FLAC_LIBFLAC=ON \
             -DSDLMIXER_MP3_MINIMP3=ON \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-            -DCMAKE_PREFIX_PATH=$(pwd)/linux_deps \
             -DCMAKE_BUILD_TYPE=Release
           cmake --build build_mixer --target install --parallel 4
 
