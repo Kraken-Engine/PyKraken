@@ -42,16 +42,17 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release
           cmake --build build_sdl --target install --parallel 4
 
+          find linux_deps -name 'SDL3Config.cmake' -o -name 'SDL3*Targets.cmake' -o -name 'SDL3ConfigVersion.cmake'
+
           # Build SDL3_image
           git clone --depth 1 --branch release-3.4.0 https://github.com/libsdl-org/SDL_image.git
           cmake -S SDL_image -B build_image \
             -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps \
-            -DSDL3_STATIC=ON \
+            -DBUILD_SHARED_LIBS=OFF \
             -DSDLIMAGE_BACKEND_STB=ON \
             -DSDLIMAGE_BUILD_SHARED_LIBS=OFF \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DCMAKE_PREFIX_PATH=$(pwd)/linux_deps \
-            -DSDL3_DIR=$(pwd)/linux_deps/lib64/cmake/SDL3 \
             -DCMAKE_BUILD_TYPE=Release
           cmake --build build_image --target install --parallel 4
 
