@@ -29,6 +29,10 @@ jobs:
 
       - name: Build SDL Dependencies
         run: |
+          mkdir -p $(pwd)/linux_deps
+
+          export PKG_CONFIG_PATH=$(pwd)/linux_deps/lib64/pkgconfig:$(pwd)/linux_deps/lib/pkgconfig:$PKG_CONFIG_PATH
+
           # Build SDL3
           git clone --depth 1 --branch release-3.4.0 https://github.com/libsdl-org/SDL.git
           cmake -S SDL -B build_sdl \
@@ -42,10 +46,12 @@ jobs:
           git clone --depth 1 --branch release-3.4.0 https://github.com/libsdl-org/SDL_image.git
           cmake -S SDL_image -B build_image \
             -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps \
+            -DSDL3_STATIC=ON \
             -DSDLIMAGE_BACKEND_STB=ON \
             -DSDLIMAGE_BUILD_SHARED_LIBS=OFF \
-            -DSDL3_DIR=$(pwd)/linux_deps/lib64/cmake/SDL3 \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DCMAKE_PREFIX_PATH=$(pwd)/linux_deps \
+            -DSDL3_DIR=$(pwd)/linux_deps/lib64/cmake/SDL3 \
             -DCMAKE_BUILD_TYPE=Release
           cmake --build build_image --target install --parallel 4
 
@@ -53,8 +59,10 @@ jobs:
           git clone --depth 1 --branch release-3.2.2 https://github.com/libsdl-org/SDL_ttf.git
           cmake -S SDL_ttf -B build_ttf \
             -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps \
+            -DSDL3_STATIC=ON \
             -DSDLTTF_BUILD_SHARED_LIBS=OFF \
             -DSDLTTF_VENDORED=ON \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DCMAKE_PREFIX_PATH=$(pwd)/linux_deps \
             -DCMAKE_BUILD_TYPE=Release
           cmake --build build_ttf --target install --parallel 4
@@ -63,11 +71,13 @@ jobs:
           git clone --depth 1 --branch prerelease-3.1.2 https://github.com/libsdl-org/SDL_mixer.git
           cmake -S SDL_mixer -B build_mixer \
             -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps \
+            -DSDL3_STATIC=ON \
             -DSDLMIXER_BUILD_SHARED_LIBS=OFF \
             -DSDLMIXER_VENDORED=ON \
             -DSDLMIXER_OPUS=ON \
             -DSDLMIXER_FLAC_LIBFLAC=ON \
             -DSDLMIXER_MP3_MINIMP3=ON \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DCMAKE_PREFIX_PATH=$(pwd)/linux_deps \
             -DCMAKE_BUILD_TYPE=Release
           cmake --build build_mixer --target install --parallel 4
