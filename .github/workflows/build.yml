@@ -170,28 +170,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # WINDOWS PREP: Fetch SDL VC Zips
-      - name: Fetch Windows SDL Binaries
+      # WINDOWS PREP: Setup SDL with official action
+      - name: Setup SDL for Windows
         if: matrix.os == 'windows-latest'
-        shell: bash
-        run: |
-          mkdir -p vendor
-
-          # SDL3
-          curl -L -o sdl3.zip https://github.com/libsdl-org/SDL/releases/download/release-3.4.0/SDL3-devel-3.4.0-VC.zip
-          unzip -q sdl3.zip -d ./vendor
-
-          # SDL3_image
-          curl -L -o sdl3_image.zip https://github.com/libsdl-org/SDL_image/releases/download/release-3.4.0/SDL3_image-devel-3.4.0-VC.zip
-          unzip -q sdl3_image.zip -d ./vendor
-
-          # SDL3_ttf
-          curl -L -o sdl3_ttf.zip https://github.com/libsdl-org/SDL_ttf/releases/download/release-3.2.2/SDL3_ttf-devel-3.2.2-VC.zip
-          unzip -q sdl3_ttf.zip -d ./vendor
-
-          # SDL3_mixer
-          curl -L -o sdl3_mixer.zip https://github.com/libsdl-org/SDL_mixer/releases/download/prerelease-3.1.2/SDL3_mixer-devel-3.1.2-VC.zip
-          unzip -q sdl3_mixer.zip -d ./vendor
+        uses: libsdl-org/setup-sdl@main
+        with:
+          version: 3.4.0
+          version-sdl-image: 3.4.0
+          version-sdl-ttf: 3.2.2
+          version-sdl-mixer: 3.1.2
+          build-type: release
+          add-to-environment: true
+          install-linux-dependencies: false
 
       # MACOS PREP: Brew and Build Mixer
       - name: Download macOS Core
@@ -219,10 +209,6 @@ jobs:
           CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux_2_28_x86_64
           CIBW_SKIP: "*-musllinux_* *-win32"
           CIBW_BUILD: "cp311-* cp312-* cp313-* cp314-*"
-
-          # Pass paths to CMake
-          CIBW_ENVIRONMENT_WINDOWS: >
-            CMAKE_PREFIX_PATH="${{ github.workspace }}/vendor/SDL3-3.4.0/cmake;${{ github.workspace }}/vendor/SDL3_image-3.4.0/cmake;${{ github.workspace }}/vendor/SDL3_ttf-3.2.2/cmake;${{ github.workspace }}/vendor/SDL3_mixer-3.1.2/cmake"
 
           CIBW_ENVIRONMENT_MACOS: >
             MACOSX_DEPLOYMENT_TARGET=15.0
