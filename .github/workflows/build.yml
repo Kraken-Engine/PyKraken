@@ -20,32 +20,54 @@ jobs:
       - name: Install System Headers
         run: |
           dnf -y install \
-          alsa-lib-devel pipewire-devel pulseaudio-libs-devel \
-          libXrandr-devel libXcursor-devel libXi-devel libXinerama-devel libXfixes-devel libXScrnSaver-devel libXtst-devel \
-          mesa-libEGL-devel mesa-libgbm-devel \
-          wayland-devel wayland-protocols-devel libxkbcommon-devel \
-          libpng-devel libjpeg-turbo-devel freetype-devel flac-devel
+            alsa-lib-devel pipewire-devel pulseaudio-libs-devel \
+            libXrandr-devel libXcursor-devel libXi-devel libXinerama-devel libXfixes-devel libXScrnSaver-devel libXtst-devel \
+            mesa-libEGL-devel mesa-libgbm-devel \
+            wayland-devel wayland-protocols-devel libxkbcommon-devel \
+            libpng-devel libjpeg-turbo-devel freetype-devel flac-devel \
+            pkgconf-pkg-config
 
       - name: Build SDL Dependencies
         run: |
           # Build SDL3
           git clone --depth 1 --branch release-3.4.0 https://github.com/libsdl-org/SDL.git
-          cmake -S SDL -B build_sdl -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps -DSDL_STATIC=ON -DSDL_SHARED=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake -S SDL -B build_sdl \
+            -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps \
+            -DSDL_STATIC=ON -DSDL_SHARED=OFF \
+            -DCMAKE_BUILD_TYPE=Release
           cmake --build build_sdl --target install --parallel 4
 
           # Build SDL3_image
           git clone --depth 1 --branch release-3.4.0 https://github.com/libsdl-org/SDL_image.git
-          cmake -S SDL_image -B build_image -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps -DSDLIMAGE_BACKEND_STB=ON -DSDLIMAGE_BUILD_SHARED_LIBS=OFF -DCMAKE_PREFIX_PATH=$(pwd)/linux_deps -DCMAKE_BUILD_TYPE=Release
+          cmake -S SDL_image -B build_image \
+            -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps \
+            -DSDLIMAGE_BACKEND_STB=ON \
+            -DSDLIMAGE_BUILD_SHARED_LIBS=OFF \
+            -DCMAKE_PREFIX_PATH=$(pwd)/linux_deps \
+            -DCMAKE_BUILD_TYPE=Release
           cmake --build build_image --target install --parallel 4
 
           # Build SDL3_ttf
           git clone --depth 1 --branch release-3.2.2 https://github.com/libsdl-org/SDL_ttf.git
-          cmake -S SDL_ttf -B build_ttf -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps -DSDLTTF_BUILD_SHARED_LIBS=OFF -DSDLTTF_VENDORED=ON -DCMAKE_PREFIX_PATH=$(pwd)/linux_deps -DCMAKE_BUILD_TYPE=Release
+          cmake -S SDL_ttf -B build_ttf \
+            -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps \
+            -DSDLTTF_BUILD_SHARED_LIBS=OFF \
+            -DSDLTTF_VENDORED=ON \
+            -DCMAKE_PREFIX_PATH=$(pwd)/linux_deps \
+            -DCMAKE_BUILD_TYPE=Release
           cmake --build build_ttf --target install --parallel 4
 
           # Build SDL3_mixer
           git clone --depth 1 --branch prerelease-3.1.2 https://github.com/libsdl-org/SDL_mixer.git
-          cmake -S SDL_mixer -B build_mixer -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps -DSDLMIXER_BUILD_SHARED_LIBS=OFF -DSDLMIXER_VENDORED=ON -DSDLMIXER_OPUS=ON -DSDLMIXER_FLAC_LIBFLAC=ON -DSDLMIXER_MP3_MINIMP3=ON -DCMAKE_PREFIX_PATH=$(pwd)/linux_deps -DCMAKE_BUILD_TYPE=Release
+          cmake -S SDL_mixer -B build_mixer \
+            -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps \
+            -DSDLMIXER_BUILD_SHARED_LIBS=OFF \
+            -DSDLMIXER_VENDORED=ON \
+            -DSDLMIXER_OPUS=ON \
+            -DSDLMIXER_FLAC_LIBFLAC=ON \
+            -DSDLMIXER_MP3_MINIMP3=ON \
+            -DCMAKE_PREFIX_PATH=$(pwd)/linux_deps \
+            -DCMAKE_BUILD_TYPE=Release
           cmake --build build_mixer --target install --parallel 4
 
       - name: Upload Linux Core
