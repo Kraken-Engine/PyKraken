@@ -42,8 +42,6 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release
           cmake --build build_sdl --target install --parallel 4
 
-          find linux_deps -name 'SDL3Config.cmake' -o -name 'SDL3*Targets.cmake' -o -name 'SDL3ConfigVersion.cmake'
-
           # Build SDL3_image
           git clone --depth 1 --branch release-3.4.0 https://github.com/libsdl-org/SDL_image.git
           cmake -S SDL_image -B build_image \
@@ -60,7 +58,7 @@ jobs:
           git clone --depth 1 --branch release-3.2.2 https://github.com/libsdl-org/SDL_ttf.git
           cmake -S SDL_ttf -B build_ttf \
             -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps \
-            -DSDL3_STATIC=ON \
+            -DBUILD_SHARED_LIBS=OFF \
             -DSDLTTF_BUILD_SHARED_LIBS=OFF \
             -DSDLTTF_VENDORED=ON \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
@@ -72,7 +70,7 @@ jobs:
           git clone --depth 1 --branch prerelease-3.1.2 https://github.com/libsdl-org/SDL_mixer.git
           cmake -S SDL_mixer -B build_mixer \
             -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps \
-            -DSDL3_STATIC=ON \
+            -DBUILD_SHARED_LIBS=OFF \
             -DSDLMIXER_BUILD_SHARED_LIBS=OFF \
             -DSDLMIXER_VENDORED=ON \
             -DSDLMIXER_OPUS=ON \
