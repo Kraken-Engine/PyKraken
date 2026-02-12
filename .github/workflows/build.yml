@@ -14,14 +14,14 @@ concurrency:
 jobs:
   prepare_linux:
     runs-on: ubuntu-latest
-    container: quay.io/pypa/manylinux2014_x86_64
+    container: quay.io/pypa/manylinux_2_28_x86_64
     steps:
       - uses: actions/checkout@v4
       - name: Install System Headers
         run: |
-          yum -y install alsa-lib-devel pipewire-devel pulseaudio-libs-devel \
+          dnf -y install alsa-lib-devel pipewire-devel pulseaudio-libs-devel \
           libXrandr-devel libXcursor-devel libXi-devel libXinerama-devel libXfixes-devel \
-          mesa-libEGL-devel wayland-devel libxkbcommon-devel libpng-devel libjpeg-turbo-devel
+          mesa-libEGL-devel wayland-devel wayland-protocols-devel libxkbcommon-devel libpng-devel libjpeg-turbo-devel
 
       - name: Build SDL Dependencies
         run: |
@@ -117,6 +117,7 @@ jobs:
         uses: pypa/cibuildwheel@v3.2.0
         env:
           CIBW_BUILD_FRONTEND: "build[uv]"
+          CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux_2_28_x86_64
           CIBW_SKIP: "*-musllinux_* *-win32"
           CIBW_BUILD: "cp311-* cp312-* cp313-* cp314-*"
 
@@ -136,7 +137,7 @@ jobs:
 
           # Linux still needs standard runtime libs to link against
           CIBW_BEFORE_ALL_LINUX: >
-            yum -y install alsa-lib-devel libXrandr-devel libXcursor-devel mesa-libEGL-devel wayland-devel libxkbcommon-devel
+            dnf -y install alsa-lib-devel libXrandr-devel libXcursor-devel mesa-libEGL-devel wayland-devel wayland-protocols
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
