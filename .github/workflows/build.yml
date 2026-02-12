@@ -34,6 +34,7 @@ jobs:
           cmake -S SDL -B build_sdl \
             -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps \
             -DSDL_STATIC=ON -DSDL_SHARED=OFF \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DCMAKE_BUILD_TYPE=Release
           cmake --build build_sdl --target install --parallel 4
 
@@ -43,6 +44,7 @@ jobs:
             -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps \
             -DSDLIMAGE_BACKEND_STB=ON \
             -DSDLIMAGE_BUILD_SHARED_LIBS=OFF \
+            -DSDL3_DIR=$(pwd)/linux_deps/lib64/cmake/SDL3 \
             -DCMAKE_PREFIX_PATH=$(pwd)/linux_deps \
             -DCMAKE_BUILD_TYPE=Release
           cmake --build build_image --target install --parallel 4
