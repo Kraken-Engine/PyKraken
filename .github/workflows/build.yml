@@ -193,13 +193,6 @@ jobs:
           curl -L -o sdl3_mixer.zip https://github.com/libsdl-org/SDL_mixer/releases/download/prerelease-3.1.2/SDL3_mixer-devel-3.1.2-VC.zip
           unzip -q sdl3_mixer.zip -d ./vendor
 
-      # Windows debug
-      - name: Locate SDL CMake config files
-        if: matrix.os == 'windows-latest'
-        shell: bash
-        run: |
-          find vendor -name "SDL3Config.cmake" -o -name "SDL3_imageConfig.cmake" -o -name "SDL3_ttfConfig.cmake" -o -name "SDL3_mixerConfig.cmake"
-
       # MACOS PREP: Brew and Build Mixer
       - name: Download macOS Core
         if: matrix.os == 'macos-latest'
@@ -229,7 +222,7 @@ jobs:
 
           # Pass paths to CMake
           CIBW_ENVIRONMENT_WINDOWS: >
-            CMAKE_PREFIX_PATH="${{ github.workspace }}/vendor/SDL3-3.4.0;${{ github.workspace }}/vendor/SDL3_image-3.4.0;${{ github.workspace }}/vendor/SDL3_ttf-3.2.2;${{ github.workspace }}/vendor/SDL3_mixer-3.1.2"
+            CMAKE_PREFIX_PATH="${{ github.workspace }}/vendor/SDL3-3.4.0/cmake;${{ github.workspace }}/vendor/SDL3_image-3.4.0/cmake;${{ github.workspace }}/vendor/SDL3_ttf-3.2.2/cmake;${{ github.workspace }}/vendor/SDL3_mixer-3.1.2/cmake"
 
           CIBW_ENVIRONMENT_MACOS: >
             MACOSX_DEPLOYMENT_TARGET=15.0
