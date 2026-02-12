@@ -179,7 +179,7 @@ jobs:
           version-sdl-image: 3.4.0
           version-sdl-ttf: 3.2.2
           version-sdl-mixer: 3.1.2
-          build-type: release
+          build-type: Release
           add-to-environment: true
           install-linux-dependencies: false
 
