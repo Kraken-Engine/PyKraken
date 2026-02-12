@@ -19,9 +19,12 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install System Headers
         run: |
-          dnf -y install alsa-lib-devel pipewire-devel pulseaudio-libs-devel \
-          libXrandr-devel libXcursor-devel libXi-devel libXinerama-devel libXfixes-devel \
-          mesa-libEGL-devel wayland-devel wayland-protocols-devel libxkbcommon-devel libpng-devel libjpeg-turbo-devel
+          dnf -y install \
+          alsa-lib-devel pipewire-devel pulseaudio-libs-devel \
+          libXrandr-devel libXcursor-devel libXi-devel libXinerama-devel libXfixes-devel libXScrnSaver-devel libXtst-devel \
+          mesa-libEGL-devel mesa-libgbm-devel \
+          wayland-devel wayland-protocols-devel libxkbcommon-devel \
+          libpng-devel libjpeg-turbo-devel freetype-devel flac-devel
 
       - name: Build SDL Dependencies
         run: |
