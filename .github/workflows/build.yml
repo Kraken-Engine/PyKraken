@@ -55,7 +55,10 @@ jobs:
           cmake --build build_image --target install --parallel 4
 
           # Build SDL3_ttf
-          git clone --depth 1 --branch release-3.2.2 https://github.com/libsdl-org/SDL_ttf.git
+          git clone --depth 1 --branch release-3.2.2 --recurse-submodules https://github.com/libsdl-org/SDL_ttf.git
+          cd SDL_ttf
+          git submodule update --init --recursive
+          cd ..
           cmake -S SDL_ttf -B build_ttf \
             -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps \
             -DBUILD_SHARED_LIBS=OFF \
