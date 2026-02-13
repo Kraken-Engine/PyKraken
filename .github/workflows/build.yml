@@ -254,6 +254,10 @@ jobs:
           Get-ChildItem -Path "${env:GITHUB_WORKSPACE}\prebuilt_windows" -Recurse -Filter SDL3Config.cmake | ForEach-Object { $_.FullName }
           Write-Host "Searching for SDL3_imageConfig.cmake:"
           Get-ChildItem -Path "${env:GITHUB_WORKSPACE}\prebuilt_windows" -Recurse -Filter SDL3_imageConfig.cmake | ForEach-Object { $_.FullName }
+          Write-Host "Searching for SDL3_imageConfig.cmake in lib/cmake:"
+          Get-ChildItem -Path "${env:GITHUB_WORKSPACE}\prebuilt_windows\lib\cmake" -Recurse -Filter SDL3_imageConfig.cmake -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }
+          Write-Host "Searching for SDL3_imageConfig.cmake in share:"
+          Get-ChildItem -Path "${env:GITHUB_WORKSPACE}\prebuilt_windows\share" -Recurse -Filter SDL3_imageConfig.cmake -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }
           Write-Host "Searching for SDL3_ttfConfig.cmake:"
           Get-ChildItem -Path "${env:GITHUB_WORKSPACE}\prebuilt_windows" -Recurse -Filter SDL3_ttfConfig.cmake | ForEach-Object { $_.FullName }
           Write-Host "Searching for SDL3_mixerConfig.cmake:"
