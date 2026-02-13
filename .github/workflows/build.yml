@@ -281,7 +281,11 @@ jobs:
           CIBW_BUILD: "cp311-* cp312-* cp313-* cp314-*"
 
           CIBW_ENVIRONMENT_WINDOWS: >
-            CMAKE_PREFIX_PATH=${{ github.workspace }}/prebuilt_windows;${{ github.workspace }}/prebuilt_windows/windows_deps
+            CMAKE_PREFIX_PATH=${{ github.workspace }}/prebuilt_windows;${{ github.workspace }}/prebuilt_windows/cmake
+            SDL3_DIR=${{ github.workspace }}/prebuilt_windows/cmake
+            SDL3_image_DIR=${{ github.workspace }}/prebuilt_windows/cmake
+            SDL3_ttf_DIR=${{ github.workspace }}/prebuilt_windows/cmake
+            SDL3_mixer_DIR=${{ github.workspace }}/prebuilt_windows/cmake
 
           CIBW_ENVIRONMENT_MACOS: >
             MACOSX_DEPLOYMENT_TARGET=15.0
