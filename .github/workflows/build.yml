@@ -179,25 +179,20 @@ jobs:
           cmake --build build_sdl --config Release --target install --parallel 4
 
           # Build SDL3_image
-          git clone --depth 1 --branch release-3.4.0 https://github.com/libsdl-org/SDL_image.git
+          git clone --depth 1 --branch release-3.4.0 --recurse-submodules https://github.com/libsdl-org/SDL_image.git
+          Push-Location SDL_image
+          git submodule update --init --recursive
+          Pop-Location
           cmake -S SDL_image -B build_image `
             -DCMAKE_INSTALL_PREFIX="$depsPath" `
             -DCMAKE_PREFIX_PATH="$depsPath" `
             -DBUILD_SHARED_LIBS=OFF `
             -DSDLIMAGE_BACKEND_STB=ON `
+            -DSDLIMAGE_VENDORED=ON `
             -DSDLIMAGE_BUILD_SHARED_LIBS=OFF `
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
             -DCMAKE_BUILD_TYPE=Release
           cmake --build build_image --config Release --target install --parallel 4
-
-          $imageInstallManifest = "$(Get-Location)\build_image\install_manifest.txt"
-          Write-Host "SDL3_image install manifest: $imageInstallManifest"
-          if (Test-Path $imageInstallManifest) {
-            Write-Host "SDL3_image manifest entries containing config/targets files:"
-            Select-String -Path $imageInstallManifest -Pattern "SDL3_image.*[Cc]onfig\.cmake|SDL3_image-config\.cmake|SDL3_image.*Targets\.cmake" | ForEach-Object { $_.Line }
-          } else {
-            Write-Host "SDL3_image install manifest not found"
-          }
 
           # Build SDL3_ttf
           git clone --depth 1 --branch release-3.2.2 --recurse-submodules https://github.com/libsdl-org/SDL_ttf.git
@@ -251,26 +246,6 @@ jobs:
         with:
           name: windows-core-deps
           path: ./prebuilt_windows
-
-      - name: Debug Windows dependency paths
-        if: matrix.os == 'windows-latest'
-        shell: powershell
-        run: |
-          Write-Host "Workspace: $env:GITHUB_WORKSPACE"
-          Write-Host "Listing prebuilt_windows top-level:"
-          Get-ChildItem -Path "${env:GITHUB_WORKSPACE}\prebuilt_windows" -Force
-          Write-Host "Searching for SDL3Config.cmake:"
-          Get-ChildItem -Path "${env:GITHUB_WORKSPACE}\prebuilt_windows" -Recurse -Filter SDL3Config.cmake | ForEach-Object { $_.FullName }
-          Write-Host "Searching for SDL3_imageConfig.cmake:"
-          Get-ChildItem -Path "${env:GITHUB_WORKSPACE}\prebuilt_windows" -Recurse -Filter SDL3_imageConfig.cmake | ForEach-Object { $_.FullName }
-          Write-Host "Searching for SDL3_imageConfig.cmake in lib/cmake:"
-          Get-ChildItem -Path "${env:GITHUB_WORKSPACE}\prebuilt_windows\lib\cmake" -Recurse -Filter SDL3_imageConfig.cmake -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }
-          Write-Host "Searching for SDL3_imageConfig.cmake in share:"
-          Get-ChildItem -Path "${env:GITHUB_WORKSPACE}\prebuilt_windows\share" -Recurse -Filter SDL3_imageConfig.cmake -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }
-          Write-Host "Searching for SDL3_ttfConfig.cmake:"
-          Get-ChildItem -Path "${env:GITHUB_WORKSPACE}\prebuilt_windows" -Recurse -Filter SDL3_ttfConfig.cmake | ForEach-Object { $_.FullName }
-          Write-Host "Searching for SDL3_mixerConfig.cmake:"
-          Get-ChildItem -Path "${env:GITHUB_WORKSPACE}\prebuilt_windows" -Recurse -Filter SDL3_mixerConfig.cmake | ForEach-Object { $_.FullName }
 
       # MACOS PREP: Brew and Build Mixer
       - name: Download macOS Core
