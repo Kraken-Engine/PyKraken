@@ -92,8 +92,6 @@ foreach(_pyk_prebuilt_dir prebuilt_windows prebuilt_macos prebuilt_linux)
   if (EXISTS "${_pyk_prebuilt_root}")
     list(PREPEND CMAKE_PREFIX_PATH
       "${_pyk_prebuilt_root}"
-      "${_pyk_prebuilt_root}/lib/cmake"
-      "${_pyk_prebuilt_root}/share/cmake"
       "${_pyk_prebuilt_root}/cmake"
     )
     message(STATUS "Using prebuilt dependency prefix: ${_pyk_prebuilt_root}")
