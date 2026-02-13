@@ -271,7 +271,7 @@ jobs:
           CIBW_BUILD: "cp311-* cp312-* cp313-* cp314-*"
 
           CIBW_ENVIRONMENT_WINDOWS: >
-            CMAKE_PREFIX_PATH=${{ github.workspace }}\prebuilt_windows
+            CMAKE_PREFIX_PATH=${{ github.workspace }}/prebuilt_windows
 
           CIBW_ENVIRONMENT_MACOS: >
             MACOSX_DEPLOYMENT_TARGET=15.0
