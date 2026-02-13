@@ -24,6 +24,7 @@ jobs:
           path: ./linux_deps
           key: linux-core-deps-v1-${{ hashFiles('.github/workflows/build.yml') }}
       - name: Install System Headers
+        if: steps.cache-linux-deps.outputs.cache-hit != 'true'
         run: |
           dnf -y install \
             alsa-lib-devel pipewire-devel pulseaudio-libs-devel \
@@ -302,13 +303,25 @@ jobs:
           path: ./windows_deps
 
   build_wheels:
-    name: Build wheels on ${{ matrix.os }}
+    name: Build wheels (${{ matrix.artifact_name }})
     needs: [prepare_linux, prepare_macos, prepare_windows]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        include:
+          - os: windows-latest
+            cibw_build: "cp311-* cp312-*"
+            artifact_name: wheels-windows-a
+          - os: windows-latest
+            cibw_build: "cp313-* cp314-*"
+            artifact_name: wheels-windows-b
+          - os: macos-latest
+            cibw_build: "cp311-* cp312-* cp313-* cp314-*"
+            artifact_name: wheels-macos
+          - os: ubuntu-latest
+            cibw_build: "cp311-* cp312-* cp313-* cp314-*"
+            artifact_name: wheels-linux
 
     steps:
       - uses: actions/checkout@v4
@@ -346,7 +359,7 @@ jobs:
           CIBW_BUILD_FRONTEND: "build[uv]"
           CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux_2_28_x86_64
           CIBW_SKIP: "*-musllinux_* *-win32"
-          CIBW_BUILD: "cp311-* cp312-* cp313-* cp314-*"
+          CIBW_BUILD: "${{ matrix.cibw_build }}"
 
           CIBW_ENVIRONMENT_WINDOWS: >
             CMAKE_PREFIX_PATH="${{ github.workspace }}/prebuilt_windows;${{ github.workspace }}/prebuilt_windows/cmake"
@@ -369,5 +382,5 @@ jobs:
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-${{ matrix.os }}
+          name: ${{ matrix.artifact_name }}
           path: ./wheelhouse/*.whl

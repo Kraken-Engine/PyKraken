@@ -85,20 +85,6 @@ endif()
 include(FetchContent)
 
 # -------------------------
-# CI prebuilt dependency hints
-# -------------------------
-foreach(_pyk_prebuilt_dir prebuilt_windows prebuilt_macos prebuilt_linux)
-  set(_pyk_prebuilt_root "${CMAKE_CURRENT_SOURCE_DIR}/${_pyk_prebuilt_dir}")
-  if (EXISTS "${_pyk_prebuilt_root}")
-    list(PREPEND CMAKE_PREFIX_PATH
-      "${_pyk_prebuilt_root}"
-      "${_pyk_prebuilt_root}/cmake"
-    )
-    message(STATUS "Using prebuilt dependency prefix: ${_pyk_prebuilt_root}")
-  endif()
-endforeach()
-
-# -------------------------
 # pybind11
 # -------------------------
 if (PYK_VENDOR_PYBIND11)
@@ -315,6 +301,7 @@ if (WIN32)
     file(GET_RUNTIME_DEPENDENCIES
          RESOLVED_DEPENDENCIES_VAR resolved
          UNRESOLVED_DEPENDENCIES_VAR unresolved
+         PRE_EXCLUDE_REGEXES \"^(api-ms-win-|ext-ms-win-)\"
          EXECUTABLES \"$<TARGET_FILE:${PYK_MODULE_NAME}>\")
     foreach(f \${resolved})
       message(STATUS \"[bundle] \${f}\")
