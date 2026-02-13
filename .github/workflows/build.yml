@@ -190,6 +190,15 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release
           cmake --build build_image --config Release --target install --parallel 4
 
+          $imageInstallManifest = "$(Get-Location)\build_image\install_manifest.txt"
+          Write-Host "SDL3_image install manifest: $imageInstallManifest"
+          if (Test-Path $imageInstallManifest) {
+            Write-Host "SDL3_image manifest entries containing config/targets files:"
+            Select-String -Path $imageInstallManifest -Pattern "SDL3_image.*[Cc]onfig\.cmake|SDL3_image-config\.cmake|SDL3_image.*Targets\.cmake" | ForEach-Object { $_.Line }
+          } else {
+            Write-Host "SDL3_image install manifest not found"
+          }
+
           # Build SDL3_ttf
           git clone --depth 1 --branch release-3.2.2 --recurse-submodules https://github.com/libsdl-org/SDL_ttf.git
           cmake -S SDL_ttf -B build_ttf `
