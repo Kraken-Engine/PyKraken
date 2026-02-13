@@ -17,6 +17,12 @@ jobs:
     container: quay.io/pypa/manylinux_2_28_x86_64
     steps:
       - uses: actions/checkout@v4
+      - name: Cache Linux Core
+        id: cache-linux-deps
+        uses: actions/cache@v4
+        with:
+          path: ./linux_deps
+          key: linux-core-deps-v1-${{ hashFiles('.github/workflows/build.yml') }}
       - name: Install System Headers
         run: |
           dnf -y install \
@@ -28,8 +34,10 @@ jobs:
             pkgconf-pkg-config
 
       - name: Build SDL Deps
+        if: steps.cache-linux-deps.outputs.cache-hit != 'true'
         run: |
           mkdir -p $(pwd)/linux_deps
+          JOBS=$(nproc)
 
           export PKG_CONFIG_PATH=$(pwd)/linux_deps/lib64/pkgconfig:$(pwd)/linux_deps/lib/pkgconfig:$PKG_CONFIG_PATH
 
@@ -40,7 +48,7 @@ jobs:
             -DSDL_STATIC=ON -DSDL_SHARED=OFF \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DCMAKE_BUILD_TYPE=Release
-          cmake --build build_sdl --target install --parallel 4
+          cmake --build build_sdl --target install --parallel ${JOBS}
 
           # Build SDL3_image
           git clone --depth 1 --branch release-3.4.0 https://github.com/libsdl-org/SDL_image.git
@@ -52,13 +60,10 @@ jobs:
             -DSDLIMAGE_BUILD_SHARED_LIBS=OFF \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DCMAKE_BUILD_TYPE=Release
-          cmake --build build_image --target install --parallel 4
+          cmake --build build_image --target install --parallel ${JOBS}
 
           # Build SDL3_ttf
           git clone --depth 1 --branch release-3.2.2 --recurse-submodules https://github.com/libsdl-org/SDL_ttf.git
-          cd SDL_ttf
-          git submodule update --init --recursive
-          cd ..
           cmake -S SDL_ttf -B build_ttf \
             -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps \
             -DCMAKE_PREFIX_PATH=$(pwd)/linux_deps \
@@ -67,13 +72,10 @@ jobs:
             -DSDLTTF_VENDORED=ON \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DCMAKE_BUILD_TYPE=Release
-          cmake --build build_ttf --target install --parallel 4
+          cmake --build build_ttf --target install --parallel ${JOBS}
 
           # Build SDL3_mixer
           git clone --depth 1 --branch prerelease-3.1.2 --recurse-submodules https://github.com/libsdl-org/SDL_mixer.git
-          cd SDL_mixer
-          git submodule update --init --recursive
-          cd ..
           cmake -S SDL_mixer -B build_mixer \
             -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps \
             -DCMAKE_PREFIX_PATH=$(pwd)/linux_deps \
@@ -85,7 +87,7 @@ jobs:
             -DSDLMIXER_MP3_MINIMP3=ON \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DCMAKE_BUILD_TYPE=Release
-          cmake --build build_mixer --target install --parallel 4
+          cmake --build build_mixer --target install --parallel ${JOBS}
 
       - name: Upload Linux Core
         uses: actions/upload-artifact@v4
@@ -97,10 +99,18 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Cache macOS Core
+        id: cache-macos-deps
+        uses: actions/cache@v4
+        with:
+          path: ./macos_deps
+          key: macos-core-deps-v1-${{ hashFiles('.github/workflows/build.yml') }}
 
       - name: Build SDL Deps
+        if: steps.cache-macos-deps.outputs.cache-hit != 'true'
         run: |
           mkdir -p $(pwd)/macos_deps
+          JOBS=$(sysctl -n hw.logicalcpu)
 
           export MACOSX_DEPLOYMENT_TARGET=15.0
 
@@ -111,7 +121,7 @@ jobs:
             -DSDL_STATIC=ON -DSDL_SHARED=OFF \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DCMAKE_BUILD_TYPE=Release
-          cmake --build build_sdl --target install --parallel 4
+          cmake --build build_sdl --target install --parallel ${JOBS}
 
           # Build SDL3_image
           git clone --depth 1 --branch release-3.4.0 https://github.com/libsdl-org/SDL_image.git
@@ -123,7 +133,7 @@ jobs:
             -DSDLIMAGE_BUILD_SHARED_LIBS=OFF \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DCMAKE_BUILD_TYPE=Release
-          cmake --build build_image --target install --parallel 4
+          cmake --build build_image --target install --parallel ${JOBS}
 
           # Build SDL3_ttf
           git clone --depth 1 --branch release-3.2.2 --recurse-submodules https://github.com/libsdl-org/SDL_ttf.git
@@ -135,7 +145,7 @@ jobs:
             -DSDLTTF_VENDORED=ON \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DCMAKE_BUILD_TYPE=Release
-          cmake --build build_ttf --target install --parallel 4
+          cmake --build build_ttf --target install --parallel ${JOBS}
 
           # Build SDL3_mixer
           git clone --depth 1 --branch prerelease-3.1.2 --recurse-submodules https://github.com/libsdl-org/SDL_mixer.git
@@ -150,7 +160,7 @@ jobs:
             -DSDLMIXER_MP3_MINIMP3=ON \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DCMAKE_BUILD_TYPE=Release
-          cmake --build build_mixer --target install --parallel 4
+          cmake --build build_mixer --target install --parallel ${JOBS}
 
       - name: Upload macOS Core
         uses: actions/upload-artifact@v4
@@ -162,11 +172,19 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Cache Windows Core
+        id: cache-windows-deps
+        uses: actions/cache@v4
+        with:
+          path: ./windows_deps
+          key: windows-core-deps-v1-${{ hashFiles('.github/workflows/build.yml') }}
 
       - name: Build SDL Deps
+        if: steps.cache-windows-deps.outputs.cache-hit != 'true'
         shell: powershell
         run: |
           $depsPath = "$(Get-Location)\windows_deps"
+          $jobs = [Environment]::ProcessorCount
           New-Item -ItemType Directory -Force -Path $depsPath
 
           # Build SDL3
@@ -176,7 +194,7 @@ jobs:
             -DSDL_STATIC=ON -DSDL_SHARED=OFF `
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
             -DCMAKE_BUILD_TYPE=Release
-          cmake --build build_sdl --config Release --target install --parallel 4
+          cmake --build build_sdl --config Release --target install --parallel $jobs
 
           # Build SDL3_image
           git clone --depth 1 --branch release-3.4.0 --recurse-submodules https://github.com/libsdl-org/SDL_image.git
@@ -192,7 +210,7 @@ jobs:
             -DSDLIMAGE_BUILD_SHARED_LIBS=OFF `
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
             -DCMAKE_BUILD_TYPE=Release
-          cmake --build build_image --config Release --target install --parallel 4
+          cmake --build build_image --config Release --target install --parallel $jobs
 
           # Build SDL3_ttf
           git clone --depth 1 --branch release-3.2.2 --recurse-submodules https://github.com/libsdl-org/SDL_ttf.git
@@ -204,7 +222,7 @@ jobs:
             -DSDLTTF_VENDORED=ON `
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
             -DCMAKE_BUILD_TYPE=Release
-          cmake --build build_ttf --config Release --target install --parallel 4
+          cmake --build build_ttf --config Release --target install --parallel $jobs
 
           # Build SDL3_mixer
           git clone --depth 1 --branch prerelease-3.1.2 --recurse-submodules https://github.com/libsdl-org/SDL_mixer.git
@@ -219,7 +237,7 @@ jobs:
             -DSDLMIXER_MP3_MINIMP3=ON `
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
             -DCMAKE_BUILD_TYPE=Release
-          cmake --build build_mixer --config Release --target install --parallel 4
+          cmake --build build_mixer --config Release --target install --parallel $jobs
 
       - name: Upload Windows Core
         uses: actions/upload-artifact@v4
