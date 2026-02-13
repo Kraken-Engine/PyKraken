@@ -158,9 +158,74 @@ jobs:
           name: macos-core-deps
           path: ./macos_deps
 
+  prepare_windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build SDL Deps
+        shell: powershell
+        run: |
+          $depsPath = "$(Get-Location)\windows_deps"
+          New-Item -ItemType Directory -Force -Path $depsPath
+
+          # Build SDL3
+          git clone --depth 1 --branch release-3.4.0 https://github.com/libsdl-org/SDL.git
+          cmake -S SDL -B build_sdl `
+            -DCMAKE_INSTALL_PREFIX="$depsPath" `
+            -DSDL_STATIC=ON -DSDL_SHARED=OFF `
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build_sdl --config Release --target install --parallel 4
+
+          # Build SDL3_image
+          git clone --depth 1 --branch release-3.4.0 https://github.com/libsdl-org/SDL_image.git
+          cmake -S SDL_image -B build_image `
+            -DCMAKE_INSTALL_PREFIX="$depsPath" `
+            -DCMAKE_PREFIX_PATH="$depsPath" `
+            -DBUILD_SHARED_LIBS=OFF `
+            -DSDLIMAGE_BACKEND_STB=ON `
+            -DSDLIMAGE_BUILD_SHARED_LIBS=OFF `
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build_image --config Release --target install --parallel 4
+
+          # Build SDL3_ttf
+          git clone --depth 1 --branch release-3.2.2 --recurse-submodules https://github.com/libsdl-org/SDL_ttf.git
+          cmake -S SDL_ttf -B build_ttf `
+            -DCMAKE_INSTALL_PREFIX="$depsPath" `
+            -DCMAKE_PREFIX_PATH="$depsPath" `
+            -DBUILD_SHARED_LIBS=OFF `
+            -DSDLTTF_BUILD_SHARED_LIBS=OFF `
+            -DSDLTTF_VENDORED=ON `
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build_ttf --config Release --target install --parallel 4
+
+          # Build SDL3_mixer
+          git clone --depth 1 --branch prerelease-3.1.2 --recurse-submodules https://github.com/libsdl-org/SDL_mixer.git
+          cmake -S SDL_mixer -B build_mixer `
+            -DCMAKE_INSTALL_PREFIX="$depsPath" `
+            -DCMAKE_PREFIX_PATH="$depsPath" `
+            -DBUILD_SHARED_LIBS=OFF `
+            -DSDLMIXER_BUILD_SHARED_LIBS=OFF `
+            -DSDLMIXER_VENDORED=ON `
+            -DSDLMIXER_OPUS=ON `
+            -DSDLMIXER_FLAC_LIBFLAC=ON `
+            -DSDLMIXER_MP3_MINIMP3=ON `
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build_mixer --config Release --target install --parallel 4
+
+      - name: Upload Windows Core
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-core-deps
+          path: ./windows_deps
+
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
-    needs: [prepare_linux, prepare_macos]
+    needs: [prepare_linux, prepare_macos, prepare_windows]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -170,18 +235,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # WINDOWS PREP: Setup SDL with official action
-      - name: Setup SDL for Windows
+      # WINDOWS PREP: Download Pre-built Core
+      - name: Download Windows Core
         if: matrix.os == 'windows-latest'
-        uses: libsdl-org/setup-sdl@main
+        uses: actions/download-artifact@v4
         with:
-          version: 3.4.0
-          version-sdl-image: 3.4.0
-          version-sdl-ttf: 3.2.2
-          version-sdl-mixer: 3.1.2
-          build-type: Release
-          add-to-environment: true
-          install-linux-dependencies: false
+          name: windows-core-deps
+          path: ./prebuilt_windows
 
       # MACOS PREP: Brew and Build Mixer
       - name: Download macOS Core
@@ -209,6 +269,9 @@ jobs:
           CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux_2_28_x86_64
           CIBW_SKIP: "*-musllinux_* *-win32"
           CIBW_BUILD: "cp311-* cp312-* cp313-* cp314-*"
+
+          CIBW_ENVIRONMENT_WINDOWS: >
+            CMAKE_PREFIX_PATH=${{ github.workspace }}\prebuilt_windows
 
           CIBW_ENVIRONMENT_MACOS: >
             MACOSX_DEPLOYMENT_TARGET=15.0
