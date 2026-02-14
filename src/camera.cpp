@@ -29,6 +29,16 @@ Vec2 Camera::getPos() const
     return pos;
 }
 
+Vec2 Camera::worldToScreen(const Vec2& worldPos) const
+{
+    return worldPos - Vec2(std::floor(pos.x), std::floor(pos.y));
+}
+
+Vec2 Camera::screenToWorld(const Vec2& screenPos) const
+{
+    return screenPos + Vec2(std::floor(pos.x), std::floor(pos.y));
+}
+
 void Camera::set()
 {
     active = this;
@@ -42,8 +52,48 @@ Vec2 getActivePos()
     return {std::floor(_cameraPos.x), std::floor(_cameraPos.y)};
 }
 
-void _bind(const py::module_& module)
+Vec2 worldToScreen(const Vec2& worldPos)
 {
+    return worldPos - getActivePos();
+}
+
+Vec2 screenToWorld(const Vec2& screenPos)
+{
+    return screenPos + getActivePos();
+}
+
+void _bind(py::module_& module)
+{
+    auto subCamera = module.def_submodule("camera", "Camera management and coordinate conversion");
+
+    subCamera.def("get_active_pos", &camera::getActivePos, R"doc(
+Get the position of the currently active camera.
+If no camera is active, returns (0, 0).
+
+Returns:
+    Vec2: The position of the active camera.
+    )doc");
+
+    subCamera.def("world_to_screen", &camera::worldToScreen, py::arg("world_pos"), R"doc(
+Convert a world position to a screen position using the active camera's translation.
+
+Args:
+    world_pos (Vec2): The world position to convert.
+
+Returns:
+    Vec2: The resulting screen position.
+    )doc");
+
+    subCamera.def("screen_to_world", &camera::screenToWorld, py::arg("screen_pos"), R"doc(
+Convert a screen position to a world position using the active camera's translation.
+
+Args:
+    screen_pos (Vec2): The screen position to convert.
+
+Returns:
+    Vec2: The resulting world position.
+    )doc");
+
     py::classh<Camera>(module, "Camera", R"doc(
 Represents a 2D camera used for rendering.
 
@@ -82,6 +132,26 @@ You can also assign a Vec2 or a (x, y) sequence to set the position.
 Set this camera as the active one for rendering.
 
 Only one camera can be active at a time.
+        )doc")
+
+        .def("world_to_screen", &Camera::worldToScreen, py::arg("world_pos"), R"doc(
+Convert a world position to a screen position using this camera's translation.
+
+Args:
+    world_pos (Vec2): The world position to convert.
+
+Returns:
+    Vec2: The resulting screen position.
+        )doc")
+
+        .def("screen_to_world", &Camera::screenToWorld, py::arg("screen_pos"), R"doc(
+Convert a screen position to a world position using this camera's translation.
+
+Args:
+    screen_pos (Vec2): The screen position to convert.
+
+Returns:
+    Vec2: The resulting world position.
         )doc");
 }
 }  // namespace camera

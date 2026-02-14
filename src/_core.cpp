@@ -73,6 +73,9 @@ static void quit()
     // Mixer is independent
     kn::mixer::_quit();
 
+    // Invalidate cached draw renderer before renderer destruction
+    kn::draw::_init(nullptr);
+
     // Renderer must be destroyed before window
     kn::renderer::_quit();
 

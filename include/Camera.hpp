@@ -18,6 +18,10 @@ class Camera
 
     [[nodiscard]] Vec2 getPos() const;
     void setPos(const Vec2& newPos);
+
+    [[nodiscard]] Vec2 worldToScreen(const Vec2& worldPos) const;
+    [[nodiscard]] Vec2 screenToWorld(const Vec2& screenPos) const;
+
     void set();
 
     static Camera* active;
@@ -28,8 +32,11 @@ class Camera
 
 namespace camera
 {
-void _bind(const py::module_& module);
+void _bind(py::module_& module);
 
 Vec2 getActivePos();
+
+[[nodiscard]] Vec2 worldToScreen(const Vec2& worldPos);
+[[nodiscard]] Vec2 screenToWorld(const Vec2& screenPos);
 }  // namespace camera
 }  // namespace kn

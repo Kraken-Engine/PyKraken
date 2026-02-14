@@ -2,6 +2,7 @@
 
 #include <pybind11/stl.h>
 
+#include <algorithm>
 #include <mapbox/earcut.hpp>
 #include <sstream>
 
@@ -20,27 +21,41 @@
 
 namespace kn::draw
 {
+SDL_Renderer* rend = nullptr;
+
+// Ellipse helpers
 void _ellipseFilled(
-    SDL_Renderer* r, const Vec2& center, double radiusX, double radiusY, const Color& color,
-    int numSegments
+    const Vec2& center, double radiusX, double radiusY, const Color& color, int numSegments
 );
 void _ellipseOutline(
-    SDL_Renderer* r, const Vec2& center, double radiusX, double radiusY, const Color& color,
-    double thickness, int numSegments
+    const Vec2& center, double radiusX, double radiusY, const Color& color, double thickness,
+    int numSegments
 );
 
-void _capsuleFilled(SDL_Renderer* r, const Capsule& capsule, const Color& color, int numSegments);
-void _capsuleOutline(
-    SDL_Renderer* r, const Capsule& capsule, const Color& color, double thickness, int numSegments
+// Capsule helpers
+void _capsuleFilled(const Capsule& capsule, const Color& color, int numSegments);
+void _capsuleOutline(const Capsule& capsule, const Color& color, double thickness, int numSegments);
+
+// Line helper for thick lines
+void _thickLine(const Line& line, const Color& color, double thickness);
+
+// Polygon helper for filled polygons
+void _polygonFilled(const Polygon& polygon, const Color& color);
+
+// Helpers for rounded rectangles
+Polygon _roundedRectPolygon(const Rect& rect, const std::array<double, 4>& radii);
+void _roundedRectOutline(const Rect& rect, const Color& color, const std::array<double, 4>& radii);
+
+std::vector<SDL_FPoint> _ellipsePolyline(
+    const Vec2& center, const double radiusX, const double radiusY, const int numSegments
 );
 
-void _thickLine(SDL_Renderer* r, const Line& line, const Color& color, double thickness);
-
-void _polygonFilled(SDL_Renderer* r, const Polygon& polygon, const Color& color);
+std::vector<SDL_FPoint> _capsulePolyline(
+    const Vec2& p1, const Vec2& p2, const double radius, const int numSegments
+);
 
 void circle(const Circle& circle, const Color& color, const double thickness, const int numSegments)
 {
-    SDL_Renderer* rend = renderer::_get();
     if (!rend)
         throw std::runtime_error("Renderer not yet initialized");
 
@@ -57,10 +72,15 @@ void circle(const Circle& circle, const Color& color, const double thickness, co
         return;
     }
 
-    if (thickness <= 0.0 || thickness >= circle.radius)
-        _ellipseFilled(rend, center, circle.radius, circle.radius, color, numSegments);
+    const bool filled = (thickness <= 0.0 || thickness >= circle.radius);
+    if (filled)
+    {
+        _ellipseFilled(center, circle.radius, circle.radius, color, numSegments);
+    }
     else
-        _ellipseOutline(rend, center, circle.radius, circle.radius, color, thickness, numSegments);
+    {
+        _ellipseOutline(center, circle.radius, circle.radius, color, thickness, numSegments);
+    }
 }
 
 void circles(
@@ -68,7 +88,6 @@ void circles(
     const int numSegments
 )
 {
-    SDL_Renderer* rend = renderer::_get();
     if (!rend)
         throw std::runtime_error("Renderer not yet initialized");
 
@@ -91,11 +110,13 @@ void circles(
         }
 
         if (thickness <= 0.0 || thickness >= circle.radius)
-            _ellipseFilled(rend, center, circle.radius, circle.radius, color, numSegments);
+        {
+            _ellipseFilled(center, circle.radius, circle.radius, color, numSegments);
+        }
         else
-            _ellipseOutline(
-                rend, center, circle.radius, circle.radius, color, thickness, numSegments
-            );
+        {
+            _ellipseOutline(center, circle.radius, circle.radius, color, thickness, numSegments);
+        }
     }
 }
 
@@ -103,19 +124,31 @@ void capsule(
     const Capsule& capsule, const Color& color, const double thickness, const int numSegments
 )
 {
-    SDL_Renderer* rend = renderer::_get();
     if (!rend)
         throw std::runtime_error("Renderer not yet initialized");
 
     if (capsule.radius < 1.0 || color.a == 0)
         return;
 
-    const double radius = capsule.radius;
+    const Vec2 cameraPos = camera::getActivePos();
+    const Vec2 targetRes = renderer::getTargetResolution();
 
-    if (thickness <= 0.0 || thickness >= radius)
-        _capsuleFilled(rend, capsule, color, numSegments);
+    const double radius = capsule.radius;
+    const Vec2 p1 = capsule.p1 - cameraPos;
+    const Vec2 p2 = capsule.p2 - cameraPos;
+
+    const double minX = std::min(p1.x, p2.x) - radius;
+    const double minY = std::min(p1.y, p2.y) - radius;
+    const double maxX = std::max(p1.x, p2.x) + radius;
+    const double maxY = std::max(p1.y, p2.y) + radius;
+    if (maxX < 0.0 || maxY < 0.0 || minX >= targetRes.x || minY >= targetRes.y)
+        return;
+
+    const bool filled = (thickness <= 0.0 || thickness >= radius);
+    if (filled)
+        _capsuleFilled(capsule, color, numSegments);
     else
-        _capsuleOutline(rend, capsule, color, thickness, numSegments);
+        _capsuleOutline(capsule, color, thickness, numSegments);
 }
 
 void capsules(
@@ -123,13 +156,38 @@ void capsules(
     const int numSegments
 )
 {
+    if (!rend)
+        throw std::runtime_error("Renderer not yet initialized");
+
+    const Vec2 cameraPos = camera::getActivePos();
+    const Vec2 targetRes = renderer::getTargetResolution();
+
     for (const auto& c : capsules)
-        capsule(c, color, thickness, numSegments);
+    {
+        if (c.radius < 1.0 || color.a == 0)
+            continue;
+
+        const double radius = c.radius;
+        const Vec2 p1 = c.p1 - cameraPos;
+        const Vec2 p2 = c.p2 - cameraPos;
+
+        const double minX = std::min(p1.x, p2.x) - radius;
+        const double minY = std::min(p1.y, p2.y) - radius;
+        const double maxX = std::max(p1.x, p2.x) + radius;
+        const double maxY = std::max(p1.y, p2.y) + radius;
+        if (maxX < 0.0 || maxY < 0.0 || minX >= targetRes.x || minY >= targetRes.y)
+            continue;
+
+        const bool filled = (thickness <= 0.0 || thickness >= radius);
+        if (filled)
+            _capsuleFilled(c, color, numSegments);
+        else
+            _capsuleOutline(c, color, thickness, numSegments);
+    }
 }
 
 void point(Vec2 point, const Color& color)
 {
-    SDL_Renderer* rend = renderer::_get();
     if (!rend)
         throw std::runtime_error("Renderer not yet initialized");
 
@@ -150,7 +208,6 @@ void point(Vec2 point, const Color& color)
 
 void points(const std::vector<Vec2>& points, const Color& color)
 {
-    SDL_Renderer* rend = renderer::_get();
     if (!rend)
         throw std::runtime_error("Renderer not yet initialized");
 
@@ -169,7 +226,7 @@ void points(const std::vector<Vec2>& points, const Color& color)
     {
         point -= cameraPos;
         if (point.x >= 0.0 && point.y >= 0.0 && point.x < targetRes.x && point.y < targetRes.y)
-            sdlPoints.push_back(std::move(static_cast<SDL_FPoint>(point)));
+            sdlPoints.push_back(static_cast<SDL_FPoint>(point));
     }
 
     if (!SDL_RenderPoints(rend, sdlPoints.data(), static_cast<int>(sdlPoints.size())))
@@ -181,7 +238,6 @@ void pointsFromNDArray(
     const py::array_t<double, py::array::c_style | py::array::forcecast>& arr, const Color& color
 )
 {
-    SDL_Renderer* rend = renderer::_get();
     if (!rend)
         throw std::runtime_error("Renderer not yet initialized");
 
@@ -209,8 +265,8 @@ void pointsFromNDArray(
     {
         Vec2 pos = {data[i * 2], data[i * 2 + 1]};
         pos -= cameraPos;
-        if (pos.x > 0.0 && pos.y > 0.0 && pos.x < targetRes.x && pos.y < targetRes.y)
-            sdlPoints.push_back(std::move(static_cast<SDL_FPoint>(pos)));
+        if (pos.x >= 0.0 && pos.y >= 0.0 && pos.x < targetRes.x && pos.y < targetRes.y)
+            sdlPoints.push_back(static_cast<SDL_FPoint>(pos));
     }
 
     if (!SDL_RenderPoints(rend, sdlPoints.data(), static_cast<int>(sdlPoints.size())))
@@ -219,39 +275,40 @@ void pointsFromNDArray(
 
 void ellipse(Rect bounds, const Color& color, const double thickness, const int numSegments)
 {
-    SDL_Renderer* rend = renderer::_get();
     if (!rend)
         throw std::runtime_error("Renderer not yet initialized");
 
-    if (bounds.w < 1 || bounds.h < 1)
-        return;
-    if (color.a == 0)
+    if (bounds.w < 1 || bounds.h < 1 || color.a == 0)
         return;
 
     const Vec2 center = bounds.getCenter() - camera::getActivePos();
     const double radiusX = bounds.w / 2.0;
     const double radiusY = bounds.h / 2.0;
 
-    if (thickness <= 0.0 || (thickness >= radiusX && thickness >= radiusY))
-        _ellipseFilled(rend, center, radiusX, radiusY, color, numSegments);
+    const bool filled = (thickness <= 0.0 || (thickness >= radiusX && thickness >= radiusY));
+    if (filled)
+    {
+        _ellipseFilled(center, radiusX, radiusY, color, numSegments);
+    }
     else
-        _ellipseOutline(rend, center, radiusX, radiusY, color, thickness, numSegments);
+    {
+        _ellipseOutline(center, radiusX, radiusY, color, thickness, numSegments);
+    }
 }
 
 void ellipses(
-    const std::vector<Rect>& rects, const Color& color, const double thickness,
+    const std::vector<Rect>& bounds, const Color& color, const double thickness,
     const int numSegments
 )
 {
-    SDL_Renderer* rend = renderer::_get();
     if (!rend)
         throw std::runtime_error("Renderer not yet initialized");
 
-    if (rects.empty() || color.a == 0)
+    if (bounds.empty() || color.a == 0)
         return;
 
     const Vec2 cameraPos = camera::getActivePos();
-    for (const auto& rect : rects)
+    for (const auto& rect : bounds)
     {
         if (rect.w < 1 || rect.h < 1)
             continue;
@@ -261,15 +318,18 @@ void ellipses(
         const double radiusY = rect.h / 2.0;
 
         if (thickness <= 0.0 || (thickness >= radiusX && thickness >= radiusY))
-            _ellipseFilled(rend, center, radiusX, radiusY, color, numSegments);
+        {
+            _ellipseFilled(center, radiusX, radiusY, color, numSegments);
+        }
         else
-            _ellipseOutline(rend, center, radiusX, radiusY, color, thickness, numSegments);
+        {
+            _ellipseOutline(center, radiusX, radiusY, color, thickness, numSegments);
+        }
     }
 }
 
 void line(Line line, const Color& color, const double thickness)
 {
-    SDL_Renderer* rend = renderer::_get();
     if (!rend)
         throw std::runtime_error("Renderer not yet initialized");
 
@@ -281,26 +341,22 @@ void line(Line line, const Color& color, const double thickness)
 
     if (thickness <= 1.0)
     {
+        const auto a = static_cast<SDL_FPoint>(line.getA());
+        const auto b = static_cast<SDL_FPoint>(line.getB());
         if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
             throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
 
-        if (!SDL_RenderLine(
-                rend, static_cast<float>(line.ax), static_cast<float>(line.ay),
-                static_cast<float>(line.bx), static_cast<float>(line.by)
-            ))
-        {
+        if (!SDL_RenderLine(rend, a.x, a.y, b.x, b.y))
             throw std::runtime_error("Failed to render line: " + std::string(SDL_GetError()));
-        }
     }
     else
     {
-        _thickLine(rend, line, color, thickness);
+        _thickLine(line, color, thickness);
     }
 }
 
 void lines(const std::vector<Line>& lines, const Color& color, const double thickness)
 {
-    SDL_Renderer* rend = renderer::_get();
     if (!rend)
         throw std::runtime_error("Renderer not yet initialized");
 
@@ -316,10 +372,9 @@ void lines(const std::vector<Line>& lines, const Color& color, const double thic
         for (auto line : lines)
         {
             line.move(-cameraPos);
-            if (!SDL_RenderLine(
-                    rend, static_cast<float>(line.ax), static_cast<float>(line.ay),
-                    static_cast<float>(line.bx), static_cast<float>(line.by)
-                ))
+            const auto a = static_cast<SDL_FPoint>(line.getA());
+            const auto b = static_cast<SDL_FPoint>(line.getB());
+            if (!SDL_RenderLine(rend, a.x, a.y, b.x, b.y))
                 throw std::runtime_error("Failed to render line: " + std::string(SDL_GetError()));
         }
     }
@@ -328,24 +383,80 @@ void lines(const std::vector<Line>& lines, const Color& color, const double thic
         for (auto line : lines)
         {
             line.move(-cameraPos);
-            _thickLine(rend, line, color, thickness);
+            _thickLine(line, color, thickness);
         }
     }
 }
 
-void rect(Rect rect, const Color& color, const int thickness)
+void rect(
+    Rect rect, const Color& color, const int thickness, const double borderRadius,
+    double radiusTopLeft, double radiusTopRight, double radiusBottomRight, double radiusBottomLeft
+)
 {
-    SDL_Renderer* rend = renderer::_get();
     if (!rend)
         throw std::runtime_error("Renderer not yet initialized");
 
-    if (color.a == 0)
+    if (color.a == 0 || rect.w < 1.0 || rect.h < 1.0)
         return;
 
     if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
         throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
 
     rect.setTopLeft(rect.getTopLeft() - camera::getActivePos());
+
+    const Vec2 targetRes = renderer::getTargetResolution();
+    if (rect.getRight() < 0.0 || rect.getBottom() < 0.0 || rect.x >= targetRes.x ||
+        rect.y >= targetRes.y)
+    {
+        return;
+    }
+
+    if (radiusTopLeft < 0.0)
+        radiusTopLeft = borderRadius;
+    if (radiusTopRight < 0.0)
+        radiusTopRight = borderRadius;
+    if (radiusBottomRight < 0.0)
+        radiusBottomRight = borderRadius;
+    if (radiusBottomLeft < 0.0)
+        radiusBottomLeft = borderRadius;
+
+    // If has any rounded corners, use polygon rendering
+    if (radiusTopLeft > 0.0 || radiusTopRight > 0.0 || radiusBottomRight > 0.0 ||
+        radiusBottomLeft > 0.0)
+    {
+        const double maxRadius = std::max(0.0, std::min(rect.w, rect.h) * 0.5);
+        const std::array<double, 4> radii = {
+            std::clamp(radiusTopLeft, 0.0, maxRadius),
+            std::clamp(radiusTopRight, 0.0, maxRadius),
+            std::clamp(radiusBottomRight, 0.0, maxRadius),
+            std::clamp(radiusBottomLeft, 0.0, maxRadius),
+        };
+
+        if (thickness <= 0 || thickness > rect.w / 2.0 || thickness > rect.h / 2.0)
+        {
+            _polygonFilled(_roundedRectPolygon(rect, radii), color);
+            return;
+        }
+
+        for (int i = 0; i < thickness; ++i)
+        {
+            Rect insetRect = rect;
+            insetRect.inflate({-2.0 * i, -2.0 * i});
+            if (insetRect.w <= 0.0 || insetRect.h <= 0.0)
+                break;
+
+            const std::array<double, 4> insetRadii = {
+                std::max(0.0, radiusTopLeft - i),
+                std::max(0.0, radiusTopRight - i),
+                std::max(0.0, radiusBottomRight - i),
+                std::max(0.0, radiusBottomLeft - i),
+            };
+            _roundedRectOutline(insetRect, color, insetRadii);
+        }
+
+        return;
+    }
+
     auto sdlRect = static_cast<SDL_FRect>(rect);
 
     if (thickness <= 0 || thickness > rect.w / 2.0 || thickness > rect.h / 2.0)
@@ -369,9 +480,12 @@ void rect(Rect rect, const Color& color, const int thickness)
     }
 }
 
-void rects(const std::vector<Rect>& rects, const Color& color, const int thickness)
+void rects(
+    const std::vector<Rect>& rects, const Color& color, const int thickness,
+    const double borderRadius, double radiusTopLeft, double radiusTopRight,
+    double radiusBottomRight, double radiusBottomLeft
+)
 {
-    SDL_Renderer* rend = renderer::_get();
     if (!rend)
         throw std::runtime_error("Renderer not yet initialized");
 
@@ -380,24 +494,56 @@ void rects(const std::vector<Rect>& rects, const Color& color, const int thickne
     if (rects.empty())
         return;
 
+    if (radiusTopLeft < 0.0)
+        radiusTopLeft = borderRadius;
+    if (radiusTopRight < 0.0)
+        radiusTopRight = borderRadius;
+    if (radiusBottomRight < 0.0)
+        radiusBottomRight = borderRadius;
+    if (radiusBottomLeft < 0.0)
+        radiusBottomLeft = borderRadius;
+
+    if (radiusTopLeft > 0.0 || radiusTopRight > 0.0 || radiusBottomRight > 0.0 ||
+        radiusBottomLeft > 0.0)
+    {
+        for (const Rect& rectValue : rects)
+            rect(
+                rectValue, color, thickness, borderRadius, radiusTopLeft, radiusTopRight,
+                radiusBottomRight, radiusBottomLeft
+            );
+        return;
+    }
+
     if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
         throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
 
     const Vec2 cameraPos = camera::getActivePos();
+    const Vec2 targetRes = renderer::getTargetResolution();
 
     // Convert to SDL_FRect array with camera offset
     std::vector<SDL_FRect> sdlRects;
     sdlRects.reserve(rects.size());
     for (const Rect& rect : rects)
     {
+        if (rect.w < 1.0 || rect.h < 1.0)
+            continue;
+
+        const double x = rect.x - cameraPos.x;
+        const double y = rect.y - cameraPos.y;
+        if (x + rect.w < 0.0 || y + rect.h < 0.0 || x >= targetRes.x || y >= targetRes.y)
+            continue;
+
         const SDL_FRect sdlRect{
-            static_cast<float>(rect.x - cameraPos.x),
-            static_cast<float>(rect.y - cameraPos.y),
+            static_cast<float>(x),
+            static_cast<float>(y),
             static_cast<float>(rect.w),
             static_cast<float>(rect.h),
         };
-        sdlRects.push_back(std::move(sdlRect));
+        sdlRects.push_back(sdlRect);
     }
+
+    if (sdlRects.empty())
+        return;
 
     // For filled rectangles or thick outlines, use batch fill
     if (thickness <= 0)
@@ -409,12 +555,11 @@ void rects(const std::vector<Rect>& rects, const Color& color, const int thickne
         return;
     }
 
+    if (!SDL_RenderRects(rend, sdlRects.data(), static_cast<int>(sdlRects.size())))
+        throw std::runtime_error("Failed to render rectangles: " + std::string(SDL_GetError()));
+
     if (thickness == 1)
-    {
-        if (!SDL_RenderRects(rend, sdlRects.data(), static_cast<int>(sdlRects.size())))
-            throw std::runtime_error("Failed to render rectangles: " + std::string(SDL_GetError()));
         return;
-    }
 
     for (int i = 1; i < thickness; i++)
     {
@@ -446,7 +591,6 @@ void rects(const std::vector<Rect>& rects, const Color& color, const int thickne
 
 void polygon(const Polygon& polygon, const Color& color, const bool filled)
 {
-    SDL_Renderer* rend = renderer::_get();
     if (!rend)
         throw std::runtime_error("Renderer not yet initialized");
 
@@ -457,12 +601,13 @@ void polygon(const Polygon& polygon, const Color& color, const bool filled)
     if (size == 0)
         return;
 
+    // If will be drawn as point or line, set color now
+    if ((size <= 2 || !filled) && !SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+        throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
+
     const Vec2 cameraPos = camera::getActivePos();
     if (size == 1)
     {
-        if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
-            throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
-
         const auto [x, y] = static_cast<SDL_FPoint>(polygon.points.at(0) - cameraPos);
         if (!SDL_RenderPoint(rend, x, y))
             throw std::runtime_error("Failed to render point: " + std::string(SDL_GetError()));
@@ -471,13 +616,10 @@ void polygon(const Polygon& polygon, const Color& color, const bool filled)
     }
     if (size == 2)
     {
-        const auto [x1, y1] = static_cast<SDL_FPoint>(polygon.points.at(0) - cameraPos);
-        const auto [x2, y2] = static_cast<SDL_FPoint>(polygon.points.at(1) - cameraPos);
+        const auto a = static_cast<SDL_FPoint>(polygon.points.at(0) - cameraPos);
+        const auto b = static_cast<SDL_FPoint>(polygon.points.at(1) - cameraPos);
 
-        if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
-            throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
-
-        if (!SDL_RenderLine(rend, x1, y1, x2, y2))
+        if (!SDL_RenderLine(rend, a.x, a.y, b.x, b.y))
             throw std::runtime_error("Failed to render line: " + std::string(SDL_GetError()));
 
         return;
@@ -489,9 +631,6 @@ void polygon(const Polygon& polygon, const Color& color, const bool filled)
     // Just draw lines if not filled
     if (!filled)
     {
-        if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
-            throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
-
         std::vector<SDL_FPoint> points;
         points.reserve(cameraPolygon.points.size() + 1);
         for (const auto& p : cameraPolygon.points)
@@ -508,17 +647,19 @@ void polygon(const Polygon& polygon, const Color& color, const bool filled)
         return;
     }
 
-    _polygonFilled(rend, cameraPolygon, color);
+    _polygonFilled(cameraPolygon, color);
 }
 
 void polygons(const std::vector<Polygon>& polygons, const Color& color, const bool filled)
 {
-    SDL_Renderer* rend = renderer::_get();
     if (!rend)
         throw std::runtime_error("Renderer not yet initialized");
 
     if (color.a == 0)
         return;
+
+    if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+        throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
 
     const Vec2 cameraPos = camera::getActivePos();
 
@@ -529,11 +670,6 @@ void polygons(const std::vector<Polygon>& polygons, const Color& color, const bo
             continue;
         if (size == 1)
         {
-            if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
-                throw std::runtime_error(
-                    "Failed to set draw color: " + std::string(SDL_GetError())
-                );
-
             const auto [x, y] = static_cast<SDL_FPoint>(polygon.points.at(0) - cameraPos);
             if (!SDL_RenderPoint(rend, x, y))
                 throw std::runtime_error("Failed to render point: " + std::string(SDL_GetError()));
@@ -542,15 +678,10 @@ void polygons(const std::vector<Polygon>& polygons, const Color& color, const bo
         }
         if (size == 2)
         {
-            const auto [x1, y1] = static_cast<SDL_FPoint>(polygon.points.at(0) - cameraPos);
-            const auto [x2, y2] = static_cast<SDL_FPoint>(polygon.points.at(1) - cameraPos);
+            const auto a = static_cast<SDL_FPoint>(polygon.points.at(0) - cameraPos);
+            const auto b = static_cast<SDL_FPoint>(polygon.points.at(1) - cameraPos);
 
-            if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
-                throw std::runtime_error(
-                    "Failed to set draw color: " + std::string(SDL_GetError())
-                );
-
-            if (!SDL_RenderLine(rend, x1, y1, x2, y2))
+            if (!SDL_RenderLine(rend, a.x, a.y, b.x, b.y))
                 throw std::runtime_error("Failed to render line: " + std::string(SDL_GetError()));
 
             continue;
@@ -561,11 +692,6 @@ void polygons(const std::vector<Polygon>& polygons, const Color& color, const bo
 
         if (!filled)
         {
-            if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
-                throw std::runtime_error(
-                    "Failed to set draw color: " + std::string(SDL_GetError())
-                );
-
             std::vector<SDL_FPoint> points;
             points.reserve(cameraPolygon.points.size() + 1);
             for (const auto& p : cameraPolygon.points)
@@ -582,7 +708,7 @@ void polygons(const std::vector<Polygon>& polygons, const Color& color, const bo
             continue;
         }
 
-        _polygonFilled(rend, cameraPolygon, color);
+        _polygonFilled(cameraPolygon, color);
     }
 }
 
@@ -591,7 +717,6 @@ void geometry(
     const std::vector<int>& indices
 )
 {
-    SDL_Renderer* rend = renderer::_get();
     if (!rend)
         throw std::runtime_error("Renderer not yet initialized");
 
@@ -628,11 +753,13 @@ void bezier(
     const int numSegments
 )
 {
-    SDL_Renderer* rend = renderer::_get();
     if (!rend)
         throw std::runtime_error("Renderer not yet initialized");
 
-    if (controlPoints.size() < 3 || controlPoints.size() > 4 || color.a == 0)
+    if (controlPoints.size() < 3 || controlPoints.size() > 4)
+        throw std::invalid_argument("Bezier curve must have 3 or 4 control points");
+
+    if (color.a == 0)
         return;
 
     std::vector<Vec2> points;
@@ -660,13 +787,13 @@ void bezier(
 
     if (thickness <= 1.0)
     {
-        if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
-            throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
-
         std::vector<SDL_FPoint> sdlPoints;
         sdlPoints.reserve(points.size());
         for (const auto& p : points)
             sdlPoints.push_back(static_cast<SDL_FPoint>(p));
+
+        if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+            throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
 
         if (!SDL_RenderLines(rend, sdlPoints.data(), static_cast<int>(sdlPoints.size())))
             throw std::runtime_error(
@@ -677,7 +804,7 @@ void bezier(
     {
         for (size_t i = 0; i < points.size() - 1; ++i)
         {
-            _thickLine(rend, Line(points[i], points[i + 1]), color, thickness);
+            _thickLine(Line(points[i], points[i + 1]), color, thickness);
         }
     }
 }
@@ -687,7 +814,6 @@ void sector(
     int numSegments
 )
 {
-    SDL_Renderer* rend = renderer::_get();
     if (!rend)
         throw std::runtime_error("Renderer not yet initialized");
 
@@ -706,28 +832,42 @@ void sector(
     }
 
     const auto fColor = static_cast<SDL_FColor>(color);
+    const int segments = std::max(1, numSegments);
+
+    const auto buildArc = [&](const double radius) -> std::vector<SDL_FPoint>
+    {
+        std::vector<SDL_FPoint> arc;
+        arc.reserve(static_cast<size_t>(segments) + 1);
+        for (int i = 0; i <= segments; ++i)
+        {
+            const double t = static_cast<double>(i) / static_cast<double>(segments);
+            const double theta = startAngle + (endAngle - startAngle) * t;
+            arc.push_back(static_cast<SDL_FPoint>(center + Vec2(cos(theta), sin(theta)) * radius));
+        }
+        return arc;
+    };
 
     if (thickness <= 0.0 || thickness >= circle.radius)
     {
         // Filled sector (pie slice)
         std::vector<SDL_Vertex> vertices;
-        vertices.reserve(numSegments + 2);
+        vertices.reserve(segments + 2);
 
         // Center point
         vertices.push_back({static_cast<SDL_FPoint>(center), fColor, {}});
 
         // Edge points
-        for (int i = 0; i <= numSegments; ++i)
+        for (int i = 0; i <= segments; ++i)
         {
-            double t = static_cast<double>(i) / static_cast<double>(numSegments);
+            double t = static_cast<double>(i) / static_cast<double>(segments);
             double theta = startAngle + (endAngle - startAngle) * t;
             Vec2 p = center + Vec2(cos(theta), sin(theta)) * circle.radius;
             vertices.push_back({static_cast<SDL_FPoint>(p), fColor, {}});
         }
 
         std::vector<int> indices;
-        indices.reserve(numSegments * 3);
-        for (int i = 1; i <= numSegments; ++i)
+        indices.reserve(segments * 3);
+        for (int i = 1; i <= segments; ++i)
         {
             indices.push_back(0);
             indices.push_back(i);
@@ -746,11 +886,11 @@ void sector(
     {
         // Outline arc with thickness
         std::vector<SDL_Vertex> vertices;
-        vertices.reserve((numSegments + 1) * 2);
+        vertices.reserve((segments + 1) * 2);
 
-        for (int i = 0; i <= numSegments; ++i)
+        for (int i = 0; i <= segments; ++i)
         {
-            double t = static_cast<double>(i) / static_cast<double>(numSegments);
+            double t = static_cast<double>(i) / static_cast<double>(segments);
             double theta = startAngle + (endAngle - startAngle) * t;
             double cosT = cos(theta);
             double sinT = sin(theta);
@@ -770,8 +910,8 @@ void sector(
         }
 
         std::vector<int> indices;
-        indices.reserve(numSegments * 6);
-        for (int i = 0; i < numSegments; ++i)
+        indices.reserve(segments * 6);
+        for (int i = 0; i < segments; ++i)
         {
             int topL = i * 2;
             int botL = i * 2 + 1;
@@ -797,7 +937,47 @@ void sector(
     }
 }
 
-void _polygonFilled(SDL_Renderer* r, const Polygon& polygon, const Color& color)
+void polyline(
+    const std::vector<Vec2>& points, const Color& color, const double thickness, const bool closed
+)
+{
+    if (!rend)
+        throw std::runtime_error("Renderer not yet initialized");
+
+    if (points.size() < 2 || color.a == 0)
+        return;
+
+    const Vec2 cameraPos = camera::getActivePos();
+
+    std::vector<SDL_FPoint> sdlPoints;
+    sdlPoints.reserve(points.size() + (closed ? 1 : 0));
+    for (const auto& p : points)
+        sdlPoints.push_back(static_cast<SDL_FPoint>(p - cameraPos));
+
+    if (closed && !sdlPoints.empty())
+        sdlPoints.push_back(sdlPoints.front());
+
+    if (thickness <= 1.0)
+    {
+        if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+            throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
+
+        if (!SDL_RenderLines(rend, sdlPoints.data(), static_cast<int>(sdlPoints.size())))
+            throw std::runtime_error("Failed to render polyline: " + std::string(SDL_GetError()));
+    }
+    else
+    {
+        const size_t count = sdlPoints.size();
+        for (size_t i = 0; i < count - 1; ++i)
+        {
+            const Vec2 a{sdlPoints[i].x, sdlPoints[i].y};
+            const Vec2 b{sdlPoints[i + 1].x, sdlPoints[i + 1].y};
+            _thickLine(Line(a, b), color, thickness);
+        }
+    }
+}
+
+void _polygonFilled(const Polygon& polygon, const Color& color)
 {
     std::vector<std::vector<kn::Vec2>> vertices;
     vertices.push_back(polygon.points);
@@ -814,7 +994,7 @@ void _polygonFilled(SDL_Renderer* r, const Polygon& polygon, const Color& color)
     }
 
     if (!SDL_RenderGeometry(
-            r, nullptr, sdlVertices.data(), static_cast<int>(sdlVertices.size()),
+            rend, nullptr, sdlVertices.data(), static_cast<int>(sdlVertices.size()),
             reinterpret_cast<const int*>(indices.data()), static_cast<int>(indices.size())
         ))
     {
@@ -825,8 +1005,7 @@ void _polygonFilled(SDL_Renderer* r, const Polygon& polygon, const Color& color)
 }
 
 void _ellipseFilled(
-    SDL_Renderer* r, const Vec2& center, double radiusX, double radiusY, const Color& color,
-    int numSegments
+    const Vec2& center, double radiusX, double radiusY, const Color& color, int numSegments
 )
 {
     std::vector<SDL_Vertex> vertices;
@@ -859,7 +1038,7 @@ void _ellipseFilled(
     }
 
     if (!SDL_RenderGeometry(
-            r, nullptr, vertices.data(), static_cast<int>(vertices.size()), indices.data(),
+            rend, nullptr, vertices.data(), static_cast<int>(vertices.size()), indices.data(),
             static_cast<int>(indices.size())
         ))
     {
@@ -870,8 +1049,8 @@ void _ellipseFilled(
 }
 
 void _ellipseOutline(
-    SDL_Renderer* r, const Vec2& center, double radiusX, double radiusY, const Color& color,
-    double thickness, int numSegments
+    const Vec2& center, double radiusX, double radiusY, const Color& color, double thickness,
+    int numSegments
 )
 {
     const auto fColor = static_cast<SDL_FColor>(color);
@@ -924,7 +1103,7 @@ void _ellipseOutline(
     }
 
     if (!SDL_RenderGeometry(
-            r, nullptr, vertices.data(), static_cast<int>(vertices.size()), indices.data(),
+            rend, nullptr, vertices.data(), static_cast<int>(vertices.size()), indices.data(),
             static_cast<int>(indices.size())
         ))
     {
@@ -934,11 +1113,12 @@ void _ellipseOutline(
     }
 }
 
-void _capsuleFilled(SDL_Renderer* r, const Capsule& capsule, const Color& color, int numSegments)
+void _capsuleFilled(const Capsule& capsule, const Color& color, int numSegments)
 {
     const Vec2 cameraPos = camera::getActivePos();
     const Vec2 p1 = capsule.p1 - cameraPos;
     const Vec2 p2 = capsule.p2 - cameraPos;
+
     const double radius = capsule.radius;
     const auto fColor = static_cast<SDL_FColor>(color);
 
@@ -970,7 +1150,7 @@ void _capsuleFilled(SDL_Renderer* r, const Capsule& capsule, const Color& color,
         vertices.push_back({static_cast<SDL_FPoint>(p), fColor, {}});
 
     if (!SDL_RenderGeometry(
-            r, nullptr, vertices.data(), static_cast<int>(vertices.size()),
+            rend, nullptr, vertices.data(), static_cast<int>(vertices.size()),
             reinterpret_cast<const int*>(indices.data()), static_cast<int>(indices.size())
         ))
     {
@@ -980,65 +1160,70 @@ void _capsuleFilled(SDL_Renderer* r, const Capsule& capsule, const Color& color,
     }
 }
 
-void _capsuleOutline(
-    SDL_Renderer* r, const Capsule& capsule, const Color& color, double thickness, int numSegments
-)
+void _capsuleOutline(const Capsule& capsule, const Color& color, double thickness, int numSegments)
 {
     const Vec2 cameraPos = camera::getActivePos();
     const Vec2 p1 = capsule.p1 - cameraPos;
     const Vec2 p2 = capsule.p2 - cameraPos;
-    const double radius = capsule.radius;
+
+    const double rOuter = capsule.radius;
+    const double rInner = capsule.radius - thickness;
+
+    if (rOuter <= 0.0 || rInner <= 0.0 || thickness <= 0.0)
+        return;
+
     const auto fColor = static_cast<SDL_FColor>(color);
 
-    const double angle = atan2(p2.y - p1.y, p2.x - p1.x);
+    std::vector<SDL_FPoint> outer = _capsulePolyline(p1, p2, rOuter, numSegments);
+    std::vector<SDL_FPoint> inner = _capsulePolyline(p1, p2, rInner, numSegments);
 
-    std::vector<SDL_Vertex> vertices;
-    vertices.reserve((numSegments + 2) * 2);
+    if (outer.size() < 3 || inner.size() != outer.size())
+        return;
 
-    auto addPoints = [&](const Vec2& center, double startAngle)
+    const auto ensureClosed = [](std::vector<SDL_FPoint>& pts) -> void
     {
-        for (int i = 0; i <= numSegments / 2; ++i)
-        {
-            double theta = startAngle + (M_PI * i) / (numSegments / 2.0);
-            double cosT = cos(theta);
-            double sinT = sin(theta);
-
-            vertices.push_back(
-                {static_cast<SDL_FPoint>(center + Vec2(cosT, sinT) * radius), fColor, {}}
-            );
-            vertices.push_back(
-                {static_cast<SDL_FPoint>(center + Vec2(cosT, sinT) * (radius - thickness)),
-                 fColor,
-                 {}}
-            );
-        }
+        if (pts.empty())
+            return;
+        const SDL_FPoint& a = pts.front();
+        const SDL_FPoint& b = pts.back();
+        if (a.x != b.x || a.y != b.y)
+            pts.push_back(a);
     };
+    ensureClosed(outer);
+    ensureClosed(inner);
 
-    addPoints(p1, angle + M_PI / 2.0);
-    addPoints(p2, angle - M_PI / 2.0);
+    const size_t n = outer.size();
+    if (inner.size() != n || n < 4)
+        return;
+
+    std::vector<SDL_Vertex> verts;
+    verts.reserve(n * 2);
+    for (size_t i = 0; i < n; ++i)
+    {
+        verts.push_back({outer[i], fColor, {}});
+        verts.push_back({inner[i], fColor, {}});
+    }
 
     std::vector<int> indices;
-    const int numVerts = static_cast<int>(vertices.size());
-    for (int i = 0; i < numVerts - 2; i += 2)
-    {
-        indices.push_back(i);
-        indices.push_back(i + 2);
-        indices.push_back(i + 1);
+    indices.reserve((n - 1) * 6);
 
-        indices.push_back(i + 2);
-        indices.push_back(i + 3);
-        indices.push_back(i + 1);
+    for (size_t i = 0; i < n - 1; ++i)
+    {
+        const int o0 = static_cast<int>(i * 2);
+        const int i0 = o0 + 1;
+        const int o1 = static_cast<int>((i + 1) * 2);
+        const int i1 = o1 + 1;
+
+        indices.push_back(o0);
+        indices.push_back(o1);
+        indices.push_back(i0);
+        indices.push_back(o1);
+        indices.push_back(i1);
+        indices.push_back(i0);
     }
-    // Close the loop
-    indices.push_back(numVerts - 2);
-    indices.push_back(0);
-    indices.push_back(numVerts - 1);
-    indices.push_back(0);
-    indices.push_back(1);
-    indices.push_back(numVerts - 1);
 
     if (!SDL_RenderGeometry(
-            r, nullptr, vertices.data(), static_cast<int>(vertices.size()), indices.data(),
+            rend, nullptr, verts.data(), static_cast<int>(verts.size()), indices.data(),
             static_cast<int>(indices.size())
         ))
     {
@@ -1048,7 +1233,7 @@ void _capsuleOutline(
     }
 }
 
-void _thickLine(SDL_Renderer* r, const Line& line, const Color& color, double thickness)
+void _thickLine(const Line& line, const Color& color, double thickness)
 {
     const Vec2 a = line.getA();
     const Vec2 b = line.getB();
@@ -1072,10 +1257,141 @@ void _thickLine(SDL_Renderer* r, const Line& line, const Color& color, double th
 
     int indices[6] = {0, 1, 2, 2, 1, 3};
 
-    if (!SDL_RenderGeometry(r, nullptr, vertices, 4, indices, 6))
+    if (!SDL_RenderGeometry(rend, nullptr, vertices, 4, indices, 6))
     {
         throw std::runtime_error(std::string("Failed to render thick line: ") + SDL_GetError());
     }
+}
+
+Polygon _roundedRectPolygon(const Rect& rect, const std::array<double, 4>& radii)
+{
+    const auto appendArcPoints = [](std::vector<Vec2>& points, const Vec2& center,
+                                    const double radius, const double startAngle,
+                                    const double endAngle, const int segments) -> void
+    {
+        if (radius <= 0.0)
+            return;
+
+        for (int i = 1; i <= segments; ++i)
+        {
+            const double t = static_cast<double>(i) / static_cast<double>(segments);
+            const double angle = startAngle + (endAngle - startAngle) * t;
+            points.push_back(center + Vec2(cos(angle), sin(angle)) * radius);
+        }
+    };
+
+    const auto [radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft] = radii;
+    const double maxRadius = std::
+        max(std::max(radiusTopLeft, radiusTopRight), std::max(radiusBottomRight, radiusBottomLeft));
+    const int cornerSegments =
+        std::max(4, std::min(24, static_cast<int>(std::ceil(maxRadius / 3.0))));
+
+    std::vector<Vec2> points;
+    points.reserve(static_cast<size_t>(cornerSegments) * 4 + 8);
+
+    points.push_back({rect.x + radiusTopLeft, rect.y});
+    points.push_back({rect.x + rect.w - radiusTopRight, rect.y});
+    appendArcPoints(
+        points, {rect.x + rect.w - radiusTopRight, rect.y + radiusTopRight}, radiusTopRight,
+        -M_PI / 2.0, 0.0, cornerSegments
+    );
+
+    points.push_back({rect.x + rect.w, rect.y + rect.h - radiusBottomRight});
+    appendArcPoints(
+        points, {rect.x + rect.w - radiusBottomRight, rect.y + rect.h - radiusBottomRight},
+        radiusBottomRight, 0.0, M_PI / 2.0, cornerSegments
+    );
+
+    points.push_back({rect.x + radiusBottomLeft, rect.y + rect.h});
+    appendArcPoints(
+        points, {rect.x + radiusBottomLeft, rect.y + rect.h - radiusBottomLeft}, radiusBottomLeft,
+        M_PI / 2.0, M_PI, cornerSegments
+    );
+
+    points.push_back({rect.x, rect.y + radiusTopLeft});
+    appendArcPoints(
+        points, {rect.x + radiusTopLeft, rect.y + radiusTopLeft}, radiusTopLeft, M_PI,
+        3.0 * M_PI / 2.0, cornerSegments
+    );
+
+    return Polygon(points);
+}
+
+void _roundedRectOutline(const Rect& rect, const Color& color, const std::array<double, 4>& radii)
+{
+    if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+        throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
+
+    const Polygon polygon = _roundedRectPolygon(rect, radii);
+    std::vector<SDL_FPoint> points;
+    points.reserve(polygon.points.size() + 1);
+    for (const Vec2& point : polygon.points)
+        points.push_back(static_cast<SDL_FPoint>(point));
+
+    if (!points.empty())
+        points.push_back(points.front());
+
+    if (points.empty())
+        return;
+
+    if (!SDL_RenderLines(rend, points.data(), static_cast<int>(points.size())))
+        throw std::runtime_error(
+            "Failed to render rounded rectangle: " + std::string(SDL_GetError())
+        );
+}
+
+std::vector<SDL_FPoint> _ellipsePolyline(
+    const Vec2& center, const double radiusX, const double radiusY, const int numSegments
+)
+{
+    const int segments = std::max(3, numSegments);
+    std::vector<SDL_FPoint> points;
+    points.reserve(static_cast<size_t>(segments) + 1);
+
+    for (int i = 0; i <= segments; ++i)
+    {
+        const double theta = 2.0 * M_PI * static_cast<double>(i) / static_cast<double>(segments);
+        points.push_back(
+            static_cast<SDL_FPoint>(
+                Vec2{center.x + radiusX * cos(theta), center.y + radiusY * sin(theta)}
+            )
+        );
+    }
+
+    return points;
+}
+
+std::vector<SDL_FPoint> _capsulePolyline(
+    const Vec2& p1, const Vec2& p2, const double radius, const int numSegments
+)
+{
+    const int halfSegments = std::max(2, numSegments / 2);
+    const double angle = atan2(p2.y - p1.y, p2.x - p1.x);
+
+    std::vector<SDL_FPoint> points;
+    points.reserve(static_cast<size_t>(halfSegments) * 2 + 3);
+
+    for (int i = 0; i <= halfSegments; ++i)
+    {
+        const double theta = angle + M_PI / 2.0 + (M_PI * i) / static_cast<double>(halfSegments);
+        points.push_back(static_cast<SDL_FPoint>(p1 + Vec2(cos(theta), sin(theta)) * radius));
+    }
+
+    for (int i = 0; i <= halfSegments; ++i)
+    {
+        const double theta = angle - M_PI / 2.0 + (M_PI * i) / static_cast<double>(halfSegments);
+        points.push_back(static_cast<SDL_FPoint>(p2 + Vec2(cos(theta), sin(theta)) * radius));
+    }
+
+    if (!points.empty())
+        points.push_back(points.front());
+
+    return points;
+}
+
+void _init(SDL_Renderer* renderer)
+{
+    rend = renderer;
 }
 
 void _bind(py::module_& module)
@@ -1170,8 +1486,7 @@ Args:
     circle (Circle): The circle to draw.
     color (Color): The color of the circle.
     thickness (float, optional): The line thickness. If <= 0 or >= radius, draws filled circle. Defaults to 0 (filled).
-    num_segments (int, optional): Number of segments to approximate the circle.
-                                  Higher values yield smoother circles. Defaults to 24.
+    num_segments (int, optional): Number of segments to approximate the circle. Higher values yield smoother circles. Defaults to 24.
     )doc"
     );
 
@@ -1184,8 +1499,7 @@ Args:
     circles (Sequence[Circle]): The circles to draw in bulk.
     color (Color): The color of the circles.
     thickness (float, optional): The line thickness. If <= 0 or >= radius, draws filled circle. Defaults to 0 (filled).
-    num_segments (int, optional): Number of segments to approximate each circle.
-                                  Higher values yield smoother circles. Defaults to 24.
+    num_segments (int, optional): Number of segments to approximate each circle. Higher values yield smoother circles. Defaults to 24.
     )doc"
     );
 
@@ -1198,8 +1512,7 @@ Args:
     capsule (Capsule): The capsule to draw.
     color (Color): The color of the capsule.
     thickness (float, optional): The line thickness. If <= 0 or >= radius, draws filled capsule. Defaults to 0 (filled).
-    num_segments (int, optional): Number of segments to approximate the capsule ends.
-                                  Higher values yield smoother capsules. Defaults to 24.
+    num_segments (int, optional): Number of segments to approximate the capsule ends. Higher values yield smoother capsules. Defaults to 24.
     )doc"
     );
 
@@ -1212,8 +1525,7 @@ Args:
     capsules (Sequence[Capsule]): The capsules to draw in bulk.
     color (Color): The color of the capsules.
     thickness (float, optional): The line thickness. If <= 0 or >= radius, draws filled capsules. Defaults to 0 (filled).
-    num_segments (int, optional): Number of segments to approximate each capsule end.
-                                  Higher values yield smoother capsules. Defaults to 24.
+    num_segments (int, optional): Number of segments to approximate each capsule end. Higher values yield smoother capsules. Defaults to 24.
     )doc"
     );
 
@@ -1226,8 +1538,7 @@ Args:
     bounds (Rect): The bounding box of the ellipse.
     color (Color): The color of the ellipse.
     thickness (float, optional): The line thickness. If <= 0 or >= radius, draws filled ellipse. Defaults to 0 (filled).
-    num_segments (int, optional): Number of segments to approximate the ellipse.
-                                  Higher values yield smoother ellipses. Defaults to 24.
+    num_segments (int, optional): Number of segments to approximate the ellipse. Higher values yield smoother ellipses. Defaults to 24.
     )doc"
     );
 
@@ -1240,8 +1551,7 @@ Args:
     bounds (Sequence[Rect]): The bounding boxes of the ellipses to draw in bulk.
     color (Color): The color of the ellipses.
     thickness (float, optional): The line thickness. If <= 0 or >= radius, draws filled ellipses. Defaults to 0 (filled).
-    num_segments (int, optional): Number of segments to approximate each ellipse.
-                                  Higher values yield smoother ellipses. Defaults to 24.
+    num_segments (int, optional): Number of segments to approximate each ellipse. Higher values yield smoother ellipses. Defaults to 24.
     )doc"
     );
 
@@ -1271,6 +1581,9 @@ Args:
 
     subDraw.def(
         "rect", &rect, py::arg("rect"), py::arg("color"), py::arg("thickness") = 0,
+        py::arg("border_radius") = 0.0, py::arg("radius_top_left") = -1.0,
+        py::arg("radius_top_right") = -1.0, py::arg("radius_bottom_right") = -1.0,
+        py::arg("radius_bottom_left") = -1.0,
         R"doc(
 Draw a rectangle to the renderer.
 
@@ -1278,11 +1591,19 @@ Args:
     rect (Rect): The rectangle to draw.
     color (Color): The color of the rectangle.
     thickness (int, optional): The border thickness. If 0 or >= half width/height, draws filled rectangle. Defaults to 0 (filled).
+    border_radius (float, optional): Uniform corner radius for all four corners. Defaults to 0.
+    radius_top_left (float, optional): Override radius for the top-left corner. -1 to ignore.
+    radius_top_right (float, optional): Override radius for the top-right corner. -1 to ignore.
+    radius_bottom_right (float, optional): Override radius for the bottom-right corner. -1 to ignore.
+    radius_bottom_left (float, optional): Override radius for the bottom-left corner. -1 to ignore.
     )doc"
     );
 
     subDraw.def(
         "rects", &rects, py::arg("rects"), py::arg("color"), py::arg("thickness") = 0,
+        py::arg("border_radius") = 0.0, py::arg("radius_top_left") = -1.0,
+        py::arg("radius_top_right") = -1.0, py::arg("radius_bottom_right") = -1.0,
+        py::arg("radius_bottom_left") = -1.0,
         R"doc(
 Batch draw an array of rectangles to the renderer.
 
@@ -1290,6 +1611,11 @@ Args:
     rects (Sequence[Rect]): The rectangles to batch draw.
     color (Color): The color of the rectangles.
     thickness (int, optional): The border thickness of the rectangles. If 0 or >= half width/height, draws filled rectangles. Defaults to 0 (filled).
+    border_radius (float, optional): Uniform corner radius for all four corners. Defaults to 0.
+    radius_top_left (float, optional): Override radius for the top-left corner of all rectangles. -1 to ignore.
+    radius_top_right (float, optional): Override radius for the top-right corner of all rectangles. -1 to ignore.
+    radius_bottom_right (float, optional): Override radius for the bottom-right corner of all rectangles. -1 to ignore.
+    radius_bottom_left (float, optional): Override radius for the bottom-left corner of all rectangles. -1 to ignore.
     )doc"
     );
 
@@ -1301,7 +1627,7 @@ Draw a polygon to the renderer.
 Args:
     polygon (Polygon): The polygon to draw.
     color (Color): The color of the polygon.
-    filled (bool, optional): Whether to draw a filled polygon or just the outline. Defaults to False (outline).
+    filled (bool, optional): Whether to draw a filled polygon or just the outline. Defaults to True.
     )doc"
     );
 
@@ -1355,7 +1681,8 @@ Args:
 
     subDraw.def(
         "sector", &sector, py::arg("circle"), py::arg("start_angle"), py::arg("end_angle"),
-        py::arg("color"), py::arg("thickness") = 0.0, py::arg("num_segments") = 24, R"doc(
+        py::arg("color"), py::arg("thickness") = 0.0, py::arg("num_segments") = 24,
+        R"doc(
 Draw a circular sector or arc.
 
 Args:
@@ -1365,6 +1692,19 @@ Args:
     color (Color): The color of the sector.
     thickness (float, optional): The line thickness. If <= 0 or >= radius, draws filled sector. Defaults to 0 (filled).
     num_segments (int, optional): Number of segments to approximate the arc. Defaults to 24.
+    )doc"
+    );
+
+    subDraw.def(
+        "polyline", &polyline, py::arg("points"), py::arg("color"), py::arg("thickness") = 1.0,
+        py::arg("closed") = false, R"doc(
+Draw connected line segments through a sequence of points.
+
+Args:
+    points (Sequence[Vec2]): The vertices of the polyline (must have at least 2).
+    color (Color): The color of the polyline.
+    thickness (float, optional): The line thickness in pixels. Defaults to 1.0.
+    closed (bool, optional): If True, connects the last point back to the first. Defaults to False.
     )doc"
     );
 }

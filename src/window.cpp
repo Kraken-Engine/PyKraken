@@ -6,6 +6,7 @@
 #include <stdexcept>
 
 #include "AnimationController.hpp"
+#include "Draw.hpp"
 #include "Font.hpp"
 #include "Log.hpp"
 #include "Math.hpp"
@@ -15,8 +16,8 @@
 #include "ShaderState.hpp"
 #include "Text.hpp"
 #include "Time.hpp"
-#include "physics/World.hpp"
 #include "misc/kraken_icon.h"
+#include "physics/World.hpp"
 
 namespace kn
 {
@@ -62,6 +63,7 @@ void create(const std::string& title, const int width, const int height)
     _isOpen = true;
 
     renderer::_init(_window, width, height);
+    draw::_init(renderer::_get());
 
     log::info("SDL version: {}.{}.{}", SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_MICRO_VERSION);
     log::info(

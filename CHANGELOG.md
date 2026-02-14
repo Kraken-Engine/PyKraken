@@ -41,6 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `World.from_map_layer(world, layer)` method for creating physics bodies from a tilemap layer.
 - `Vec2` can be divided by another `Vec2` element-wise using the `/` operator.
 - New `draw.bezier` and `draw.sector` functions for drawing Bezier curves and circular sectors.
+- Added `draw.polyline` for drawing connected line segments.
+- `world_to_screen` and `screen_to_world` functions/methods for converting between world and screen coordinates.
+- `camera.get_active_pos` function for getting the position of the currently active camera.
 
 ### Changed
 - Refactored the audio backend to use SDL3_mixer.
@@ -50,10 +53,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Stream.looping` is now an RW property instead of just a setter method.
 - `Stream` playback position renamed from `current_time` to `playback_pos`.
 - Circle drawing (and now ellipses) default segment count reduced from 36 to 24.
-- Line drawing thickess can now be a float.
+- Line drawing thickness can now be a float.
 - Rename `Map.layers` to `Map.all_layers`
 - `Texture` constructor involving a `Vec2` size parameter changed to accept separate `width` and `height` integer parameters for type safety.
 - `AnimationController.add_sheet` method `Vec2` frame size parameter changed to separate `frame_width` and `frame_height` integer parameters for type safety.
+- `draw.rect` and `draw.rects` functions now have parameters for corner radii.
 
 ### Fixed
 - Fixed a bug where textures wouldn't render at all (hopefully). Likely related to the internal SDL2->SDL3 transition.

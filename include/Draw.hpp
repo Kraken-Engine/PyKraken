@@ -30,6 +30,7 @@ struct Vertex
 namespace draw
 {
 void _bind(py::module_& module);
+void _init(SDL_Renderer* renderer);
 
 void circle(const Circle& circle, const Color& color, double thickness = 0.0, int numSegments = 24);
 void circles(
@@ -47,7 +48,8 @@ void capsules(
 
 void ellipse(Rect bounds, const Color& color, double thickness = 0.0, int numSegments = 24);
 void ellipses(
-    const std::vector<Rect>& rects, const Color& color, double thickness = 0.0, int numSegments = 24
+    const std::vector<Rect>& bounds, const Color& color, double thickness = 0.0,
+    int numSegments = 24
 );
 
 void point(Vec2 point, const Color& color);
@@ -59,8 +61,16 @@ void pointsFromNDArray(
 void line(Line line, const Color& color, double thickness = 1.0);
 void lines(const std::vector<Line>& lines, const Color& color, double thickness = 1.0);
 
-void rect(Rect rect, const Color& color, int thickness = 0);
-void rects(const std::vector<Rect>& rects, const Color& color, int thickness = 0);
+void rect(
+    Rect rect, const Color& color, int thickness = 0, double borderRadius = 0.0,
+    double radiusTopLeft = -1.0, double radiusTopRight = -1.0, double radiusBottomRight = -1.0,
+    double radiusBottomLeft = -1.0
+);
+void rects(
+    const std::vector<Rect>& rects, const Color& color, int thickness = 0,
+    double borderRadius = 0.0, double radiusTopLeft = -1.0, double radiusTopRight = -1.0,
+    double radiusBottomRight = -1.0, double radiusBottomLeft = -1.0
+);
 
 void polygon(const Polygon& polygon, const Color& color, bool filled = true);
 void polygons(const std::vector<Polygon>& polygons, const Color& color, bool filled = true);
@@ -78,6 +88,10 @@ void bezier(
 void sector(
     const Circle& circle, double startAngle, double endAngle, const Color& color,
     double thickness = 0.0, int numSegments = 24
+);
+
+void polyline(
+    const std::vector<Vec2>& points, const Color& color, double thickness = 1.0, bool closed = false
 );
 }  // namespace draw
 }  // namespace kn
