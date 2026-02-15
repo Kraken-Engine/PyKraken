@@ -1,9 +1,11 @@
 // clang-format off
 #include "opaque_types.hpp"
+#include "pykraken_version.hpp"
 // clang-format on
 
 #include "AnimationController.hpp"
 #include "Camera.hpp"
+#include "Capsule.hpp"
 #include "Circle.hpp"
 #include "Collision.hpp"
 #include "Color.hpp"
@@ -27,7 +29,6 @@
 #include "Rect.hpp"
 #include "Renderer.hpp"
 #include "ShaderState.hpp"
-#include "Sprite.hpp"
 #include "Text.hpp"
 #include "Texture.hpp"
 #include "TileMap.hpp"
@@ -35,10 +36,7 @@
 #include "Transform.hpp"
 #include "Viewport.hpp"
 #include "Window.hpp"
-
-constexpr int KRAKEN_MAJOR_VERSION = 1;
-constexpr int KRAKEN_MINOR_VERSION = 5;
-constexpr int KRAKEN_MICRO_VERSION = 1;
+#include "physics/World.hpp"
 
 constexpr const char* getPlatform();
 constexpr const char* getArchitecture();
@@ -75,6 +73,9 @@ static void quit()
     // Mixer is independent
     kn::mixer::_quit();
 
+    // Invalidate cached draw renderer before renderer destruction
+    kn::draw::_init(nullptr);
+
     // Renderer must be destroyed before window
     kn::renderer::_quit();
 
@@ -108,11 +109,11 @@ Tear down the Kraken engine subsystems.
     kn::rect::_bind(m);
     kn::pixel_array::_bind(m);
     kn::texture::_bind(m);
-    kn::sprite::_bind(m);
     kn::polygon::_bind(m);
     kn::camera::_bind(m);
     kn::line::_bind(m);
     kn::circle::_bind(m);
+    kn::capsule::_bind(m);
     kn::collision::_bind(m);
     kn::ease::_bind(m);
     kn::event::_bind(m);
@@ -132,6 +133,7 @@ Tear down the Kraken engine subsystems.
     kn::animation_controller::_bind(m);
     kn::orchestrator::_bind(m);
     kn::tilemap::_bind(m);
+    kn::physics::_bind(m);
     kn::shader_state::_bind(m);
     kn::viewport::_bind(m);
 }

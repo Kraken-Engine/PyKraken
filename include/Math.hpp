@@ -2,6 +2,7 @@
 
 #include <SDL3/SDL.h>
 #include <pybind11/pybind11.h>
+#include <box2d/box2d.h>
 
 namespace py = pybind11;
 
@@ -108,6 +109,8 @@ class Vec2
 
     Vec2 operator*(double scalar) const;
 
+    Vec2 operator/(const Vec2& other) const;
+
     Vec2 operator/(double scalar) const;
 
     Vec2& operator+=(const Vec2& other);
@@ -117,6 +120,8 @@ class Vec2
     Vec2& operator*=(const Vec2& other);
 
     Vec2& operator*=(double scalar);
+
+    Vec2& operator/=(const Vec2& other);
 
     Vec2& operator/=(double scalar);
 
@@ -129,8 +134,39 @@ class Vec2
     explicit operator SDL_Point() const;
 
     explicit operator SDL_FPoint() const;
-};
 
+    explicit operator b2Vec2() const;
+};
+}  // namespace kn
+
+namespace mapbox
+{
+namespace util
+{
+template <size_t I, typename T>
+struct nth;
+
+template <>
+struct nth<0, kn::Vec2>
+{
+    inline static float get(const kn::Vec2& v)
+    {
+        return static_cast<float>(v.x);
+    }
+};
+template <>
+struct nth<1, kn::Vec2>
+{
+    inline static float get(const kn::Vec2& v)
+    {
+        return static_cast<float>(v.y);
+    }
+};
+}  // namespace util
+}  // namespace mapbox
+
+namespace kn
+{
 Vec2 operator*(double lhs, const Vec2& rhs);
 
 namespace math

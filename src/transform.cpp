@@ -1,6 +1,18 @@
 #include "Transform.hpp"
 
+#include <box2d/box2d.h>
 #include <pybind11/stl.h>
+
+namespace kn
+{
+Transform::operator b2Transform() const
+{
+    b2Transform xf;
+    xf.p = static_cast<b2Vec2>(pos);
+    xf.q = b2MakeRot(static_cast<float>(angle));
+    return xf;
+}
+}  // namespace kn
 
 namespace kn::transform
 {

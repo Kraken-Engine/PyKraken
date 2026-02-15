@@ -98,6 +98,43 @@ Vec2 Polygon::getCentroid() const
     return {cx, cy};
 }
 
+bool Polygon::isConvex() const
+{
+    if (points.size() < 3)
+        return false;
+
+    bool initialized = false;
+    bool positive = false;
+    const size_t n = points.size();
+
+    for (size_t i = 0; i < n; ++i)
+    {
+        const Vec2& p1 = points[i];
+        const Vec2& p2 = points[(i + 1) % n];
+        const Vec2& p3 = points[(i + 2) % n];
+
+        double cp = (p2.x - p1.x) * (p3.y - p2.y) - (p2.y - p1.y) * (p3.x - p2.x);
+        if (std::abs(cp) > 1e-10)  // Ignore very small cross products
+        {
+            if (!initialized)
+            {
+                positive = cp > 0;
+                initialized = true;
+            }
+            else if (positive != (cp > 0))
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+bool Polygon::isConcave() const
+{
+    return !isConvex();
+}
+
 Rect Polygon::getRect() const
 {
     if (points.empty())
@@ -211,9 +248,22 @@ Get the centroid of the polygon.
 Returns:
     Vec2: The center point of the polygon.
         )doc")
+        .def_property_readonly("is_convex", &Polygon::isConvex, R"doc(
+Check if the polygon is convex.
+
+Returns:
+    bool: True if the polygon is convex, False otherwise.
+        )doc")
+        .def_property_readonly("is_concave", &Polygon::isConcave, R"doc(
+Check if the polygon is concave.
+
+Returns:
+    bool: True if the polygon is concave, False otherwise.
+        )doc")
 
         .def("get_rect", &Polygon::getRect, R"doc(
 Get the axis-aligned bounding rectangle of the polygon.
+
 Returns:
     Rect: The bounding rectangle.
         )doc")

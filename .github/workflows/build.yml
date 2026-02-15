@@ -12,48 +12,375 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  prepare_linux:
+    runs-on: ubuntu-latest
+    container: quay.io/pypa/manylinux_2_28_x86_64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache Linux Core
+        id: cache-linux-deps
+        uses: actions/cache@v4
+        with:
+          path: ./linux_deps
+          key: linux-core-deps-v1-${{ hashFiles('.github/workflows/build.yml') }}
+      - name: Install System Headers
+        if: steps.cache-linux-deps.outputs.cache-hit != 'true'
+        run: |
+          dnf -y install \
+            alsa-lib-devel pipewire-devel pulseaudio-libs-devel \
+            libXrandr-devel libXcursor-devel libXi-devel libXinerama-devel libXfixes-devel libXScrnSaver-devel libXtst-devel \
+            mesa-libEGL-devel mesa-libgbm-devel \
+            wayland-devel wayland-protocols-devel libxkbcommon-devel \
+            libpng-devel libjpeg-turbo-devel freetype-devel flac-devel \
+            pkgconf-pkg-config
+
+      - name: Build SDL Deps
+        if: steps.cache-linux-deps.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p $(pwd)/linux_deps
+          JOBS=$(nproc)
+
+          export PKG_CONFIG_PATH=$(pwd)/linux_deps/lib64/pkgconfig:$(pwd)/linux_deps/lib/pkgconfig:$PKG_CONFIG_PATH
+
+          # Build SDL3
+          git clone --depth 1 --branch release-3.4.0 https://github.com/libsdl-org/SDL.git
+          cmake -S SDL -B build_sdl \
+            -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps \
+            -DSDL_STATIC=ON -DSDL_SHARED=OFF \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build_sdl --target install --parallel ${JOBS}
+
+          # Build SDL3_image
+          git clone --depth 1 --branch release-3.4.0 https://github.com/libsdl-org/SDL_image.git
+          cmake -S SDL_image -B build_image \
+            -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps \
+            -DCMAKE_PREFIX_PATH=$(pwd)/linux_deps \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DSDLIMAGE_BACKEND_STB=ON \
+            -DSDLIMAGE_BUILD_SHARED_LIBS=OFF \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build_image --target install --parallel ${JOBS}
+
+          # Build SDL3_ttf
+          git clone --depth 1 --branch release-3.2.2 --recurse-submodules https://github.com/libsdl-org/SDL_ttf.git
+          cmake -S SDL_ttf -B build_ttf \
+            -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps \
+            -DCMAKE_PREFIX_PATH=$(pwd)/linux_deps \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DSDLTTF_BUILD_SHARED_LIBS=OFF \
+            -DSDLTTF_VENDORED=ON \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build_ttf --target install --parallel ${JOBS}
+
+          # Build SDL3_mixer
+          git clone --depth 1 --branch prerelease-3.1.2 --recurse-submodules https://github.com/libsdl-org/SDL_mixer.git
+          cmake -S SDL_mixer -B build_mixer \
+            -DCMAKE_INSTALL_PREFIX=$(pwd)/linux_deps \
+            -DCMAKE_PREFIX_PATH=$(pwd)/linux_deps \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DSDLMIXER_BUILD_SHARED_LIBS=OFF \
+            -DSDLMIXER_VENDORED=ON \
+            -DSDLMIXER_OPUS=ON \
+            -DSDLMIXER_FLAC_LIBFLAC=ON \
+            -DSDLMIXER_MP3_MINIMP3=ON \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build_mixer --target install --parallel ${JOBS}
+
+      - name: Upload Linux Core
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-core-deps
+          path: ./linux_deps
+
+  prepare_macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache macOS Core
+        id: cache-macos-deps
+        uses: actions/cache@v4
+        with:
+          path: ./macos_deps
+          key: macos-core-deps-v1-${{ hashFiles('.github/workflows/build.yml') }}
+
+      - name: Build SDL Deps
+        if: steps.cache-macos-deps.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p $(pwd)/macos_deps
+          JOBS=$(sysctl -n hw.logicalcpu)
+
+          export MACOSX_DEPLOYMENT_TARGET=15.0
+
+          # Build SDL3
+          git clone --depth 1 --branch release-3.4.0 https://github.com/libsdl-org/SDL.git
+          cmake -G Ninja -S SDL -B build_sdl \
+            -DCMAKE_INSTALL_PREFIX=$(pwd)/macos_deps \
+            -DSDL_STATIC=ON -DSDL_SHARED=OFF \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build_sdl --target install --parallel ${JOBS}
+
+          # Build SDL3_image
+          git clone --depth 1 --branch release-3.4.0 https://github.com/libsdl-org/SDL_image.git
+          cmake -G Ninja -S SDL_image -B build_image \
+            -DCMAKE_INSTALL_PREFIX=$(pwd)/macos_deps \
+            -DCMAKE_PREFIX_PATH=$(pwd)/macos_deps \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DSDLIMAGE_BACKEND_STB=ON \
+            -DSDLIMAGE_BUILD_SHARED_LIBS=OFF \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build_image --target install --parallel ${JOBS}
+
+          # Build SDL3_ttf
+          git clone --depth 1 --branch release-3.2.2 --recurse-submodules https://github.com/libsdl-org/SDL_ttf.git
+          cmake -G Ninja -S SDL_ttf -B build_ttf \
+            -DCMAKE_INSTALL_PREFIX=$(pwd)/macos_deps \
+            -DCMAKE_PREFIX_PATH=$(pwd)/macos_deps \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DSDLTTF_BUILD_SHARED_LIBS=OFF \
+            -DSDLTTF_VENDORED=ON \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build_ttf --target install --parallel ${JOBS}
+
+          # Build SDL3_mixer
+          git clone --depth 1 --branch prerelease-3.1.2 --recurse-submodules https://github.com/libsdl-org/SDL_mixer.git
+          cmake -G Ninja -S SDL_mixer -B build_mixer \
+            -DCMAKE_INSTALL_PREFIX=$(pwd)/macos_deps \
+            -DCMAKE_PREFIX_PATH=$(pwd)/macos_deps \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DSDLMIXER_BUILD_SHARED_LIBS=OFF \
+            -DSDLMIXER_VENDORED=ON \
+            -DSDLMIXER_OPUS=ON \
+            -DSDLMIXER_FLAC_LIBFLAC=ON \
+            -DSDLMIXER_MP3_MINIMP3=ON \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build_mixer --target install --parallel ${JOBS}
+
+      - name: Upload macOS Core
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-core-deps
+          path: ./macos_deps
+
+  prepare_windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache Windows Core
+        id: cache-windows-deps
+        uses: actions/cache@v4
+        with:
+          path: ./windows_deps
+          key: windows-core-deps-v1-${{ hashFiles('.github/workflows/build.yml') }}
+
+      - name: Build SDL Deps
+        if: steps.cache-windows-deps.outputs.cache-hit != 'true'
+        shell: powershell
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          $depsPath = "$(Get-Location)\windows_deps"
+          $jobs = [Environment]::ProcessorCount
+          New-Item -ItemType Directory -Force -Path $depsPath
+
+          function Install-SdlVcRelease {
+            param(
+              [string]$Repo,
+              [string]$Tag,
+              [string]$Pattern
+            )
+
+            $headers = @{
+              Accept = "application/vnd.github+json"
+              Authorization = "Bearer $env:GITHUB_TOKEN"
+              "X-GitHub-Api-Version" = "2022-11-28"
+            }
+
+            $releaseApi = "https://api.github.com/repos/libsdl-org/$Repo/releases/tags/$Tag"
+            Write-Host "Resolving release asset for $Repo@$Tag ($Pattern)"
+            $release = Invoke-RestMethod -Uri $releaseApi -Headers $headers
+            $asset = $release.assets | Where-Object { $_.name -like $Pattern } | Select-Object -First 1
+            if (-not $asset) {
+              throw "No asset matching '$Pattern' found for $Repo@$Tag"
+            }
+
+            $zipPath = Join-Path $env:RUNNER_TEMP $asset.name
+            $extractDir = Join-Path $env:RUNNER_TEMP ("extract_" + [System.IO.Path]::GetFileNameWithoutExtension($asset.name))
+
+            Write-Host "Downloading $($asset.name)"
+            Invoke-WebRequest -Uri $asset.browser_download_url -Headers $headers -OutFile $zipPath
+
+            if (Test-Path $extractDir) {
+              Remove-Item -Path $extractDir -Recurse -Force
+            }
+            Expand-Archive -Path $zipPath -DestinationPath $extractDir -Force
+
+            $payloadRoot = Get-ChildItem -Path $extractDir -Directory | Select-Object -First 1
+            if (-not $payloadRoot) {
+              throw "Unexpected archive structure for $($asset.name)"
+            }
+
+            Copy-Item -Path (Join-Path $payloadRoot.FullName "*") -Destination $depsPath -Recurse -Force
+          }
+
+          $usingPrebuilt = $false
+          try {
+            Install-SdlVcRelease -Repo "SDL" -Tag "release-3.4.0" -Pattern "SDL3-devel-*-VC.zip"
+            Install-SdlVcRelease -Repo "SDL_image" -Tag "release-3.4.0" -Pattern "SDL3_image-devel-*-VC.zip"
+            Install-SdlVcRelease -Repo "SDL_ttf" -Tag "release-3.2.2" -Pattern "SDL3_ttf-devel-*-VC.zip"
+            Install-SdlVcRelease -Repo "SDL_mixer" -Tag "prerelease-3.1.2" -Pattern "SDL3_mixer-devel-*-VC.zip"
+            $usingPrebuilt = $true
+            Write-Host "Using prebuilt SDL VC packages for Windows dependencies"
+          } catch {
+            Write-Host "Prebuilt package resolution failed, falling back to source builds: $($_.Exception.Message)"
+          }
+
+          if (-not $usingPrebuilt) {
+            # Build SDL3
+            git clone --depth 1 --branch release-3.4.0 https://github.com/libsdl-org/SDL.git
+            cmake -S SDL -B build_sdl `
+              -DCMAKE_INSTALL_PREFIX="$depsPath" `
+              -DSDL_STATIC=ON -DSDL_SHARED=OFF `
+              -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
+              -DCMAKE_BUILD_TYPE=Release
+            cmake --build build_sdl --config Release --target install --parallel $jobs
+
+            # Build SDL3_image
+            git clone --depth 1 --branch release-3.4.0 --recurse-submodules https://github.com/libsdl-org/SDL_image.git
+            Push-Location SDL_image
+            git submodule update --init --recursive
+            Pop-Location
+            cmake -S SDL_image -B build_image `
+              -DCMAKE_INSTALL_PREFIX="$depsPath" `
+              -DCMAKE_PREFIX_PATH="$depsPath" `
+              -DBUILD_SHARED_LIBS=OFF `
+              -DSDLIMAGE_BACKEND_STB=ON `
+              -DSDLIMAGE_VENDORED=ON `
+              -DSDLIMAGE_BUILD_SHARED_LIBS=OFF `
+              -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
+              -DCMAKE_BUILD_TYPE=Release
+            cmake --build build_image --config Release --target install --parallel $jobs
+
+            # Build SDL3_ttf
+            git clone --depth 1 --branch release-3.2.2 --recurse-submodules https://github.com/libsdl-org/SDL_ttf.git
+            cmake -S SDL_ttf -B build_ttf `
+              -DCMAKE_INSTALL_PREFIX="$depsPath" `
+              -DCMAKE_PREFIX_PATH="$depsPath" `
+              -DBUILD_SHARED_LIBS=OFF `
+              -DSDLTTF_BUILD_SHARED_LIBS=OFF `
+              -DSDLTTF_VENDORED=ON `
+              -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
+              -DCMAKE_BUILD_TYPE=Release
+            cmake --build build_ttf --config Release --target install --parallel $jobs
+
+            # Build SDL3_mixer
+            git clone --depth 1 --branch prerelease-3.1.2 --recurse-submodules https://github.com/libsdl-org/SDL_mixer.git
+            cmake -S SDL_mixer -B build_mixer `
+              -DCMAKE_INSTALL_PREFIX="$depsPath" `
+              -DCMAKE_PREFIX_PATH="$depsPath" `
+              -DBUILD_SHARED_LIBS=OFF `
+              -DSDLMIXER_BUILD_SHARED_LIBS=OFF `
+              -DSDLMIXER_VENDORED=ON `
+              -DSDLMIXER_OPUS=ON `
+              -DSDLMIXER_FLAC_LIBFLAC=ON `
+              -DSDLMIXER_MP3_MINIMP3=ON `
+              -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
+              -DCMAKE_BUILD_TYPE=Release
+            cmake --build build_mixer --config Release --target install --parallel $jobs
+          }
+
+      - name: Upload Windows Core
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-core-deps
+          path: ./windows_deps
+
   build_wheels:
-    name: Build wheels on ${{ matrix.os }}
+    name: Build wheels (${{ matrix.artifact_name }})
+    needs: [prepare_linux, prepare_macos, prepare_windows]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        include:
+          - os: windows-latest
+            cibw_build: "cp311-* cp312-*"
+            artifact_name: wheels-windows-a
+          - os: windows-latest
+            cibw_build: "cp313-* cp314-*"
+            artifact_name: wheels-windows-b
+          - os: macos-latest
+            cibw_build: "cp311-* cp312-* cp313-* cp314-*"
+            artifact_name: wheels-macos
+          - os: ubuntu-latest
+            cibw_build: "cp311-* cp312-* cp313-* cp314-*"
+            artifact_name: wheels-linux
 
     steps:
       - uses: actions/checkout@v4
 
-      # ------------------ Build Wheels ------------------
-      - name: Install UV
-        uses: astral-sh/setup-uv@v6
-        with: { version: "latest" }
+      # WINDOWS PREP: Download Pre-built Core
+      - name: Download Windows Core
+        if: matrix.os == 'windows-latest'
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-core-deps
+          path: ./prebuilt_windows
+
+      # MACOS PREP: Brew and Build Mixer
+      - name: Download macOS Core
+        if: matrix.os == 'macos-latest'
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-core-deps
+          path: ./prebuilt_macos
+
+      # LINUX PREP: Download Pre-built Core
+      - name: Download Linux Core
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-core-deps
+          path: ./prebuilt_linux
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
 
       - name: Build and test wheels
         uses: pypa/cibuildwheel@v3.2.0
         env:
           CIBW_BUILD_FRONTEND: "build[uv]"
-          CIBW_BUILD_VERBOSITY: 1
+          CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux_2_28_x86_64
           CIBW_SKIP: "*-musllinux_* *-win32"
-          CIBW_BUILD: "cp311-* cp312-* cp313-* cp314-*"
-          CIBW_ARCHS_WINDOWS: "AMD64"
-          CIBW_ENVIRONMENT: CMAKE_GENERATOR=Ninja
+          CIBW_BUILD: "${{ matrix.cibw_build }}"
 
-          CIBW_ENVIRONMENT_WINDOWS: "CC=cl CXX=cl"
+          CIBW_ENVIRONMENT_WINDOWS: >
+            CMAKE_PREFIX_PATH="${{ github.workspace }}/prebuilt_windows;${{ github.workspace }}/prebuilt_windows/cmake"
 
-          # Minimal system headers inside manylinux
+          CIBW_ENVIRONMENT_MACOS: >
+            MACOSX_DEPLOYMENT_TARGET=15.0
+            CMAKE_OSX_DEPLOYMENT_TARGET=15.0
+            CMAKE_PREFIX_PATH=${{ github.workspace }}/prebuilt_macos
+            DYLD_LIBRARY_PATH=${{ github.workspace }}/prebuilt_macos/lib:${{ github.workspace }}/prebuilt_macos/lib64:$DYLD_LIBRARY_PATH
+            DYLD_FALLBACK_LIBRARY_PATH=${{ github.workspace }}/prebuilt_macos/lib:${{ github.workspace }}/prebuilt_macos/lib64:$DYLD_FALLBACK_LIBRARY_PATH
+
+          CIBW_ENVIRONMENT_LINUX: >
+            CMAKE_PREFIX_PATH=/host${{ github.workspace }}/prebuilt_linux
+            LD_LIBRARY_PATH=/host${{ github.workspace }}/prebuilt_linux/lib:$LD_LIBRARY_PATH
+
+          # Linux still needs standard runtime libs to link against
           CIBW_BEFORE_ALL_LINUX: >
-            yum -y install \
-              cmake ninja-build \
-              alsa-lib-devel pipewire-devel pulseaudio-libs-devel \
-              libXrandr-devel libXcursor-devel libXi-devel libXinerama-devel libXfixes-devel libXScrnSaver-devel libXtst-devel \
-              mesa-libEGL-devel mesa-libgbm-devel \
-              wayland-devel wayland-protocols-devel libxkbcommon-devel \
-              dbus-devel ibus-devel systemd-devel \
-              libpng-devel libjpeg-turbo-devel freetype-devel flac-devel
+            dnf -y install alsa-lib-devel libXrandr-devel libXcursor-devel mesa-libEGL-devel wayland-devel wayland-protocols-devel
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-${{ matrix.os }}
+          name: ${{ matrix.artifact_name }}
           path: ./wheelhouse/*.whl
-          compression-level: 0

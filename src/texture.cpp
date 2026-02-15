@@ -10,11 +10,8 @@
 
 namespace kn
 {
-Texture::Texture(const Vec2& size, const TextureScaleMode scaleMode)
+Texture::Texture(const int width, const int height, const TextureScaleMode scaleMode)
 {
-    const int width = static_cast<int>(size.x);
-    const int height = static_cast<int>(size.y);
-
     if (width < 1 || height < 1)
         throw std::invalid_argument("Texture size values must be at least 1");
 
@@ -31,9 +28,9 @@ Texture::Texture(const Vec2& size, const TextureScaleMode scaleMode)
                                                 : scaleMode;
     SDL_SetTextureScaleMode(m_texPtr, static_cast<SDL_ScaleMode>(finalScaleMode));
 
-    m_width = size.x;
-    m_height = size.y;
-    m_clipArea = {0.0, 0.0, m_width, m_height};
+    m_width = width;
+    m_height = height;
+    m_clipArea = {0, 0, m_width, m_height};
 }
 
 Texture::Texture(
@@ -76,9 +73,9 @@ Texture::Texture(
 
     float w, h;
     SDL_GetTextureSize(m_texPtr, &w, &h);
-    m_width = static_cast<double>(w);
-    m_height = static_cast<double>(h);
-    m_clipArea = {0.0, 0.0, m_width, m_height};
+    m_width = static_cast<int>(w);
+    m_height = static_cast<int>(h);
+    m_clipArea = {0, 0, m_width, m_height};
 }
 
 Texture::Texture(
@@ -145,9 +142,9 @@ Texture::Texture(
         m_texPtr = nullptr;
         throw std::runtime_error("Failed to get texture size: " + std::string(SDL_GetError()));
     }
-    m_width = static_cast<double>(w);
-    m_clipArea = {0.0, 0.0, m_width, m_height};
-    m_height = static_cast<double>(h);
+    m_width = static_cast<int>(w);
+    m_height = static_cast<int>(h);
+    m_clipArea = {0, 0, m_width, m_height};
 }
 
 Texture::~Texture()
@@ -159,12 +156,12 @@ Texture::~Texture()
     }
 }
 
-double Texture::getWidth() const
+int Texture::getWidth() const
 {
     return m_width;
 }
 
-double Texture::getHeight() const
+int Texture::getHeight() const
 {
     return m_height;
 }
@@ -314,13 +311,14 @@ Raises:
         )doc"
         )
         .def(
-            py::init<const Vec2&, TextureScaleMode>(), py::arg("size"),
+            py::init<int, int, TextureScaleMode>(), py::arg("width"), py::arg("height"),
             py::arg("scale_mode") = TextureScaleMode::DEFAULT, R"doc(
 Create a (render target) Texture with the specified size.
 If no scale mode is provided, the default renderer scale mode is used.
 
 Args:
-    size (Vec2): The width and height of the texture.
+    width (int): The width of the texture in pixels (must be > 0).
+    height (int): The height of the texture in pixels (must be > 0).
     scale_mode (TextureScaleMode, optional): Scaling/filtering mode for the texture.
 
 Raises:
@@ -339,6 +337,18 @@ Get or set the alpha modulation of the texture as a float between `0.0` and `1.0
         )doc")
         .def_property("clip_area", &Texture::getClipArea, &Texture::setClipArea, R"doc(
 Get or set the clip area (atlas region) of the texture.
+        )doc")
+        .def_property("tint", &Texture::getTint, &Texture::setTint, R"doc(
+Get or set the color tint applied to the texture.
+        )doc")
+        .def_property_readonly("width", &Texture::getWidth, R"doc(
+The width of the texture in pixels.
+        )doc")
+        .def_property_readonly("height", &Texture::getHeight, R"doc(
+The height of the texture in pixels.
+        )doc")
+        .def_property_readonly("size", &Texture::getSize, R"doc(
+The dimensions of the texture as a `Vec2`.
         )doc")
 
         .def("make_additive", &Texture::makeAdditive, R"doc(

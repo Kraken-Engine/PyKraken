@@ -216,6 +216,11 @@ Vec2 Vec2::operator/(const double scalar) const
     return {x / scalar, y / scalar};
 }
 
+Vec2 Vec2::operator/(const Vec2& other) const
+{
+    return {x / other.x, y / other.y};
+}
+
 Vec2 Vec2::operator*(const Vec2& other) const
 {
     return {x * other.x, y * other.y};
@@ -256,6 +261,13 @@ Vec2& Vec2::operator/=(const double scalar)
     return *this;
 }
 
+Vec2& Vec2::operator/=(const Vec2& other)
+{
+    x /= other.x;
+    y /= other.y;
+    return *this;
+}
+
 Vec2 operator*(const double lhs, const Vec2& rhs)
 {
     return rhs * lhs;
@@ -279,7 +291,13 @@ Vec2::operator SDL_Point() const
 {
     return {static_cast<int>(x), static_cast<int>(y)};
 }
+
 Vec2::operator SDL_FPoint() const
+{
+    return {static_cast<float>(x), static_cast<float>(y)};
+}
+
+Vec2::operator b2Vec2() const
 {
     return {static_cast<float>(x), static_cast<float>(y)};
 }
@@ -716,8 +734,10 @@ Returns:
         .def("__isub__", &Vec2::operator-=, py::arg("other"))
         .def("__neg__", py::overload_cast<>(&Vec2::operator-, py::const_))
         .def("__bool__", [](const Vec2& v) -> bool { return static_cast<bool>(v); })
-        .def("__truediv__", &Vec2::operator/, py::arg("scalar"))
-        .def("__itruediv__", &Vec2::operator/=, py::arg("scalar"))
+        .def("__truediv__", py::overload_cast<double>(&Vec2::operator/, py::const_), py::arg("scalar"))
+        .def("__truediv__", py::overload_cast<const Vec2&>(&Vec2::operator/, py::const_), py::arg("other"))
+        .def("__itruediv__", py::overload_cast<double>(&Vec2::operator/=), py::arg("scalar"))
+        .def("__itruediv__", py::overload_cast<const Vec2&>(&Vec2::operator/=), py::arg("other"))
         .def(
             "__mul__", py::overload_cast<const Vec2&>(&Vec2::operator*, py::const_),
             py::arg("other")

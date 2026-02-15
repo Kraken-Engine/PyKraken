@@ -7,8 +7,38 @@ import numpy
 import numpy.typing
 import pykraken._core
 import typing
-__all__: list[str] = ['circle', 'circles', 'ellipse', 'geometry', 'line', 'point', 'points', 'points_from_ndarray', 'polygon', 'polygons', 'rect', 'rects']
-def circle(circle: pykraken._core.Circle, color: pykraken._core.Color, thickness: typing.SupportsFloat = 0, num_segments: typing.SupportsInt = 36) -> None:
+__all__: list[str] = ['bezier', 'capsule', 'capsules', 'circle', 'circles', 'ellipse', 'ellipses', 'geometry', 'line', 'lines', 'point', 'points', 'points_from_ndarray', 'polygon', 'polygons', 'polyline', 'rect', 'rects', 'sector']
+def bezier(control_points: collections.abc.Sequence[pykraken._core.Vec2], color: pykraken._core.Color, thickness: typing.SupportsFloat = 1.0, num_segments: typing.SupportsInt = 24) -> None:
+    """
+    Draw a Bezier curve with 3 or 4 control points.
+    
+    Args:
+        control_points (Sequence[Vec2]): The control points (3 for quadratic, 4 for cubic).
+        color (Color): The color of the curve.
+        thickness (float, optional): The line thickness. Defaults to 1.0.
+        num_segments (int, optional): Number of segments to approximate the curve. Defaults to 24.
+    """
+def capsule(capsule: pykraken._core.Capsule, color: pykraken._core.Color, thickness: typing.SupportsFloat = 0, num_segments: typing.SupportsInt = 24) -> None:
+    """
+    Draw a capsule to the renderer.
+    
+    Args:
+        capsule (Capsule): The capsule to draw.
+        color (Color): The color of the capsule.
+        thickness (float, optional): The line thickness. If <= 0 or >= radius, draws filled capsule. Defaults to 0 (filled).
+        num_segments (int, optional): Number of segments to approximate the capsule ends. Higher values yield smoother capsules. Defaults to 24.
+    """
+def capsules(capsules: collections.abc.Sequence[pykraken._core.Capsule], color: pykraken._core.Color, thickness: typing.SupportsFloat = 0, num_segments: typing.SupportsInt = 24) -> None:
+    """
+    Draw an array of capsules in bulk to the renderer.
+    
+    Args:
+        capsules (Sequence[Capsule]): The capsules to draw in bulk.
+        color (Color): The color of the capsules.
+        thickness (float, optional): The line thickness. If <= 0 or >= radius, draws filled capsules. Defaults to 0 (filled).
+        num_segments (int, optional): Number of segments to approximate each capsule end. Higher values yield smoother capsules. Defaults to 24.
+    """
+def circle(circle: pykraken._core.Circle, color: pykraken._core.Color, thickness: typing.SupportsFloat = 0, num_segments: typing.SupportsInt = 24) -> None:
     """
     Draw a circle to the renderer.
     
@@ -16,10 +46,9 @@ def circle(circle: pykraken._core.Circle, color: pykraken._core.Color, thickness
         circle (Circle): The circle to draw.
         color (Color): The color of the circle.
         thickness (float, optional): The line thickness. If <= 0 or >= radius, draws filled circle. Defaults to 0 (filled).
-        num_segments (int, optional): Number of segments to approximate the circle.
-                                      Higher values yield smoother circles. Defaults to 36.
+        num_segments (int, optional): Number of segments to approximate the circle. Higher values yield smoother circles. Defaults to 24.
     """
-def circles(circles: collections.abc.Sequence[pykraken._core.Circle], color: pykraken._core.Color, thickness: typing.SupportsFloat = 0, num_segments: typing.SupportsInt = 36) -> None:
+def circles(circles: collections.abc.Sequence[pykraken._core.Circle], color: pykraken._core.Color, thickness: typing.SupportsFloat = 0, num_segments: typing.SupportsInt = 24) -> None:
     """
     Draw an array of circles in bulk to the renderer.
     
@@ -27,18 +56,27 @@ def circles(circles: collections.abc.Sequence[pykraken._core.Circle], color: pyk
         circles (Sequence[Circle]): The circles to draw in bulk.
         color (Color): The color of the circles.
         thickness (float, optional): The line thickness. If <= 0 or >= radius, draws filled circle. Defaults to 0 (filled).
-        num_segments (int, optional): Number of segments to approximate each circle.
-                                      Higher values yield smoother circles. Defaults to 36.
+        num_segments (int, optional): Number of segments to approximate each circle. Higher values yield smoother circles. Defaults to 24.
     """
-def ellipse(bounds: pykraken._core.Rect, color: pykraken._core.Color, filled: bool = False) -> None:
+def ellipse(bounds: pykraken._core.Rect, color: pykraken._core.Color, thickness: typing.SupportsFloat = 0.0, num_segments: typing.SupportsInt = 24) -> None:
     """
     Draw an ellipse to the renderer.
     
     Args:
         bounds (Rect): The bounding box of the ellipse.
         color (Color): The color of the ellipse.
-        filled (bool, optional): Whether to draw a filled ellipse or just the outline.
-                                 Defaults to False (outline).
+        thickness (float, optional): The line thickness. If <= 0 or >= radius, draws filled ellipse. Defaults to 0 (filled).
+        num_segments (int, optional): Number of segments to approximate the ellipse. Higher values yield smoother ellipses. Defaults to 24.
+    """
+def ellipses(bounds: collections.abc.Sequence[pykraken._core.Rect], color: pykraken._core.Color, thickness: typing.SupportsFloat = 0.0, num_segments: typing.SupportsInt = 24) -> None:
+    """
+    Draw an array of ellipses in bulk to the renderer.
+    
+    Args:
+        bounds (Sequence[Rect]): The bounding boxes of the ellipses to draw in bulk.
+        color (Color): The color of the ellipses.
+        thickness (float, optional): The line thickness. If <= 0 or >= radius, draws filled ellipses. Defaults to 0 (filled).
+        num_segments (int, optional): Number of segments to approximate each ellipse. Higher values yield smoother ellipses. Defaults to 24.
     """
 def geometry(texture: pykraken._core.Texture | None, vertices: collections.abc.Sequence[pykraken._core.Vertex], indices: typing.Any = None) -> None:
     """
@@ -50,14 +88,23 @@ def geometry(texture: pykraken._core.Texture | None, vertices: collections.abc.S
         indices (Sequence[int] | None): A list of indices defining the primitives.
                                        If None or empty, vertices are drawn sequentially.
     """
-def line(line: pykraken._core.Line, color: pykraken._core.Color, thickness: typing.SupportsInt = 1) -> None:
+def line(line: pykraken._core.Line, color: pykraken._core.Color, thickness: typing.SupportsFloat = 1.0) -> None:
     """
     Draw a line to the renderer.
     
     Args:
         line (Line): The line to draw.
         color (Color): The color of the line.
-        thickness (int, optional): The line thickness in pixels. Defaults to 1.
+        thickness (float, optional): The line thickness in pixels. Defaults to 1.0.
+    """
+def lines(lines: collections.abc.Sequence[pykraken._core.Line], color: pykraken._core.Color, thickness: typing.SupportsFloat = 1.0) -> None:
+    """
+    Batch draw an array of lines to the renderer.
+    
+    Args:
+        lines (Sequence[Line]): The lines to batch draw.
+        color (Color): The color of the lines.
+        thickness (float, optional): The line thickness in pixels. Defaults to 1.0.
     """
 def point(point: pykraken._core.Vec2, color: pykraken._core.Color) -> None:
     """
@@ -104,8 +151,7 @@ def polygon(polygon: pykraken._core.Polygon, color: pykraken._core.Color, filled
     Args:
         polygon (Polygon): The polygon to draw.
         color (Color): The color of the polygon.
-        filled (bool, optional): Whether to draw a filled polygon or just the outline.
-                                 Defaults to False (outline). Works with both convex and concave polygons.
+        filled (bool, optional): Whether to draw a filled polygon or just the outline. Defaults to True.
     """
 def polygons(polygons: collections.abc.Sequence[pykraken._core.Polygon], color: pykraken._core.Color, filled: bool = True) -> None:
     """
@@ -114,10 +160,19 @@ def polygons(polygons: collections.abc.Sequence[pykraken._core.Polygon], color: 
     Args:
         polygons (Sequence[Polygon]): The polygons to draw in bulk.
         color (Color): The color of the polygons.
-        filled (bool, optional): Whether to draw filled polygons or just the outlines.
-                                 Defaults to True (filled). Works with both convex and concave polygons.
+        filled (bool, optional): Whether to draw filled polygons or just the outlines. Defaults to True (filled).
     """
-def rect(rect: pykraken._core.Rect, color: pykraken._core.Color, thickness: typing.SupportsInt = 0) -> None:
+def polyline(points: collections.abc.Sequence[pykraken._core.Vec2], color: pykraken._core.Color, thickness: typing.SupportsFloat = 1.0, closed: bool = False) -> None:
+    """
+    Draw connected line segments through a sequence of points.
+    
+    Args:
+        points (Sequence[Vec2]): The vertices of the polyline (must have at least 2).
+        color (Color): The color of the polyline.
+        thickness (float, optional): The line thickness in pixels. Defaults to 1.0.
+        closed (bool, optional): If True, connects the last point back to the first. Defaults to False.
+    """
+def rect(rect: pykraken._core.Rect, color: pykraken._core.Color, thickness: typing.SupportsInt = 0, border_radius: typing.SupportsFloat = 0.0, radius_top_left: typing.SupportsFloat = -1.0, radius_top_right: typing.SupportsFloat = -1.0, radius_bottom_right: typing.SupportsFloat = -1.0, radius_bottom_left: typing.SupportsFloat = -1.0) -> None:
     """
     Draw a rectangle to the renderer.
     
@@ -125,8 +180,13 @@ def rect(rect: pykraken._core.Rect, color: pykraken._core.Color, thickness: typi
         rect (Rect): The rectangle to draw.
         color (Color): The color of the rectangle.
         thickness (int, optional): The border thickness. If 0 or >= half width/height, draws filled rectangle. Defaults to 0 (filled).
+        border_radius (float, optional): Uniform corner radius for all four corners. Defaults to 0.
+        radius_top_left (float, optional): Override radius for the top-left corner. -1 to ignore.
+        radius_top_right (float, optional): Override radius for the top-right corner. -1 to ignore.
+        radius_bottom_right (float, optional): Override radius for the bottom-right corner. -1 to ignore.
+        radius_bottom_left (float, optional): Override radius for the bottom-left corner. -1 to ignore.
     """
-def rects(rects: collections.abc.Sequence[pykraken._core.Rect], color: pykraken._core.Color, thickness: typing.SupportsInt = 0) -> None:
+def rects(rects: collections.abc.Sequence[pykraken._core.Rect], color: pykraken._core.Color, thickness: typing.SupportsInt = 0, border_radius: typing.SupportsFloat = 0.0, radius_top_left: typing.SupportsFloat = -1.0, radius_top_right: typing.SupportsFloat = -1.0, radius_bottom_right: typing.SupportsFloat = -1.0, radius_bottom_left: typing.SupportsFloat = -1.0) -> None:
     """
     Batch draw an array of rectangles to the renderer.
     
@@ -134,4 +194,21 @@ def rects(rects: collections.abc.Sequence[pykraken._core.Rect], color: pykraken.
         rects (Sequence[Rect]): The rectangles to batch draw.
         color (Color): The color of the rectangles.
         thickness (int, optional): The border thickness of the rectangles. If 0 or >= half width/height, draws filled rectangles. Defaults to 0 (filled).
+        border_radius (float, optional): Uniform corner radius for all four corners. Defaults to 0.
+        radius_top_left (float, optional): Override radius for the top-left corner of all rectangles. -1 to ignore.
+        radius_top_right (float, optional): Override radius for the top-right corner of all rectangles. -1 to ignore.
+        radius_bottom_right (float, optional): Override radius for the bottom-right corner of all rectangles. -1 to ignore.
+        radius_bottom_left (float, optional): Override radius for the bottom-left corner of all rectangles. -1 to ignore.
+    """
+def sector(circle: pykraken._core.Circle, start_angle: typing.SupportsFloat, end_angle: typing.SupportsFloat, color: pykraken._core.Color, thickness: typing.SupportsFloat = 0.0, num_segments: typing.SupportsInt = 24) -> None:
+    """
+    Draw a circular sector or arc.
+    
+    Args:
+        circle (Circle): The circle defining the sector.
+        start_angle (float): The start angle in radians.
+        end_angle (float): The end angle in radians.
+        color (Color): The color of the sector.
+        thickness (float, optional): The line thickness. If <= 0 or >= radius, draws filled sector. Defaults to 0 (filled).
+        num_segments (int, optional): Number of segments to approximate the arc. Defaults to 24.
     """

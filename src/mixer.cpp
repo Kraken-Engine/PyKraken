@@ -1,118 +1,96 @@
-#define MINIAUDIO_IMPLEMENTATION
-
 #include "Mixer.hpp"
 
+#include <pybind11/native_enum.h>
+
 #include <algorithm>
-#include <atomic>
+#include <limits>
 #include <stdexcept>
 
 #include "Log.hpp"
 
-const char* getBackendName(ma_backend backend);
-
-namespace kn
+namespace kn::mixer
 {
-static ma_engine _engine;
-static std::vector<std::weak_ptr<Audio>> _audioInstances;
-static std::mutex _instancesMutex;
-static std::vector<AudioStream*> _audioStreamInstances;
-static std::mutex _streamsMutex;
-static std::atomic<bool> _engineShutdown{false};
+constexpr uint8_t MAX_TRACKS = 64;
+constexpr uint8_t MAX_POLYPHONY = 32;
 
-static bool hasSupportedExtension(const std::string& path)
+enum class TrackUsage : uint8_t
 {
-    auto extPos = path.find_last_of('.');
-    if (extPos == std::string::npos)
-        return false;
+    None = 0,
+    Sample = 1,
+    Stream = 2,
+};
 
-    std::string ext = path.substr(extPos + 1);
-    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+struct TrackInfo
+{
+    MIX_Track* track = nullptr;
+    MIX_Audio* audio = nullptr;  // currently assigned audio (if any)
+    AudioPriority priority = AudioPriority::SFX;
+    uint64_t started_seq = 0;
+    TrackUsage usage = TrackUsage::None;
+};
 
-    return ext == "wav" || ext == "mp3" || ext == "flac";
+static MIX_Mixer* _mixer = nullptr;
+static TrackInfo _tracks[MAX_TRACKS] = {};
+static uint64_t _playSeq = 1;
+
+static uint8_t _countPlayingInstances(MIX_Audio* audio);
+static int _trackIndex(const TrackInfo* trackInfo);
+static void _clearTrackAssignment(TrackInfo& trackInfo);
+static TrackInfo* _acquireTrack(AudioPriority priority, TrackUsage usage, bool canSteal);
+
+static Sint64 _secondsToMs(double seconds);
+static SDL_PropertiesID _buildPlayOptions(bool looping, double fadeInSeconds);
+static Sint64 _fadeOutFramesForTrack(MIX_Track* track, double fadeOutSeconds);
+
+std::shared_ptr<Sample> loadSample(const std::string& path, const bool predecode)
+{
+    MIX_Audio* audio = MIX_LoadAudio(_mixer, path.c_str(), predecode);
+    if (audio == nullptr)
+    {
+        throw std::runtime_error(
+            std::string("Failed to load sample '") + path + "': " + SDL_GetError()
+        );
+    }
+
+    return std::shared_ptr<Sample>(new Sample(audio));
 }
 
-Audio::Audio(const std::string& path, const float volume)
-    : m_path(path),
-      m_volume(volume)
+std::shared_ptr<Stream> loadStream(const std::string& path, const bool predecode)
 {
-    if (!hasSupportedExtension(path))
-        throw std::invalid_argument("Unsupported audio format: " + path);
+    MIX_Audio* audio = MIX_LoadAudio(_mixer, path.c_str(), predecode);
+    if (audio == nullptr)
+    {
+        throw std::runtime_error(
+            std::string("Failed to load stream '") + path + "': " + SDL_GetError()
+        );
+    }
 
-    if (ma_sound_init_from_file(&_engine, m_path.c_str(), m_flags, nullptr, nullptr, &m_proto) !=
-        MA_SUCCESS)
-        throw std::runtime_error("Failed to decode: " + path);
+    return std::shared_ptr<Stream>(new Stream(audio));
+}
+
+void setMasterVolume(float volume)
+{
+    volume = std::clamp(volume, 0.0f, 1.0f);
+    MIX_SetMixerGain(_mixer, volume);
+}
+
+float getMasterVolume()
+{
+    return MIX_GetMixerGain(_mixer);
+}
+
+Audio::Audio(MIX_Audio* sdlAudio)
+    : m_audio(sdlAudio)
+{
 }
 
 Audio::~Audio()
 {
-    // Only clean up if engine hasn't been shut down
-    if (!_engineShutdown.load(std::memory_order_acquire))
+    if (m_audio != nullptr)
     {
-        // Only clean up if engine still exists (not already cleaned by _quit)
-        if (m_proto.engineNode.pEngine != nullptr)
-        {
-            stop();
-            {
-                std::lock_guard g(m_mutex);
-                for (const auto& v : m_voices)
-                {
-                    ma_sound_set_end_callback(&v->snd, nullptr, nullptr);
-                    ma_sound_uninit(&v->snd);
-                }
-                m_voices.clear();
-            }
-            ma_sound_uninit(&m_proto);
-        }
-
-        // Unregister this instance
-        std::lock_guard g(_instancesMutex);
-        std::erase_if(
-            _audioInstances, [&](auto& w) { return w.expired() || w.lock().get() == this; }
-        );
+        MIX_DestroyAudio(m_audio);
+        m_audio = nullptr;
     }
-}
-
-void Audio::play(const int fadeInMs, const bool loop)
-{
-    auto v = std::make_unique<Voice>();
-
-    if (ma_sound_init_copy(&_engine, &m_proto, m_flags, nullptr, &v->snd) != MA_SUCCESS)
-        throw std::runtime_error("ma_sound_init_copy() failed");
-
-    ma_sound_set_looping(&v->snd, loop ? MA_TRUE : MA_FALSE);
-    ma_sound_set_volume(&v->snd, m_volume);
-
-    if (fadeInMs > 0)
-    {
-        const ma_uint64 frames = msToFrames(fadeInMs);
-        ma_sound_set_fade_in_pcm_frames(&v->snd, 0.0f, m_volume, frames);
-    }
-
-    // Mark for GC on end.
-    ma_sound_set_end_callback(
-        &v->snd, [](void* user, ma_sound*)
-        { static_cast<Voice*>(user)->done.store(true, std::memory_order_relaxed); }, v.get()
-    );
-
-    ma_sound_start(&v->snd);
-
-    std::lock_guard g(m_mutex);
-    m_voices.push_back(std::move(v));
-}
-
-void Audio::stop(const int fadeOutMs)
-{
-    std::lock_guard g(m_mutex);
-    for (const auto& v : m_voices)
-        doFadeStop(v->snd, m_volume, fadeOutMs);
-}
-
-void Audio::setVolume(const float volume)
-{
-    m_volume = volume;
-    std::lock_guard g(m_mutex);
-    for (const auto& v : m_voices)
-        ma_sound_set_volume(&v->snd, volume);
 }
 
 float Audio::getVolume() const
@@ -120,483 +98,740 @@ float Audio::getVolume() const
     return m_volume;
 }
 
-void Audio::cleanup()
+Sample::Sample(MIX_Audio* sdlAudio)
+    : Audio(sdlAudio)
 {
-    std::lock_guard g(m_mutex);
-    std::erase_if(
-        m_voices,
-        [&](const std::unique_ptr<Voice>& v)
-        {
-            if (v->done.load(std::memory_order_relaxed) && !ma_sound_is_playing(&v->snd))
-            {
-                ma_sound_set_end_callback(&v->snd, nullptr, nullptr);
-                ma_sound_uninit(&v->snd);
-                return true;
-            }
-            return false;
-        }
-    );
 }
 
-ma_uint64 Audio::msToFrames(const int ms)
+void Sample::setMaxPolyphony(uint8_t maxPolyphony)
 {
-    return ma_engine_get_sample_rate(&_engine) * static_cast<ma_uint64>(ms) / 1000;
+    maxPolyphony = std::clamp(maxPolyphony, uint8_t(1), MAX_POLYPHONY);
+    m_maxPolyphony = maxPolyphony;
 }
 
-void Audio::doFadeStop(ma_sound& snd, const float currentVol, const int fadeOutMs)
+uint8_t Sample::getMaxPolyphony() const
 {
-    if (fadeOutMs <= 0)
+    return m_maxPolyphony;
+}
+
+void Sample::setVolume(float volume)
+{
+    m_volume = std::clamp(volume, 0.0f, 1.0f);
+
+    if (_mixer == nullptr || m_audio == nullptr)
+        return;
+
+    for (auto& trackInfo : _tracks)
     {
-        ma_sound_stop(&snd);
+        if (!trackInfo.track)
+            continue;
+        if (trackInfo.audio != m_audio)
+            continue;
+        if (trackInfo.usage != TrackUsage::Sample)
+            continue;
+        if (!MIX_TrackPlaying(trackInfo.track))
+            continue;
+
+        MIX_SetTrackGain(trackInfo.track, m_volume);
+    }
+}
+
+bool Sample::isPlaying() const
+{
+    if (_mixer == nullptr || m_audio == nullptr)
+        return false;
+
+    for (const auto& trackInfo : _tracks)
+    {
+        if (!trackInfo.track || trackInfo.audio != m_audio)
+            continue;
+        if (trackInfo.usage != TrackUsage::Sample)
+            continue;
+
+        if (MIX_TrackPlaying(trackInfo.track))
+            return true;
+    }
+
+    return false;
+}
+
+void Sample::play(const double fadeInSeconds)
+{
+    if (_mixer == nullptr)
+        throw std::runtime_error("Mixer not initialized");
+    if (m_audio == nullptr)
+        throw std::runtime_error("Audio not loaded");
+
+    if (_countPlayingInstances(m_audio) >= m_maxPolyphony)
+        return;
+
+    TrackInfo* trackInfo = _acquireTrack(priority, TrackUsage::Sample, canSteal);
+    if (trackInfo == nullptr)
+        return;
+
+    if (MIX_TrackPlaying(trackInfo->track))
+    {
+        if (!MIX_StopTrack(trackInfo->track, 0))
+            throw std::runtime_error(std::string("Failed to stop track: ") + SDL_GetError());
+    }
+
+    if (!MIX_SetTrackAudio(trackInfo->track, m_audio))
+        throw std::runtime_error(std::string("Failed to set track audio: ") + SDL_GetError());
+
+    const SDL_PropertiesID options = _buildPlayOptions(m_looping, fadeInSeconds);
+    if (!MIX_PlayTrack(trackInfo->track, options))
+    {
+        if (options != 0)
+            SDL_DestroyProperties(options);
+        throw std::runtime_error(std::string("Failed to play track: ") + SDL_GetError());
+    }
+    if (options != 0)
+        SDL_DestroyProperties(options);
+
+    trackInfo->audio = m_audio;
+    trackInfo->priority = priority;
+    trackInfo->started_seq = _playSeq++;
+    trackInfo->usage = TrackUsage::Sample;
+
+    // Apply per-audio volume to this new instance.
+    if (trackInfo->track)
+        MIX_SetTrackGain(trackInfo->track, m_volume);
+}
+
+void Sample::stop(const double fadeOutSeconds)
+{
+    if (_mixer == nullptr)
+        throw std::runtime_error("Mixer not initialized");
+    if (m_audio == nullptr)
+        throw std::runtime_error("Audio not loaded");
+
+    for (auto& trackInfo : _tracks)
+    {
+        if (!trackInfo.track || trackInfo.audio != m_audio)
+            continue;
+        if (trackInfo.usage != TrackUsage::Sample)
+            continue;
+
+        const Sint64 fadeFrames = _fadeOutFramesForTrack(trackInfo.track, fadeOutSeconds);
+        if (!MIX_StopTrack(trackInfo.track, fadeFrames))
+            throw std::runtime_error(std::string("Failed to stop track: ") + SDL_GetError());
+    }
+}
+
+Stream::Stream(MIX_Audio* sdlAudio)
+    : Audio(sdlAudio)
+{
+}
+
+Stream::~Stream()
+{
+    if (_mixer != nullptr && m_trackIndex >= 0 && m_trackIndex < MAX_TRACKS)
+    {
+        TrackInfo& trackInfo = _tracks[m_trackIndex];
+        if (trackInfo.track)
+        {
+            (void)MIX_StopTrack(trackInfo.track, 0);
+            _clearTrackAssignment(trackInfo);
+        }
+    }
+    m_trackIndex = -1;
+
+    // m_audio is destroyed by Audio base class destructor
+}
+
+void Stream::setLooping(const bool looping)
+{
+    m_looping = looping;
+
+    // Best-effort: update currently playing instance too.
+    if (_mixer == nullptr || m_audio == nullptr)
+        return;
+    if (m_trackIndex < 0 || m_trackIndex >= MAX_TRACKS)
+        return;
+
+    TrackInfo& trackInfo = _tracks[m_trackIndex];
+    if (!trackInfo.track)
+        return;
+    if (trackInfo.usage != TrackUsage::Stream)
+        return;
+
+    const int loops = m_looping ? -1 : 0;
+    MIX_SetTrackLoops(trackInfo.track, loops);
+}
+
+bool Stream::getLooping() const
+{
+    return m_looping;
+}
+
+void Stream::setVolume(float volume)
+{
+    m_volume = std::clamp(volume, 0.0f, 1.0f);
+
+    if (_mixer == nullptr || m_audio == nullptr)
+        return;
+    if (m_trackIndex < 0 || m_trackIndex >= MAX_TRACKS)
+        return;
+
+    TrackInfo& trackInfo = _tracks[m_trackIndex];
+    if (!trackInfo.track)
+        return;
+    if (trackInfo.usage != TrackUsage::Stream)
+        return;
+    if (!MIX_TrackPlaying(trackInfo.track))
+        return;
+
+    MIX_SetTrackGain(trackInfo.track, m_volume);
+}
+
+bool Stream::isPlaying() const
+{
+    if (_mixer == nullptr || m_audio == nullptr)
+        return false;
+    if (m_trackIndex < 0 || m_trackIndex >= MAX_TRACKS)
+        return false;
+
+    const TrackInfo& trackInfo = _tracks[m_trackIndex];
+    if (!trackInfo.track || trackInfo.usage != TrackUsage::Stream)
+        return false;
+
+    return MIX_TrackPlaying(trackInfo.track);
+}
+
+double Stream::getPlaybackPos() const
+{
+    if (_mixer == nullptr || m_audio == nullptr)
+        return 0.0;
+
+    if (m_trackIndex >= 0 && m_trackIndex < MAX_TRACKS)
+    {
+        const TrackInfo& trackInfo = _tracks[m_trackIndex];
+        if (trackInfo.track && trackInfo.usage == TrackUsage::Stream &&
+            MIX_TrackPlaying(trackInfo.track))
+        {
+            const Sint64 frames = MIX_GetTrackPlaybackPosition(trackInfo.track);
+            if (frames >= 0)
+            {
+                const Sint64 ms = MIX_TrackFramesToMS(trackInfo.track, frames);
+                if (ms >= 0)
+                    return static_cast<double>(ms) / 1000.0;
+            }
+        }
+    }
+
+    const Sint64 ms = MIX_AudioFramesToMS(m_audio, m_savedFrames);
+    if (ms < 0)
+        return 0.0;
+
+    return static_cast<double>(ms) / 1000.0;
+}
+
+void Stream::play(const double fadeInSeconds)
+{
+    if (_mixer == nullptr)
+        throw std::runtime_error("Mixer not initialized");
+    if (m_audio == nullptr)
+        throw std::runtime_error("Audio not loaded");
+
+    stop(0.0);
+    m_savedFrames = 0;
+
+    TrackInfo* trackInfo = _acquireTrack(priority, TrackUsage::Stream, canSteal);
+    if (trackInfo == nullptr)
+        return;
+
+    const int idx = _trackIndex(trackInfo);
+    if (idx < 0)
+        return;
+    m_trackIndex = idx;
+
+    if (MIX_TrackPlaying(trackInfo->track))
+    {
+        if (!MIX_StopTrack(trackInfo->track, 0))
+            throw std::runtime_error(std::string("Failed to stop track: ") + SDL_GetError());
+    }
+
+    if (!MIX_SetTrackAudio(trackInfo->track, m_audio))
+        throw std::runtime_error(std::string("Failed to set track audio: ") + SDL_GetError());
+
+    const SDL_PropertiesID options = _buildPlayOptions(m_looping, fadeInSeconds);
+    if (!MIX_PlayTrack(trackInfo->track, options))
+    {
+        if (options != 0)
+            SDL_DestroyProperties(options);
+        throw std::runtime_error(std::string("Failed to play track: ") + SDL_GetError());
+    }
+    if (options != 0)
+        SDL_DestroyProperties(options);
+
+    trackInfo->audio = m_audio;
+    trackInfo->priority = priority;
+    trackInfo->started_seq = _playSeq++;
+    trackInfo->usage = TrackUsage::Stream;
+
+    MIX_SetTrackGain(trackInfo->track, m_volume);
+}
+
+void Stream::pause()
+{
+    if (_mixer == nullptr)
+        throw std::runtime_error("Mixer not initialized");
+    if (m_audio == nullptr)
+        throw std::runtime_error("Audio not loaded");
+
+    if (m_trackIndex < 0 || m_trackIndex >= MAX_TRACKS)
+        return;
+
+    TrackInfo& trackInfo = _tracks[m_trackIndex];
+    if (!trackInfo.track || trackInfo.usage != TrackUsage::Stream)
+        return;
+
+    if (!MIX_TrackPlaying(trackInfo.track))
+        return;
+
+    const Sint64 frames = MIX_GetTrackPlaybackPosition(trackInfo.track);
+    if (frames >= 0)
+        m_savedFrames = frames;
+
+    // Requirement: paused streams should be removed from the track.
+    if (!MIX_StopTrack(trackInfo.track, 0))
+        throw std::runtime_error(std::string("Failed to stop track: ") + SDL_GetError());
+
+    _clearTrackAssignment(trackInfo);
+    m_trackIndex = -1;
+}
+
+void Stream::resume(const double fadeInSeconds)
+{
+    if (_mixer == nullptr)
+        throw std::runtime_error("Mixer not initialized");
+    if (m_audio == nullptr)
+        throw std::runtime_error("Audio not loaded");
+
+    if (isPlaying())
+        return;
+
+    TrackInfo* trackInfo = _acquireTrack(priority, TrackUsage::Stream, canSteal);
+    if (trackInfo == nullptr)
+        return;
+
+    const int idx = _trackIndex(trackInfo);
+    if (idx < 0)
+        return;
+    m_trackIndex = idx;
+
+    if (MIX_TrackPlaying(trackInfo->track))
+    {
+        if (!MIX_StopTrack(trackInfo->track, 0))
+            throw std::runtime_error(std::string("Failed to stop track: ") + SDL_GetError());
+    }
+
+    if (!MIX_SetTrackAudio(trackInfo->track, m_audio))
+        throw std::runtime_error(std::string("Failed to set track audio: ") + SDL_GetError());
+
+    const SDL_PropertiesID options = _buildPlayOptions(m_looping, fadeInSeconds);
+    if (!MIX_PlayTrack(trackInfo->track, options))
+    {
+        if (options != 0)
+            SDL_DestroyProperties(options);
+        throw std::runtime_error(std::string("Failed to play track: ") + SDL_GetError());
+    }
+    if (options != 0)
+        SDL_DestroyProperties(options);
+
+    if (m_savedFrames > 0)
+    {
+        if (!MIX_SetTrackPlaybackPosition(trackInfo->track, m_savedFrames))
+            throw std::runtime_error(std::string("Failed to seek track: ") + SDL_GetError());
+    }
+
+    trackInfo->audio = m_audio;
+    trackInfo->priority = priority;
+    trackInfo->started_seq = _playSeq++;
+    trackInfo->usage = TrackUsage::Stream;
+
+    MIX_SetTrackGain(trackInfo->track, m_volume);
+}
+
+void Stream::stop(const double fadeOutSeconds)
+{
+    if (_mixer == nullptr)
+        throw std::runtime_error("Mixer not initialized");
+    if (m_audio == nullptr)
+        throw std::runtime_error("Audio not loaded");
+
+    if (m_trackIndex < 0 || m_trackIndex >= MAX_TRACKS)
+    {
+        m_savedFrames = 0;
         return;
     }
 
-    const ma_uint64 fadeFrames = msToFrames(fadeOutMs);
-    ma_sound_set_fade_in_pcm_frames(&snd, currentVol, 0.0f, fadeFrames);
-
-    // Schedule the stop for exactly when the fade hits 0.
-    const ma_uint64 now = ma_engine_get_time_in_pcm_frames(&_engine);
-    ma_sound_set_stop_time_in_pcm_frames(&snd, now + fadeFrames);
-}
-
-AudioStream::AudioStream(const std::string& filePath, const float volume)
-    : m_volume(volume)
-{
-    if (!hasSupportedExtension(filePath))
-        throw std::invalid_argument("Unsupported audio format: " + filePath);
-
-    if (ma_sound_init_from_file(&_engine, filePath.c_str(), m_flags, nullptr, nullptr, &m_snd) !=
-        MA_SUCCESS)
-        throw std::runtime_error("ma_sound_init_from_file(STREAM) failed: " + filePath);
-
-    ma_sound_set_volume(&m_snd, volume);
-
-    // Register this stream for cleanup
-    std::lock_guard g(_streamsMutex);
-    _audioStreamInstances.push_back(this);
-}
-
-AudioStream::~AudioStream()
-{
-    // Only clean up if engine hasn't been shut down
-    if (!_engineShutdown.load(std::memory_order_acquire))
+    TrackInfo& trackInfo = _tracks[m_trackIndex];
+    if (!trackInfo.track || trackInfo.usage != TrackUsage::Stream)
     {
-        // Unregister this stream
-        {
-            std::lock_guard g(_streamsMutex);
-            auto it = std::find(_audioStreamInstances.begin(), _audioStreamInstances.end(), this);
-            if (it != _audioStreamInstances.end())
-            {
-                _audioStreamInstances.erase(it);
-            }
-        }
+        m_trackIndex = -1;
+        m_savedFrames = 0;
+        return;
+    }
 
-        // Only uninit if engine still exists (not already cleaned by _quit)
-        if (m_snd.engineNode.pEngine != nullptr)
+    const Sint64 fadeFrames = _fadeOutFramesForTrack(trackInfo.track, fadeOutSeconds);
+    if (!MIX_StopTrack(trackInfo.track, fadeFrames))
+        throw std::runtime_error(std::string("Failed to stop track: ") + SDL_GetError());
+
+    _clearTrackAssignment(trackInfo);
+    m_trackIndex = -1;
+    m_savedFrames = 0;
+}
+
+void Stream::seek(const double seconds)
+{
+    if (_mixer == nullptr)
+        throw std::runtime_error("Mixer not initialized");
+    if (m_audio == nullptr)
+        throw std::runtime_error("Audio not loaded");
+
+    const Sint64 ms = _secondsToMs(seconds);
+
+    if (m_trackIndex >= 0 && m_trackIndex < MAX_TRACKS)
+    {
+        TrackInfo& trackInfo = _tracks[m_trackIndex];
+        if (trackInfo.track && trackInfo.usage == TrackUsage::Stream &&
+            MIX_TrackPlaying(trackInfo.track))
         {
-            ma_sound_uninit(&m_snd);
+            const Sint64 frames = MIX_TrackMSToFrames(trackInfo.track, ms);
+            if (frames < 0)
+                throw std::runtime_error(
+                    std::string("Failed to convert ms->frames: ") + SDL_GetError()
+                );
+
+            if (!MIX_SetTrackPlaybackPosition(trackInfo.track, frames))
+                throw std::runtime_error(std::string("Failed to seek track: ") + SDL_GetError());
+
+            m_savedFrames = frames;
+            return;
         }
     }
+
+    const Sint64 frames = MIX_AudioMSToFrames(m_audio, ms);
+    if (frames < 0)
+        throw std::runtime_error(std::string("Failed to convert ms->frames: ") + SDL_GetError());
+
+    m_savedFrames = frames;
 }
 
-void AudioStream::play(const int fadeInMs, const bool loop, const float startTimeSeconds)
+uint8_t _countPlayingInstances(MIX_Audio* audio)
 {
-    startTimeSeconds > 0.0f ? seek(startTimeSeconds) : rewind();
+    uint8_t count = 0;
+    for (const auto& trackInfo : _tracks)
+        if (trackInfo.track && trackInfo.audio == audio && MIX_TrackPlaying(trackInfo.track))
+            ++count;
+    return count;
+}
 
-    ma_sound_set_looping(&m_snd, loop ? MA_TRUE : MA_FALSE);
+int _trackIndex(const TrackInfo* trackInfo)
+{
+    if (!trackInfo)
+        return -1;
+    for (int i = 0; i < MAX_TRACKS; ++i)
+        if (&_tracks[i] == trackInfo)
+            return i;
+    return -1;
+}
+
+void _clearTrackAssignment(TrackInfo& trackInfo)
+{
+    trackInfo.audio = nullptr;
+    trackInfo.priority = AudioPriority::SFX;
+    trackInfo.started_seq = 0;
+    trackInfo.usage = TrackUsage::None;
+}
+
+TrackInfo* _acquireTrack(AudioPriority priority, TrackUsage usage, bool canSteal)
+{
+    TrackInfo* stealCandidate = nullptr;
+
+    for (auto& trackInfo : _tracks)
+    {
+        if (!trackInfo.track)
+            continue;
+
+        // 1. Try finding a completely idle track.
+        if (!MIX_TrackPlaying(trackInfo.track))
+            return &trackInfo;
+
+        if (!canSteal)
+            continue;
+
+        // 2. Streams never steal from other streams.
+        if (usage == TrackUsage::Stream && trackInfo.usage == TrackUsage::Stream)
+            continue;
+
+        // 3. Compare priorities.
+        // Steal if the target has LOWER priority,
+        // or SAME priority if it's an older sample.
+        if (trackInfo.priority < priority)
+        {
+            if (!stealCandidate || trackInfo.priority < stealCandidate->priority ||
+                (trackInfo.priority == stealCandidate->priority &&
+                 trackInfo.started_seq < stealCandidate->started_seq))
+            {
+                stealCandidate = &trackInfo;
+            }
+        }
+        else if (trackInfo.priority == priority && trackInfo.usage != TrackUsage::Stream)
+        {
+            // Within same priority, steal the oldest one.
+            if (!stealCandidate || trackInfo.started_seq < stealCandidate->started_seq)
+            {
+                stealCandidate = &trackInfo;
+            }
+        }
+    }
+
+    return stealCandidate;
+}
+
+Sint64 _secondsToMs(double seconds)
+{
+    if (seconds <= 0.0)
+        return 0;
+
+    const double ms = seconds * 1000.0;
+    const auto maxMs = static_cast<double>(std::numeric_limits<Sint64>::max());
+    if (ms >= maxMs)
+        return std::numeric_limits<Sint64>::max();
+
+    return static_cast<Sint64>(ms);
+}
+
+SDL_PropertiesID _buildPlayOptions(const bool looping, const double fadeInSeconds)
+{
+    const Sint64 fadeInMs = _secondsToMs(fadeInSeconds);
+    const Sint64 loops = looping ? -1 : 0;
+
+    if (fadeInMs <= 0 && loops == 0)
+        return 0;
+
+    const SDL_PropertiesID options = SDL_CreateProperties();
+    if (options == 0)
+        throw std::runtime_error(std::string("Failed to create SDL properties: ") + SDL_GetError());
+
+    if (loops != 0)
+        SDL_SetNumberProperty(options, MIX_PROP_PLAY_LOOPS_NUMBER, loops);
     if (fadeInMs > 0)
-    {
-        const ma_uint64 frames = msToFrames(fadeInMs);
-        ma_sound_set_fade_in_pcm_frames(&m_snd, 0.0f, m_volume, frames);
-    }
-    else
-    {
-        ma_sound_set_volume(&m_snd, m_volume);
-    }
-    ma_sound_start(&m_snd);
+        SDL_SetNumberProperty(options, MIX_PROP_PLAY_FADE_IN_MILLISECONDS_NUMBER, fadeInMs);
+
+    return options;
 }
 
-void AudioStream::stop(const int fadeOutMs)
+Sint64 _fadeOutFramesForTrack(MIX_Track* track, const double fadeOutSeconds)
 {
-    if (fadeOutMs <= 0)
-    {
-        ma_sound_stop(&m_snd);
-        return;
-    }
+    if (fadeOutSeconds <= 0.0)
+        return 0;
 
-    const float cur = ma_sound_get_volume(&m_snd);
-    const ma_uint64 frames = msToFrames(fadeOutMs);
-    ma_sound_set_fade_in_pcm_frames(&m_snd, cur, 0.0f, frames);
-    const ma_uint64 now = ma_engine_get_time_in_pcm_frames(&_engine);
-    ma_sound_set_stop_time_in_pcm_frames(&m_snd, now + frames);
+    const Sint64 fadeOutMs = _secondsToMs(fadeOutSeconds);
+    const Sint64 frames = MIX_TrackMSToFrames(track, fadeOutMs);
+    if (frames < 0)
+        return 0;
+
+    return frames;
 }
 
-void AudioStream::pause()
-{
-    ma_sound_stop(&m_snd);
-}
-
-void AudioStream::resume()
-{
-    ma_sound_start(&m_snd);
-}
-
-void AudioStream::rewind()
-{
-    ma_sound_seek_to_pcm_frame(&m_snd, 0);
-}
-
-void AudioStream::seek(float timeSeconds)
-{
-    // Clamp to positive values only to prevent bugs
-    if (timeSeconds < 0.0f)
-        timeSeconds = 0.0f;
-
-    const ma_uint32 sampleRate = ma_engine_get_sample_rate(&_engine);
-    const ma_uint64 framePosition = static_cast<ma_uint64>(timeSeconds * sampleRate);
-    ma_sound_seek_to_pcm_frame(&m_snd, framePosition);
-}
-
-float AudioStream::getCurrentTime()
-{
-    ma_uint64 currentFrame = ma_sound_get_time_in_pcm_frames(&m_snd);
-    const ma_uint32 sampleRate = ma_engine_get_sample_rate(&_engine);
-
-    // Get the total length to handle looping properly
-    ma_uint64 lengthInFrames = 0;
-    ma_result result = ma_sound_get_length_in_pcm_frames(&m_snd, &lengthInFrames);
-    if (result == MA_SUCCESS && lengthInFrames > 0)
-        currentFrame %= lengthInFrames;
-
-    return static_cast<float>(currentFrame) / static_cast<float>(sampleRate);
-}
-
-void AudioStream::setVolume(const float volume)
-{
-    m_volume = volume;
-    ma_sound_set_volume(&m_snd, volume);
-}
-
-float AudioStream::getVolume() const
-{
-    return m_volume;
-}
-
-void AudioStream::setLooping(const bool loop)
-{
-    ma_sound_set_looping(&m_snd, loop ? MA_TRUE : MA_FALSE);
-}
-
-ma_uint64 AudioStream::msToFrames(const int ms)
-{
-    return ma_engine_get_sample_rate(&_engine) * static_cast<ma_uint64>(ms) / 1000;
-}
-
-namespace mixer
-{
 void _init()
 {
-    if (ma_engine_init(nullptr, &_engine) != MA_SUCCESS)
-        throw std::runtime_error("Audio engine init failed");
+    if (!MIX_Init())
+    {
+        throw std::runtime_error(std::string("Failed to initialize SDL_mixer: ") + SDL_GetError());
+    }
 
-    ma_engine_listener_set_enabled(&_engine, 0, MA_FALSE);
+    kn::log::info(
+        "SDL_mixer version: {}.{}.{}", SDL_MIXER_MAJOR_VERSION, SDL_MIXER_MINOR_VERSION,
+        SDL_MIXER_MICRO_VERSION
+    );
 
-    kn::log::info("Miniaudio version: {}", MA_VERSION_STRING);
-    kn::log::info("Audio device: {}", _engine.pDevice->playback.name);
-    kn::log::info("Audio sample rate: {} Hz", _engine.pDevice->sampleRate);
-    kn::log::info("Audio channels: {}", _engine.pDevice->playback.channels);
+    _mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, nullptr);
+    if (_mixer == nullptr)
+    {
+        throw std::runtime_error(std::string("Failed to create mixer device: ") + SDL_GetError());
+    }
+
+    const SDL_PropertiesID mixerProps = MIX_GetMixerProperties(_mixer);
+    const auto deviceNumber = SDL_GetNumberProperty(mixerProps, MIX_PROP_MIXER_DEVICE_NUMBER, 0);
+    kn::log::info("Using mixer device number: {}", deviceNumber);
+
+    for (uint8_t i = 0; i < MAX_TRACKS; ++i)
+    {
+        _tracks[i].track = MIX_CreateTrack(_mixer);
+        if (_tracks[i].track == nullptr)
+        {
+            throw std::runtime_error(
+                std::string("Failed to create mixer track ") + std::to_string(i) + ": " +
+                SDL_GetError()
+            );
+        }
+    }
+
+    kn::log::info("Initialized mixer with {} tracks.", MAX_TRACKS);
 }
 
 void _quit()
 {
-    // Mark as shutting down first to prevent _tick() from running
-    _engineShutdown.store(true, std::memory_order_release);
-
-    // Stop the engine to halt all audio processing threads
-    // This prevents any race conditions with audio callbacks
-    ma_engine_stop(&_engine);
-
-    // Clean up all AudioStream instances
+    if (_mixer != nullptr)
     {
-        std::lock_guard g(_streamsMutex);
-        for (AudioStream* stream : _audioStreamInstances)
-        {
-            if (stream->m_snd.engineNode.pEngine != nullptr)
-            {
-                ma_sound_uninit(&stream->m_snd);
-                stream->m_snd.engineNode.pEngine = nullptr;
-            }
-        }
-        _audioStreamInstances.clear();
+        MIX_DestroyMixer(_mixer);
+        _mixer = nullptr;
     }
-
-    // Clean up all Audio instances
-    // Collect the audio instances first, then release the mutex before cleanup
-    std::vector<std::shared_ptr<Audio>> audioToClean;
-    {
-        std::lock_guard g(_instancesMutex);
-        for (auto& weak : _audioInstances)
-        {
-            if (auto audio = weak.lock())
-            {
-                audioToClean.push_back(audio);
-            }
-        }
-        _audioInstances.clear();
-    }
-
-    // Now clean up audio instances without holding _instancesMutex (avoid deadlock)
-    for (auto& audio : audioToClean)
-    {
-        // Stop all sounds (this will acquire audio->m_mutex internally)
-        audio->stop(0);
-
-        // Clean up voices
-        {
-            std::lock_guard audioLock(audio->m_mutex);
-            for (const auto& v : audio->m_voices)
-            {
-                ma_sound_set_end_callback(&v->snd, nullptr, nullptr);
-                ma_sound_uninit(&v->snd);
-            }
-            audio->m_voices.clear();
-        }
-
-        // Clean up proto sound
-        if (audio->m_proto.engineNode.pEngine != nullptr)
-        {
-            ma_sound_uninit(&audio->m_proto);
-            audio->m_proto.engineNode.pEngine = nullptr;
-        }
-    }
-
-    // Finally uninit the engine
-    ma_engine_uninit(&_engine);
 }
 
-void _tick()
+void _bind(py::module_& module)
 {
-    // Don't tick if engine is shutting down or has shut down
-    if (_engineShutdown.load(std::memory_order_acquire))
-        return;
+    auto subMixer = module.def_submodule("mixer", R"doc(
+        Sound mixer and audio management system.
 
-    std::vector<std::shared_ptr<Audio>> work;
-    {
-        std::lock_guard lk(_instancesMutex);
-        // collect live instances and compact away expired ones
-        work.reserve(_audioInstances.size());
-        auto it = _audioInstances.begin();
-        while (it != _audioInstances.end())
-        {
-            if (auto sp = it->lock())
-            {
-                work.push_back(std::move(sp));
-                ++it;
-            }
-            else
-            {
-                it = _audioInstances.erase(it);  // drop expired
-            }
-        }
+        The mixer manages a pool of 64 mixer tracks/voices for playing
+        :class:`Sample` (short polyphonic sounds) and :class:`Stream`
+        (long music files). It handles automatic track acquisition and
+        priority-based sound stealing when the track pool is exhausted.
+    )doc");
 
-        if (_audioInstances.capacity() > _audioInstances.size() * 2)
-            _audioInstances.shrink_to_fit();
-    }
-    for (const auto& a : work)
-        a->cleanup();  // no global lock held; lifetime pinned
-}
+    py::native_enum<AudioPriority>(subMixer, "AudioPriority", "enum.IntEnum", R"doc(
+        Priority levels used for track acquisition.
 
-void _bind(const py::module_& module)
-{
-    // ------------ Audio -------------
-    py::classh<Audio>(module, "Audio", R"doc(
-A decoded audio object that supports multiple simultaneous playbacks.
-
-Audio objects decode the entire file into memory for low-latency playback. They support
-multiple concurrent playbacks of the same sound. Use this for short sound effects that may need to overlap.
+        Used to determine which sounds to interrupt ('steal') when the 64-track
+        limit is reached. Higher priority sounds are more protected from being stolen.
     )doc")
-        .def(
-            py::init(
-                [](const std::string& path, float volume) -> std::shared_ptr<Audio>
-                {
-                    auto sp = std::make_shared<Audio>(path, volume);
-                    {
-                        std::lock_guard g(_instancesMutex);
-                        _audioInstances.push_back(sp);
-                    }
-                    return sp;
-                }
-            ),
-            py::arg("file_path"), py::arg("volume") = 1.0f,
-            R"doc(
-Create an Audio object from a file path with optional volume.
+        .value("MUSIC", AudioPriority::Music, "Highest priority level.")
+        .value("UI", AudioPriority::UI, "Medium priority level.")
+        .value("SFX", AudioPriority::SFX, "Standard priority level.")
+        .finalize();
 
-Args:
-    file_path (str): Path to the audio file to load.
-    volume (float, optional): Initial volume level (0.0 to 1.0+). Defaults to 1.0.
+    py::classh<Audio>(subMixer, "Audio", R"doc(
+        Abstract base class for all audio resources.
 
-Raises:
-    RuntimeError: If the audio file cannot be loaded or decoded.
-        )doc"
-        )
+        Common interface for local volume and playback status. Local volume
+        is multiplied by the mixer's master volume. Both default to 1.0.
 
-        .def_property("volume", &Audio::getVolume, &Audio::setVolume, R"doc(
-The volume level for new and existing playbacks.
+        Attributes:
+            volume (float): Local volume multiplier (0.0 to 1.0). Defaults to 1.0.
+            playing (bool): (Read-only) Whether the audio is currently playing on any track.
 
-Setting this property affects all currently playing voices and sets the default
-volume for future playbacks. Volume can exceed 1.0 for amplification.
+        Methods:
+            play(fade_in=0.0): Start audio playback.
+            stop(fade_out=0.0): Stop all instances of this audio resource.
+    )doc")
+        .def_property("volume", &Audio::getVolume, &Audio::setVolume, "Volume scalar (0.0 to 1.0).")
+        .def_property_readonly("playing", &Audio::isPlaying, "True if currently playing.")
 
-Type:
-    float: Volume level (0.0 = silent, 1.0 = original volume, >1.0 = amplified).
+        .def("play", &Audio::play, py::arg("fade_in") = 0.0, R"doc(
+            Start audio playback.
+
+            Args:
+                fade_in (float): Fade in duration in seconds. Defaults to 0.0.
         )doc")
+        .def("stop", &Audio::stop, py::arg("fade_out") = 0.0, R"doc(
+            Stop all playing instances of this audio.
 
-        .def(
-            "play", &Audio::play, py::arg("fade_in_ms") = 0, py::arg("loop") = false,
-            R"doc(
-Play the audio with optional fade-in time and loop setting.
-
-Creates a new voice for playback, allowing multiple simultaneous plays of the same audio.
-Each play instance is independent and can have different fade and loop settings.
-
-Args:
-    fade_in_ms (int, optional): Fade-in duration in milliseconds. Defaults to 0.
-    loop (bool, optional): Whether to loop the audio continuously. Defaults to False.
-
-Raises:
-    RuntimeError: If audio playback initialization fails.
-        )doc"
-        )
-        .def("stop", &Audio::stop, py::arg("fade_out_ms") = 0, R"doc(
-Stop all active playbacks of this audio.
-
-Stops all currently playing voices associated with this Audio object. If a fade-out
-time is specified, all voices will fade out over that duration before stopping.
-
-Args:
-    fade_out_ms (int, optional): Fade-out duration in milliseconds. Defaults to 0.
+            Args:
+                fade_out (float): Fade out duration in seconds. Defaults to 0.0.
         )doc");
 
-    // ------------ AudioStream -------------
+    py::classh<Sample, Audio>(subMixer, "Sample", R"doc(
+        A sound effect sample loaded entirely into memory.
 
-    py::classh<AudioStream>(module, "AudioStream", R"doc(
-A streaming audio object for single-instance playback of large audio files.
+        Samples support polyphony (multiple simultaneous instances). If tracks
+        are full, samples attempt to steal tracks from lower-priority or older sounds.
 
-AudioStream objects stream audio data from disk during playback, using minimal memory.
-They support only one playback instance at a time, making them ideal for background
-music, long audio tracks, or when memory usage is a concern.
+        Attributes:
+            priority (AudioPriority): Acquisition priority level. Defaults to SFX.
+            can_steal (bool): Whether this sound can interrupt others to acquire a
+                track. Defaults to True.
+            max_polyphony (int): Maximum simultaneous instances of this specific
+                sample (Range 1-32). Defaults to 1.
     )doc")
-        .def(
-            py::init<const std::string&, float>(), py::arg("file_path"), py::arg("volume") = 1.0f,
-            R"doc(
-Create an AudioStream object from a file path with optional volume.
+        .def_readwrite("priority", &Sample::priority, "Acquisition priority level.")
+        .def_readwrite("can_steal", &Sample::canSteal, "Whether can interrupt others to acquire a track.")
+        .def_property(
+            "max_polyphony", &Sample::getMaxPolyphony, &Sample::setMaxPolyphony,
+            "Max simultaneous instances of sample (1-32)."
+        );
 
-Args:
-    file_path (str): Path to the audio file to stream.
-    volume (float, optional): Initial volume level (0.0 to 1.0+). Defaults to 1.0.
+    py::classh<Stream, Audio>(subMixer, "Stream", R"doc(
+        A streaming audio resource intended for long music files.
 
-Raises:
-    RuntimeError: If the audio file cannot be opened for streaming.
-        )doc"
+        Streams occupy exactly one track while active. They are protected and
+        will not be stolen by incoming :class:`Sample` requests.
+
+        Attributes:
+            playback_pos (float): (Read-only) Current playback position in seconds.
+            looping (bool): Whether the stream should loop when it reaches the end.
+
+        Methods:
+            pause(): Pause playback, preserving position.
+            resume(fade_in=0.0): Resume playback from a paused state.
+            seek(seconds): Jump to a specific time in the audio file.
+    )doc")
+        .def_property_readonly(
+            "playback_pos", &Stream::getPlaybackPos,
+            R"doc(Current position in seconds. 0.0 if stopped/never played, paused position if paused.)doc"
+        )
+        .def_property(
+            "looping", &Stream::getLooping, &Stream::setLooping,
+            R"doc(Whether the stream should loop when it reaches the end.)doc"
         )
 
-        .def_property("volume", &AudioStream::getVolume, &AudioStream::setVolume, R"doc(
-The volume level of the audio stream.
-
-Volume can exceed 1.0 for amplification.
-
-Type:
-    float: Volume level (0.0 = silent, 1.0 = original volume, >1.0 = amplified).
-    )doc")
-        .def_property_readonly("current_time", &AudioStream::getCurrentTime, R"doc(
-The current playback time position in seconds.
-    )doc")
-
-        .def(
-            "play", &AudioStream::play, py::arg("fade_in_ms") = 0, py::arg("loop") = false,
-            py::arg("start_time_seconds") = 0.0f,
-            R"doc(
-Play the audio stream with optional fade-in time, loop setting, and start position.
-
-Starts playback from the specified time position. If the stream is already
-playing, it will restart from the specified position.
-
-Args:
-    fade_in_ms (int, optional): Fade-in duration in milliseconds. Defaults to 0.
-    loop (bool, optional): Whether to loop the audio continuously. Defaults to False.
-    start_time_seconds (float, optional): Time position in seconds to start playback from. Defaults to 0.0.
-        )doc"
-        )
-        .def("stop", &AudioStream::stop, py::arg("fade_out_ms") = 0, R"doc(
-Stop the audio stream playback.
-
-Args:
-    fade_out_ms (int, optional): Fade-out duration in milliseconds. If 0, stops immediately.
-                              If > 0, fades out over the specified duration. Defaults to 0.
+        .def("pause", &Stream::pause, R"doc(
+            Pause playback. Releases the hardware track but preserves position.
         )doc")
-        .def("pause", &AudioStream::pause, R"doc(
-Pause the audio stream playback.
+        .def("resume", &Stream::resume, py::arg("fade_in") = 0.0, R"doc(
+            Resume playback from a paused state.
 
-The stream position is preserved and can be resumed with resume().
+            Args:
+                fade_in (float): Duration in seconds to fade back in. Defaults to 0.0.
         )doc")
-        .def("resume", &AudioStream::resume, R"doc(
-Resume paused audio stream playback.
+        .def("seek", &Stream::seek, py::arg("seconds"), R"doc(
+            Jump to a specific time in the audio file.
 
-Continues playback from the current stream position.
-        )doc")
-        .def("rewind", &AudioStream::rewind, R"doc(
-Rewind the audio stream to the beginning.
-
-Sets the playback position back to the start of the audio file. Does not affect
-the current play state (playing/paused).
-        )doc")
-        .def("seek", &AudioStream::seek, py::arg("time_seconds"), R"doc(
-Seek to a specific time position in the audio stream.
-
-Sets the playback position to the specified time in seconds. Does not affect
-the current play state (playing/paused).
-
-Args:
-    time_seconds (float): The time position in seconds to seek to.
-        )doc")
-        .def("set_looping", &AudioStream::setLooping, py::arg("loop"), R"doc(
-Set whether the audio stream loops continuously.
-
-Args:
-    loop (bool): True to enable looping, False to disable.
+            Args:
+                seconds (float): Target position in seconds from the start.
         )doc");
-}
-}  // namespace mixer
-}  // namespace kn
 
-const char* getBackendName(ma_backend backend)
-{
-    switch (backend)
-    {
-    case ma_backend_wasapi:
-        return "WASAPI";
-    case ma_backend_dsound:
-        return "DirectSound";
-    case ma_backend_winmm:
-        return "WinMM";
-    case ma_backend_coreaudio:
-        return "CoreAudio";
-    case ma_backend_alsa:
-        return "ALSA";
-    case ma_backend_pulseaudio:
-        return "PulseAudio";
-    case ma_backend_jack:
-        return "JACK";
-    case ma_backend_oss:
-        return "OSS";
-    case ma_backend_aaudio:
-        return "AAudio";
-    case ma_backend_opensl:
-        return "OpenSL ES";
-    case ma_backend_webaudio:
-        return "WebAudio";
-    case ma_backend_null:
-        return "Null";
-    default:
-        return "Unknown";
-    }
+    subMixer.def("load_sample", &loadSample, py::arg("path"), py::arg("predecode") = true, R"doc(
+        Load an audio sample (SFX) from disk.
+
+        Args:
+            path (str): File path to load.
+            predecode (bool): Whether to decode into memory now. Defaults to True.
+
+        Returns:
+            Sample: The loaded audio object.
+    )doc");
+
+    subMixer.def("load_stream", &loadStream, py::arg("path"), py::arg("predecode") = false, R"doc(
+        Load an audio stream (Music) from disk.
+
+        Args:
+            path (str): File path to load.
+            predecode (bool): Whether to decode into memory now. Defaults to False.
+
+        Returns:
+            Stream: The loaded audio object.
+    )doc");
+
+    subMixer.def("set_master_volume", &setMasterVolume, py::arg("volume"), R"doc(
+        Set the global mixer gain.
+
+        This affects all playing samples and streams. Individual audio volume
+        is multiplied by this value. Default is 1.0.
+
+        Args:
+            volume (float): Master volume scalar (0.0 to 1.0).
+    )doc");
+
+    subMixer.def("get_master_volume", &getMasterVolume, R"doc(
+        Get the current global mixer gain.
+
+        Returns:
+            float: Master volume (0.0 to 1.0).
+    )doc");
 }
+}  // namespace kn::mixer

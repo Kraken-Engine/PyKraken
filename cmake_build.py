@@ -65,6 +65,7 @@ def main() -> int:
     parser.add_argument("--vendor-pybind11", action="store_true", help="Vendor pybind11 (FetchContent)")
     parser.add_argument("--vendor-sdl", action="store_true", help="Vendor SDL3/SDL_image/SDL_ttf (FetchContent)")
     parser.add_argument("--vendor-tmxlite", action="store_true", help="Vendor tmxlite (FetchContent)")
+    parser.add_argument("--vendor-box2d", action="store_true", help="Vendor Box2D (FetchContent)")
 
     # Everything after `--` goes to CMake configure step
     parser.add_argument("cmake_args", nargs=argparse.REMAINDER, help="Extra args after `--` go to CMake configure")
@@ -96,12 +97,14 @@ def main() -> int:
     vendor_pybind11 = args.vendor_all or args.vendor_pybind11
     vendor_sdl = args.vendor_all or args.vendor_sdl
     vendor_tmxlite = args.vendor_all or args.vendor_tmxlite
+    vendor_box2d = args.vendor_all or args.vendor_box2d
 
     # If user didn't specify any vendor flags, default to ON for all (contributor-friendly).
-    if not (args.vendor_all or args.vendor_pybind11 or args.vendor_sdl or args.vendor_tmxlite):
+    if not (args.vendor_all or args.vendor_pybind11 or args.vendor_sdl or args.vendor_tmxlite or args.vendor_box2d):
         vendor_pybind11 = True
         vendor_sdl = True
         vendor_tmxlite = True
+        vendor_box2d = True
 
     # CMake configure args
     configure_cmd = [
@@ -113,6 +116,7 @@ def main() -> int:
         f"-DPYK_VENDOR_PYBIND11={'ON' if vendor_pybind11 else 'OFF'}",
         f"-DPYK_VENDOR_SDL={'ON' if vendor_sdl else 'OFF'}",
         f"-DPYK_VENDOR_TMXLITE={'ON' if vendor_tmxlite else 'OFF'}",
+        f"-DPYK_VENDOR_BOX2D={'ON' if vendor_box2d else 'OFF'}",
     ]
 
     # Helpful for IDEs/tools (and harmless elsewhere)

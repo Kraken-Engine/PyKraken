@@ -25,20 +25,19 @@ AnimationController::~AnimationController()
     std::erase(_controllers, this);
 }
 
-void AnimationController::addSheet(const Vec2& frameSize, const std::vector<SheetStrip>& strips)
+void AnimationController::addSheet(
+    const int frameWidth, const int frameHeight, const std::vector<SheetStrip>& strips
+)
 {
     if (renderer::_get() == nullptr)
         throw std::runtime_error(
             "Renderer not initialized; create a window before configuring animations"
         );
 
-    if (frameSize.x <= 0 || frameSize.y <= 0)
+    if (frameWidth <= 0 || frameHeight <= 0)
         throw std::invalid_argument("Frame size must be positive non-zero values");
     if (strips.empty())
         throw std::invalid_argument("No strips provided for animation controller");
-
-    const auto frameWidth = static_cast<int>(frameSize.x);
-    const auto frameHeight = static_cast<int>(frameSize.y);
 
     for (size_t stripIndex = 0; stripIndex < strips.size(); ++stripIndex)
     {
@@ -59,7 +58,7 @@ void AnimationController::addSheet(const Vec2& frameSize, const std::vector<Shee
         for (int i = 0; i < strip.frameCount; ++i)
         {
             const int x = i * frameWidth;
-            newAnim.frames.emplace_back(Rect{x, y, frameWidth, frameHeight});
+            newAnim.frames.emplace_back(x, y, frameWidth, frameHeight);
         }
 
         m_animMap[name] = std::move(newAnim);
@@ -328,7 +327,8 @@ Returns:
     )doc"
         )
         .def(
-            "add_sheet", &AnimationController::addSheet, py::arg("frame_size"), py::arg("strips"),
+            "add_sheet", &AnimationController::addSheet, py::arg("frame_width"),
+            py::arg("frame_height"), py::arg("strips"),
             R"doc(
 Add animations from a sprite sheet definition.
 
@@ -337,7 +337,8 @@ Each strip is divided into equal-sized frames based on the specified frame size.
 Frames are read left-to-right within each strip, and strips are read top-to-bottom.
 
 Args:
-    frame_size (Vec2): Size of each frame as (width, height).
+    frame_width (int): The width of each frame in pixels.
+    frame_height (int): The height of each frame in pixels.
     strips (Sequence[SheetStrip]): List of strip definitions.
 
 Raises:

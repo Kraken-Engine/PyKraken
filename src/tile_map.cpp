@@ -329,9 +329,58 @@ const std::vector<TileSet>& Map::getTileSets() const
     return m_tileSets;
 }
 
-const std::vector<std::shared_ptr<Layer>>& Map::getLayers() const
+const std::vector<std::shared_ptr<Layer>>& Map::getAllLayers() const
 {
     return m_layers;
+}
+
+std::shared_ptr<Layer> Map::getLayer(const std::string& name) const
+{
+    for (const auto& layer : m_layers)
+    {
+        if (layer->getName() == name)
+            return layer;
+    }
+    return nullptr;
+}
+
+std::vector<std::shared_ptr<TileLayer>> Map::getTileLayers() const
+{
+    std::vector<std::shared_ptr<TileLayer>> layers;
+    for (const auto& layer : m_layers)
+    {
+        if (layer->getType() == tmx::Layer::Type::Tile)
+        {
+            layers.push_back(std::static_pointer_cast<TileLayer>(layer));
+        }
+    }
+    return layers;
+}
+
+std::vector<std::shared_ptr<ObjectGroup>> Map::getObjectGroups() const
+{
+    std::vector<std::shared_ptr<ObjectGroup>> layers;
+    for (const auto& layer : m_layers)
+    {
+        if (layer->getType() == tmx::Layer::Type::Object)
+        {
+            layers.push_back(std::static_pointer_cast<ObjectGroup>(layer));
+        }
+    }
+    return layers;
+}
+
+std::vector<std::shared_ptr<ImageLayer>> Map::getImageLayers() const
+{
+    std::vector<std::shared_ptr<ImageLayer>> layers;
+    for (const auto& layer : m_layers)
+    {
+        if (layer->getType() == tmx::Layer::Type::Image)
+        {
+            layers.push_back(std::static_pointer_cast<ImageLayer>(layer));
+        }
+    }
+    return layers;
 }
 
 uint32_t TileSet::getFirstGID() const
@@ -563,7 +612,7 @@ void TileLayer::draw()
             setTexture->flip.v = flipInfo.v;
 
             setTexture->setClipArea(setTile->getClipArea());
-            renderer::draw(setTexture, renderTransform);
+            renderer::draw(*setTexture, renderTransform);
         }
     }
 }
@@ -764,7 +813,7 @@ void ObjectGroup::draw()
                 Transform renderTransform = obj.transform;
                 renderTransform.pos += offset;
                 setTexture->setClipArea(tile->getClipArea());
-                renderer::draw(setTexture, renderTransform);
+                renderer::draw(*setTexture, renderTransform);
             }
 
             continue;
@@ -834,7 +883,7 @@ void ImageLayer::draw()
     if (!visible)
         return;
 
-    renderer::draw(m_texture, transform);
+    renderer::draw(*m_texture, transform);
 }
 
 void ImageLayer::setOpacity(const double value)
@@ -1278,7 +1327,7 @@ TMX object shape types.
         .def_readwrite("transform", &MapObject::transform, R"doc(
 Transform component for the object.
     )doc")
-        .def_readwrite("visible", &MapObject::visible, R"doc(
+        .def_readwrite("is_visible", &MapObject::visible, R"doc(
 Visibility flag.
     )doc")
 
@@ -1387,17 +1436,59 @@ Attributes:
     stagger_axis (MapStaggerAxis): Stagger axis enum for staggered/hex maps.
     stagger_index (MapStaggerIndex): Stagger index enum.
     tile_sets (TileSetList): List of TileSet objects.
-    layers (LayerList): List of Layer instances.
+    all_layers (LayerList): List of Layer instances.
+    tile_layers (List[TileLayer]): List of tile layers.
+    object_groups (List[ObjectGroup]): List of object groups.
+    image_layers (List[ImageLayer]): List of image layers.
 
 Methods:
     load: Load a TMX file from path.
     draw: Draw all layers.
+    get_layer: Get a layer by name.
     )doc")
         .def(py::init<>())
 
-        .def_readwrite("background_color", &Map::backgroundColor, R"doc(
-Map background color.
-    )doc")
+        .def_readwrite("background_color", &Map::backgroundColor, R"doc(Map background color.)doc")
+
+        .def_property_readonly(
+            "orientation", &Map::getOrientation, R"doc(Map orientation enum.)doc"
+        )
+        .def_property_readonly(
+            "render_order", &Map::getRenderOrder, R"doc(Tile render order enum.)doc"
+        )
+        .def_property_readonly("map_size", &Map::getMapSize, R"doc(Map dimensions in tiles.)doc")
+        .def_property_readonly("tile_size", &Map::getTileSize, R"doc(Size of tiles in pixels.)doc")
+        .def_property_readonly("bounds", &Map::getBounds, R"doc(Map bounds in pixels.)doc")
+        .def_property_readonly(
+            "hex_side_length", &Map::getHexSideLength, R"doc(Hex side length for hex maps.)doc"
+        )
+        .def_property_readonly(
+            "stagger_axis", &Map::getStaggerAxis,
+            R"doc(Stagger axis enum for staggered/hex maps.)doc"
+        )
+        .def_property_readonly(
+            "stagger_index", &Map::getStaggerIndex,
+            R"doc(Stagger index enum for staggered/hex maps.)doc"
+        )
+        .def_property_readonly(
+            "tile_sets", &Map::getTileSets, R"doc(TileSetList of tilesets used by the map.)doc"
+        )
+        .def_property_readonly(
+            "all_layers", &Map::getAllLayers, py::return_value_policy::reference_internal,
+            R"doc(LayerList of layers in the map.)doc"
+        )
+        .def_property_readonly(
+            "tile_layers", &Map::getTileLayers, py::return_value_policy::reference_internal,
+            R"doc(List of tile layers in the map.)doc"
+        )
+        .def_property_readonly(
+            "object_groups", &Map::getObjectGroups, py::return_value_policy::reference_internal,
+            R"doc(List of object group layers in the map.)doc"
+        )
+        .def_property_readonly(
+            "image_layers", &Map::getImageLayers, py::return_value_policy::reference_internal,
+            R"doc(List of image layers in the map.)doc"
+        )
 
         .def("load", &Map::load, py::arg("tmx_path"), R"doc(
 Load a TMX file from path.
@@ -1405,40 +1496,15 @@ Load a TMX file from path.
 Args:
     tmx_path (str): Path to the TMX file to load.
         )doc")
-        .def("draw", &Map::draw, R"doc(
-Draw all layers.
-        )doc")
+        .def("draw", &Map::draw, R"doc(Draw all layers.)doc")
+        .def(
+            "get_layer", &Map::getLayer, py::arg("name"),
+            py::return_value_policy::reference_internal, R"doc(
+Get a layer by its name. Will return None if not found.
 
-        .def_property_readonly("orientation", &Map::getOrientation, R"doc(
-Map orientation enum.
-    )doc")
-        .def_property_readonly("render_order", &Map::getRenderOrder, R"doc(
-Tile render order enum.
-    )doc")
-        .def_property_readonly("map_size", &Map::getMapSize, R"doc(
-Map dimensions in tiles.
-    )doc")
-        .def_property_readonly("tile_size", &Map::getTileSize, R"doc(
-Size of tiles in pixels.
-    )doc")
-        .def_property_readonly("bounds", &Map::getBounds, R"doc(
-Map bounds in pixels.
-    )doc")
-        .def_property_readonly("hex_side_length", &Map::getHexSideLength, R"doc(
-Hex side length for hex maps.
-    )doc")
-        .def_property_readonly("stagger_axis", &Map::getStaggerAxis, R"doc(
-Stagger axis enum for staggered/hex maps.
-    )doc")
-        .def_property_readonly("stagger_index", &Map::getStaggerIndex, R"doc(
-Stagger index enum for staggered/hex maps.
-    )doc")
-        .def_property_readonly("tile_sets", &Map::getTileSets, R"doc(
-TileSetList of tilesets used by the map.
-    )doc")
-        .def_property_readonly(
-            "layers", &Map::getLayers, py::return_value_policy::reference_internal,
-            R"doc(LayerList of layers in the map.)doc"
+Args:
+    name (str): Name of the layer to retrieve.
+        )doc"
         );
 }
 }  // namespace tilemap

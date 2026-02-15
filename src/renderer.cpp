@@ -153,39 +153,25 @@ std::unique_ptr<PixelArray> readPixels(const Rect& src)
     return std::make_unique<PixelArray>(surface);
 }
 
-void draw(
-    const std::shared_ptr<Texture>& texture, const Transform& transform, const Vec2& anchor,
-    const Vec2& pivot
-)
+void draw(const Texture& texture, const Transform& transform, const Vec2& anchor, const Vec2& pivot)
 {
     if (!_renderer)
         throw std::runtime_error("Renderer not yet initialized");
-    if (!texture)
-        throw std::runtime_error("Texture cannot be null");
+    if (!texture.getSDL())
+        throw std::runtime_error("Invalid texture provided for drawing");
 
-    Rect clipArea = texture->getClipArea();
+    Rect clipArea = texture.getClipArea();
     if (clipArea.w <= 0.0 || clipArea.h <= 0.0)
         return;
 
     if (transform.scale.isZero())
-    {
-        log::warn("Transform scale is zero, skipping draw call");
         return;
-    }
-    if (texture->getAlpha() == 0.0f)
-    {
-        log::warn("Texture alpha is zero, skipping draw call");
+    if (texture.getAlpha() == 0.0f)
         return;
-    }
 
     const Vec2 size = clipArea.getSize();
 
-    Rect dstRect{
-        0.0,
-        0.0,
-        size.x * transform.scale.x,
-        size.y * transform.scale.y,
-    };
+    Rect dstRect{0.0, 0.0, size * transform.scale};
 
     // Position based on anchor (normalized 0..1 view of the destination size)
     const Vec2 pos = transform.pos - camera::getActivePos();
@@ -210,13 +196,13 @@ void draw(
     const auto pivotPoint = static_cast<SDL_FPoint>(dstRect.getSize() * pivot);
 
     SDL_FlipMode flipAxis = SDL_FLIP_NONE;
-    if (texture->flip.h)
+    if (texture.flip.h)
         flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_HORIZONTAL);
-    if (texture->flip.v)
+    if (texture.flip.v)
         flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_VERTICAL);
 
     if (!SDL_RenderTextureRotated(
-            _renderer, texture->getSDL(), &srcSDLRect, &dstSDLRect, TO_DEGREES(transform.angle),
+            _renderer, texture.getSDL(), &srcSDLRect, &dstSDLRect, TO_DEGREES(transform.angle),
             &pivotPoint, flipAxis
         ))
     {
@@ -316,8 +302,8 @@ Raises:
 
     subRenderer.def(
         "draw",
-        [](const std::shared_ptr<Texture>& texture, const py::object& transformObj,
-           const py::object& anchorObj, const py::object& pivotObj)
+        [](const Texture& texture, const py::object& transformObj, const py::object& anchorObj,
+           const py::object& pivotObj)
         {
             const auto transform = transformObj.is_none() ? Transform()
                                                           : transformObj.cast<Transform>();
