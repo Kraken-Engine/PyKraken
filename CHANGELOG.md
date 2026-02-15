@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
         - `MotorJoint` for applying a motor force to maintain a relative position between two bodies.
         - `PrismaticJoint` for allowing relative movement along a specified axis between two bodies.
         - `RevoluteJoint` for allowing relative rotation between two bodies.
-        - `TargetJoint` for pulling a body towards a target position in world space.
+        - `MouseJoint` for dragging a body with the mouse cursor.
         - `WeldJoint` for rigidly connecting two bodies together.
         - `WheelJoint` for allowing relative rotation and translation along a specified axis between two bodies.
 - `Collision` class for representing collision information between two bodies. Provided via `World.get_collisions()` method.
