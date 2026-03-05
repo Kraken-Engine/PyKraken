@@ -1,11 +1,11 @@
 #pragma once
 
 #include <inttypes.h>
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 #include <vector>
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn
 {
@@ -30,6 +30,6 @@ void set(const Rect& rect);
 
 void unset();
 
-void _bind(py::module_& module);
+void _bind(nb::module_& module);
 }  // namespace viewport
 }  // namespace kn

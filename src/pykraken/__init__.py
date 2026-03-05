@@ -1,2 +1,2 @@
-from ._core import *
+from ._pykraken import *
 from .shader_uniform import ShaderUniform

@@ -1,17 +1,17 @@
 #pragma once
 
 #include <SDL3/SDL.h>
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 #include <string>
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn
 {
 namespace shader_state
 {
-void _bind(py::module_& module);
+void _bind(nb::module_& module);
 void _quit();
 }  // namespace shader_state
 

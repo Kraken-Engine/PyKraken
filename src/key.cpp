@@ -1,5 +1,6 @@
 #include "Key.hpp"
 
+#include <algorithm>
 #include <unordered_map>
 
 #include "Event.hpp"
@@ -109,12 +110,14 @@ void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
     }
 }
 
-void _bind(py::module_& module)
+void _bind(nb::module_& module)
 {
+    using namespace nb::literals;
+
     auto subKey = module.def_submodule("key", "Keyboard key state checks");
 
     subKey.def(
-        "is_pressed", py::overload_cast<SDL_Scancode>(&isPressed), py::arg("scancode"),
+        "is_pressed", nb::overload_cast<SDL_Scancode>(&isPressed), "scancode"_a,
         R"doc(
 Check if a key is currently held down (by scancode).
 
@@ -127,7 +130,7 @@ Returns:
     );
 
     subKey.def(
-        "is_just_pressed", py::overload_cast<SDL_Scancode>(&isJustPressed), py::arg("scancode"),
+        "is_just_pressed", nb::overload_cast<SDL_Scancode>(&isJustPressed), "scancode"_a,
         R"doc(
 Check if a key was pressed this frame (by scancode).
 
@@ -140,7 +143,7 @@ Returns:
     );
 
     subKey.def(
-        "is_just_released", py::overload_cast<SDL_Scancode>(&isJustReleased), py::arg("scancode"),
+        "is_just_released", nb::overload_cast<SDL_Scancode>(&isJustReleased), "scancode"_a,
         R"doc(
 Check if a key was released this frame (by scancode).
 
@@ -153,7 +156,7 @@ Returns:
     );
 
     subKey.def(
-        "is_pressed", py::overload_cast<Keycode>(&isPressed), py::arg("keycode"),
+        "is_pressed", nb::overload_cast<Keycode>(&isPressed), "keycode"_a,
         R"doc(
 Check if a key is currently held down (by keycode).
 
@@ -166,7 +169,7 @@ Returns:
     );
 
     subKey.def(
-        "is_just_pressed", py::overload_cast<Keycode>(&isJustPressed), py::arg("keycode"),
+        "is_just_pressed", nb::overload_cast<Keycode>(&isJustPressed), "keycode"_a,
         R"doc(
 Check if a key was pressed this frame (by keycode).
 
@@ -179,7 +182,7 @@ Returns:
     );
 
     subKey.def(
-        "is_just_released", py::overload_cast<Keycode>(&isJustReleased), py::arg("keycode"),
+        "is_just_released", nb::overload_cast<Keycode>(&isJustReleased), "keycode"_a,
         R"doc(
 Check if a key was released this frame (by keycode).
 

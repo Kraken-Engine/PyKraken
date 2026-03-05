@@ -1,5 +1,7 @@
 #include "Window.hpp"
 
+#include <nanobind/stl/string.h>
+
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 
@@ -191,11 +193,13 @@ void _quit()
     }
 }
 
-void _bind(py::module_& module)
+void _bind(nb::module_& module)
 {
+    using namespace nb::literals;
+
     auto subWindow = module.def_submodule("window", "Window related functions");
 
-    subWindow.def("create", &create, py::arg("title"), py::arg("width"), py::arg("height"), R"doc(
+    subWindow.def("create", &create, "title"_a, "width"_a, "height"_a, R"doc(
 Create a window with the requested title and resolution.
 
 Args:
@@ -222,7 +226,7 @@ Marks the window as closed, typically used to signal the main loop to exit.
 This doesn't destroy the window immediately but sets the close flag.
     )doc");
 
-    subWindow.def("set_fullscreen", &setFullscreen, py::arg("fullscreen"), R"doc(
+    subWindow.def("set_fullscreen", &setFullscreen, "fullscreen"_a, R"doc(
 Set the fullscreen mode of the window.
 
 Args:
@@ -275,7 +279,7 @@ Raises:
     RuntimeError: If the window is not initialized.
     )doc");
 
-    subWindow.def("set_title", &setTitle, py::arg("title"), R"doc(
+    subWindow.def("set_title", &setTitle, "title"_a, R"doc(
 Set the title of the window.
 
 Args:
@@ -286,7 +290,7 @@ Raises:
     ValueError: If title is empty or exceeds 255 characters.
     )doc");
 
-    subWindow.def("set_icon", &setIcon, py::arg("path"), R"doc(
+    subWindow.def("set_icon", &setIcon, "path"_a, R"doc(
 Set the window icon from an image file.
 
 Args:
@@ -296,7 +300,7 @@ Raises:
     RuntimeError: If the window is not initialized or icon setting fails.
     )doc");
 
-    subWindow.def("save_screenshot", &saveScreenshot, py::arg("path"), R"doc(
+    subWindow.def("save_screenshot", &saveScreenshot, "path"_a, R"doc(
 Save a screenshot of the current frame to a file.
 
 Args:

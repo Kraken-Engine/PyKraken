@@ -1,12 +1,12 @@
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 #include <vector>
 
 #include "Math.hpp"
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn
 {
@@ -36,6 +36,6 @@ class Polygon
 
 namespace polygon
 {
-void _bind(const py::module_& module);
+void _bind(const nb::module_& module);
 }  // namespace polygon
 }  // namespace kn

@@ -1,5 +1,7 @@
 #include "Line.hpp"
 
+#include <nanobind/make_iterator.h>
+
 #include "Math.hpp"
 
 namespace kn
@@ -11,18 +13,18 @@ Line move(const Line& line, const Vec2& offset)
     return {line.ax + offset.x, line.ay + offset.y, line.bx + offset.x, line.by + offset.y};
 }
 
-void _bind(py::module_& module)
+void _bind(nb::module_& module)
 {
-    py::classh<Line>(module, "Line", R"doc(
+    using namespace nb::literals;
+
+    nb::class_<Line>(module, "Line", R"doc(
 A 2D line segment defined by two points: A and B.
 You can access or modify points using `.a`, `.b`, or directly via `.ax`, `.ay`, `.bx`, `.by`.
     )doc")
-        .def(py::init(), R"doc(
+        .def(nb::init(), R"doc(
 Create a default line with all values set to 0.
     )doc")
-        .def(
-            py::init<double, double, double, double>(), py::arg("ax"), py::arg("ay"), py::arg("bx"),
-            py::arg("by"), R"doc(
+        .def(nb::init<double, double, double, double>(), "ax"_a, "ay"_a, "bx"_a, "by"_a, R"doc(
 Create a line from two coordinate points.
 
 Args:
@@ -30,10 +32,9 @@ Args:
     ay (float): Y-coordinate of point A.
     bx (float): X-coordinate of point B.
     by (float): Y-coordinate of point B.
-         )doc"
-        )
+         )doc")
         .def(
-            py::init<double, double, const Vec2&>(), py::arg("ax"), py::arg("ay"), py::arg("b"),
+            nb::init<double, double, const Vec2&>(), "ax"_a, "ay"_a, "b"_a,
             R"doc(
 Create a line from A coordinates and a Vec2 B point.
 
@@ -44,7 +45,7 @@ Args:
          )doc"
         )
         .def(
-            py::init<const Vec2&, double, double>(), py::arg("a"), py::arg("bx"), py::arg("by"),
+            nb::init<const Vec2&, double, double>(), "a"_a, "bx"_a, "by"_a,
             R"doc(
 Create a line from a Vec2 A point and B coordinates.
 
@@ -54,7 +55,7 @@ Args:
     by (float): Y-coordinate of point B.
          )doc"
         )
-        .def(py::init<const Vec2&, const Vec2&>(), py::arg("a"), py::arg("b"), R"doc(
+        .def(nb::init<const Vec2&, const Vec2&>(), "a"_a, "b"_a, R"doc(
 Create a line from two Vec2 points.
 
 Args:
@@ -62,26 +63,26 @@ Args:
     b (Vec2): Point B.
          )doc")
 
-        .def_property("a", &Line::getA, &Line::setA, R"doc(
+        .def_prop_rw("a", &Line::getA, &Line::setA, R"doc(
 Get or set point A as a tuple or Vec2.
     )doc")
-        .def_property("b", &Line::getB, &Line::setB, R"doc(
+        .def_prop_rw("b", &Line::getB, &Line::setB, R"doc(
 Get or set point B as a tuple or Vec2.
     )doc")
 
-        .def_readwrite("ax", &Line::ax, "X-coordinate of point A.")
-        .def_readwrite("ay", &Line::ay, "Y-coordinate of point A.")
-        .def_readwrite("bx", &Line::bx, "X-coordinate of point B.")
-        .def_readwrite("by", &Line::by, "Y-coordinate of point B.")
+        .def_rw("ax", &Line::ax, "X-coordinate of point A.")
+        .def_rw("ay", &Line::ay, "Y-coordinate of point A.")
+        .def_rw("bx", &Line::bx, "X-coordinate of point B.")
+        .def_rw("by", &Line::by, "Y-coordinate of point B.")
 
-        .def_property_readonly("length", &Line::getLength, R"doc(
+        .def_prop_ro("length", &Line::getLength, R"doc(
 The Euclidean length of the line segment.
     )doc")
 
         .def("copy", &Line::copy, R"doc(
 Return a copy of this line.
     )doc")
-        .def("move", &Line::move, py::arg("offset"), R"doc(
+        .def("move", &Line::move, "offset"_a, R"doc(
 Move this line by a Vec2 or 2-element sequence.
 
 Args:
@@ -89,8 +90,9 @@ Args:
     )doc")
 
         .def(
-            "__iter__", [](const Line& self) -> py::iterator
-            { return py::make_iterator(&self.ax, &self.ax + 4); }, py::keep_alive<0, 1>()
+            "__iter__", [](const Line& self) -> nb::iterator
+            { return nb::make_iterator(nb::type<Line>(), "iterator", &self.ax, &self.ax + 4); },
+            nb::keep_alive<0, 1>()
         )
         .def(
             "__getitem__",
@@ -107,18 +109,18 @@ Args:
                 case 3:
                     return self.by;
                 default:
-                    throw py::index_error("Index out of range");
+                    throw nb::index_error("Index out of range");
                 }
             },
-            py::arg("index")
+            "index"_a
         )
         .def("__len__", [](const Line&) -> int { return 4; })
-        .def("__eq__", &Line::operator==, py::arg("other"))
-        .def("__ne__", &Line::operator!=, py::arg("other"));
+        .def("__eq__", &Line::operator==, "other"_a)
+        .def("__ne__", &Line::operator!=, "other"_a);
 
     auto subLine = module.def_submodule("line");
 
-    subLine.def("move", &move, py::arg("line"), py::arg("offset"), R"doc(
+    subLine.def("move", &move, "line"_a, "offset"_a, R"doc(
 Move the given line by a Vec2 or 2-element sequence.
 
 Args:

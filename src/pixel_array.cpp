@@ -1,5 +1,9 @@
 #include <SDL3_image/SDL_image.h>
-#include <pybind11/native_enum.h>
+#include <nanobind/stl/string.h>
+#include <nanobind/stl/unique_ptr.h>
+
+#include <cstring>
+#include <vector>
 
 #include "Color.hpp"
 #include "Math.hpp"
@@ -638,24 +642,25 @@ SDL_Surface* _rotateSurface(SDL_Surface* src, double angle)
     return dst;
 }
 
-void _bind(py::module_& module)
+void _bind(nb::module_& module)
 {
-    py::native_enum<ScrollMode>(module, "ScrollMode", "enum.IntEnum", R"doc(
+    using namespace nb::literals;
+
+    nb::enum_<ScrollMode>(module, "ScrollMode", R"doc(
 Edge handling behavior for PixelArray scrolling.
     )doc")
         .value("SMEAR", ScrollMode::SMEAR, "Clamp edge pixels when scrolling")
         .value("ERASE", ScrollMode::ERASE, "Erase pixels that scroll out")
-        .value("REPEAT", ScrollMode::REPEAT, "Wrap pixels when scrolling")
-        .finalize();
+        .value("REPEAT", ScrollMode::REPEAT, "Wrap pixels when scrolling");
 
-    py::classh<PixelArray>(module, "PixelArray", R"doc(
+    nb::class_<PixelArray>(module, "PixelArray", R"doc(
 Represents a 2D pixel buffer for image manipulation and blitting operations.
 
 A PixelArray is a 2D array of pixels that can be manipulated, drawn on, and used as a source
 for texture creation or blitting to other PixelArrays. Supports pixel-level operations,
 color key transparency, and alpha blending.
     )doc")
-        .def(py::init<const Vec2&>(), py::arg("size"), R"doc(
+        .def(nb::init<const Vec2&>(), "size"_a, R"doc(
 Create a new PixelArray with the specified dimensions.
 
 Args:
@@ -664,7 +669,7 @@ Args:
 Raises:
     RuntimeError: If pixel array creation fails.
         )doc")
-        .def(py::init<const std::string&>(), py::arg("file_path"), R"doc(
+        .def(nb::init<const std::string&>(), "file_path"_a, R"doc(
 Create a PixelArray by loading an image from a file.
 
 Args:
@@ -674,7 +679,7 @@ Raises:
     RuntimeError: If the file cannot be loaded or doesn't exist.
         )doc")
 
-        .def_property("color_key", &PixelArray::getColorKey, &PixelArray::setColorKey, R"doc(
+        .def_prop_rw("color_key", &PixelArray::getColorKey, &PixelArray::setColorKey, R"doc(
 The color key for transparency.
 
 When set, pixels of this color will be treated as transparent during blitting operations.
@@ -686,7 +691,7 @@ Returns:
 Raises:
     RuntimeError: If getting the color key fails.
         )doc")
-        .def_property("alpha_mod", &PixelArray::getAlpha, &PixelArray::setAlpha, R"doc(
+        .def_prop_rw("alpha_mod", &PixelArray::getAlpha, &PixelArray::setAlpha, R"doc(
 The alpha modulation value for the pixel array.
 
 Controls the overall transparency of the pixel array. Values range from 0 (fully transparent)
@@ -699,26 +704,26 @@ Raises:
     RuntimeError: If getting the alpha value fails.
         )doc")
 
-        .def_property_readonly("width", &PixelArray::getWidth, R"doc(
+        .def_prop_ro("width", &PixelArray::getWidth, R"doc(
 The width of the pixel array.
 
 Returns:
     int: The pixel array width.
         )doc")
-        .def_property_readonly("height", &PixelArray::getHeight, R"doc(
+        .def_prop_ro("height", &PixelArray::getHeight, R"doc(
 The height of the pixel array.
 
 Returns:
     int: The pixel array height.
         )doc")
-        .def_property_readonly("size", &PixelArray::getSize, R"doc(
+        .def_prop_ro("size", &PixelArray::getSize, R"doc(
 The size of the pixel array as a Vec2.
 
 Returns:
     Vec2: The pixel array size as (width, height).
         )doc")
 
-        .def("fill", &PixelArray::fill, py::arg("color"), R"doc(
+        .def("fill", &PixelArray::fill, "color"_a, R"doc(
 Fill the entire pixel array with a solid color.
 
 Args:
@@ -726,27 +731,10 @@ Args:
         )doc")
         .def(
             "blit",
-            [](const PixelArray& self, const PixelArray& other, const Vec2& pos,
-               const py::object& anchorObj, const py::object& srcObj) -> void
-            {
-                try
-                {
-                    Vec2 anchor{};
-                    if (!anchorObj.is_none())
-                        anchor = anchorObj.cast<Vec2>();
-
-                    srcObj.is_none() ? self.blit(other, pos, anchor)
-                                     : self.blit(other, pos, anchor, srcObj.cast<Rect>());
-                }
-                catch (const py::cast_error&)
-                {
-                    throw py::type_error(
-                        "Invalid type for 'src', expected Rect, or 'anchor' expected Vec2"
-                    );
-                }
-            },
-            py::arg("pixel_array"), py::arg("pos"), py::arg("anchor") = py::none(),
-            py::arg("src") = py::none(), R"doc(
+            nb::overload_cast<
+                const PixelArray&, const Vec2&, const Vec2&,
+                const Rect&>(&PixelArray::blit, nb::const_),
+            "pixel_array"_a, "pos"_a, "anchor"_a = Anchor::TOP_LEFT, "src"_a = Rect{}, R"doc(
 Blit (copy) another pixel array onto this pixel array at the specified position with anchor alignment.
 
 Args:
@@ -761,19 +749,9 @@ Raises:
         )
         .def(
             "blit",
-            [](const PixelArray& self, const PixelArray& other, const Rect& dst,
-               const py::object& src)
-            {
-                try
-                {
-                    src.is_none() ? self.blit(other, dst) : self.blit(other, dst, src.cast<Rect>());
-                }
-                catch (const py::cast_error&)
-                {
-                    throw py::type_error("Invalid type for 'src', expected Rect");
-                }
-            },
-            py::arg("pixel_array"), py::arg("dst"), py::arg("src") = py::none(), R"doc(
+            nb::overload_cast<
+                const PixelArray&, const Rect&, const Rect&>(&PixelArray::blit, nb::const_),
+            "pixel_array"_a, "dst"_a, "src"_a = Rect{}, R"doc(
 Blit (copy) another pixel array onto this pixel array with specified destination and source rectangles.
 
 Args:
@@ -785,7 +763,7 @@ Raises:
     RuntimeError: If the blit operation fails.
         )doc"
         )
-        .def("get_at", &PixelArray::getAt, py::arg("coord"), R"doc(
+        .def("get_at", &PixelArray::getAt, "coord"_a, R"doc(
 Get the color of a pixel at the specified coordinates.
 
 Args:
@@ -797,7 +775,7 @@ Returns:
 Raises:
     IndexError: If coordinates are outside the pixel array bounds.
         )doc")
-        .def("set_at", &PixelArray::setAt, py::arg("coord"), py::arg("color"), R"doc(
+        .def("set_at", &PixelArray::setAt, "coord"_a, "color"_a, R"doc(
 Set the color of a pixel at the specified coordinates.
 
 Args:
@@ -823,7 +801,7 @@ Returns:
     Rect: A rectangle with position (0, 0) and the pixel array's dimensions.
         )doc")
         .def(
-            "scroll", &PixelArray::scroll, py::arg("dx"), py::arg("dy"), py::arg("scroll_mode"),
+            "scroll", &PixelArray::scroll, "dx"_a, "dy"_a, "scroll_mode"_a,
             R"doc(
 Scroll the pixel array's contents by the specified offset.
 
@@ -841,7 +819,7 @@ Args:
         module.def_submodule("pixel_array", "Functions for manipulating PixelArray objects");
 
     subPixelArray.def(
-        "flip", &flip, py::arg("pixel_array"), py::arg("flip_x"), py::arg("flip_y"),
+        "flip", &flip, "pixel_array"_a, "flip_x"_a, "flip_y"_a,
         R"doc(
 Flip a pixel array horizontally, vertically, or both.
 
@@ -858,7 +836,7 @@ Raises:
     )doc"
     );
 
-    subPixelArray.def("scale_to", &scaleTo, py::arg("pixel_array"), py::arg("size"), R"doc(
+    subPixelArray.def("scale_to", &scaleTo, "pixel_array"_a, "size"_a, R"doc(
 Scale a pixel array to a new exact size.
 
 Args:
@@ -873,8 +851,8 @@ Raises:
     )doc");
 
     subPixelArray.def(
-        "scale_by", py::overload_cast<const PixelArray&, double>(&scaleBy), py::arg("pixel_array"),
-        py::arg("factor"), R"doc(
+        "scale_by", nb::overload_cast<const PixelArray&, double>(&scaleBy), "pixel_array"_a,
+        "factor"_a, R"doc(
 Scale a pixel array by a given factor.
 
 Args:
@@ -891,7 +869,7 @@ Raises:
     )doc"
     );
 
-    subPixelArray.def("rotate", &rotate, py::arg("pixel_array"), py::arg("angle"), R"doc(
+    subPixelArray.def("rotate", &rotate, "pixel_array"_a, "angle"_a, R"doc(
 Rotate a pixel array by a given angle.
 
 Args:
@@ -907,8 +885,7 @@ Raises:
     )doc");
 
     subPixelArray.def(
-        "box_blur", &boxBlur, py::arg("pixel_array"), py::arg("radius"),
-        py::arg("repeat_edge_pixels") = true, R"doc(
+        "box_blur", &boxBlur, "pixel_array"_a, "radius"_a, "repeat_edge_pixels"_a = true, R"doc(
 Apply a box blur effect to a pixel array.
 
 Box blur creates a uniform blur effect by averaging pixels within a square kernel.
@@ -929,8 +906,8 @@ Raises:
     );
 
     subPixelArray.def(
-        "gaussian_blur", &gaussianBlur, py::arg("pixel_array"), py::arg("radius"),
-        py::arg("repeat_edge_pixels") = true, R"doc(
+        "gaussian_blur", &gaussianBlur, "pixel_array"_a, "radius"_a, "repeat_edge_pixels"_a = true,
+        R"doc(
 Apply a Gaussian blur effect to a pixel array.
 
 Gaussian blur creates a natural, smooth blur effect using a Gaussian distribution
@@ -951,7 +928,7 @@ Raises:
     )doc"
     );
 
-    subPixelArray.def("invert", &invert, py::arg("pixel_array"), R"doc(
+    subPixelArray.def("invert", &invert, "pixel_array"_a, R"doc(
 Invert the colors of a pixel array.
 
 Creates a negative image effect by inverting each color channel (RGB).
@@ -967,7 +944,7 @@ Raises:
     RuntimeError: If pixel array creation fails.
     )doc");
 
-    subPixelArray.def("grayscale", &grayscale, py::arg("pixel_array"), R"doc(
+    subPixelArray.def("grayscale", &grayscale, "pixel_array"_a, R"doc(
 Convert a pixel array to grayscale.
 
 Converts the pixel array to grayscale using the standard luminance formula:

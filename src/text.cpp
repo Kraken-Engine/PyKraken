@@ -1,5 +1,7 @@
 #include "Text.hpp"
 
+#include <nanobind/stl/string.h>
+
 #include <algorithm>
 #include <cmath>
 #include <mutex>
@@ -263,9 +265,11 @@ void _quit()
     _textEngine = nullptr;
 }
 
-void _bind(const py::module_& module)
+void _bind(const nb::module_& module)
 {
-    py::classh<Text>(module, "Text", R"doc(
+    using namespace nb::literals;
+
+    nb::class_<Text>(module, "Text", R"doc(
 A text object for rendering text to the active renderer.
 
 This class handles the rendered text instance. You must provide a Font object
@@ -276,7 +280,7 @@ Note:
     call kn.window.create(...) first, which initializes the text engine.
     )doc")
         .def(
-            py::init<const Font&, const std::string&>(), py::arg("font"), py::arg("text") = "",
+            nb::init<const Font&, const std::string&>(), "font"_a, "text"_a = "",
             R"doc(
 Create a Text object.
 
@@ -289,76 +293,44 @@ Raises:
     )doc"
         )
 
-        .def_readwrite("shadow_color", &Text::shadowColor, R"doc(
+        .def_rw("shadow_color", &Text::shadowColor, R"doc(
 Get or set the shadow color for the text.
         )doc")
-        .def_readwrite("shadow_offset", &Text::shadowOffset, R"doc(
+        .def_rw("shadow_offset", &Text::shadowOffset, R"doc(
 Get or set the shadow offset for the text.
         )doc")
 
-        .def_property("wrap_width", &Text::getWrapWidth, &Text::setWrapWidth, R"doc(
+        .def_prop_rw("wrap_width", &Text::getWrapWidth, &Text::setWrapWidth, R"doc(
 Get or set the wrap width in pixels for text wrapping.
 
 Set to 0 to disable wrapping. Negative values are clamped to 0.
         )doc")
-        .def_property("text", &Text::getText, &Text::setText, R"doc(
+        .def_prop_rw("text", &Text::getText, &Text::setText, R"doc(
 Get or set the text string to be rendered.
         )doc")
-        .def_property("color", &Text::getColor, &Text::setColor, R"doc(
+        .def_prop_rw("color", &Text::getColor, &Text::setColor, R"doc(
 Get or set the color of the rendered text.
         )doc")
-        .def_property_readonly("size", &Text::getSize, R"doc(
+        .def_prop_ro("size", &Text::getSize, R"doc(
 Get the size (width, height) of the current text as a Vec2.
 
 Returns:
     Vec2: The text dimensions.
         )doc")
-        .def_property_readonly("width", &Text::getWidth, R"doc(
+        .def_prop_ro("width", &Text::getWidth, R"doc(
 Get the width in pixels of the current text.
 
 Returns:
     int: The text width.
         )doc")
-        .def_property_readonly("height", &Text::getHeight, R"doc(
+        .def_prop_ro("height", &Text::getHeight, R"doc(
 Get the height in pixels of the current text.
 
 Returns:
     int: The text height.
         )doc")
 
-        .def(
-            "draw",
-            [](const Text& self, const py::object& posObj, const py::object& anchorObj) -> void
-            {
-                Vec2 pos{};
-                if (!posObj.is_none())
-                {
-                    try
-                    {
-                        pos = posObj.cast<Vec2>();
-                    }
-                    catch (const py::cast_error&)
-                    {
-                        throw py::type_error("Invalid type for 'pos', expected Vec2");
-                    }
-                }
-
-                Vec2 anchor{};
-                if (!anchorObj.is_none())
-                {
-                    try
-                    {
-                        anchor = anchorObj.cast<Vec2>();
-                    }
-                    catch (const py::cast_error&)
-                    {
-                        throw py::type_error("Invalid type for 'anchor', expected Vec2");
-                    }
-                }
-
-                self.draw(pos, anchor);
-            },
-            py::arg("pos") = py::none(), py::arg("anchor") = py::none(), R"doc(
+        .def("draw", &Text::draw, "pos"_a = Vec2{}, "anchor"_a = Anchor::TOP_LEFT, R"doc(
 Draw the text to the renderer at the specified position with alignment.
 A shadow is drawn if shadow_color.a > 0 and shadow_offset is not (0, 0).
 
@@ -369,9 +341,8 @@ Args:
 Raises:
     RuntimeError: If the renderer is not initialized or text drawing fails.
     RuntimeError: If the text font is not set or has gone out of scope.
-        )doc"
-        )
-        .def("set_font", &Text::setFont, py::arg("font"), R"doc(
+        )doc")
+        .def("set_font", &Text::setFont, "font"_a, R"doc(
 Set the font to use for rendering this text.
 
 Args:

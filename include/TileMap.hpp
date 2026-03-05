@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 #include <memory>
 #include <optional>
@@ -15,7 +15,7 @@
 #include "Transform.hpp"
 #include "_globals.hpp"
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn
 {
@@ -315,6 +315,6 @@ class Map
     std::vector<std::shared_ptr<Layer>> m_layers{};
 };
 
-void _bind(py::module_& module);
+void _bind(nb::module_& module);
 }  // namespace tilemap
 }  // namespace kn

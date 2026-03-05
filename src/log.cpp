@@ -24,23 +24,25 @@ void _init()
     _loggerEnabled = true;
 }
 
-void _bind(py::module_& module)
+void _bind(nb::module_& module)
 {
+    using namespace nb::literals;
+
     auto subLog = module.def_submodule("log", "Logging utilities");
 
-    subLog.def("info", [](const char* fmt) { spdlog::info(fmt); }, py::arg("message"), R"doc(
+    subLog.def("info", [](const char* fmt) { spdlog::info(fmt); }, "message"_a, R"doc(
 Log an informational message.
 
 Args:
     message (str): The message to log.
         )doc");
-    subLog.def("warn", [](const char* fmt) { spdlog::warn(fmt); }, py::arg("message"), R"doc(
+    subLog.def("warn", [](const char* fmt) { spdlog::warn(fmt); }, "message"_a, R"doc(
 Log a warning message.
 
 Args:
     message (str): The message to log.
         )doc");
-    subLog.def("error", [](const char* fmt) { spdlog::error(fmt); }, py::arg("message"), R"doc(
+    subLog.def("error", [](const char* fmt) { spdlog::error(fmt); }, "message"_a, R"doc(
 Log an error message.
 
 Args:

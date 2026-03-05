@@ -62,8 +62,10 @@ Vec2 screenToWorld(const Vec2& screenPos)
     return screenPos + getActivePos();
 }
 
-void _bind(py::module_& module)
+void _bind(nb::module_& module)
 {
+    using namespace nanobind::literals;
+
     auto subCamera = module.def_submodule("camera", "Camera management and coordinate conversion");
 
     subCamera.def("get_active_pos", &camera::getActivePos, R"doc(
@@ -74,7 +76,7 @@ Returns:
     Vec2: The position of the active camera.
     )doc");
 
-    subCamera.def("world_to_screen", &camera::worldToScreen, py::arg("world_pos"), R"doc(
+    subCamera.def("world_to_screen", &camera::worldToScreen, "world_pos"_a, R"doc(
 Convert a world position to a screen position using the active camera's translation.
 
 Args:
@@ -84,7 +86,7 @@ Returns:
     Vec2: The resulting screen position.
     )doc");
 
-    subCamera.def("screen_to_world", &camera::screenToWorld, py::arg("screen_pos"), R"doc(
+    subCamera.def("screen_to_world", &camera::screenToWorld, "screen_pos"_a, R"doc(
 Convert a screen position to a world position using the active camera's translation.
 
 Args:
@@ -94,24 +96,24 @@ Returns:
     Vec2: The resulting world position.
     )doc");
 
-    py::classh<Camera>(module, "Camera", R"doc(
+    nb::class_<Camera>(module, "Camera", R"doc(
 Represents a 2D camera used for rendering.
 
 Controls the viewport's translation, allowing you to move the view of the world.
     )doc")
-        .def(py::init(), R"doc(
+        .def(nb::init(), R"doc(
 Create a camera at the default position (0, 0).
 
 Returns:
     Camera: A new camera instance.
         )doc")
-        .def(py::init<const Vec2&>(), py::arg("pos"), R"doc(
+        .def(nb::init<const Vec2&>(), "pos"_a, R"doc(
 Create a camera at the given position.
 
 Args:
     pos (Vec2): The camera's initial position.
         )doc")
-        .def(py::init<double, double>(), py::arg("x"), py::arg("y"), R"doc(
+        .def(nb::init<double, double>(), "x"_a, "y"_a, R"doc(
 Create a camera at the given position.
 
 Args:
@@ -119,7 +121,7 @@ Args:
     y (float): The y-coordinate of the camera's initial position.
         )doc")
 
-        .def_property("pos", &Camera::getPos, &Camera::setPos, R"doc(
+        .def_prop_rw("pos", &Camera::getPos, &Camera::setPos, R"doc(
 Get or set the camera's position.
 
 Returns:
@@ -134,7 +136,7 @@ Set this camera as the active one for rendering.
 Only one camera can be active at a time.
         )doc")
 
-        .def("world_to_screen", &Camera::worldToScreen, py::arg("world_pos"), R"doc(
+        .def("world_to_screen", &Camera::worldToScreen, "world_pos"_a, R"doc(
 Convert a world position to a screen position using this camera's translation.
 
 Args:
@@ -144,7 +146,7 @@ Returns:
     Vec2: The resulting screen position.
         )doc")
 
-        .def("screen_to_world", &Camera::screenToWorld, py::arg("screen_pos"), R"doc(
+        .def("screen_to_world", &Camera::screenToWorld, "screen_pos"_a, R"doc(
 Convert a screen position to a world position using this camera's translation.
 
 Args:

@@ -1,11 +1,11 @@
 #pragma once
 
 #include <SDL3/SDL.h>
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 #include <string_view>
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn
 {
@@ -20,7 +20,7 @@ struct HSV
     double a = 1.0;
 };
 
-void _bind(py::module_& module);
+void _bind(nb::module_& module);
 
 Color fromHex(std::string_view hex);
 

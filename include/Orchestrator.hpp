@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 #include <functional>
 #include <memory>
@@ -9,13 +9,13 @@
 #include "Math.hpp"
 #include "Transform.hpp"
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn
 {
 namespace orchestrator
 {
-void _bind(py::module_& module);
+void _bind(nb::module_& module);
 void _tick();
 }  // namespace orchestrator
 
@@ -147,8 +147,8 @@ class Orchestrator
 
     void setTarget(Transform* target);
 
-    Orchestrator& addStep(const std::vector<std::shared_ptr<Effect>>& effects);
-    Orchestrator& addStep(std::shared_ptr<Effect> effect);
+    Orchestrator& parallel(const std::vector<std::shared_ptr<Effect>>& effects);
+    Orchestrator& then(std::shared_ptr<Effect> effect);
 
     void finalize();
     void play();

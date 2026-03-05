@@ -1,5 +1,7 @@
 #include "Circle.hpp"
 
+#include <nanobind/make_iterator.h>
+
 #include "Line.hpp"
 #include "Rect.hpp"
 
@@ -61,24 +63,26 @@ bool Circle::operator!=(const Circle& other) const
 
 namespace circle
 {
-void _bind(const py::module_& module)
+void _bind(const nb::module_& module)
 {
-    py::classh<Circle>(module, "Circle", R"doc(
+    using namespace nb::literals;
+
+    nb::class_<Circle>(module, "Circle", R"doc(
 Represents a circle shape with position and radius.
 
 Supports collision detection with points, rectangles, other circles, and lines.
     )doc")
 
-        .def(py::init<>(), R"doc(
+        .def(nb::init<>(), R"doc(
 Create a circle with default position (0, 0) and radius 0.
         )doc")
-        .def(py::init<double>(), py::arg("radius"), R"doc(
+        .def(nb::init<double>(), "radius"_a, R"doc(
 Create a circle with a specified radius at the default position (0, 0).
 
 Args:
     radius (float): The radius of the circle.
         )doc")
-        .def(py::init<const Vec2&, double>(), py::arg("pos"), py::arg("radius"), R"doc(
+        .def(nb::init<const Vec2&, double>(), "pos"_a, "radius"_a, R"doc(
 Create a circle at a given position and radius.
 
 Args:
@@ -86,7 +90,7 @@ Args:
     radius (float): Radius of the circle.
         )doc")
         .def(
-            py::init<double, double, double>(), py::arg("x"), py::arg("y"), py::arg("radius"),
+            nb::init<double, double, double>(), "x"_a, "y"_a, "radius"_a,
             R"doc(
 Create a circle at given x and y coordinates with a specified radius.
 
@@ -97,19 +101,19 @@ Args:
         )doc"
         )
 
-        .def_readwrite("pos", &Circle::pos, R"doc(
+        .def_rw("pos", &Circle::pos, R"doc(
 The center position of the circle as a Vec2.
         )doc")
 
-        .def_readwrite("radius", &Circle::radius, R"doc(
+        .def_rw("radius", &Circle::radius, R"doc(
 The radius of the circle.
         )doc")
 
-        .def_property_readonly("area", &Circle::getArea, R"doc(
+        .def_prop_ro("area", &Circle::getArea, R"doc(
 Return the area of the circle.
         )doc")
 
-        .def_property_readonly("circumference", &Circle::getCircumference, R"doc(
+        .def_prop_ro("circumference", &Circle::getCircumference, R"doc(
 Return the circumference of the circle.
         )doc")
 
@@ -123,15 +127,15 @@ Return a copy of the circle.
 
         .def(
             "__iter__",
-            [](const Circle& circle) -> py::iterator
+            [](const Circle& circle) -> nb::iterator
             {
                 static double data[3];
                 data[0] = circle.pos.x;
                 data[1] = circle.pos.y;
                 data[2] = circle.radius;
-                return py::make_iterator(data, data + 3);
+                return nb::make_iterator(nb::type<Circle>(), "iterator", data, data + 3);
             },
-            py::keep_alive<0, 1>()
+            nb::keep_alive<0, 1>()
         )
 
         .def(
@@ -147,17 +151,17 @@ Return a copy of the circle.
                 case 2:
                     return circle.radius;
                 default:
-                    throw py::index_error("Index out of range");
+                    throw nb::index_error("Index out of range");
                 }
             },
-            py::arg("index")
+            "index"_a
         )
 
         .def("__len__", [](const Circle&) -> int { return 3; })
 
-        .def("__eq__", &Circle::operator==, py::arg("other"))
+        .def("__eq__", &Circle::operator==, "other"_a)
 
-        .def("__ne__", &Circle::operator!=, py::arg("other"));
+        .def("__ne__", &Circle::operator!=, "other"_a);
 }
 }  // namespace circle
 }  // namespace kn

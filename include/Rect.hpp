@@ -1,11 +1,11 @@
 #pragma once
 
 #include <SDL3/SDL.h>
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 #include "Math.hpp"
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn
 {
@@ -102,7 +102,7 @@ class Rect
 
 namespace rect
 {
-void _bind(py::module_& module);
+void _bind(nb::module_& module);
 
 Rect move(const Rect& rect, const Vec2& offset);
 Rect clamp(const Rect& rect, const Vec2& min, const Vec2& max);

@@ -55,22 +55,18 @@ void _tick()
                 {
                     if (it->isBound)
                     {
-                        py::object owner = it->weakOwner();
+                        nb::object owner = it->weakOwner();
                         if (owner.is_none())
-                        {
                             shouldRemove = true;
-                        }
                         else
-                        {
                             it->unboundMethod(owner, _fixedDelta);
-                        }
                     }
                     else
                     {
                         it->callback(_fixedDelta);
                     }
                 }
-                catch (const py::error_already_set& e)
+                catch (const nb::python_error& e)
                 {
                     throw std::runtime_error(
                         "An error occurred in a fixed update callback: " + std::string(e.what())
@@ -111,19 +107,20 @@ int getMaxSubsteps()
     return _maxSubsteps;
 }
 
-void World::addFixedUpdate(py::object callback)
+void World::addFixedUpdate(nb::object callback)
 {
     if (callback.is_none())
         throw std::invalid_argument("Callback cannot be None.");
 
-    if (!py::hasattr(callback, "__call__"))
+    if (!nb::hasattr(callback, "__call__"))
         throw std::invalid_argument("Callback must be a callable object.");
 
     FixedUpdateCallback wrapper;
-    if (py::hasattr(callback, "__self__") && !py::getattr(callback, "__self__").is_none())
+    if (nb::hasattr(callback, "__self__") && !nb::getattr(callback, "__self__").is_none())
     {
+        nb::object self = callback.attr("__self__");
         wrapper.isBound = true;
-        wrapper.weakOwner = py::weakref(callback.attr("__self__"));
+        wrapper.weakOwner = nb::weakref(self);
         wrapper.unboundMethod = callback.attr("__func__");
     }
     else

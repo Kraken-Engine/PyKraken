@@ -1,6 +1,7 @@
 #include "Mixer.hpp"
 
-#include <pybind11/native_enum.h>
+#include <nanobind/stl/shared_ptr.h>
+#include <nanobind/stl/string.h>
 
 #include <algorithm>
 #include <limits>
@@ -683,8 +684,10 @@ void _quit()
     }
 }
 
-void _bind(py::module_& module)
+void _bind(nb::module_& module)
 {
+    using namespace nb::literals;
+
     auto subMixer = module.def_submodule("mixer", R"doc(
         Sound mixer and audio management system.
 
@@ -694,7 +697,7 @@ void _bind(py::module_& module)
         priority-based sound stealing when the track pool is exhausted.
     )doc");
 
-    py::native_enum<AudioPriority>(subMixer, "AudioPriority", "enum.IntEnum", R"doc(
+    nb::enum_<AudioPriority>(subMixer, "AudioPriority", R"doc(
         Priority levels used for track acquisition.
 
         Used to determine which sounds to interrupt ('steal') when the 64-track
@@ -702,10 +705,9 @@ void _bind(py::module_& module)
     )doc")
         .value("MUSIC", AudioPriority::Music, "Highest priority level.")
         .value("UI", AudioPriority::UI, "Medium priority level.")
-        .value("SFX", AudioPriority::SFX, "Standard priority level.")
-        .finalize();
+        .value("SFX", AudioPriority::SFX, "Standard priority level.");
 
-    py::classh<Audio>(subMixer, "Audio", R"doc(
+    nb::class_<Audio>(subMixer, "Audio", R"doc(
         Abstract base class for all audio resources.
 
         Common interface for local volume and playback status. Local volume
@@ -719,23 +721,23 @@ void _bind(py::module_& module)
             play(fade_in=0.0): Start audio playback.
             stop(fade_out=0.0): Stop all instances of this audio resource.
     )doc")
-        .def_property("volume", &Audio::getVolume, &Audio::setVolume, "Volume scalar (0.0 to 1.0).")
-        .def_property_readonly("playing", &Audio::isPlaying, "True if currently playing.")
+        .def_prop_rw("volume", &Audio::getVolume, &Audio::setVolume, "Volume scalar (0.0 to 1.0).")
+        .def_prop_ro("playing", &Audio::isPlaying, "True if currently playing.")
 
-        .def("play", &Audio::play, py::arg("fade_in") = 0.0, R"doc(
+        .def("play", &Audio::play, "fade_in"_a = 0.0, R"doc(
             Start audio playback.
 
             Args:
                 fade_in (float): Fade in duration in seconds. Defaults to 0.0.
         )doc")
-        .def("stop", &Audio::stop, py::arg("fade_out") = 0.0, R"doc(
+        .def("stop", &Audio::stop, "fade_out"_a = 0.0, R"doc(
             Stop all playing instances of this audio.
 
             Args:
                 fade_out (float): Fade out duration in seconds. Defaults to 0.0.
         )doc");
 
-    py::classh<Sample, Audio>(subMixer, "Sample", R"doc(
+    nb::class_<Sample, Audio>(subMixer, "Sample", R"doc(
         A sound effect sample loaded entirely into memory.
 
         Samples support polyphony (multiple simultaneous instances). If tracks
@@ -748,14 +750,14 @@ void _bind(py::module_& module)
             max_polyphony (int): Maximum simultaneous instances of this specific
                 sample (Range 1-32). Defaults to 1.
     )doc")
-        .def_readwrite("priority", &Sample::priority, "Acquisition priority level.")
-        .def_readwrite("can_steal", &Sample::canSteal, "Whether can interrupt others to acquire a track.")
-        .def_property(
+        .def_rw("priority", &Sample::priority, "Acquisition priority level.")
+        .def_rw("can_steal", &Sample::canSteal, "Whether can interrupt others to acquire a track.")
+        .def_prop_rw(
             "max_polyphony", &Sample::getMaxPolyphony, &Sample::setMaxPolyphony,
             "Max simultaneous instances of sample (1-32)."
         );
 
-    py::classh<Stream, Audio>(subMixer, "Stream", R"doc(
+    nb::class_<Stream, Audio>(subMixer, "Stream", R"doc(
         A streaming audio resource intended for long music files.
 
         Streams occupy exactly one track while active. They are protected and
@@ -770,11 +772,11 @@ void _bind(py::module_& module)
             resume(fade_in=0.0): Resume playback from a paused state.
             seek(seconds): Jump to a specific time in the audio file.
     )doc")
-        .def_property_readonly(
+        .def_prop_ro(
             "playback_pos", &Stream::getPlaybackPos,
             R"doc(Current position in seconds. 0.0 if stopped/never played, paused position if paused.)doc"
         )
-        .def_property(
+        .def_prop_rw(
             "looping", &Stream::getLooping, &Stream::setLooping,
             R"doc(Whether the stream should loop when it reaches the end.)doc"
         )
@@ -782,20 +784,20 @@ void _bind(py::module_& module)
         .def("pause", &Stream::pause, R"doc(
             Pause playback. Releases the hardware track but preserves position.
         )doc")
-        .def("resume", &Stream::resume, py::arg("fade_in") = 0.0, R"doc(
+        .def("resume", &Stream::resume, "fade_in"_a = 0.0, R"doc(
             Resume playback from a paused state.
 
             Args:
                 fade_in (float): Duration in seconds to fade back in. Defaults to 0.0.
         )doc")
-        .def("seek", &Stream::seek, py::arg("seconds"), R"doc(
+        .def("seek", &Stream::seek, "seconds"_a, R"doc(
             Jump to a specific time in the audio file.
 
             Args:
                 seconds (float): Target position in seconds from the start.
         )doc");
 
-    subMixer.def("load_sample", &loadSample, py::arg("path"), py::arg("predecode") = true, R"doc(
+    subMixer.def("load_sample", &loadSample, "path"_a, "predecode"_a = true, R"doc(
         Load an audio sample (SFX) from disk.
 
         Args:
@@ -806,7 +808,7 @@ void _bind(py::module_& module)
             Sample: The loaded audio object.
     )doc");
 
-    subMixer.def("load_stream", &loadStream, py::arg("path"), py::arg("predecode") = false, R"doc(
+    subMixer.def("load_stream", &loadStream, "path"_a, "predecode"_a = false, R"doc(
         Load an audio stream (Music) from disk.
 
         Args:
@@ -817,7 +819,7 @@ void _bind(py::module_& module)
             Stream: The loaded audio object.
     )doc");
 
-    subMixer.def("set_master_volume", &setMasterVolume, py::arg("volume"), R"doc(
+    subMixer.def("set_master_volume", &setMasterVolume, "volume"_a, R"doc(
         Set the global mixer gain.
 
         This affects all playing samples and streams. Individual audio volume

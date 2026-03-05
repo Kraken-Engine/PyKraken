@@ -1,6 +1,6 @@
 #include "Font.hpp"
 
-#include <pybind11/native_enum.h>
+#include <nanobind/stl/string.h>
 
 #include <algorithm>
 #include <cmath>
@@ -292,9 +292,11 @@ void _quit()
         TTF_Quit();
 }
 
-void _bind(const py::module_& module)
+void _bind(const nb::module_& module)
 {
-    py::native_enum<font::Hinting>(module, "FontHint", "enum.IntEnum", R"doc(
+    using namespace nb::literals;
+
+    nb::enum_<font::Hinting>(module, "FontHint", R"doc(
 Font hinting modes for controlling how fonts are rendered.
 
 Hinting is the process of fitting font outlines to the pixel grid to improve
@@ -304,10 +306,9 @@ readability at small sizes.
         .value("MONO", Hinting::Mono, "Monochrome hinting")
         .value("LIGHT", Hinting::Light, "Light hinting")
         .value("LIGHT_SUBPIXEL", Hinting::LightSubpixel, "Light subpixel hinting")
-        .value("NONE", Hinting::None, "No hinting")
-        .finalize();
+        .value("NONE", Hinting::None, "No hinting");
 
-    py::classh<Font>(module, "Font", R"doc(
+    nb::class_<Font>(module, "Font", R"doc(
 A font typeface for rendering text.
 
 This class wraps an SDL_ttf font and manages font properties like size,
@@ -323,7 +324,7 @@ Note:
     call kn.window.create(...) first, which initializes the font engine.
     )doc")
         .def(
-            py::init<const std::string&, int>(), py::arg("file_dir"), py::arg("pt_size"),
+            nb::init<const std::string&, int>(), "file_dir"_a, "pt_size"_a,
             R"doc(
 Create a Font.
 
@@ -339,58 +340,55 @@ Raises:
     )doc"
         )
 
-        .def_property("alignment", &Font::getAlignment, &Font::setAlignment, R"doc(
+        .def_prop_rw("alignment", &Font::getAlignment, &Font::setAlignment, R"doc(
 Get or set the text alignment for wrapped text.
 
 Valid values: Align.LEFT, Align.CENTER, Align.RIGHT
         )doc")
-        .def_property("hinting", &Font::getHinting, &Font::setHinting, R"doc(
+        .def_prop_rw("hinting", &Font::getHinting, &Font::setHinting, R"doc(
 Get or set the font hinting mode.
 
 Valid values: FontHinting.NORMAL, FontHinting.MONO, FontHinting.LIGHT,
               FontHinting.LIGHT_SUBPIXEL, FontHinting.NONE
         )doc")
-        .def_property("pt_size", &Font::getPtSize, &Font::setPtSize, R"doc(
+        .def_prop_rw("pt_size", &Font::getPtSize, &Font::setPtSize, R"doc(
 Get or set the point size of the font. Values below 8 are clamped to 8.
         )doc")
-        .def_property("bold", &Font::isBold, &Font::setBold, R"doc(
+        .def_prop_rw("bold", &Font::isBold, &Font::setBold, R"doc(
 Get or set whether bold text style is enabled.
         )doc")
-        .def_property("italic", &Font::isItalic, &Font::setItalic, R"doc(
+        .def_prop_rw("italic", &Font::isItalic, &Font::setItalic, R"doc(
 Get or set whether italic text style is enabled.
         )doc")
-        .def_property("underline", &Font::isUnderline, &Font::setUnderline, R"doc(
+        .def_prop_rw("underline", &Font::isUnderline, &Font::setUnderline, R"doc(
 Get or set whether underline text style is enabled.
         )doc")
-        .def_property(
-            "strikethrough", &Font::isStrikethrough, &Font::setStrikethrough,
-            R"doc(
+        .def_prop_rw("strikethrough", &Font::isStrikethrough, &Font::setStrikethrough, R"doc(
 Get or set whether strikethrough text style is enabled.
-        )doc"
-        )
-        .def_property("line_spacing", &Font::getLineSpacing, &Font::setLineSpacing, R"doc(
+        )doc")
+        .def_prop_rw("line_spacing", &Font::getLineSpacing, &Font::setLineSpacing, R"doc(
 Get or set the spacing between lines of text in pixels.
         )doc")
-        .def_property("outline", &Font::getOutline, &Font::setOutline, R"doc(
+        .def_prop_rw("outline", &Font::getOutline, &Font::setOutline, R"doc(
 Get or set the outline width in pixels (0 for no outline).
         )doc")
-        .def_property("kerning", &Font::getKerning, &Font::setKerning, R"doc(
+        .def_prop_rw("kerning", &Font::getKerning, &Font::setKerning, R"doc(
 Get or set whether kerning is enabled.
         )doc")
 
-        .def_property_readonly("height", &Font::getHeight, R"doc(
+        .def_prop_ro("height", &Font::getHeight, R"doc(
 Get the maximum pixel height of all glyphs in the font.
 
 Returns:
     int: The font height in pixels.
         )doc")
-        .def_property_readonly("ascent", &Font::getAscent, R"doc(
+        .def_prop_ro("ascent", &Font::getAscent, R"doc(
 Get the pixel ascent of the font.
 
 Returns:
     int: The font ascent in pixels.
         )doc")
-        .def_property_readonly("descent", &Font::getDescent, R"doc(
+        .def_prop_ro("descent", &Font::getDescent, R"doc(
 Get the pixel descent of the font.
 
 Returns:

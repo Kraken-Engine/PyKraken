@@ -1,14 +1,14 @@
 #pragma once
 
 #include <box2d/box2d.h>
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 #include <vector>
 
 #include "Math.hpp"
 #include "_globals.hpp"
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn
 {
@@ -25,6 +25,6 @@ namespace transform
 {
 Transform composePair(const Transform& parent, Transform child);
 
-void _bind(py::module_& module);
+void _bind(nb::module_& module);
 }  // namespace transform
 }  // namespace kn

@@ -146,6 +146,8 @@ _skbuild/
 .vscode/
 .idea/
 
-src/pykraken/*.dll
+vcpkg_installed/
 
-main.py
+# Generated stubs (nanobind_add_stub copies these into source tree for IDE support)
+src/pykraken/_pykraken/
+src/pykraken/py.typed

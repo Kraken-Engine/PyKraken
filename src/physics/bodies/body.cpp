@@ -45,7 +45,7 @@ void Body::addCollider(
     shapeDef.isSensor = isSensor;
     shapeDef.filter = m_filter;
 
-    b2ShapeId shapeId = b2CreateCircleShape(m_bodyId, &shapeDef, &b2c);
+    b2CreateCircleShape(m_bodyId, &shapeDef, &b2c);
 }
 
 void Body::addCollider(
@@ -76,7 +76,7 @@ void Body::addCollider(
         shapeDef.isSensor = isSensor;
         shapeDef.filter = m_filter;
 
-        b2ShapeId shapeId = b2CreatePolygonShape(m_bodyId, &shapeDef, &poly);
+        b2CreatePolygonShape(m_bodyId, &shapeDef, &poly);
     }
     else
     {
@@ -102,7 +102,7 @@ void Body::addCollider(
             shapeDef.isSensor = isSensor;
             shapeDef.filter = m_filter;
 
-            b2ShapeId shapeId = b2CreatePolygonShape(m_bodyId, &shapeDef, &poly);
+            b2CreatePolygonShape(m_bodyId, &shapeDef, &poly);
         }
     }
 }
@@ -132,7 +132,7 @@ void Body::addCollider(
     shapeDef.isSensor = isSensor;
     shapeDef.filter = m_filter;
 
-    b2ShapeId shapeId = b2CreatePolygonShape(m_bodyId, &shapeDef, &box);
+    b2CreatePolygonShape(m_bodyId, &shapeDef, &box);
 }
 
 void Body::addCollider(
@@ -154,7 +154,7 @@ void Body::addCollider(
     shapeDef.isSensor = isSensor;
     shapeDef.filter = m_filter;
 
-    b2ShapeId shapeId = b2CreateCapsuleShape(m_bodyId, &shapeDef, &b2c);
+    b2CreateCapsuleShape(m_bodyId, &shapeDef, &b2c);
 }
 
 void Body::setPos(const Vec2& pos)

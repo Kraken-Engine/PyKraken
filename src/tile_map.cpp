@@ -1,6 +1,7 @@
-#include <pybind11/native_enum.h>
-#include <pybind11/stl.h>
-#include <pybind11/stl_bind.h>
+#include <nanobind/make_iterator.h>
+#include <nanobind/stl/bind_vector.h>
+#include <nanobind/stl/shared_ptr.h>
+#include <nanobind/stl/string.h>
 
 #include <tmxlite/ImageLayer.hpp>
 #include <tmxlite/TileLayer.hpp>
@@ -188,6 +189,8 @@ void Map::load(const std::string& tmxPath)
             layer = imgLayer;
             break;
         }
+        case tmx::Layer::Type::Group:
+            break;
         }
 
         if (layer)
@@ -897,57 +900,54 @@ double ImageLayer::getOpacity() const
     return m_opacity;
 }
 
-void _bind(py::module_& module)
+void _bind(nb::module_& module)
 {
+    using namespace nb::literals;
+
     auto subTilemap = module.def_submodule("tilemap", "Tile map handling module");
 
     // ----- Enums -----
-    py::native_enum<tmx::Orientation>(subTilemap, "MapOrientation", "enum.IntEnum", R"doc(
+    nb::enum_<tmx::Orientation>(subTilemap, "MapOrientation", R"doc(
 TMX map orientation values.
     )doc")
         .value("ORTHOGONAL", tmx::Orientation::Orthogonal, "Orthogonal grid orientation")
         .value("ISOMETRIC", tmx::Orientation::Isometric, "Isometric orientation")
         .value("STAGGERED", tmx::Orientation::Staggered, "Staggered orientation")
         .value("HEXAGONAL", tmx::Orientation::Hexagonal, "Hexagonal orientation")
-        .value("NONE", tmx::Orientation::None, "No orientation specified")
-        .finalize();
+        .value("NONE", tmx::Orientation::None, "No orientation specified");
 
-    py::native_enum<tmx::RenderOrder>(subTilemap, "MapRenderOrder", "enum.IntEnum", R"doc(
+    nb::enum_<tmx::RenderOrder>(subTilemap, "MapRenderOrder", R"doc(
 Tile render order for TMX maps.
     )doc")
         .value("RIGHT_DOWN", tmx::RenderOrder::RightDown, "Render right then down")
         .value("RIGHT_UP", tmx::RenderOrder::RightUp, "Render right then up")
         .value("LEFT_DOWN", tmx::RenderOrder::LeftDown, "Render left then down")
         .value("LEFT_UP", tmx::RenderOrder::LeftUp, "Render left then up")
-        .value("NONE", tmx::RenderOrder::None, "No render order specified")
-        .finalize();
+        .value("NONE", tmx::RenderOrder::None, "No render order specified");
 
-    py::native_enum<tmx::StaggerAxis>(subTilemap, "MapStaggerAxis", "enum.IntEnum", R"doc(
+    nb::enum_<tmx::StaggerAxis>(subTilemap, "MapStaggerAxis", R"doc(
 Stagger axis for staggered/hex maps.
     )doc")
         .value("X", tmx::StaggerAxis::X, "Stagger along the X axis")
         .value("Y", tmx::StaggerAxis::Y, "Stagger along the Y axis")
-        .value("NONE", tmx::StaggerAxis::None, "No stagger axis")
-        .finalize();
+        .value("NONE", tmx::StaggerAxis::None, "No stagger axis");
 
-    py::native_enum<tmx::StaggerIndex>(subTilemap, "MapStaggerIndex", "enum.IntEnum", R"doc(
+    nb::enum_<tmx::StaggerIndex>(subTilemap, "MapStaggerIndex", R"doc(
 Stagger index for staggered/hex maps.
     )doc")
         .value("EVEN", tmx::StaggerIndex::Even, "Even rows/columns are staggered")
         .value("ODD", tmx::StaggerIndex::Odd, "Odd rows/columns are staggered")
-        .value("NONE", tmx::StaggerIndex::None, "No stagger index")
-        .finalize();
+        .value("NONE", tmx::StaggerIndex::None, "No stagger index");
 
-    py::native_enum<tmx::Layer::Type>(subTilemap, "LayerType", "enum.IntEnum", R"doc(
+    nb::enum_<tmx::Layer::Type>(subTilemap, "LayerType", R"doc(
 TMX layer type values.
     )doc")
         .value("TILE", tmx::Layer::Type::Tile, "Tile layer")
         .value("OBJECT", tmx::Layer::Type::Object, "Object layer")
-        .value("IMAGE", tmx::Layer::Type::Image, "Image layer")
-        .finalize();
+        .value("IMAGE", tmx::Layer::Type::Image, "Image layer");
 
     // ----- TileSet -----
-    auto tileSetClass = py::classh<TileSet>(subTilemap, "TileSet", R"doc(
+    auto tileSetClass = nb::class_<TileSet>(subTilemap, "TileSet", R"doc(
 TileSet represents a collection of tiles and associated metadata.
 
 Attributes:
@@ -969,7 +969,7 @@ Methods:
     get_tile: Retrieve tile metadata for a given id.
     )doc");
 
-    auto tileSetTileClass = py::classh<TileSet::Tile>(tileSetClass, "Tile", R"doc(
+    auto tileSetTileClass = nb::class_<TileSet::Tile>(tileSetClass, "Tile", R"doc(
 Tile represents a single tile entry within a TileSet.
 
 Attributes:
@@ -979,18 +979,24 @@ Attributes:
     clip_rect (Rect): Source rectangle in the tileset texture.
     )doc");
 
-    py::class_<std::array<int, 4>>(tileSetTileClass, "TerrainIndices")
+    nb::class_<std::array<int, 4>>(tileSetTileClass, "TerrainIndices")
         .def("__len__", [](const std::array<int, 4>&) { return 4; })
         .def(
-            "__iter__", [](const std::array<int, 4>& arr)
-            { return py::make_iterator(arr.begin(), arr.end()); }, py::keep_alive<0, 1>()
+            "__iter__",
+            [](const std::array<int, 4>& arr)
+            {
+                return nb::make_iterator(
+                    nb::type<std::array<int, 4>>(), "iterator", arr.begin(), arr.end()
+                );
+            },
+            nb::keep_alive<0, 1>()
         )
         .def(
             "__getitem__",
             [](const std::array<int, 4>& arr, const size_t i)
             {
                 if (i >= arr.size())
-                    throw py::index_error("Index out of range");
+                    throw nb::index_error("Index out of range");
                 return arr[i];
             }
         )
@@ -1026,39 +1032,38 @@ Attributes:
         );
 
     tileSetTileClass
-        .def_property_readonly("id", &TileSet::Tile::getID, R"doc(
+        .def_prop_ro("id", &TileSet::Tile::getID, R"doc(
 Local tile id within the tileset.
     )doc")
-        .def_property_readonly(
-            "terrain_indices", &TileSet::Tile::getTerrainIndices,
-            py::return_value_policy::reference_internal,
+        .def_prop_ro(
+            "terrain_indices", &TileSet::Tile::getTerrainIndices, nb::rv_policy::reference_internal,
             R"doc(TerrainIndices for each corner of the tile.)doc"
         )
-        .def_property_readonly("probability", &TileSet::Tile::getProbability, R"doc(
+        .def_prop_ro("probability", &TileSet::Tile::getProbability, R"doc(
 Probability used for weighted/random tile placement.
     )doc")
-        .def_property_readonly("clip_area", &TileSet::Tile::getClipArea, R"doc(
+        .def_prop_ro("clip_area", &TileSet::Tile::getClipArea, R"doc(
 Source rectangle of the tile within the tileset texture.
     )doc");
-    py::bind_vector<std::vector<TileSet::Tile>>(tileSetClass, "TileSetTileList");
+    nb::bind_vector<std::vector<TileSet::Tile>>(tileSetClass, "TileSetTileList");
 
-    py::classh<TileSet::Terrain>(tileSetClass, "Terrain", R"doc(
+    nb::class_<TileSet::Terrain>(tileSetClass, "Terrain", R"doc(
 Terrain describes a named terrain type defined in a tileset.
 
 Attributes:
     name (str): Terrain name.
     tile_id (int): Representative tile id for the terrain.
     )doc")
-        .def_property_readonly("name", &TileSet::Terrain::getName, R"doc(
+        .def_prop_ro("name", &TileSet::Terrain::getName, R"doc(
 Terrain name.
     )doc")
-        .def_property_readonly("tile_id", &TileSet::Terrain::getTileID, R"doc(
+        .def_prop_ro("tile_id", &TileSet::Terrain::getTileID, R"doc(
 Representative tile id for the terrain.
     )doc");
-    py::bind_vector<std::vector<TileSet::Terrain>>(tileSetClass, "TerrainList");
+    nb::bind_vector<std::vector<TileSet::Terrain>>(tileSetClass, "TerrainList");
 
     tileSetClass
-        .def("has_tile", &TileSet::hasTile, py::arg("id"), R"doc(
+        .def("has_tile", &TileSet::hasTile, "id"_a, R"doc(
 Check whether a global tile id belongs to this tileset.
 
 Args:
@@ -1068,8 +1073,8 @@ Returns:
     bool: True if the tileset contains the tile id, False otherwise.
         )doc")
         .def(
-            "get_tile", &TileSet::getTile, py::arg("id"),
-            py::return_value_policy::reference_internal, R"doc(
+            "get_tile", &TileSet::getTile, "id"_a, nb::rv_policy::reference_internal,
+            R"doc(
 Retrieve tile metadata for a given id.
 
 Args:
@@ -1080,49 +1085,45 @@ Returns:
         )doc"
         )
 
-        .def_property_readonly(
+        .def_prop_ro(
             "first_gid", &TileSet::getFirstGID,
             R"doc(First global tile id (GID) in this tileset.)doc"
         )
-        .def_property_readonly(
+        .def_prop_ro(
             "last_gid", &TileSet::getLastGID, R"doc(Last global tile id (GID) in this tileset.)doc"
         )
-        .def_property_readonly("name", &TileSet::getName, R"doc(Tileset name.)doc")
-        .def_property_readonly(
-            "tile_size", &TileSet::getTileSize, R"doc(Size of tiles in pixels.)doc"
-        )
-        .def_property_readonly(
+        .def_prop_ro("name", &TileSet::getName, R"doc(Tileset name.)doc")
+        .def_prop_ro("tile_size", &TileSet::getTileSize, R"doc(Size of tiles in pixels.)doc")
+        .def_prop_ro(
             "spacing", &TileSet::getSpacing,
             R"doc(Pixel spacing between tiles in the source image.)doc"
         )
-        .def_property_readonly(
+        .def_prop_ro(
             "margin", &TileSet::getMargin, R"doc(Pixel margin around the source image.)doc"
         )
-        .def_property_readonly(
+        .def_prop_ro(
             "tile_count", &TileSet::getTileCount, R"doc(Total number of tiles in the tileset.)doc"
         )
-        .def_property_readonly(
+        .def_prop_ro(
             "columns", &TileSet::getColumns, R"doc(Number of tile columns in the source image.)doc"
         )
-        .def_property_readonly(
+        .def_prop_ro(
             "tile_offset", &TileSet::getTileOffset,
             R"doc(Per-tile offset applied when rendering.)doc"
         )
-        .def_property_readonly(
-            "terrains", &TileSet::getTerrains, py::return_value_policy::reference_internal,
+        .def_prop_ro(
+            "terrains", &TileSet::getTerrains, nb::rv_policy::reference_internal,
             R"doc(TerrainList of terrain definitions.)doc"
         )
-        .def_property_readonly(
-            "tiles", &TileSet::getTiles, py::return_value_policy::reference_internal,
+        .def_prop_ro(
+            "tiles", &TileSet::getTiles, nb::rv_policy::reference_internal,
             R"doc(TileSetTileList of tile metadata entries.)doc"
         )
-        .def_property_readonly(
-            "texture", &TileSet::getTexture, R"doc(Source texture for the tileset.)doc"
-        );
-    py::bind_vector<std::vector<TileSet>>(subTilemap, "TileSetList");
+        .def_prop_ro("texture", &TileSet::getTexture, R"doc(Source texture for the tileset.)doc");
+    nb::bind_vector<std::vector<TileSet>>(subTilemap, "TileSetList");
 
     // ----- Layer -----
-    py::classh<Layer>(subTilemap, "Layer", R"doc(
+    nb::class_<Layer>(subTilemap, "Layer", R"doc(
 Layer is the base class for all tilemap layers.
 
 Attributes:
@@ -1135,31 +1136,25 @@ Attributes:
 Methods:
     draw: Draw the layer to the current renderer.
     )doc")
-        .def_readwrite("visible", &Layer::visible, R"doc(
+        .def_rw("visible", &Layer::visible, R"doc(
 Whether the layer is visible.
     )doc")
-        .def_readwrite("offset", &Layer::offset, R"doc(
+        .def_rw("offset", &Layer::offset, R"doc(
 Per-layer drawing offset.
     )doc")
 
-        .def_property("opacity", &Layer::getOpacity, &Layer::setOpacity, R"doc(
+        .def_prop_rw("opacity", &Layer::getOpacity, &Layer::setOpacity, R"doc(
 Layer opacity from 0.0 to 1.0.
     )doc")
 
-        .def_property_readonly("name", &Layer::getName, R"doc(
-Layer name.
-    )doc")
-        .def_property_readonly("type", &Layer::getType, R"doc(
-Layer type enum.
-    )doc")
+        .def_prop_ro("name", &Layer::getName, R"doc(Layer name.)doc")
+        .def_prop_ro("type", &Layer::getType, R"doc(Layer type enum.)doc")
 
-        .def("draw", &Layer::draw, R"doc(
-Draw the layer to the current renderer.
-        )doc");
-    py::bind_vector<std::vector<std::shared_ptr<Layer>>>(subTilemap, "LayerList");
+        .def("draw", &Layer::draw, R"doc(Draw the layer to the current renderer.)doc");
+    nb::bind_vector<std::vector<std::shared_ptr<Layer>>>(subTilemap, "LayerList");
 
     // ----- TileLayer -----
-    auto tileLayerClass = py::classh<TileLayer, Layer>(subTilemap, "TileLayer", R"doc(
+    auto tileLayerClass = nb::class_<TileLayer, Layer>(subTilemap, "TileLayer", R"doc(
 TileLayer represents a grid of tiles within the map.
 
 Attributes:
@@ -1172,7 +1167,7 @@ Methods:
     draw: Draw the tile layer.
     )doc");
 
-    py::classh<TileLayer::Tile>(tileLayerClass, "Tile", R"doc(
+    nb::class_<TileLayer::Tile>(tileLayerClass, "Tile", R"doc(
 Tile represents an instance of a tile in a TileLayer.
 
 Attributes:
@@ -1180,42 +1175,41 @@ Attributes:
     flip_flags (int): Flags describing tile flips/rotations.
     tileset_index (int): Index of the tileset this tile belongs to.
     )doc")
-        .def_property_readonly("id", &TileLayer::Tile::getID, R"doc(
-Global tile id (GID).
-    )doc")
-        .def_property_readonly("flip_flags", &TileLayer::Tile::getFlipFlags, R"doc(
-Tile flip/rotation flags.
-    )doc")
-        .def_property_readonly("tileset_index", &TileLayer::Tile::getTilesetIndex, R"doc(
-Index of the tileset used by this tile.
-    )doc");
-    py::bind_vector<std::vector<TileLayer::Tile>>(tileLayerClass, "TileLayerTileList");
+        .def_prop_ro("id", &TileLayer::Tile::getID, R"doc(Global tile id (GID).)doc")
+        .def_prop_ro(
+            "flip_flags", &TileLayer::Tile::getFlipFlags, R"doc(Tile flip/rotation flags.)doc"
+        )
+        .def_prop_ro(
+            "tileset_index", &TileLayer::Tile::getTilesetIndex,
+            R"doc(Index of the tileset used by this tile.)doc"
+        );
+    nb::bind_vector<std::vector<TileLayer::Tile>>(tileLayerClass, "TileLayerTileList");
 
-    py::classh<TileLayer::TileResult>(tileLayerClass, "TileResult", R"doc(
+    nb::class_<TileLayer::TileResult>(tileLayerClass, "TileResult", R"doc(
 TileResult bundles a `Tile` with its world-space `Rect`.
 
 Attributes:
     tile (Tile): The tile entry.
     rect (Rect): The world-space rectangle covered by the tile.
     )doc")
-        .def_readonly("tile", &TileLayer::TileResult::tile, R"doc(
+        .def_ro("tile", &TileLayer::TileResult::tile, R"doc(
 The tile entry.
     )doc")
-        .def_readonly("rect", &TileLayer::TileResult::rect, R"doc(
+        .def_ro("rect", &TileLayer::TileResult::rect, R"doc(
 World-space rectangle covered by the tile.
     )doc");
 
     tileLayerClass
-        .def_property(
+        .def_prop_rw(
             "opacity", &TileLayer::getOpacity, &TileLayer::setOpacity,
             R"doc(Layer opacity from 0.0 to 1.0.)doc"
         )
-        .def_property_readonly(
-            "tiles", &TileLayer::getTiles, py::return_value_policy::reference_internal,
+        .def_prop_ro(
+            "tiles", &TileLayer::getTiles, nb::rv_policy::reference_internal,
             R"doc(TileLayerTileList of tiles in the layer grid.)doc"
         )
 
-        .def("get_from_area", &TileLayer::getFromArea, py::arg("area"), R"doc(
+        .def("get_from_area", &TileLayer::getFromArea, "area"_a, R"doc(
 Return tiles intersecting a Rect area.
 
 Args:
@@ -1226,12 +1220,12 @@ Returns:
         )doc")
         .def(
             "get_from_point",
-            [](const TileLayer& self, const Vec2& position) -> py::object
+            [](const TileLayer& self, const Vec2& position) -> nb::object
             {
                 const auto result = self.getFromPoint(position);
-                return result.has_value() ? py::cast(result.value()) : py::none();
+                return result.has_value() ? nb::cast(result.value()) : nb::none();
             },
-            py::arg("position"), R"doc(
+            "position"_a, R"doc(
 Return the tile at a given world position.
 
 Args:
@@ -1246,7 +1240,7 @@ Draw the tile layer.
         )doc");
 
     // ----- MapObject -----
-    py::classh<TextProperties>(subTilemap, "TextProperties", R"doc(
+    nb::class_<TextProperties>(subTilemap, "TextProperties", R"doc(
 TextProperties holds styling for text objects on the map.
 
 Attributes:
@@ -1262,41 +1256,41 @@ Attributes:
     align (Align): Horizontal alignment.
     text (str): The text content.
     )doc")
-        .def_readwrite("font_family", &TextProperties::fontFamily, R"doc(
+        .def_rw("font_family", &TextProperties::fontFamily, R"doc(
 Font family name.
     )doc")
-        .def_readwrite("pixel_size", &TextProperties::pixelSize, R"doc(
+        .def_rw("pixel_size", &TextProperties::pixelSize, R"doc(
 Font size in pixels.
     )doc")
-        .def_readwrite("wrap", &TextProperties::wrap, R"doc(
+        .def_rw("wrap", &TextProperties::wrap, R"doc(
 Whether text wrapping is enabled.
     )doc")
-        .def_readwrite("color", &TextProperties::color, R"doc(
+        .def_rw("color", &TextProperties::color, R"doc(
 Text color.
     )doc")
-        .def_readwrite("bold", &TextProperties::bold, R"doc(
+        .def_rw("bold", &TextProperties::bold, R"doc(
 Bold style flag.
     )doc")
-        .def_readwrite("italic", &TextProperties::italic, R"doc(
+        .def_rw("italic", &TextProperties::italic, R"doc(
 Italic style flag.
     )doc")
-        .def_readwrite("underline", &TextProperties::underline, R"doc(
+        .def_rw("underline", &TextProperties::underline, R"doc(
 Underline style flag.
     )doc")
-        .def_readwrite("strikethrough", &TextProperties::strikethrough, R"doc(
+        .def_rw("strikethrough", &TextProperties::strikethrough, R"doc(
 Strikethrough style flag.
     )doc")
-        .def_readwrite("kerning", &TextProperties::kerning, R"doc(
+        .def_rw("kerning", &TextProperties::kerning, R"doc(
 Kerning enabled flag.
     )doc")
-        .def_readwrite("align", &TextProperties::align, R"doc(
+        .def_rw("align", &TextProperties::align, R"doc(
 Horizontal text alignment.
     )doc")
-        .def_readwrite("text", &TextProperties::text, R"doc(
+        .def_rw("text", &TextProperties::text, R"doc(
 Text content.
     )doc");
 
-    auto mapObjectClass = py::classh<MapObject>(subTilemap, "MapObject", R"doc(
+    auto mapObjectClass = nb::class_<MapObject>(subTilemap, "MapObject", R"doc(
 MapObject represents a placed object on an object layer.
 
 Attributes:
@@ -1312,7 +1306,7 @@ Attributes:
     text (TextProperties): Text properties when shape is text.
     )doc");
 
-    py::native_enum<tmx::Object::Shape>(mapObjectClass, "ShapeType", "enum.IntEnum", R"doc(
+    nb::enum_<tmx::Object::Shape>(mapObjectClass, "ShapeType", R"doc(
 TMX object shape types.
     )doc")
         .value("RECTANGLE", tmx::Object::Shape::Rectangle, "Rectangle shape")
@@ -1320,46 +1314,44 @@ TMX object shape types.
         .value("POINT", tmx::Object::Shape::Point, "Point shape")
         .value("POLYGON", tmx::Object::Shape::Polygon, "Polygon shape")
         .value("POLYLINE", tmx::Object::Shape::Polyline, "Polyline shape")
-        .value("TEXT", tmx::Object::Shape::Text, "Text object")
-        .finalize();
+        .value("TEXT", tmx::Object::Shape::Text, "Text object");
 
     mapObjectClass
-        .def_readwrite("transform", &MapObject::transform, R"doc(
+        .def_rw("transform", &MapObject::transform, R"doc(
 Transform component for the object.
     )doc")
-        .def_readwrite("is_visible", &MapObject::visible, R"doc(
+        .def_rw("is_visible", &MapObject::visible, R"doc(
 Visibility flag.
     )doc")
 
-        .def_property_readonly("uid", &MapObject::getUID, R"doc(
+        .def_prop_ro("uid", &MapObject::getUID, R"doc(
 Unique object identifier.
     )doc")
-        .def_property_readonly("name", &MapObject::getName, R"doc(
+        .def_prop_ro("name", &MapObject::getName, R"doc(
 Object name.
     )doc")
-        .def_property_readonly("type", &MapObject::getType, R"doc(
+        .def_prop_ro("type", &MapObject::getType, R"doc(
 Object type string.
     )doc")
-        .def_property_readonly("rect", &MapObject::getRect, R"doc(
+        .def_prop_ro("rect", &MapObject::getRect, R"doc(
 Object bounding rectangle.
     )doc")
-        .def_property_readonly("tile_id", &MapObject::getTileID, R"doc(
+        .def_prop_ro("tile_id", &MapObject::getTileID, R"doc(
 Associated tile id when the object is a tile.
     )doc")
-        .def_property_readonly("shape_type", &MapObject::getShapeType, R"doc(
+        .def_prop_ro("shape_type", &MapObject::getShapeType, R"doc(
 Shape type enum for the object.
     )doc")
-        .def_property_readonly("vertices", &MapObject::getVertices, R"doc(
+        .def_prop_ro("vertices", &MapObject::getVertices, R"doc(
 List of vertices for polygon/polyline shapes.
     )doc")
-        .def_property_readonly("text", &MapObject::getTextProperties, R"doc(
+        .def_prop_ro("text", &MapObject::getTextProperties, R"doc(
 Text properties if the object is text.
     )doc");
-
-    py::bind_vector<std::vector<MapObject>>(subTilemap, "MapObjectList");
+    nb::bind_vector<std::vector<MapObject>>(subTilemap, "MapObjectList");
 
     // ----- ObjectGroup -----
-    auto objGroupClass = py::classh<ObjectGroup, Layer>(subTilemap, "ObjectGroup", R"doc(
+    auto objGroupClass = nb::class_<ObjectGroup, Layer>(subTilemap, "ObjectGroup", R"doc(
 ObjectGroup is a layer containing placed MapObjects.
 
 Attributes:
@@ -1372,25 +1364,24 @@ Methods:
     draw: Draw the object group.
     )doc");
 
-    py::native_enum<tmx::ObjectGroup::DrawOrder>(objGroupClass, "DrawOrder", "enum.IntEnum", R"doc(
+    nb::enum_<tmx::ObjectGroup::DrawOrder>(objGroupClass, "DrawOrder", R"doc(
 Object drawing order for object layers.
     )doc")
         .value("INDEX", tmx::ObjectGroup::DrawOrder::Index, "Draw by object index")
-        .value("TOP_DOWN", tmx::ObjectGroup::DrawOrder::TopDown, "Draw top-down by Y")
-        .finalize();
+        .value("TOP_DOWN", tmx::ObjectGroup::DrawOrder::TopDown, "Draw top-down by Y");
 
     objGroupClass
-        .def_readwrite("color", &ObjectGroup::color, R"doc(Tint color for non-tile objects.)doc")
+        .def_rw("color", &ObjectGroup::color, R"doc(Tint color for non-tile objects.)doc")
 
-        .def_property("opacity", &ObjectGroup::getOpacity, &ObjectGroup::setOpacity, R"doc(
+        .def_prop_rw("opacity", &ObjectGroup::getOpacity, &ObjectGroup::setOpacity, R"doc(
 Layer opacity from 0.0 to 1.0.
     )doc")
 
-        .def_property_readonly("draw_order", &ObjectGroup::getDrawOrder, R"doc(
+        .def_prop_ro("draw_order", &ObjectGroup::getDrawOrder, R"doc(
 Drawing order for objects in the group.
     )doc")
-        .def_property_readonly(
-            "objects", &ObjectGroup::getObjects, py::return_value_policy::reference_internal,
+        .def_prop_ro(
+            "objects", &ObjectGroup::getObjects, nb::rv_policy::reference_internal,
             R"doc(MapObjectList of objects in the group.)doc"
         )
 
@@ -1399,7 +1390,7 @@ Draw the object group.
         )doc");
 
     // ----- ImageLayer -----
-    py::classh<ImageLayer, Layer>(subTilemap, "ImageLayer", R"doc(
+    nb::class_<ImageLayer, Layer>(subTilemap, "ImageLayer", R"doc(
 ImageLayer displays a single image as a layer.
 
 Attributes:
@@ -1409,11 +1400,11 @@ Attributes:
 Methods:
     draw: Draw the image layer.
     )doc")
-        .def_property("opacity", &ImageLayer::getOpacity, &ImageLayer::setOpacity, R"doc(
+        .def_prop_rw("opacity", &ImageLayer::getOpacity, &ImageLayer::setOpacity, R"doc(
 Layer opacity from 0.0 to 1.0.
     )doc")
 
-        .def_property_readonly("texture", &ImageLayer::getTexture, R"doc(
+        .def_prop_ro("texture", &ImageLayer::getTexture, R"doc(
 Texture used by the image layer.
     )doc")
 
@@ -1422,7 +1413,7 @@ Draw the image layer.
         )doc");
 
     // ----- Map -----
-    py::classh<Map>(subTilemap, "Map", R"doc(
+    nb::class_<Map>(subTilemap, "Map", R"doc(
 A TMX map with access to its layers and tilesets.
 
 Attributes:
@@ -1446,66 +1437,59 @@ Methods:
     draw: Draw all layers.
     get_layer: Get a layer by name.
     )doc")
-        .def(py::init<>())
+        .def(nb::init<>())
 
-        .def_readwrite("background_color", &Map::backgroundColor, R"doc(Map background color.)doc")
+        .def_rw("background_color", &Map::backgroundColor, R"doc(Map background color.)doc")
 
-        .def_property_readonly(
-            "orientation", &Map::getOrientation, R"doc(Map orientation enum.)doc"
-        )
-        .def_property_readonly(
-            "render_order", &Map::getRenderOrder, R"doc(Tile render order enum.)doc"
-        )
-        .def_property_readonly("map_size", &Map::getMapSize, R"doc(Map dimensions in tiles.)doc")
-        .def_property_readonly("tile_size", &Map::getTileSize, R"doc(Size of tiles in pixels.)doc")
-        .def_property_readonly("bounds", &Map::getBounds, R"doc(Map bounds in pixels.)doc")
-        .def_property_readonly(
+        .def_prop_ro("orientation", &Map::getOrientation, R"doc(Map orientation enum.)doc")
+        .def_prop_ro("render_order", &Map::getRenderOrder, R"doc(Tile render order enum.)doc")
+        .def_prop_ro("map_size", &Map::getMapSize, R"doc(Map dimensions in tiles.)doc")
+        .def_prop_ro("tile_size", &Map::getTileSize, R"doc(Size of tiles in pixels.)doc")
+        .def_prop_ro("bounds", &Map::getBounds, R"doc(Map bounds in pixels.)doc")
+        .def_prop_ro(
             "hex_side_length", &Map::getHexSideLength, R"doc(Hex side length for hex maps.)doc"
         )
-        .def_property_readonly(
+        .def_prop_ro(
             "stagger_axis", &Map::getStaggerAxis,
             R"doc(Stagger axis enum for staggered/hex maps.)doc"
         )
-        .def_property_readonly(
+        .def_prop_ro(
             "stagger_index", &Map::getStaggerIndex,
             R"doc(Stagger index enum for staggered/hex maps.)doc"
         )
-        .def_property_readonly(
+        .def_prop_ro(
             "tile_sets", &Map::getTileSets, R"doc(TileSetList of tilesets used by the map.)doc"
         )
-        .def_property_readonly(
-            "all_layers", &Map::getAllLayers, py::return_value_policy::reference_internal,
+        .def_prop_ro(
+            "all_layers", &Map::getAllLayers, nb::rv_policy::reference_internal,
             R"doc(LayerList of layers in the map.)doc"
         )
-        .def_property_readonly(
-            "tile_layers", &Map::getTileLayers, py::return_value_policy::reference_internal,
+        .def_prop_ro(
+            "tile_layers", &Map::getTileLayers, nb::rv_policy::reference_internal,
             R"doc(List of tile layers in the map.)doc"
         )
-        .def_property_readonly(
-            "object_groups", &Map::getObjectGroups, py::return_value_policy::reference_internal,
+        .def_prop_ro(
+            "object_groups", &Map::getObjectGroups, nb::rv_policy::reference_internal,
             R"doc(List of object group layers in the map.)doc"
         )
-        .def_property_readonly(
-            "image_layers", &Map::getImageLayers, py::return_value_policy::reference_internal,
+        .def_prop_ro(
+            "image_layers", &Map::getImageLayers, nb::rv_policy::reference_internal,
             R"doc(List of image layers in the map.)doc"
         )
 
-        .def("load", &Map::load, py::arg("tmx_path"), R"doc(
+        .def("load", &Map::load, "tmx_path"_a, R"doc(
 Load a TMX file from path.
 
 Args:
     tmx_path (str): Path to the TMX file to load.
         )doc")
         .def("draw", &Map::draw, R"doc(Draw all layers.)doc")
-        .def(
-            "get_layer", &Map::getLayer, py::arg("name"),
-            py::return_value_policy::reference_internal, R"doc(
+        .def("get_layer", &Map::getLayer, "name"_a, nb::rv_policy::reference_internal, R"doc(
 Get a layer by its name. Will return None if not found.
 
 Args:
     name (str): Name of the layer to retrieve.
-        )doc"
-        );
+        )doc");
 }
 }  // namespace tilemap
 }  // namespace kn

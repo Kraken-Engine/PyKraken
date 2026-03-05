@@ -1,8 +1,11 @@
 #include "Draw.hpp"
 
-#include <pybind11/stl.h>
+#include <nanobind/stl/optional.h>
+#include <nanobind/stl/shared_ptr.h>
+#include <nanobind/stl/vector.h>
 
 #include <algorithm>
+#include <array>
 #include <mapbox/earcut.hpp>
 #include <sstream>
 
@@ -235,7 +238,7 @@ void points(const std::vector<Vec2>& points, const Color& color)
 
 // Accept a NumPy ndarray with shape (N,2) and dtype float64 for the fastest path.
 void pointsFromNDArray(
-    const py::array_t<double, py::array::c_style | py::array::forcecast>& arr, const Color& color
+    nb::ndarray<const double, nb::ndim<2>, nb::c_contig, nb::device::cpu> arr, const Color& color
 )
 {
     if (!rend)
@@ -244,11 +247,10 @@ void pointsFromNDArray(
     if (color.a == 0)
         return;
 
-    const auto info = arr.request();
-    if (info.ndim != 2 || info.shape[1] != 2)
+    if (arr.ndim() != 2 || arr.shape(1) != 2)
         throw std::invalid_argument("Expected array shape (N,2)");
 
-    const auto n = static_cast<size_t>(info.shape[0]);
+    const auto n = static_cast<size_t>(arr.shape(0));
     if (n == 0)
         return;
 
@@ -258,7 +260,7 @@ void pointsFromNDArray(
     std::vector<SDL_FPoint> sdlPoints;
     sdlPoints.reserve(n);
 
-    const auto* data = static_cast<double*>(info.ptr);
+    const auto* data = arr.data();
     const Vec2 targetRes = renderer::getTargetResolution();
     const Vec2 cameraPos = camera::getActivePos();
     for (size_t i = 0; i < n; ++i)
@@ -834,19 +836,6 @@ void sector(
     const auto fColor = static_cast<SDL_FColor>(color);
     const int segments = std::max(1, numSegments);
 
-    const auto buildArc = [&](const double radius) -> std::vector<SDL_FPoint>
-    {
-        std::vector<SDL_FPoint> arc;
-        arc.reserve(static_cast<size_t>(segments) + 1);
-        for (int i = 0; i <= segments; ++i)
-        {
-            const double t = static_cast<double>(i) / static_cast<double>(segments);
-            const double theta = startAngle + (endAngle - startAngle) * t;
-            arc.push_back(static_cast<SDL_FPoint>(center + Vec2(cos(theta), sin(theta)) * radius));
-        }
-        return arc;
-    };
-
     if (thickness <= 0.0 || thickness >= circle.radius)
     {
         // Filled sector (pie slice)
@@ -1394,21 +1383,17 @@ void _init(SDL_Renderer* renderer)
     rend = renderer;
 }
 
-void _bind(py::module_& module)
+void _bind(nb::module_& module)
 {
-    py::classh<Vertex>(module, "Vertex", "A vertex with position, color, and texture coordinates.")
-        .def(
-            py::init(
-                [](const Vec2& position, py::object colorObj, py::object texCoordObj) -> Vertex
-                {
-                    const auto color = colorObj.is_none() ? WHITE : colorObj.cast<Color>();
-                    const auto texCoord = texCoordObj.is_none() ? Vec2::ZERO()
-                                                                : texCoordObj.cast<Vec2>();
+    using namespace nb::literals;
 
-                    return {position, color, texCoord};
-                }
-            ),
-            py::arg("position"), py::arg("color") = py::none(), py::arg("tex_coord") = py::none(),
+    nb::class_<Vertex>(module, "Vertex", "A vertex with position, color, and texture coordinates.")
+        .def(
+            "__init__",
+            [](Vertex* self, const Vec2& position, std::optional<Color> color,
+               std::optional<Vec2> texCoord) -> void
+            { new (self) Vertex{position, color.value_or(WHITE), texCoord.value_or(Vec2{})}; },
+            "position"_a, "color"_a = nb::none(), "tex_coord"_a = nb::none(),
             R"doc(
 Create a new Vertex.
 
@@ -1418,9 +1403,9 @@ Args:
     tex_coord (Vec2 | None): The texture coordinate of the vertex. Defaults to (0, 0).
             )doc"
         )
-        .def_readwrite("position", &Vertex::pos, "Position of the vertex in world space.")
-        .def_readwrite("color", &Vertex::color, "Color of the vertex.")
-        .def_readwrite("tex_coord", &Vertex::texCoord, "Texture coordinate of the vertex.")
+        .def_rw("position", &Vertex::pos, "Position of the vertex in world space.")
+        .def_rw("color", &Vertex::color, "Color of the vertex.")
+        .def_rw("tex_coord", &Vertex::texCoord, "Texture coordinate of the vertex.")
         .def(
             "__repr__",
             [](const Vertex& self)
@@ -1436,7 +1421,7 @@ Args:
 
     auto subDraw = module.def_submodule("draw", "Functions for drawing shape objects");
 
-    subDraw.def("point", &point, py::arg("point"), py::arg("color"), R"doc(
+    subDraw.def("point", &point, "point"_a, "color"_a, R"doc(
 Draw a single point to the renderer.
 
 Args:
@@ -1447,7 +1432,7 @@ Raises:
     RuntimeError: If point rendering fails.
     )doc");
 
-    subDraw.def("points", &points, py::arg("points"), py::arg("color"), R"doc(
+    subDraw.def("points", &points, "points"_a, "color"_a, R"doc(
 Batch draw an array of points to the renderer.
 
 Args:
@@ -1459,7 +1444,7 @@ Raises:
     )doc");
 
     subDraw.def(
-        "points_from_ndarray", &pointsFromNDArray, py::arg("points"), py::arg("color"),
+        "points_from_ndarray", &pointsFromNDArray, "points"_a, "color"_a,
         R"doc(
 Batch draw points from a NumPy array.
 
@@ -1478,8 +1463,7 @@ Raises:
     );
 
     subDraw.def(
-        "circle", &circle, py::arg("circle"), py::arg("color"), py::arg("thickness") = 0,
-        py::arg("num_segments") = 24, R"doc(
+        "circle", &circle, "circle"_a, "color"_a, "thickness"_a = 0, "num_segments"_a = 24, R"doc(
 Draw a circle to the renderer.
 
 Args:
@@ -1491,8 +1475,8 @@ Args:
     );
 
     subDraw.def(
-        "circles", &circles, py::arg("circles"), py::arg("color"), py::arg("thickness") = 0,
-        py::arg("num_segments") = 24, R"doc(
+        "circles", &circles, "circles"_a, "color"_a, "thickness"_a = 0, "num_segments"_a = 24,
+        R"doc(
 Draw an array of circles in bulk to the renderer.
 
 Args:
@@ -1504,8 +1488,8 @@ Args:
     );
 
     subDraw.def(
-        "capsule", &capsule, py::arg("capsule"), py::arg("color"), py::arg("thickness") = 0,
-        py::arg("num_segments") = 24, R"doc(
+        "capsule", &capsule, "capsule"_a, "color"_a, "thickness"_a = 0, "num_segments"_a = 24,
+        R"doc(
 Draw a capsule to the renderer.
 
 Args:
@@ -1517,8 +1501,8 @@ Args:
     );
 
     subDraw.def(
-        "capsules", &capsules, py::arg("capsules"), py::arg("color"), py::arg("thickness") = 0,
-        py::arg("num_segments") = 24, R"doc(
+        "capsules", &capsules, "capsules"_a, "color"_a, "thickness"_a = 0, "num_segments"_a = 24,
+        R"doc(
 Draw an array of capsules in bulk to the renderer.
 
 Args:
@@ -1530,8 +1514,8 @@ Args:
     );
 
     subDraw.def(
-        "ellipse", &ellipse, py::arg("bounds"), py::arg("color"), py::arg("thickness") = 0.0,
-        py::arg("num_segments") = 24, R"doc(
+        "ellipse", &ellipse, "bounds"_a, "color"_a, "thickness"_a = 0.0, "num_segments"_a = 24,
+        R"doc(
 Draw an ellipse to the renderer.
 
 Args:
@@ -1543,8 +1527,8 @@ Args:
     );
 
     subDraw.def(
-        "ellipses", &ellipses, py::arg("bounds"), py::arg("color"), py::arg("thickness") = 0.0,
-        py::arg("num_segments") = 24, R"doc(
+        "ellipses", &ellipses, "bounds"_a, "color"_a, "thickness"_a = 0.0, "num_segments"_a = 24,
+        R"doc(
 Draw an array of ellipses in bulk to the renderer.
 
 Args:
@@ -1556,7 +1540,7 @@ Args:
     );
 
     subDraw.def(
-        "line", &line, py::arg("line"), py::arg("color"), py::arg("thickness") = 1.0,
+        "line", &line, "line"_a, "color"_a, "thickness"_a = 1.0,
         R"doc(
 Draw a line to the renderer.
 
@@ -1568,7 +1552,7 @@ Args:
     );
 
     subDraw.def(
-        "lines", &lines, py::arg("lines"), py::arg("color"), py::arg("thickness") = 1.0,
+        "lines", &lines, "lines"_a, "color"_a, "thickness"_a = 1.0,
         R"doc(
 Batch draw an array of lines to the renderer.
 
@@ -1580,10 +1564,9 @@ Args:
     );
 
     subDraw.def(
-        "rect", &rect, py::arg("rect"), py::arg("color"), py::arg("thickness") = 0,
-        py::arg("border_radius") = 0.0, py::arg("radius_top_left") = -1.0,
-        py::arg("radius_top_right") = -1.0, py::arg("radius_bottom_right") = -1.0,
-        py::arg("radius_bottom_left") = -1.0,
+        "rect", &rect, "rect"_a, "color"_a, "thickness"_a = 0, "border_radius"_a = 0.0,
+        "radius_top_left"_a = -1.0, "radius_top_right"_a = -1.0, "radius_bottom_right"_a = -1.0,
+        "radius_bottom_left"_a = -1.0,
         R"doc(
 Draw a rectangle to the renderer.
 
@@ -1600,10 +1583,9 @@ Args:
     );
 
     subDraw.def(
-        "rects", &rects, py::arg("rects"), py::arg("color"), py::arg("thickness") = 0,
-        py::arg("border_radius") = 0.0, py::arg("radius_top_left") = -1.0,
-        py::arg("radius_top_right") = -1.0, py::arg("radius_bottom_right") = -1.0,
-        py::arg("radius_bottom_left") = -1.0,
+        "rects", &rects, "rects"_a, "color"_a, "thickness"_a = 0, "border_radius"_a = 0.0,
+        "radius_top_left"_a = -1.0, "radius_top_right"_a = -1.0, "radius_bottom_right"_a = -1.0,
+        "radius_bottom_left"_a = -1.0,
         R"doc(
 Batch draw an array of rectangles to the renderer.
 
@@ -1620,7 +1602,7 @@ Args:
     );
 
     subDraw.def(
-        "polygon", &polygon, py::arg("polygon"), py::arg("color"), py::arg("filled") = true,
+        "polygon", &polygon, "polygon"_a, "color"_a, "filled"_a = true,
         R"doc(
 Draw a polygon to the renderer.
 
@@ -1632,7 +1614,7 @@ Args:
     );
 
     subDraw.def(
-        "polygons", &polygons, py::arg("polygons"), py::arg("color"), py::arg("filled") = true,
+        "polygons", &polygons, "polygons"_a, "color"_a, "filled"_a = true,
         R"doc(
 Draw an array of polygons in bulk to the renderer.
 
@@ -1644,17 +1626,7 @@ Args:
     );
 
     subDraw.def(
-        "geometry",
-        [](const std::shared_ptr<Texture>& texture, const std::vector<Vertex>& vertices,
-           const py::object& indicesObj)
-        {
-            std::vector<int> indices;
-            if (!indicesObj.is_none())
-                indices = indicesObj.cast<std::vector<int>>();
-
-            geometry(texture, vertices, indices);
-        },
-        py::arg("texture").none(true), py::arg("vertices"), py::arg("indices") = py::none(),
+        "geometry", &geometry, "texture"_a.none(), "vertices"_a, "indices"_a = std::vector<int>{},
         R"doc(
 Draw arbitrary geometry using vertices and optional indices.
 
@@ -1663,12 +1635,12 @@ Args:
     vertices (Sequence[Vertex]): A list of Vertex objects.
     indices (Sequence[int] | None): A list of indices defining the primitives.
                                    If None or empty, vertices are drawn sequentially.
-    )doc"
+        )doc"
     );
 
     subDraw.def(
-        "bezier", &bezier, py::arg("control_points"), py::arg("color"), py::arg("thickness") = 1.0,
-        py::arg("num_segments") = 24, R"doc(
+        "bezier", &bezier, "control_points"_a, "color"_a, "thickness"_a = 1.0,
+        "num_segments"_a = 24, R"doc(
 Draw a Bezier curve with 3 or 4 control points.
 
 Args:
@@ -1680,8 +1652,8 @@ Args:
     );
 
     subDraw.def(
-        "sector", &sector, py::arg("circle"), py::arg("start_angle"), py::arg("end_angle"),
-        py::arg("color"), py::arg("thickness") = 0.0, py::arg("num_segments") = 24,
+        "sector", &sector, "circle"_a, "start_angle"_a, "end_angle"_a, "color"_a,
+        "thickness"_a = 0.0, "num_segments"_a = 24,
         R"doc(
 Draw a circular sector or arc.
 
@@ -1696,8 +1668,8 @@ Args:
     );
 
     subDraw.def(
-        "polyline", &polyline, py::arg("points"), py::arg("color"), py::arg("thickness") = 1.0,
-        py::arg("closed") = false, R"doc(
+        "polyline", &polyline, "points"_a, "color"_a, "thickness"_a = 1.0, "closed"_a = false,
+        R"doc(
 Draw connected line segments through a sequence of points.
 
 Args:

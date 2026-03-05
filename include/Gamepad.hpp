@@ -1,11 +1,12 @@
 #pragma once
 
 #include <SDL3/SDL.h>
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 #include <unordered_map>
+#include <vector>
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn
 {
@@ -22,8 +23,6 @@ struct GamepadState
 
 namespace gamepad
 {
-void _bind(py::module_& module);
-
 bool isPressed(SDL_GamepadButton button, int slot = 0);
 
 bool isJustPressed(SDL_GamepadButton button, int slot = 0);
@@ -47,5 +46,7 @@ const std::vector<int> getConnectedSlots();
 void _clearStates();
 
 void _handleEvents(const SDL_Event& sdlEvent, const Event& e);
+
+void _bind(nb::module_& module);
 }  // namespace gamepad
 }  // namespace kn

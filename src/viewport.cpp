@@ -1,7 +1,6 @@
 #include "Viewport.hpp"
 
-#include <pybind11/native_enum.h>
-#include <pybind11/stl.h>
+#include <nanobind/stl/vector.h>
 
 #include "Rect.hpp"
 #include "Renderer.hpp"
@@ -80,19 +79,20 @@ void unset()
         throw std::runtime_error(std::string("viewport::unset failed: ") + SDL_GetError());
 }
 
-void _bind(py::module_& module)
+void _bind(nb::module_& module)
 {
-    py::native_enum<ViewportMode>(module, "ViewportMode", "enum.IntEnum", R"doc(
+    using namespace nb::literals;
+
+    nb::enum_<ViewportMode>(module, "ViewportMode", R"doc(
 Viewport layout mode for split-screen layouts.
     )doc")
         .value("VERTICAL", ViewportMode::VERTICAL, "Split viewports vertically")
-        .value("HORIZONTAL", ViewportMode::HORIZONTAL, "Split viewports horizontally")
-        .finalize();
+        .value("HORIZONTAL", ViewportMode::HORIZONTAL, "Split viewports horizontally");
 
-    py::module_ subViewport = module.def_submodule("viewport", "Viewport management functions");
+    auto subViewport = module.def_submodule("viewport", "Viewport management functions");
 
     subViewport.def(
-        "layout", &layout, py::arg("count"), py::arg("mode") = ViewportMode::VERTICAL,
+        "layout", &layout, "count"_a, "mode"_a = ViewportMode::VERTICAL,
         R"doc(
 Layout the screen into multiple viewports.
 The viewports are created with the current renderer target resolution in mind.
@@ -107,7 +107,7 @@ Returns:
                     )doc"
     );
 
-    subViewport.def("set", &set, py::arg("rect"), R"doc(
+    subViewport.def("set", &set, "rect"_a, R"doc(
 Set the current viewport to the given rectangle.
 
 Args:

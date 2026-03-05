@@ -1,14 +1,14 @@
 #pragma once
 
 #include <SDL3/SDL.h>
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 #include <string>
 
 #include "Math.hpp"
 #include "Rect.hpp"
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn
 {
@@ -83,6 +83,6 @@ class Texture
 
 namespace texture
 {
-void _bind(const py::module_& module);
+void _bind(const nb::module_& module);
 }  // namespace texture
 }  // namespace kn

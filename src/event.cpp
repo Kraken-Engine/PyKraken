@@ -1,7 +1,9 @@
 #include "Event.hpp"
 
+#include <nanobind/stl/string.h>
+#include <nanobind/stl/vector.h>
+
 #include <SDL3/SDL.h>
-#include <pybind11/stl.h>
 
 #include <unordered_map>
 
@@ -18,14 +20,14 @@ Event::Event(const uint32_t type)
 {
 }
 
-py::object Event::getAttr(const std::string& name) const
+nb::object Event::getAttr(const std::string& name) const
 {
     if (name == "type")
-        return py::int_(type);
+        return nb::int_(type);
     if (data.contains(name))
         return data[name.c_str()];
 
-    throw py::attribute_error("Attribute '" + name + "' not found");
+    throw nb::attribute_error(("Attribute '" + name + "' not found").c_str());
 }
 
 namespace event
@@ -126,9 +128,9 @@ const std::vector<Event> poll()
         case SDL_EVENT_CLIPBOARD_UPDATE:
             e.data["num_mime_types"] = event.clipboard.num_mime_types;
             {
-                py::list mime_types;
+                nb::list mime_types;
                 for (int i = 0; i < event.clipboard.num_mime_types; ++i)
-                    mime_types.append(py::str(event.clipboard.mime_types[i]));
+                    mime_types.append(nb::str(event.clipboard.mime_types[i]));
                 e.data["mime_types"] = mime_types;
             }
             break;
@@ -150,9 +152,9 @@ const std::vector<Event> poll()
         case SDL_EVENT_SENSOR_UPDATE:
             e.data["which"] = event.sensor.which;
             {
-                py::list sensor_data;
+                nb::list sensor_data;
                 for (int i = 0; i < 6; ++i)
-                    sensor_data.append(py::float_(event.sensor.data[i]));
+                    sensor_data.append(nb::float_(event.sensor.data[i]));
                 e.data["data"] = sensor_data;
             }
             break;
@@ -313,16 +315,18 @@ void unschedule(const Event& event)
     }
 }
 
-void _bind(py::module_& module)
+void _bind(nb::module_& module)
 {
-    py::classh<Event>(module, "Event", R"doc(
+    using namespace nb::literals;
+
+    nb::class_<Event>(module, "Event", R"doc(
 Represents a single input event such as keyboard, mouse, or gamepad activity.
 
 Attributes:
     type (int): Event type. Additional fields are accessed dynamically.
         )doc")
 
-        .def_readonly("type", &Event::type, R"doc(
+        .def_ro("type", &Event::type, R"doc(
 The event type (e.g., KEY_DOWN, MOUSE_BUTTON_UP).
         )doc")
 
@@ -349,7 +353,7 @@ Raises:
     RuntimeError: If registration fails.
         )doc");
 
-    subEvent.def("push", &push, py::arg("event"), R"doc(
+    subEvent.def("push", &push, "event"_a, R"doc(
 Push a custom event to the event queue.
 
 Args:
@@ -361,7 +365,7 @@ Raises:
         )doc");
 
     subEvent.def(
-        "schedule", &schedule, py::arg("event"), py::arg("delay_ms"), py::arg("repeat") = false,
+        "schedule", &schedule, "event"_a, "delay_ms"_a, "repeat"_a = false,
         R"doc(
 Schedule a custom event to be pushed after a delay. Will overwrite any existing timer for the same event.
 
@@ -377,7 +381,7 @@ Raises:
         )doc"
     );
 
-    subEvent.def("unschedule", &unschedule, py::arg("event"), R"doc(
+    subEvent.def("unschedule", &unschedule, "event"_a, R"doc(
 Cancel a scheduled event timer.
 
 Args:

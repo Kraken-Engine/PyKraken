@@ -1,12 +1,12 @@
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 #include <functional>
 
 #include "Math.hpp"
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn
 {
@@ -14,7 +14,7 @@ namespace ease
 {
 using EasingFunction = std::function<double(double)>;
 
-void _bind(py::module_& module);
+void _bind(nb::module_& module);
 
 double linear(double t);
 

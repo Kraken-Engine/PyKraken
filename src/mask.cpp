@@ -1,6 +1,9 @@
 #include "Mask.hpp"
 
-#include <pybind11/stl.h>
+#include <nanobind/stl/unique_ptr.h>
+#include <nanobind/stl/vector.h>
+
+#include <algorithm>
 
 #include "Color.hpp"
 #include "Math.hpp"
@@ -318,19 +321,21 @@ Mask Mask::copy() const
 
 namespace mask
 {
-void _bind(const py::module_& module)
+void _bind(const nb::module_& module)
 {
-    py::classh<Mask>(module, "Mask", R"doc(
+    using namespace nb::literals;
+
+    nb::class_<Mask>(module, "Mask", R"doc(
 A collision mask for pixel-perfect collision detection.
 
 A Mask represents a 2D bitmap, typically used for precise collision detection based on
 non-transparent pixels.
     )doc")
-        .def(py::init(), R"doc(
+        .def(nb::init(), R"doc(
 Create an empty mask with size (0, 0).
         )doc")
         .def(
-            py::init<const Vec2&, bool>(), py::arg("size"), py::arg("filled") = false,
+            nb::init<const Vec2&, bool>(), "size"_a, "filled"_a = false,
             R"doc(
 Create a mask with specified size.
 
@@ -340,8 +345,7 @@ Args:
         )doc"
         )
         .def(
-            py::init<const PixelArray&, uint8_t>(), py::arg("pixel_array"),
-            py::arg("threshold") = 1,
+            nb::init<const PixelArray&, uint8_t>(), "pixel_array"_a, "threshold"_a = 1,
             R"doc(
 Create a mask from a pixel array based on alpha threshold.
 
@@ -354,13 +358,13 @@ Raises:
         )doc"
         )
 
-        .def_property_readonly("width", &Mask::getWidth, R"doc(
+        .def_prop_ro("width", &Mask::getWidth, R"doc(
 The width of the mask in pixels.
     )doc")
-        .def_property_readonly("height", &Mask::getHeight, R"doc(
+        .def_prop_ro("height", &Mask::getHeight, R"doc(
 The height of the mask in pixels.
     )doc")
-        .def_property_readonly("size", &Mask::getSize, R"doc(
+        .def_prop_ro("size", &Mask::getSize, R"doc(
 The size of the mask as a Vec2.
     )doc")
 
@@ -370,7 +374,7 @@ Create a copy of this mask.
 Returns:
     Mask: A new Mask with the same dimensions and pixel data.
         )doc")
-        .def("get_at", &Mask::getAt, py::arg("pos"), R"doc(
+        .def("get_at", &Mask::getAt, "pos"_a, R"doc(
 Get the pixel value at a specific position.
 
 Args:
@@ -379,7 +383,7 @@ Args:
 Returns:
     bool: True if the pixel is solid (above threshold), False otherwise.
         )doc")
-        .def("set_at", &Mask::setAt, py::arg("pos"), py::arg("value"), R"doc(
+        .def("set_at", &Mask::setAt, "pos"_a, "value"_a, R"doc(
 Set the pixel value at a specific position.
 
 Args:
@@ -387,22 +391,7 @@ Args:
     value (bool): The pixel value (True for solid, False for transparent).
         )doc")
         .def(
-            "get_overlap_area",
-            [](const Mask& self, const Mask& other, const py::object& offsetObj) -> int
-            {
-                if (offsetObj.is_none())
-                    return self.getOverlapArea(other);
-
-                try
-                {
-                    return self.getOverlapArea(other, offsetObj.cast<Vec2>());
-                }
-                catch (const py::cast_error&)
-                {
-                    throw py::type_error("Invalid type for 'offset', expected Vec2");
-                }
-            },
-            py::arg("other"), py::arg("offset") = py::none(),
+            "get_overlap_area", &Mask::getOverlapArea, "other"_a, "offset"_a = Vec2{},
             R"doc(
 Get the number of overlapping pixels between this mask and another.
 
@@ -415,22 +404,7 @@ Returns:
         )doc"
         )
         .def(
-            "get_overlap_mask",
-            [](const Mask& self, const Mask& other, const py::object& offsetObj) -> Mask
-            {
-                if (offsetObj.is_none())
-                    return self.getOverlapMask(other, {});
-
-                try
-                {
-                    return self.getOverlapMask(other, offsetObj.cast<Vec2>());
-                }
-                catch (const py::cast_error&)
-                {
-                    throw py::type_error("Invalid type for 'offset', expected Vec2");
-                }
-            },
-            py::arg("other"), py::arg("offset") = py::none(),
+            "get_overlap_mask", &Mask::getOverlapMask, "other"_a, "offset"_a = Vec2{},
             R"doc(
 Get a mask representing the overlapping area between this mask and another.
 
@@ -454,25 +428,7 @@ Invert all pixels in the mask.
 Solid pixels become transparent and transparent pixels become solid.
         )doc")
         .def(
-            "add",
-            [](Mask& self, const Mask& other, const py::object& offsetObj) -> void
-            {
-                if (offsetObj.is_none())
-                {
-                    self.add(other, {});
-                    return;
-                }
-
-                try
-                {
-                    self.add(other, offsetObj.cast<Vec2>());
-                }
-                catch (const py::cast_error&)
-                {
-                    throw py::type_error("Invalid type for 'offset', expected Vec2");
-                }
-            },
-            py::arg("other"), py::arg("offset") = py::none(),
+            "add", &Mask::add, "other"_a, "offset"_a = Vec2{},
             R"doc(
 Add another mask to this mask with an offset.
 
@@ -484,25 +440,7 @@ Args:
         )doc"
         )
         .def(
-            "subtract",
-            [](Mask& self, const Mask& other, const py::object& offsetObj) -> void
-            {
-                if (offsetObj.is_none())
-                {
-                    self.subtract(other, {});
-                    return;
-                }
-
-                try
-                {
-                    self.subtract(other, offsetObj.cast<Vec2>());
-                }
-                catch (const py::cast_error&)
-                {
-                    throw py::type_error("Invalid type for 'offset', expected Vec2");
-                }
-            },
-            py::arg("other"), py::arg("offset") = py::none(),
+            "subtract", &Mask::subtract, "other"_a, "offset"_a = Vec2{},
             R"doc(
 Subtract another mask from this mask with an offset.
 
@@ -541,22 +479,7 @@ Returns:
           Returns empty rect if mask has no solid pixels.
         )doc")
         .def(
-            "collide_mask",
-            [](const Mask& self, const Mask& other, const py::object& offsetObj) -> bool
-            {
-                if (offsetObj.is_none())
-                    return self.collideMask(other, {});
-
-                try
-                {
-                    return self.collideMask(other, offsetObj.cast<Vec2>());
-                }
-                catch (const py::cast_error&)
-                {
-                    throw py::type_error("Invalid type for 'offset', expected Vec2");
-                }
-            },
-            py::arg("other"), py::arg("offset") = py::none(),
+            "collide_mask", &Mask::collideMask, "other"_a, "offset"_a = Vec2{},
             R"doc(
 Check collision between this mask and another mask with an offset.
 
@@ -569,23 +492,7 @@ Returns:
         )doc"
         )
         .def(
-            "get_collision_points",
-            [](const Mask& self, const Mask& other,
-               const py::object& offsetObj) -> std::vector<Vec2>
-            {
-                if (offsetObj.is_none())
-                    return self.getCollisionPoints(other, {});
-
-                try
-                {
-                    return self.getCollisionPoints(other, offsetObj.cast<Vec2>());
-                }
-                catch (const py::cast_error&)
-                {
-                    throw py::type_error("Invalid type for 'offset', expected Vec2");
-                }
-            },
-            py::arg("other"), py::arg("offset") = py::none(),
+            "get_collision_points", &Mask::getCollisionPoints, "other"_a, "offset"_a = Vec2{},
             R"doc(
 Get all points where this mask collides with another mask.
 
@@ -604,22 +511,7 @@ Returns:
     bool: True if the mask is empty, False otherwise.
         )doc")
         .def(
-            "get_pixel_array",
-            [](const Mask& self, const py::object& colorObj) -> std::unique_ptr<PixelArray>
-            {
-                if (colorObj.is_none())
-                    return self.getPixelArray();
-
-                try
-                {
-                    return self.getPixelArray(colorObj.cast<Color>());
-                }
-                catch (const py::cast_error&)
-                {
-                    throw py::type_error("Invalid type for 'color', expected Color");
-                }
-            },
-            py::arg("color") = py::none(),
+            "get_pixel_array", &Mask::getPixelArray, "color"_a = Color{255, 255, 255, 255},
             R"doc(
 Convert the mask to a pixel array with the specified color.
 

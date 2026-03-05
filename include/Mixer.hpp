@@ -1,12 +1,12 @@
 #pragma once
 
 #include <SDL3_mixer/SDL_mixer.h>
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 #include <memory>
 #include <string>
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn
 {
@@ -16,7 +16,7 @@ class Audio;
 class Sample;
 class Stream;
 
-void _bind(py::module_& module);
+void _bind(nb::module_& module);
 void _init();
 void _quit();
 

@@ -1,7 +1,7 @@
-#include <pybind11/stl.h>
-
 #include <algorithm>
 #include <filesystem>
+#include <nanobind/stl/string.h>
+#include <nanobind/stl/vector.h>
 
 #include "AnimationController.hpp"
 #include "Log.hpp"
@@ -213,9 +213,11 @@ void _tick()
         controller->update(delta);
 }
 
-void _bind(const py::module_& module)
+void _bind(const nb::module_& module)
 {
-    py::classh<SheetStrip>(module, "SheetStrip", R"doc(
+    using namespace nb::literals;
+
+    nb::class_<SheetStrip>(module, "SheetStrip", R"doc(
 A descriptor for one horizontal strip (row) in a sprite sheet.
 
 Defines a single animation within a sprite sheet by specifying the animation name,
@@ -224,8 +226,7 @@ per second (FPS).
     )doc")
 
         .def(
-            py::init<const std::string&, int, double>(), py::arg("name"), py::arg("frame_count"),
-            py::arg("fps"), R"doc(
+            nb::init<const std::string&, int, double>(), "name"_a, "frame_count"_a, "fps"_a, R"doc(
 Create a sprite sheet strip definition.
 
 Args:
@@ -235,13 +236,13 @@ Args:
              )doc"
         )
 
-        .def_readwrite("name", &SheetStrip::name, R"doc(
+        .def_rw("name", &SheetStrip::name, R"doc(
 The unique name identifier for this animation strip.
 
 Type:
     str: The animation name used to reference this strip.
         )doc")
-        .def_readwrite("frame_count", &SheetStrip::frameCount, R"doc(
+        .def_rw("frame_count", &SheetStrip::frameCount, R"doc(
 The number of frames in this animation strip.
 
 Specifies how many frames to extract from the horizontal strip in the sprite sheet,
@@ -250,7 +251,7 @@ reading from left to right.
 Type:
     int: The number of frames (must be positive).
         )doc")
-        .def_readwrite("fps", &SheetStrip::fps, R"doc(
+        .def_rw("fps", &SheetStrip::fps, R"doc(
 The playback speed in frames per second.
 
 Determines how fast the animation plays. Higher values result in faster playback.
@@ -259,15 +260,15 @@ Type:
     float: The frames per second for this animation.
         )doc");
 
-    py::classh<AnimationController>(module, "AnimationController", R"doc(
+    nb::class_<AnimationController>(module, "AnimationController", R"doc(
 Manages and controls sprite animations with multiple animation sequences.
 
 The AnimationController handles loading animations from sprite sheets or image folders,
 managing playback state, and providing frame-by-frame animation control.
     )doc")
-        .def(py::init<>())
+        .def(nb::init<>())
 
-        .def_property_readonly(
+        .def_prop_ro(
             "current_animation_name", &AnimationController::getCurrentAnimationName, R"doc(
 The name of the currently active animation.
 
@@ -275,9 +276,9 @@ Returns:
     str: The name of the current animation, or empty string if none is set.
     )doc"
         )
-        .def_property_readonly(
-            "frame_area", &AnimationController::getCurrentClip,
-            py::return_value_policy::reference_internal, R"doc(
+        .def_prop_ro(
+            "frame_area", &AnimationController::getCurrentClip, nb::rv_policy::reference_internal,
+            R"doc(
 The clip area (atlas region) for the current animation frame.
 
 Returns:
@@ -287,7 +288,7 @@ Raises:
     RuntimeError: If no animation is currently set or the animation has no frames.
     )doc"
         )
-        .def_property_readonly("frame_index", &AnimationController::getFrameIndex, R"doc(
+        .def_prop_ro("frame_index", &AnimationController::getFrameIndex, R"doc(
 The current frame index in the animation sequence.
 
 Returns the integer frame index (0-based) of the currently displayed frame.
@@ -295,7 +296,7 @@ Returns the integer frame index (0-based) of the currently displayed frame.
 Returns:
     int: The current frame index.
     )doc")
-        .def_property_readonly("progress", &AnimationController::getProgress, R"doc(
+        .def_prop_ro("progress", &AnimationController::getProgress, R"doc(
 The normalized progress through the current animation.
 
 Returns a value between 0.0 (start) and 1.0 (end) representing how far through
@@ -305,7 +306,7 @@ or triggering events at specific points in the animation.
 Returns:
     float: The animation progress as a value between 0.0 and 1.0.
     )doc")
-        .def_property(
+        .def_prop_rw(
             "playback_speed", &AnimationController::getPlaybackSpeed,
             &AnimationController::setPlaybackSpeed, R"doc(
 The playback speed multiplier for animation timing.
@@ -317,7 +318,7 @@ Returns:
     float: The current playback speed multiplier.
     )doc"
         )
-        .def_property(
+        .def_prop_rw(
             "looping", &AnimationController::isLooping, &AnimationController::setLooping,
             R"doc(
 Whether the animation should loop when it reaches the end.
@@ -327,9 +328,8 @@ Returns:
     )doc"
         )
         .def(
-            "add_sheet", &AnimationController::addSheet, py::arg("frame_width"),
-            py::arg("frame_height"), py::arg("strips"),
-            R"doc(
+            "add_sheet", &AnimationController::addSheet, "frame_width"_a, "frame_height"_a,
+            "strips"_a, R"doc(
 Add animations from a sprite sheet definition.
 
 Divides an atlas into horizontal strips, where each strip represents a different animation.
@@ -346,7 +346,7 @@ Raises:
     RuntimeError: If duplicate animation names exist.
     )doc"
         )
-        .def("set", &AnimationController::set, py::arg("name"), R"doc(
+        .def("set", &AnimationController::set, "name"_a, R"doc(
 Set the current active animation by name without affecting playback state.
 
 Switches to the specified animation while preserving the current frame index and
@@ -358,7 +358,7 @@ Args:
 Raises:
     ValueError: If the specified animation name is not found.
              )doc")
-        .def("play", &AnimationController::play, py::arg("name"), R"doc(
+        .def("play", &AnimationController::play, "name"_a, R"doc(
 Play an animation from the beginning.
 
 Switches to the specified animation, rewinds it to frame 0, and starts playback.
@@ -369,7 +369,7 @@ Args:
 Raises:
     ValueError: If the specified animation name is not found.
              )doc")
-        .def("play_from", &AnimationController::playFrom, py::arg("frame_index"), R"doc(
+        .def("play_from", &AnimationController::playFrom, "frame_index"_a, R"doc(
 Start playing the current animation from a specific frame.
 
 Sets the animation to the specified frame index and resumes playback. Useful for

@@ -1,5 +1,7 @@
 #include "Mouse.hpp"
 
+#include <algorithm>
+
 #include "Camera.hpp"
 #include "Event.hpp"
 #include "Math.hpp"
@@ -13,8 +15,10 @@ constexpr size_t MOUSE_BUTTON_COUNT = 5;
 static bool _mousePressed[MOUSE_BUTTON_COUNT];
 static bool _mouseReleased[MOUSE_BUTTON_COUNT];
 
-void _bind(py::module_& module)
+void _bind(nb::module_& module)
 {
+    using namespace nb::literals;
+
     auto subMouse = module.def_submodule("mouse", "Mouse related functions");
 
     subMouse.def("get_pos", &getPos, R"doc(
@@ -29,7 +33,7 @@ Get the relative mouse movement since the last frame.
 Returns:
     tuple[float, float]: The relative movement of the mouse as (dx, dy).
     )doc");
-    subMouse.def("is_pressed", &isPressed, py::arg("button"), R"doc(
+    subMouse.def("is_pressed", &isPressed, "button"_a, R"doc(
 Check if a mouse button is currently pressed.
 
 Args:
@@ -38,7 +42,7 @@ Args:
 Returns:
     bool: True if the button is currently pressed.
     )doc");
-    subMouse.def("is_just_pressed", &isJustPressed, py::arg("button"), R"doc(
+    subMouse.def("is_just_pressed", &isJustPressed, "button"_a, R"doc(
 Check if a mouse button was pressed this frame.
 
 Args:
@@ -47,7 +51,7 @@ Args:
 Returns:
     bool: True if the button was just pressed.
     )doc");
-    subMouse.def("is_just_released", &isJustReleased, py::arg("button"), R"doc(
+    subMouse.def("is_just_released", &isJustReleased, "button"_a, R"doc(
 Check if a mouse button was released this frame.
 
 Args:
