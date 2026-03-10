@@ -62,7 +62,7 @@ jobs:
             mesa-libEGL-devel mesa-libgbm-devel
             wayland-devel wayland-protocols-devel libxkbcommon-devel
             libpng-devel libjpeg-turbo-devel freetype-devel flac-devel
-            libxcrypt-devel
+            libxcrypt-devel gperf
             autoconf autoconf-archive automake libtool perl
             zip unzip curl tar &&
             git clone --depth 1 https://github.com/microsoft/vcpkg.git /opt/vcpkg &&
