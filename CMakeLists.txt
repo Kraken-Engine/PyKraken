@@ -77,6 +77,7 @@ FetchContent_Declare(tmxlite
   SOURCE_SUBDIR  tmxlite
 )
 set(TMXLITE_STATIC_LIB ON CACHE BOOL "" FORCE)
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "" FORCE)
 FetchContent_MakeAvailable(tmxlite)
 
 FetchContent_Declare(SDL_mixer

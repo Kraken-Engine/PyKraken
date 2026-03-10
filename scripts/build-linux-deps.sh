@@ -23,6 +23,6 @@ cmake -S /tmp/SDL3_ttf -B /tmp/SDL3_ttf/build ${CMAKE_COMMON} -DSDLTTF_VENDORED=
 cmake --build /tmp/SDL3_ttf/build --target install --parallel "${JOBS}"
 
 # box2d
-git clone --depth 1 --branch v3.0.0 https://github.com/erincatto/box2d.git /tmp/box2d
+git clone --depth 1 --branch v3.1.1 https://github.com/erincatto/box2d.git /tmp/box2d
 cmake -S /tmp/box2d -B /tmp/box2d/build ${CMAKE_COMMON} -DBOX2D_SAMPLES=OFF -DBOX2D_UNIT_TESTS=OFF
 cmake --build /tmp/box2d/build --target install --parallel "${JOBS}"
