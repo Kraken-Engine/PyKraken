@@ -570,11 +570,13 @@ A class for animating values over time using easing functions.
 This class supports pausing, resuming, reversing, and checking progress.
     )doc")
 
-        .def(nb::init<EasingFunction, double>(), "ease_func"_a, "duration"_a, R"doc(
+        .def(nb::init<EasingFunction, double>(), "ease_func"_a, "duration"_a,
+            nb::sig("def __init__(self, ease_func: Callable[[float], float], duration: float) -> None"),
+            R"doc(
 Create an EasingAnimation.
 
 Args:
-    ease_func (Callable): Easing function that maps [0, 1] → [0, 1].
+    ease_func (Callable[[float], float]): Easing function that maps [0, 1] → [0, 1].
     duration (float): Time in seconds for full animation.
     )doc")
 

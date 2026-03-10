@@ -1408,7 +1408,7 @@ Args:
         .def_rw("tex_coord", &Vertex::texCoord, "Texture coordinate of the vertex.")
         .def(
             "__repr__",
-            [](const Vertex& self)
+            [](const Vertex& self) -> std::string
             {
                 std::stringstream ss;
                 ss << "Vertex(pos=(" << self.pos.x << ", " << self.pos.y << "), color=("

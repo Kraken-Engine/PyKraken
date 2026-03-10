@@ -8,6 +8,14 @@
 namespace kn
 {
 
+Rect::Rect(const Vec2& size)
+    : x(0),
+      y(0),
+      w(size.x),
+      h(size.y)
+{
+}
+
 Rect::Rect(const Vec2& pos, const Vec2& size)
     : x(pos.x),
       y(pos.y),
@@ -311,6 +319,12 @@ A Rect is defined by its top-left corner position (x, y) and dimensions (w, h).
 Supports various geometric operations, collision detection, and positioning methods.
         )doc")
         .def(nb::init(), R"doc(Create a Rect with default values (0, 0, 0, 0).)doc")
+        .def(nb::init<const Vec2&>(), "size"_a, R"doc(
+Create a Rect at position (0, 0) with the given size.
+
+Args:
+    size (Vec2): The size as a Vec2 (width, height).
+        )doc")
         .def(nb::init<double, double, double, double>(), "x"_a, "y"_a, "w"_a, "h"_a, R"doc(
 Create a Rect with specified position and dimensions.
 

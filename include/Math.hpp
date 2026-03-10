@@ -101,6 +101,10 @@ class Vec2
 
     Vec2 movedToward(const Vec2& target, double maxStep) const;
 
+    [[nodiscard]] Vec2 floored() const;
+    [[nodiscard]] Vec2 ceiled() const;
+    [[nodiscard]] Vec2 rounded() const;
+
     friend std::ostream& operator<<(std::ostream& os, const Vec2& v)
     {
         return os << "<" << v.x << ", " << v.y << ">";

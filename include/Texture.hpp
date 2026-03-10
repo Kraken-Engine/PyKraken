@@ -55,6 +55,8 @@ class Texture
 
     [[nodiscard]] Vec2 getSize() const;
 
+    [[nodiscard]] Rect getRect() const;
+
     [[nodiscard]] Rect getClipArea() const;
     void setClipArea(const Rect& area);
 

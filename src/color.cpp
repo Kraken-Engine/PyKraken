@@ -330,7 +330,10 @@ Range: 0-255 (8-bit unsigned integer)
 Note: 0 = fully transparent, 255 = fully opaque
         )doc")
 
-        .def_prop_rw("hex", &Color::toHex, &Color::fromHex, R"doc(
+        .def_prop_rw(
+            "hex", &Color::toHex,
+            [](Color& self, const std::string& hex) { self.fromHex(hex); },
+            R"doc(
 Get or set the color as a hex string.
 
 When getting, returns an 8-digit hex string in the format "#RRGGBBAA".
@@ -342,10 +345,10 @@ Example:
         )doc")
         .def_prop_rw(
             "hsv",
-            [](const Color& self)
+            [](const Color& self) -> nb::tuple
             {
                 const auto [h, s, v, a] = self.toHSV();
-                return std::make_tuple(h, s, v, a);
+                return nb::make_tuple(h, s, v, a);
             },
             [](Color& self, const nb::sequence& hsvSeq)
             {
@@ -475,7 +478,9 @@ This module provides functions for color manipulation and conversion,
 as well as commonly used color constants for convenience.
     )doc");
 
-    subColor.def("from_hex", &fromHex, "hex"_a, R"doc(
+    subColor.def(
+        "from_hex",
+        [](const std::string& hex) { return fromHex(hex); }, "hex"_a, R"doc(
 Create a Color from a hex string.
 
 Supports multiple hex formats:

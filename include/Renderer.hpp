@@ -2,6 +2,7 @@
 
 #include <SDL3/SDL.h>
 #include <nanobind/nanobind.h>
+#include <nanobind/ndarray.h>
 
 #include <memory>
 #include <vector>
@@ -43,8 +44,16 @@ void draw(
     const Vec2& pivot = Anchor::CENTER
 );
 
+void draw(const Texture& texture, const Rect& dst);
+
 void drawBatch(
     const Texture& texture, const std::vector<Transform>& transforms,
+    const Vec2& anchor = Anchor::TOP_LEFT, const Vec2& pivot = Anchor::CENTER
+);
+
+void drawBatchNDArray(
+    const Texture& texture,
+    nb::ndarray<const double, nb::ndim<2>, nb::c_contig, nb::device::cpu> arr,
     const Vec2& anchor = Anchor::TOP_LEFT, const Vec2& pivot = Anchor::CENTER
 );
 }  // namespace renderer

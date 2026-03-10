@@ -200,25 +200,24 @@ endif()
 nanobind_add_stub(
   pykraken_stub
   MODULE _pykraken
-  OUTPUT _pykraken/__init__.pyi
   PYTHON_PATH $<TARGET_FILE_DIR:_pykraken>
   DEPENDS _pykraken
-  MARKER_FILE _pykraken/py.typed
   RECURSIVE
+  OUTPUT_PATH _pykraken
+  OUTPUT
+    _pykraken/_pykraken/__init__.pyi
+    _pykraken/_pykraken/physics.pyi
+  MARKER_FILE _pykraken/py.typed
 )
 
-# Copy stubs to source tree for IDE support (editable installs)
-add_custom_target(copy_stubs ALL
+# Copy stubs into source tree so Pylance can find them during editable installs
+add_custom_command(TARGET pykraken_stub POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
-    $<TARGET_FILE_DIR:_pykraken>/_pykraken
+    ${CMAKE_CURRENT_BINARY_DIR}/_pykraken/_pykraken
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pykraken/_pykraken
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    ${CMAKE_CURRENT_BINARY_DIR}/_pykraken/py.typed
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/pykraken/py.typed
-  DEPENDS pykraken_stub
-  COMMENT "Copying stubs to source tree for IDE support"
 )
 
 # Install stubs for wheel builds
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/pykraken/_pykraken/ DESTINATION pykraken/_pykraken FILES_MATCHING PATTERN "*.pyi")
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/_pykraken/_pykraken/ DESTINATION pykraken/_pykraken FILES_MATCHING PATTERN "*.pyi")
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/_pykraken/_pykraken/__init__.pyi DESTINATION pykraken RENAME _pykraken.pyi)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/_pykraken/py.typed DESTINATION pykraken)

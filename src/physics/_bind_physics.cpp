@@ -59,9 +59,24 @@ Returns:
     int: The number of substeps per time step.
     )doc");
 
-    auto pyWorld = nb::class_<World>(subPhysics, "World");
+    auto pyWorld = nb::class_<World>(subPhysics, "World",
+        R"doc(
+A physics world that manages bodies, joints, and collision detection.
 
-    nb::class_<Body>(subPhysics, "Body")
+The world handles stepping the physics simulation, creating and destroying bodies
+and joints, and provides spatial queries such as ray casts and shape casts.
+Multiple worlds can exist simultaneously, each with their own gravity and bodies.
+        )doc");
+
+    nb::class_<Body>(subPhysics, "Body",
+        R"doc(
+Base class for all physics bodies.
+
+A body represents a physical object in the simulation. It can have one or more
+colliders (shapes) attached to it and participates in collision detection and
+resolution. This is an abstract base class — use RigidBody, StaticBody, or
+CharacterBody instead.
+        )doc")
         .def(
             "add_collider",
             nb::overload_cast<const Circle&, float, float, float, bool, bool>(&Body::addCollider),
@@ -160,8 +175,23 @@ Draw all colliders attached to the body (debug/development only).
         .def(nb::self == nb::self)
         .def(nb::self != nb::self);
 
-    nb::class_<RigidBody, Body>(subPhysics, "RigidBody")
-        .def(nb::init<World&>(), "world"_a)
+    nb::class_<RigidBody, Body>(subPhysics, "RigidBody",
+        R"doc(
+A dynamic physics body that responds to forces, impulses, and collisions.
+
+Rigid bodies are fully simulated by the physics engine. They have mass, velocity,
+and can be affected by gravity, forces, and impulses. Use this for objects like
+projectiles, crates, or anything that should move realistically.
+        )doc")
+        .def(nb::init<World&>(), "world"_a, R"doc(
+Create a new rigid body in the specified world.
+
+The body is created at the origin with no colliders. Add colliders with
+``add_collider`` before the body can interact with other objects.
+
+Args:
+    world (World): The physics world to create the body in.
+        )doc")
         .def_prop_rw(
             "linear_velocity", &RigidBody::getLinearVelocity, &RigidBody::setLinearVelocity,
             R"doc(The linear velocity of the body.)doc"
@@ -253,10 +283,42 @@ Args:
             )doc"
         );
 
-    nb::class_<StaticBody, Body>(subPhysics, "StaticBody").def(nb::init<World&>(), "world"_a);
+    nb::class_<StaticBody, Body>(subPhysics, "StaticBody",
+        R"doc(
+A physics body that does not move.
 
-    nb::class_<CharacterBody, Body>(subPhysics, "CharacterBody")
-        .def(nb::init<World&>(), "world"_a)
+Static bodies are fixed in place and are not affected by forces or collisions.
+They are ideal for level geometry such as floors, walls, and platforms. Static
+bodies have zero velocity and infinite mass.
+        )doc")
+        .def(nb::init<World&>(), "world"_a, R"doc(
+Create a new static body in the specified world.
+
+The body is created at the origin with no colliders. Add colliders with
+``add_collider`` to define its shape.
+
+Args:
+    world (World): The physics world to create the body in.
+        )doc");
+
+    nb::class_<CharacterBody, Body>(subPhysics, "CharacterBody",
+        R"doc(
+A kinematic physics body designed for player-controlled characters.
+
+Character bodies use a move-and-slide algorithm for movement and collision
+resolution. They automatically detect floor, wall, and ceiling contacts and
+slide along surfaces rather than bouncing off them. Ideal for platformer
+characters, NPCs, or any entity that needs precise movement control.
+        )doc")
+        .def(nb::init<World&>(), "world"_a, R"doc(
+Create a new character body in the specified world.
+
+The body is created at the origin with default movement properties.
+Add colliders with ``add_collider`` before calling ``move_and_slide``.
+
+Args:
+    world (World): The physics world to create the body in.
+        )doc")
         .def_rw(
             "velocity", &CharacterBody::velocity, R"doc(The velocity of the character body.)doc"
         )
@@ -300,7 +362,14 @@ Args:
         )doc"
         );
 
-    nb::class_<Joint>(subPhysics, "Joint")
+    nb::class_<Joint>(subPhysics, "Joint",
+        R"doc(
+Base class for all physics joints.
+
+A joint constrains the relative motion of two bodies. Joints are created
+through the World's ``create_*_joint`` methods and can be destroyed manually
+or when either attached body is destroyed.
+        )doc")
         .def_prop_rw(
             "collide_connected", &Joint::getCollideConnected, &Joint::setCollideConnected,
             R"doc(Whether the connected bodies should collide with each other.)doc"
@@ -320,7 +389,13 @@ Args:
         )
         .def("destroy", &Joint::destroy, R"doc(Destroy the joint manually.)doc");
 
-    nb::class_<DistanceJoint, Joint>(subPhysics, "DistanceJoint")
+    nb::class_<DistanceJoint, Joint>(subPhysics, "DistanceJoint",
+        R"doc(
+A joint that constrains two bodies to maintain a fixed distance between their anchor points.
+
+Optionally supports a spring to soften the constraint, a motor to drive the
+distance, and limits to allow a range of distances.
+        )doc")
         .def_prop_rw(
             "length", &DistanceJoint::getLength, &DistanceJoint::setLength,
             R"doc(The rest length of the joint.)doc"
@@ -381,7 +456,14 @@ Args:
         subPhysics, "FilterJoint", R"doc(A joint used to filter collisions between two bodies.)doc"
     );
 
-    nb::class_<MotorJoint, Joint>(subPhysics, "MotorJoint")
+    nb::class_<MotorJoint, Joint>(subPhysics, "MotorJoint",
+        R"doc(
+A joint that drives two bodies toward a target relative linear and angular offset.
+
+The motor joint applies forces and torques to maintain the specified offsets.
+Useful for animating bodies to follow paths or track positions while still
+interacting with the physics simulation.
+        )doc")
         .def_prop_rw(
             "linear_offset", &MotorJoint::getLinearOffset, &MotorJoint::setLinearOffset,
             R"doc(The target linear offset from body A to body B.)doc"
@@ -403,7 +485,14 @@ Args:
             R"doc(The position correction factor in [0, 1].)doc"
         );
 
-    nb::class_<MouseJoint, Joint>(subPhysics, "MouseJoint")
+    nb::class_<MouseJoint, Joint>(subPhysics, "MouseJoint",
+        R"doc(
+A joint that pulls a body toward a world-space target point using a spring.
+
+The mouse joint is typically used for click-and-drag interactions, where a
+user drags a body around the world. It applies a spring force to pull the
+body toward the target position.
+        )doc")
         .def_prop_rw(
             "target", &MouseJoint::getTarget, &MouseJoint::setTarget,
             R"doc(The target point in world coordinates.)doc"
@@ -421,7 +510,13 @@ Args:
             R"doc(The maximum constraint force.)doc"
         );
 
-    nb::class_<PrismaticJoint, Joint>(subPhysics, "PrismaticJoint")
+    nb::class_<PrismaticJoint, Joint>(subPhysics, "PrismaticJoint",
+        R"doc(
+A joint that constrains two bodies to move only along a specified axis.
+
+Also known as a slider joint. Supports optional translation limits, a spring,
+and a motor. Useful for pistons, elevators, or sliding doors.
+        )doc")
         .def_prop_rw(
             "spring_enabled", &PrismaticJoint::isSpringEnabled, &PrismaticJoint::enableSpring,
             R"doc(Whether the spring is enabled.)doc"
@@ -478,7 +573,13 @@ Args:
     upper (float): The upper translation limit.
             )doc");
 
-    nb::class_<RevoluteJoint, Joint>(subPhysics, "RevoluteJoint")
+    nb::class_<RevoluteJoint, Joint>(subPhysics, "RevoluteJoint",
+        R"doc(
+A joint that allows two bodies to rotate around a shared anchor point.
+
+Also known as a hinge or pin joint. Supports optional angle limits, a spring,
+and a motor. Useful for doors, wheels, pendulums, and rotating platforms.
+        )doc")
         .def_prop_rw(
             "spring_enabled", &RevoluteJoint::isSpringEnabled, &RevoluteJoint::enableSpring,
             R"doc(Whether the spring is enabled.)doc"
@@ -533,7 +634,14 @@ Args:
     upper (float): The upper angle limit in radians.
             )doc");
 
-    nb::class_<WeldJoint, Joint>(subPhysics, "WeldJoint")
+    nb::class_<WeldJoint, Joint>(subPhysics, "WeldJoint",
+        R"doc(
+A joint that rigidly connects two bodies at an anchor point.
+
+The weld joint attempts to keep the bodies at a fixed relative position and
+angle. Optionally supports linear and angular springs to allow some flex.
+Useful for breakable structures or soft connections between bodies.
+        )doc")
         .def_prop_rw(
             "linear_hz", &WeldJoint::getLinearHertz, &WeldJoint::setLinearHertz,
             R"doc(The linear spring frequency in Hertz.)doc"
@@ -551,7 +659,14 @@ Args:
             &WeldJoint::setAngularDampingRatio, R"doc(The angular spring damping ratio.)doc"
         );
 
-    nb::class_<WheelJoint, Joint>(subPhysics, "WheelJoint")
+    nb::class_<WheelJoint, Joint>(subPhysics, "WheelJoint",
+        R"doc(
+A joint that simulates a wheel attached to a vehicle body.
+
+Provides a suspension spring along a specified axis and an optional motor for
+driving rotation. Supports translation limits along the suspension axis.
+Ideal for vehicle wheels and similar mechanisms.
+        )doc")
         .def_prop_rw(
             "spring_enabled", &WheelJoint::isSpringEnabled, &WheelJoint::enableSpring,
             R"doc(Whether the spring is enabled.)doc"
@@ -597,7 +712,13 @@ Args:
     upper (float): The upper translation limit.
             )doc");
 
-    nb::class_<Collision>(subPhysics, "Collision")
+    nb::class_<Collision>(subPhysics, "Collision",
+        R"doc(
+Information about a collision between two bodies.
+
+Collision events are generated during the physics step for colliders that have
+``enable_events`` set to True. Retrieve them with ``World.get_collisions()``.
+        )doc")
         .def_ro("body_a", &Collision::bodyA, "The first body involved in the collision.")
         .def_ro("body_b", &Collision::bodyB, "The second body involved in the collision.")
         .def_ro("point", &Collision::point, "The point of impact in world coordinates.")
@@ -607,7 +728,13 @@ Args:
             "The speed at which the bodies approached each other."
         );
 
-    nb::class_<CastHit>(subPhysics, "CastHit")
+    nb::class_<CastHit>(subPhysics, "CastHit",
+        R"doc(
+Result of a ray cast or shape cast query.
+
+Contains the body that was hit, the point and normal of the intersection,
+and the fraction along the cast path where the hit occurred.
+        )doc")
         .def_ro("body", &CastHit::body, "The body that was hit.")
         .def_ro("point", &CastHit::point, "The point of the hit in world coordinates.")
         .def_ro("normal", &CastHit::normal, "The normal vector of the hit surface.")

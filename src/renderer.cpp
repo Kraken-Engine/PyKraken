@@ -206,6 +206,45 @@ void draw(const Texture& texture, const Transform& transform, const Vec2& anchor
     }
 }
 
+void draw(const Texture& texture, const Rect& dst)
+{
+    if (!_renderer)
+        throw std::runtime_error("Renderer not yet initialized");
+    if (!texture.getSDL())
+        throw std::runtime_error("Invalid texture provided for drawing");
+    if (texture.getAlpha() == 0.0f)
+        return;
+
+    const Rect clipArea = texture.getClipArea();
+    if (clipArea.w <= 0.0 || clipArea.h <= 0.0)
+        return;
+
+    Rect dstRect = dst;
+    dstRect.x -= camera::getActivePos().x;
+    dstRect.y -= camera::getActivePos().y;
+
+    const Vec2 targetRes = getTargetResolution();
+    if (dstRect.getRight() < 0.0 || dstRect.x >= targetRes.x || dstRect.getBottom() < 0.0 ||
+        dstRect.y >= targetRes.y)
+        return;
+
+    const auto dstSDLRect = static_cast<SDL_FRect>(dstRect);
+    const auto srcSDLRect = static_cast<SDL_FRect>(clipArea);
+
+    SDL_FlipMode flipAxis = SDL_FLIP_NONE;
+    if (texture.flip.h)
+        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_HORIZONTAL);
+    if (texture.flip.v)
+        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_VERTICAL);
+
+    if (!SDL_RenderTextureRotated(
+            _renderer, texture.getSDL(), &srcSDLRect, &dstSDLRect, 0.0, nullptr, flipAxis
+        ))
+    {
+        throw std::runtime_error("Failed to render texture: " + std::string(SDL_GetError()));
+    }
+}
+
 void drawBatch(
     const Texture& texture, const std::vector<Transform>& transforms, const Vec2& anchor,
     const Vec2& pivot
@@ -253,6 +292,79 @@ void drawBatch(
 
         if (!SDL_RenderTextureRotated(
                 _renderer, texture.getSDL(), &srcSDLRect, &dstSDLRect, TO_DEGREES(transform.angle),
+                &pivotPoint, flipAxis
+            ))
+        {
+            throw std::runtime_error("Failed to render texture: " + std::string(SDL_GetError()));
+        }
+    }
+}
+
+void drawBatchNDArray(
+    const Texture& texture,
+    nb::ndarray<const double, nb::ndim<2>, nb::c_contig, nb::device::cpu> arr, const Vec2& anchor,
+    const Vec2& pivot
+)
+{
+    if (!_renderer)
+        throw std::runtime_error("Renderer not yet initialized");
+    if (!texture.getSDL())
+        throw std::runtime_error("Invalid texture provided for drawing");
+
+    if (arr.ndim() != 2)
+        throw std::invalid_argument("Expected 2D array");
+
+    const auto n = static_cast<size_t>(arr.shape(0));
+    const auto cols = static_cast<size_t>(arr.shape(1));
+
+    if (n == 0)
+        return;
+    if (cols != 2 && cols != 3 && cols != 5)
+        throw std::invalid_argument(
+            "Expected array with 2, 3, or 5 columns [x, y, (angle,) (scale_x, scale_y)]"
+        );
+
+    const Rect clipArea = texture.getClipArea();
+    if (clipArea.w <= 0.0 || clipArea.h <= 0.0)
+        return;
+    if (texture.getAlpha() == 0.0f)
+        return;
+
+    const auto srcSDLRect = static_cast<SDL_FRect>(clipArea);
+    const Vec2 clipSize = clipArea.getSize();
+    const Vec2 cameraPos = camera::getActivePos();
+    const Vec2 targetRes = getTargetResolution();
+
+    SDL_FlipMode flipAxis = SDL_FLIP_NONE;
+    if (texture.flip.h)
+        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_HORIZONTAL);
+    if (texture.flip.v)
+        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_VERTICAL);
+
+    const auto* data = arr.data();
+
+    for (size_t i = 0; i < n; ++i)
+    {
+        const size_t row = i * cols;
+        const Vec2 pos = Vec2{data[row], data[row + 1]} - cameraPos;
+        const double angle = (cols >= 3) ? data[row + 2] : 0.0;
+        const Vec2 scale = (cols == 5) ? Vec2{data[row + 3], data[row + 4]} : Vec2{1.0, 1.0};
+
+        if (scale.isZero())
+            continue;
+
+        Rect dstRect{0.0, 0.0, clipSize * scale};
+        dstRect.setTopLeft(pos - (dstRect.getSize() * anchor));
+
+        if (dstRect.getRight() < 0.0 || dstRect.x >= targetRes.x || dstRect.getBottom() < 0.0 ||
+            dstRect.y >= targetRes.y)
+            continue;
+
+        const auto dstSDLRect = static_cast<SDL_FRect>(dstRect);
+        const auto pivotPoint = static_cast<SDL_FPoint>(dstRect.getSize() * pivot);
+
+        if (!SDL_RenderTextureRotated(
+                _renderer, texture.getSDL(), &srcSDLRect, &dstSDLRect, TO_DEGREES(angle),
                 &pivotPoint, flipAxis
             ))
         {
@@ -340,9 +452,10 @@ Raises:
         )doc");
 
     subRenderer.def(
-        "draw", &draw, "texture"_a, "transform"_a = Transform{}, "anchor"_a = Anchor::TOP_LEFT,
-        "pivot"_a = Anchor::CENTER,
-        R"doc(
+        "draw",
+        nb::overload_cast<const Texture&, const Transform&, const Vec2&, const Vec2&>(&draw),
+        "texture"_a, "transform"_a = Transform{}, "anchor"_a = Anchor::TOP_LEFT,
+        "pivot"_a = Anchor::CENTER, R"doc(
 Render a texture.
 
 Args:
@@ -350,6 +463,20 @@ Args:
     transform (Transform, optional): The transform (position, rotation, scale).
     anchor (Vec2, optional): The anchor point (0.0-1.0). Defaults to top left (0, 0).
     pivot (Vec2, optional): The rotation pivot (0.0-1.0). Defaults to center (0.5, 0.5).
+        )doc"
+    );
+
+    subRenderer.def(
+        "draw", nb::overload_cast<const Texture&, const Rect&>(&draw), "texture"_a, "dst"_a, R"doc(
+Render a texture stretched into a destination rectangle.
+
+This is a simpler alternative to the transform-based draw when you only
+need to place a texture at a specific screen rectangle without rotation.
+The source region is determined by the texture's clip area.
+
+Args:
+    texture (Texture): The texture to render.
+    dst (Rect): Destination rectangle on screen.
         )doc"
     );
 
@@ -379,6 +506,29 @@ Args:
     transforms (Sequence[Transform]): A list of transforms (position, rotation, scale).
     anchor (Vec2, optional): The anchor point (0.0-1.0). Defaults to top left (0, 0).
     pivot (Vec2, optional): The rotation pivot (0.0-1.0). Defaults to center (0.5, 0.5).
+        )doc"
+    );
+
+    subRenderer.def(
+        "draw_batch", &drawBatchNDArray, "texture"_a, "transforms"_a, "anchor"_a = Anchor::TOP_LEFT,
+        "pivot"_a = Anchor::CENTER, nb::call_guard<nb::gil_scoped_release>(), R"doc(
+Render a texture multiple times using a NumPy array for maximum throughput.
+
+Each row of the array describes one instance. The number of columns determines
+the layout:
+
+- **2 columns** ``[x, y]`` — position only (angle=0, scale=1).
+- **3 columns** ``[x, y, angle]`` — position + rotation (scale=1).
+- **5 columns** ``[x, y, angle, scale_x, scale_y]`` — full transform.
+
+Args:
+    texture (Texture): The texture to render.
+    transforms (numpy.ndarray): float64 array with shape ``(N, 2|3|5)``.
+    anchor (Vec2, optional): The anchor point (0.0-1.0). Defaults to top left (0, 0).
+    pivot (Vec2, optional): The rotation pivot (0.0-1.0). Defaults to center (0.5, 0.5).
+
+Raises:
+    ValueError: If the array does not have 2, 3, or 5 columns.
         )doc"
     );
 }

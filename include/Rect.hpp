@@ -18,6 +18,7 @@ class Rect
     double h = 0;
 
     Rect() = default;
+    explicit Rect(const Vec2& size);
     Rect(const Vec2& pos, const Vec2& size);
     template <typename T>
     Rect(T x, T y, T w, T h)

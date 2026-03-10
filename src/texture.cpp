@@ -172,6 +172,11 @@ Vec2 Texture::getSize() const
     return {m_width, m_height};
 }
 
+Rect Texture::getRect() const
+{
+    return {0, 0, m_width, m_height};
+}
+
 Rect Texture::getClipArea() const
 {
     return m_clipArea;
@@ -348,6 +353,13 @@ The height of the texture in pixels.
         )doc")
         .def_prop_ro("size", &Texture::getSize, R"doc(
 The dimensions of the texture as a `Vec2`.
+        )doc")
+
+        .def("get_rect", &Texture::getRect, R"doc(
+Return a Rect with position (0, 0) and the texture's dimensions.
+
+Returns:
+    Rect: A rectangle representing the texture's bounds.
         )doc")
 
         .def("make_additive", &Texture::makeAdditive, R"doc(

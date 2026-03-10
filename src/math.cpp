@@ -6,6 +6,7 @@
 #include <nanobind/stl/string.h>
 
 #include <algorithm>
+#include <cmath>
 #include <string>
 
 #ifndef M_PI
@@ -196,6 +197,21 @@ Vec2 Vec2::movedToward(const Vec2& target, const double maxStep) const
     Vec2 result = *this;
     result.moveToward(target, maxStep);
     return result;
+}
+
+Vec2 Vec2::floored() const
+{
+    return {std::floor(x), std::floor(y)};
+}
+
+Vec2 Vec2::ceiled() const
+{
+    return {std::ceil(x), std::ceil(y)};
+}
+
+Vec2 Vec2::rounded() const
+{
+    return {std::round(x), std::round(y)};
 }
 
 Vec2 Vec2::operator-() const
@@ -680,6 +696,35 @@ Args:
 Returns:
     Vec2: A new vector moved toward the target.
         )doc")
+        .def("floored", &Vec2::floored, R"doc(
+Return a new Vec2 with both components floored to the nearest integer.
+
+Returns:
+    Vec2: A new vector with floored components.
+        )doc")
+        .def("ceiled", &Vec2::ceiled, R"doc(
+Return a new Vec2 with both components ceiled to the nearest integer.
+
+Returns:
+    Vec2: A new vector with ceiled components.
+        )doc")
+        .def("rounded", &Vec2::rounded, R"doc(
+Return a new Vec2 with both components rounded to the nearest integer.
+
+Returns:
+    Vec2: A new vector with rounded components.
+        )doc")
+        .def(
+            "as_ints",
+            [](const Vec2& v) -> nb::tuple
+            { return nb::make_tuple(static_cast<int>(v.x), static_cast<int>(v.y)); },
+            R"doc(
+Return the vector components truncated to integers as a tuple.
+
+Returns:
+    tuple[int, int]: The (x, y) components as integers.
+        )doc"
+        )
 
         // Dunder methods
         .def(
@@ -845,25 +890,8 @@ Raises:
     ValueError: If in_min equals in_max.
         )doc");
 
-    subMath.def("to_deg", &toDegrees, "radians"_a, R"doc(
-Convert radians to degrees.
-
-Args:
-    radians (float): The angle in radians.
-
-Returns:
-    float: The angle in degrees.
-        )doc");
-
-    subMath.def("to_rad", &toRadians, "degrees"_a, R"doc(
-Convert degrees to radians.
-
-Args:
-    degrees (float): The angle in degrees.
-
-Returns:
-    float: The angle in radians.
-        )doc");
+    subMath.attr("DEG2RAD") = M_PI / 180.0;
+    subMath.attr("RAD2DEG") = 180.0 / M_PI;
 
     subMath.def("dot", &dot, "a"_a, "b"_a, R"doc(
 Calculate the dot product of two vectors.

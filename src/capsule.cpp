@@ -102,7 +102,7 @@ Returns:
         .def("__ne__", &Capsule::operator!=)
         .def(
             "__repr__",
-            [](const Capsule& self)
+            [](const Capsule& self) -> std::string
             {
                 return "Capsule(p1=" + std::to_string(self.p1.x) + ", " +
                        std::to_string(self.p1.y) + ", p2=" + std::to_string(self.p2.x) + ", " +

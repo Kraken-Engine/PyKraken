@@ -25,13 +25,13 @@ void _bind(nb::module_& module)
 Get the current position of the mouse cursor.
 
 Returns:
-    tuple[float, float]: The current mouse position as (x, y) coordinates.
+    Vec2: The current mouse position as (x, y) coordinates.
     )doc");
     subMouse.def("get_rel", &getRel, R"doc(
 Get the relative mouse movement since the last frame.
 
 Returns:
-    tuple[float, float]: The relative movement of the mouse as (dx, dy).
+    Vec2: The relative movement of the mouse as (dx, dy).
     )doc");
     subMouse.def("is_pressed", &isPressed, "button"_a, R"doc(
 Check if a mouse button is currently pressed.

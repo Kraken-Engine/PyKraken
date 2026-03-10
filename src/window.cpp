@@ -252,7 +252,7 @@ Raises:
 Get the current size of the window.
 
 Returns:
-    tuple[float, float]: The window size as (width, height).
+    Vec2: The window size as (width, height).
 
 Raises:
     RuntimeError: If the window is not initialized.
