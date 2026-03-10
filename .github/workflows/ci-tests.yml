@@ -42,5 +42,8 @@ jobs:
           if (Test-Path -Path "dev-requirements.txt") { pip install -r dev-requirements.txt } else { pip install pytest }
         shell: powershell
 
+      - name: Build extension
+        run: pip install -e .
+
       - name: Run tests
         run: python -m pytest tests -q
