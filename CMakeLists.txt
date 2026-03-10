@@ -13,6 +13,10 @@ if(DEFINED ENV{VCPKG_OVERLAY_TRIPLETS} AND NOT DEFINED VCPKG_OVERLAY_TRIPLETS)
   set(VCPKG_OVERLAY_TRIPLETS "$ENV{VCPKG_OVERLAY_TRIPLETS}" CACHE STRING "")
 endif()
 
+if(DEFINED ENV{VCPKG_OVERLAY_PORTS} AND NOT DEFINED VCPKG_OVERLAY_PORTS)
+  set(VCPKG_OVERLAY_PORTS "$ENV{VCPKG_OVERLAY_PORTS}" CACHE STRING "")
+endif()
+
 project(KrakenEngine LANGUAGES CXX)
 
 if (NOT SKBUILD)
@@ -47,7 +51,9 @@ find_package(Python 3.12
 find_package(nanobind CONFIG REQUIRED)
 
 # SDL_mixer options (built via FetchContent, not vcpkg)
-set(SDLMIXER_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+# BUILD_SHARED_LIBS must be OFF so SDL_mixer looks for SDL3::SDL3 (generic alias)
+# instead of SDL3::SDL3-shared, which doesn't exist with static vcpkg triplets.
+set(BUILD_SHARED_LIBS           OFF CACHE BOOL "" FORCE)
 set(SDLMIXER_MIDI_NATIVE       OFF CACHE BOOL "" FORCE)
 set(SDLMIXER_GME               OFF CACHE BOOL "" FORCE)
 set(SDLMIXER_WAVPACK           OFF CACHE BOOL "" FORCE)

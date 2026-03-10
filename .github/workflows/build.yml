@@ -64,7 +64,8 @@ jobs:
             mesa-libEGL-devel mesa-libgbm-devel
             wayland-devel wayland-protocols-devel libxkbcommon-devel
             libpng-devel libjpeg-turbo-devel freetype-devel flac-devel
-            autoconf autoconf-archive automake libtool
+            libxcrypt-devel
+            autoconf autoconf-archive automake libtool perl
             zip unzip curl tar &&
             git clone --depth 1 https://github.com/microsoft/vcpkg.git /opt/vcpkg &&
             /opt/vcpkg/bootstrap-vcpkg.sh -disableMetrics
@@ -72,6 +73,7 @@ jobs:
             VCPKG_ROOT=/opt/vcpkg
             VCPKG_DEFAULT_TRIPLET=x64-linux-release
             VCPKG_OVERLAY_TRIPLETS={project}/triplets
+            VCPKG_OVERLAY_PORTS={project}/overlay-ports
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
