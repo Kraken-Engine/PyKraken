@@ -1,6 +1,6 @@
 {
-  "name": "libxcrypt",
-  "version": "4.4.36",
-  "port-version": 1,
-  "description": "Use system-provided libxcrypt (overlay to skip vcpkg build)"
+    "name": "libxcrypt",
+    "version": "4.4.36",
+    "port-version": 1,
+    "description": "Use system-provided libxcrypt (overlay to skip vcpkg build)"
 }

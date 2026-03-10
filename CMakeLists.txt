@@ -9,12 +9,13 @@ if(DEFINED ENV{VCPKG_DEFAULT_TRIPLET} AND NOT DEFINED VCPKG_TARGET_TRIPLET)
   set(VCPKG_TARGET_TRIPLET "$ENV{VCPKG_DEFAULT_TRIPLET}" CACHE STRING "")
 endif()
 
-if(DEFINED ENV{VCPKG_OVERLAY_TRIPLETS} AND NOT DEFINED VCPKG_OVERLAY_TRIPLETS)
-  set(VCPKG_OVERLAY_TRIPLETS "$ENV{VCPKG_OVERLAY_TRIPLETS}" CACHE STRING "")
+# Auto-detect overlay triplets and ports from the source tree
+if(NOT DEFINED VCPKG_OVERLAY_TRIPLETS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/triplets")
+  set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_CURRENT_SOURCE_DIR}/triplets" CACHE STRING "")
 endif()
 
-if(DEFINED ENV{VCPKG_OVERLAY_PORTS} AND NOT DEFINED VCPKG_OVERLAY_PORTS)
-  set(VCPKG_OVERLAY_PORTS "$ENV{VCPKG_OVERLAY_PORTS}" CACHE STRING "")
+if(NOT DEFINED VCPKG_OVERLAY_PORTS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/overlay-ports")
+  set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_SOURCE_DIR}/overlay-ports" CACHE STRING "")
 endif()
 
 project(KrakenEngine LANGUAGES CXX)
@@ -151,12 +152,15 @@ if (MSVC)
   target_compile_options(_pykraken PRIVATE /utf-8)
 endif()
 
+find_package(zstd CONFIG REQUIRED)
+
 target_link_libraries(_pykraken PRIVATE
   SDL3::SDL3
   SDL3_image::SDL3_image
   SDL3_ttf::SDL3_ttf
   SDL3_mixer::SDL3_mixer
   PkgConfig::tmxlite
+  $<IF:$<TARGET_EXISTS:zstd::libzstd_static>,zstd::libzstd_static,zstd::libzstd_shared>
   box2d::box2d
 )
 

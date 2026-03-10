@@ -11,6 +11,7 @@
       "name": "sdl3-ttf",
       "features": ["harfbuzz"]
     },
-    "tmxlite"
+    "tmxlite",
+    "zstd"
   ]
 }

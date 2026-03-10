@@ -44,7 +44,6 @@ jobs:
           CIBW_ENVIRONMENT_WINDOWS: >
             VCPKG_ROOT=C:/vcpkg
             VCPKG_DEFAULT_TRIPLET=x64-windows-release
-            VCPKG_OVERLAY_TRIPLETS={project}/triplets
 
           # --- macOS: bootstrap vcpkg, use static release triplet ---
           CIBW_BEFORE_ALL_MACOS: >
@@ -54,7 +53,6 @@ jobs:
             MACOSX_DEPLOYMENT_TARGET=11.0
             VCPKG_ROOT=/tmp/vcpkg
             VCPKG_DEFAULT_TRIPLET=arm64-osx-release
-            VCPKG_OVERLAY_TRIPLETS={project}/triplets
 
           # --- Linux: install system headers, bootstrap vcpkg, use static release triplet ---
           CIBW_BEFORE_ALL_LINUX: >
@@ -72,8 +70,6 @@ jobs:
           CIBW_ENVIRONMENT_LINUX: >
             VCPKG_ROOT=/opt/vcpkg
             VCPKG_DEFAULT_TRIPLET=x64-linux-release
-            VCPKG_OVERLAY_TRIPLETS={project}/triplets
-            VCPKG_OVERLAY_PORTS={project}/overlay-ports
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
