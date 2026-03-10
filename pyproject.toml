@@ -40,6 +40,3 @@ wheel.packages = ["src/pykraken"]
 
 [tool.cibuildwheel]
 build-verbosity = 1
-
-[tool.cibuildwheel.macos.environment]
-MACOSX_DEPLOYMENT_TARGET = "11.0"

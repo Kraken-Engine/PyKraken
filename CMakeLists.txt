@@ -68,7 +68,16 @@ find_package(SDL3 CONFIG REQUIRED)
 find_package(SDL3_image CONFIG REQUIRED)
 find_package(SDL3_ttf CONFIG REQUIRED)
 find_package(box2d CONFIG REQUIRED)
-find_package(zstd CONFIG REQUIRED)
+
+find_package(zstd CONFIG QUIET)
+if(NOT zstd_FOUND)
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(ZSTD REQUIRED libzstd)
+
+  add_library(zstd::zstd INTERFACE IMPORTED)
+  target_include_directories(zstd::zstd INTERFACE ${ZSTD_INCLUDE_DIRS})
+  target_link_libraries(zstd::zstd INTERFACE ${ZSTD_LIBRARIES})
+endif()
 
 FetchContent_Declare(tmxlite
   GIT_REPOSITORY https://github.com/fallahn/tmxlite.git
@@ -164,7 +173,8 @@ target_link_libraries(_pykraken PRIVATE
   SDL3_ttf::SDL3_ttf
   SDL3_mixer::SDL3_mixer
   tmxlite
-  $<IF:$<TARGET_EXISTS:zstd::libzstd_static>,zstd::libzstd_static,zstd::libzstd_shared>
+  $<IF:$<TARGET_EXISTS:zstd::libzstd_static>,zstd::libzstd_static,
+    $<IF:$<TARGET_EXISTS:zstd::zstd>,zstd::zstd,zstd::libzstd_shared>>
   box2d::box2d
 )
 

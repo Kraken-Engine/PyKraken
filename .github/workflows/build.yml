@@ -49,7 +49,7 @@ jobs:
           CIBW_BEFORE_ALL_MACOS: >
             brew install sdl3 sdl3_image sdl3_ttf box2d zstd
           CIBW_ENVIRONMENT_MACOS: >
-            MACOSX_DEPLOYMENT_TARGET=11.0
+            MACOSX_DEPLOYMENT_TARGET=15.0
             CMAKE_PREFIX_PATH=/opt/homebrew
 
           # --- Linux: install system headers, build SDL deps from source ---
