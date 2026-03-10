@@ -210,11 +210,19 @@ nanobind_add_stub(
   MARKER_FILE _pykraken/py.typed
 )
 
-# Copy stubs into source tree so Pylance can find them during editable installs
+# Fix stub imports: nanobind generates "import _pykraken" (absolute) which type
+# checkers can't resolve from inside the _pykraken package. Rewrite to relative
+# imports so _pykraken.Vec2 becomes Vec2 imported from the package __init__.
+# Then copy stubs into source tree so editable installs expose types to Pylance.
 add_custom_command(TARGET pykraken_stub POST_BUILD
+  COMMAND ${Python_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/scripts/fix_stub_imports.py"
+    "${CMAKE_CURRENT_BINARY_DIR}/_pykraken/_pykraken"
   COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_CURRENT_BINARY_DIR}/_pykraken/_pykraken
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/pykraken/_pykraken
+    "${CMAKE_CURRENT_BINARY_DIR}/_pykraken/_pykraken"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/pykraken/_pykraken"
+  COMMAND ${CMAKE_COMMAND} -E copy
+    "${CMAKE_CURRENT_BINARY_DIR}/_pykraken/py.typed"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/pykraken/py.typed"
 )
 
 # Install stubs for wheel builds
