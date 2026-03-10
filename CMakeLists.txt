@@ -88,6 +88,7 @@ FetchContent_Declare(tmxlite
 set(TMXLITE_STATIC_LIB ON CACHE BOOL "" FORCE)
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "" FORCE)
 FetchContent_MakeAvailable(tmxlite)
+set_target_properties(tmxlite PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 FetchContent_Declare(SDL_mixer
   GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer.git
