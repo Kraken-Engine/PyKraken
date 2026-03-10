@@ -1,7 +1,6 @@
 {
   "dependencies": [
     "box2d",
-    "pkgconf",
     "sdl3",
     {
       "name": "sdl3-image",
@@ -11,7 +10,6 @@
       "name": "sdl3-ttf",
       "features": ["harfbuzz"]
     },
-    "tmxlite",
     "zstd"
   ]
 }

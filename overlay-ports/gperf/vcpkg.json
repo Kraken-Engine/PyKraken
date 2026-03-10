@@ -1,5 +1,0 @@
-{
-  "name": "gperf",
-  "version": "3.3",
-  "description": "Use system-provided gperf (overlay to skip vcpkg build)"
-}

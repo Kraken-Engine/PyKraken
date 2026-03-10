@@ -1,21 +1,19 @@
 cmake_minimum_required(VERSION 3.15...3.27)
 
+# --- vcpkg integration (Windows CI and local dev) ---
 if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
   set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
       CACHE STRING "Vcpkg toolchain file")
-endif()
 
-if(DEFINED ENV{VCPKG_DEFAULT_TRIPLET} AND NOT DEFINED VCPKG_TARGET_TRIPLET)
-  set(VCPKG_TARGET_TRIPLET "$ENV{VCPKG_DEFAULT_TRIPLET}" CACHE STRING "")
-endif()
+  if(DEFINED ENV{VCPKG_DEFAULT_TRIPLET} AND NOT DEFINED VCPKG_TARGET_TRIPLET)
+    set(VCPKG_TARGET_TRIPLET "$ENV{VCPKG_DEFAULT_TRIPLET}" CACHE STRING "")
+  endif()
 
-# Auto-detect overlay triplets and ports from the source tree
-if(NOT DEFINED VCPKG_OVERLAY_TRIPLETS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/triplets")
-  set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_CURRENT_SOURCE_DIR}/triplets" CACHE STRING "")
-endif()
+  if(NOT DEFINED VCPKG_OVERLAY_TRIPLETS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/triplets")
+    set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_CURRENT_SOURCE_DIR}/triplets" CACHE STRING "")
+  endif()
 
-if(NOT DEFINED VCPKG_OVERLAY_PORTS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/overlay-ports")
-  set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_SOURCE_DIR}/overlay-ports" CACHE STRING "")
+  set(VCPKG_APPLOCAL_DEPS OFF CACHE BOOL "" FORCE)
 endif()
 
 project(KrakenEngine LANGUAGES CXX)
@@ -70,10 +68,17 @@ find_package(SDL3 CONFIG REQUIRED)
 find_package(SDL3_image CONFIG REQUIRED)
 find_package(SDL3_ttf CONFIG REQUIRED)
 find_package(box2d CONFIG REQUIRED)
-find_package(PkgConfig REQUIRED)
-# Point pkgconf at the release .pc files (vcpkg's debug .pc files link the -d variants)
-set(ENV{PKG_CONFIG_PATH} "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/pkgconfig")
-pkg_check_modules(tmxlite REQUIRED IMPORTED_TARGET tmxlite)
+find_package(zstd CONFIG REQUIRED)
+
+FetchContent_Declare(tmxlite
+  GIT_REPOSITORY https://github.com/fallahn/tmxlite.git
+  GIT_TAG        v1.4.4
+  GIT_SHALLOW    TRUE
+  SOURCE_SUBDIR  tmxlite
+)
+set(TMXLITE_STATIC_LIB ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(tmxlite)
+
 FetchContent_Declare(SDL_mixer
   GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer.git
   GIT_TAG        prerelease-3.1.2
@@ -152,33 +157,32 @@ if (MSVC)
   target_compile_options(_pykraken PRIVATE /utf-8)
 endif()
 
-find_package(zstd CONFIG REQUIRED)
-
 target_link_libraries(_pykraken PRIVATE
   SDL3::SDL3
   SDL3_image::SDL3_image
   SDL3_ttf::SDL3_ttf
   SDL3_mixer::SDL3_mixer
-  PkgConfig::tmxlite
+  tmxlite
   $<IF:$<TARGET_EXISTS:zstd::libzstd_static>,zstd::libzstd_static,zstd::libzstd_shared>
   box2d::box2d
 )
 
-# Copy runtime DLLs next to the module so it can be imported (needed for stubgen and local dev)
+# Copy runtime DLLs next to the module (only needed with dynamic vcpkg triplets like x64-windows)
 if(WIN32)
   set(_VCPKG_BIN_DIR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin")
   file(GLOB _VCPKG_DLLS "${_VCPKG_BIN_DIR}/*.dll")
-  add_custom_command(TARGET _pykraken POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:_pykraken> $<TARGET_FILE_DIR:_pykraken>
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${_VCPKG_DLLS} $<TARGET_FILE_DIR:_pykraken>
-    COMMAND_EXPAND_LISTS
-  )
+  if(_VCPKG_DLLS)
+    add_custom_command(TARGET _pykraken POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${_VCPKG_DLLS} $<TARGET_FILE_DIR:_pykraken>
+      COMMAND_EXPAND_LISTS
+    )
+  endif()
 endif()
 
 # Ensure the module is placed in the correct package directory for scikit-build-core
 install(TARGETS _pykraken LIBRARY DESTINATION pykraken)
-if(WIN32)
-  install(FILES $<TARGET_RUNTIME_DLLS:_pykraken> ${_VCPKG_DLLS} DESTINATION pykraken)
+if(WIN32 AND _VCPKG_DLLS)
+  install(FILES ${_VCPKG_DLLS} DESTINATION pykraken)
 endif()
 
 nanobind_add_stub(

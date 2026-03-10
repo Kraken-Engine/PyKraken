@@ -45,16 +45,14 @@ jobs:
             VCPKG_ROOT=C:/vcpkg
             VCPKG_DEFAULT_TRIPLET=x64-windows-release
 
-          # --- macOS: bootstrap vcpkg, use static release triplet ---
+          # --- macOS: install deps via Homebrew ---
           CIBW_BEFORE_ALL_MACOS: >
-            git clone --depth 1 https://github.com/microsoft/vcpkg.git /tmp/vcpkg &&
-            /tmp/vcpkg/bootstrap-vcpkg.sh -disableMetrics
+            brew install sdl3 sdl3_image sdl3_ttf box2d zstd
           CIBW_ENVIRONMENT_MACOS: >
             MACOSX_DEPLOYMENT_TARGET=11.0
-            VCPKG_ROOT=/tmp/vcpkg
-            VCPKG_DEFAULT_TRIPLET=arm64-osx-release
+            CMAKE_PREFIX_PATH=/opt/homebrew
 
-          # --- Linux: install system headers, bootstrap vcpkg, use static release triplet ---
+          # --- Linux: install system headers, build SDL deps from source ---
           CIBW_BEFORE_ALL_LINUX: >
             dnf -y install
             alsa-lib-devel pipewire-devel pulseaudio-libs-devel
@@ -62,14 +60,10 @@ jobs:
             mesa-libEGL-devel mesa-libgbm-devel
             wayland-devel wayland-protocols-devel libxkbcommon-devel
             libpng-devel libjpeg-turbo-devel freetype-devel flac-devel
-            libxcrypt-devel gperf
-            autoconf autoconf-archive automake libtool perl
-            zip unzip curl tar &&
-            git clone --depth 1 https://github.com/microsoft/vcpkg.git /opt/vcpkg &&
-            /opt/vcpkg/bootstrap-vcpkg.sh -disableMetrics
+            libzstd-devel &&
+            bash {project}/scripts/build-linux-deps.sh
           CIBW_ENVIRONMENT_LINUX: >
-            VCPKG_ROOT=/opt/vcpkg
-            VCPKG_DEFAULT_TRIPLET=x64-linux-release
+            CMAKE_PREFIX_PATH=/opt/deps
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
