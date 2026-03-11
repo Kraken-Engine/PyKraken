@@ -14,7 +14,7 @@ std::vector<Rect> layout(const uint8_t count, const ViewportMode mode)
     if (count > 4 || count < 2)
         throw std::runtime_error("'count' must be between 2 and 4");
 
-    const Vec2 rendRes = renderer::getResolution();
+    const Vec2 rendRes = renderer::getCurrentResolution();
     std::vector<Rect> viewports;
     viewports.reserve(count);
 

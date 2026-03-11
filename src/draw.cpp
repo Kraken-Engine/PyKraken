@@ -66,7 +66,7 @@ void circle(const Circle& circle, const Color& color, const double thickness, co
         return;
 
     const Vec2 cameraPos = camera::getActivePos();
-    const Vec2 rendRes = renderer::getResolution();
+    const Vec2 rendRes = renderer::getCurrentResolution();
 
     const Vec2 center = circle.pos - cameraPos;
     if (center.x + circle.radius < 0.0 || center.y + circle.radius < 0.0 ||
@@ -98,7 +98,7 @@ void circles(
         return;
 
     const Vec2 cameraPos = camera::getActivePos();
-    const Vec2 rendRes = renderer::getResolution();
+    const Vec2 rendRes = renderer::getCurrentResolution();
 
     for (const Circle& circle : circles)
     {
@@ -134,7 +134,7 @@ void capsule(
         return;
 
     const Vec2 cameraPos = camera::getActivePos();
-    const Vec2 rendRes = renderer::getResolution();
+    const Vec2 rendRes = renderer::getCurrentResolution();
 
     const double radius = capsule.radius;
     const Vec2 p1 = capsule.p1 - cameraPos;
@@ -163,7 +163,7 @@ void capsules(
         throw std::runtime_error("Renderer not yet initialized");
 
     const Vec2 cameraPos = camera::getActivePos();
-    const Vec2 rendRes = renderer::getResolution();
+    const Vec2 rendRes = renderer::getCurrentResolution();
 
     for (const auto& c : capsules)
     {
@@ -197,7 +197,7 @@ void point(Vec2 point, const Color& color)
     if (color.a == 0)
         return;
 
-    const Vec2 rendRes = renderer::getResolution();
+    const Vec2 rendRes = renderer::getCurrentResolution();
     point -= camera::getActivePos();
     if (point.x < 0.0 || point.y < 0.0 || point.x >= rendRes.x || point.y >= rendRes.y)
         return;
@@ -224,7 +224,7 @@ void points(const std::vector<Vec2>& points, const Color& color)
     sdlPoints.reserve(points.size());
 
     const Vec2 cameraPos = camera::getActivePos();
-    const Vec2 rendRes = renderer::getResolution();
+    const Vec2 rendRes = renderer::getCurrentResolution();
     for (Vec2 point : points)
     {
         point -= cameraPos;
@@ -261,7 +261,7 @@ void pointsFromNDArray(
     sdlPoints.reserve(n);
 
     const auto* data = arr.data();
-    const Vec2 rendRes = renderer::getResolution();
+    const Vec2 rendRes = renderer::getCurrentResolution();
     const Vec2 cameraPos = camera::getActivePos();
     for (size_t i = 0; i < n; ++i)
     {
@@ -406,7 +406,7 @@ void rect(
 
     rect.setTopLeft(rect.getTopLeft() - camera::getActivePos());
 
-    const Vec2 rendRes = renderer::getResolution();
+    const Vec2 rendRes = renderer::getCurrentResolution();
     if (rect.getRight() < 0.0 || rect.getBottom() < 0.0 || rect.x >= rendRes.x ||
         rect.y >= rendRes.y)
     {
@@ -520,7 +520,7 @@ void rects(
         throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
 
     const Vec2 cameraPos = camera::getActivePos();
-    const Vec2 rendRes = renderer::getResolution();
+    const Vec2 rendRes = renderer::getCurrentResolution();
 
     // Convert to SDL_FRect array with camera offset
     std::vector<SDL_FRect> sdlRects;
@@ -823,7 +823,7 @@ void sector(
         return;
 
     const Vec2 cameraPos = camera::getActivePos();
-    const Vec2 rendRes = renderer::getResolution();
+    const Vec2 rendRes = renderer::getCurrentResolution();
     const Vec2 center = circle.pos - cameraPos;
 
     // Basic culling

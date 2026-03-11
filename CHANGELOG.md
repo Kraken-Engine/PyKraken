@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Texture.get_rect()` method for getting the dimensions of a texture as a `Rect` object.
 - Debug info messages now show GPU driver information.
 - Some more pytest scripts for important functions and objects.
-- New `renderer.set_resolution` function for setting the resolution of the main renderer, and `renderer.get_resolution` for retrieving it. This defines the coordinate system for rendering and how it maps to the actual output resolution.
+- New `renderer.set_present_resolution` function for setting the resolution at which the final rendered image is presented to the screen.
 - `math.DEG2RAD` and `math.RAD2DEG` constants for converting between degrees and radians.
 
 ### Changed
@@ -23,9 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - In my testing, migrating the same engine API from pybind11 to nanobind increased transform-heavy sprite throughput by about 8–9× under the same Python script and workload.
 - Wheels now build against the Python 3.12 stable ABI, allowing a single binary to work across future Python versions.
 - Renamed `EasingAnimation` class to `Tween` to follow common terminology.
+- `renderer.get_target_resolution` function renamed to `renderer.get_current_resolution` for clarity.
 
 ### Removed
-- `renderer.get_target_resolution` function removed.
 - `math.to_deg()` and `math.to_rad()` functions have been removed in favor of `math.DEG2RAD` and `math.RAD2DEG` constants for conversion.
 - Removed lesser used `renderer.clear` function that accepted 4 separate color components.
 

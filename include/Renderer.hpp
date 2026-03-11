@@ -30,8 +30,8 @@ SDL_GPUDevice* _getGPUDevice();
 void clear(const Color& color = {});
 void present();
 
-void setResolution(int width, int height);
-Vec2 getResolution();
+void setPresentResolution(int width, int height);
+Vec2 getCurrentResolution();
 
 std::unique_ptr<PixelArray> readPixels(const Rect& src = {});
 

@@ -157,8 +157,11 @@ void present()
         currCamera->setPos(cameraPos);
 }
 
-void setResolution(const int width, const int height)
+void setPresentResolution(const int width, const int height)
 {
+    if (width <= 0 || height <= 0)
+        throw std::invalid_argument("Resolution width and height must be positive integers");
+
     if (_primaryTarget != nullptr)
     {
         delete _primaryTarget;
@@ -169,9 +172,29 @@ void setResolution(const int width, const int height)
     setTarget(_primaryTarget);
 }
 
-Vec2 getResolution()
+Vec2 getCurrentResolution()
 {
-    return _primaryTarget ? _primaryTarget->getSize() : _size;
+    SDL_Texture* currentTarget = SDL_GetRenderTarget(_renderer);
+    if (currentTarget)
+    {
+        if (_primaryTarget && currentTarget == _primaryTarget->getSDL())
+            return _primaryTarget->getSize();
+
+        float w, h;
+        if (!SDL_GetTextureSize(currentTarget, &w, &h))
+        {
+            throw std::runtime_error(
+                "Failed to get render target size: " + std::string(SDL_GetError())
+            );
+        }
+
+        return Vec2{w, h};
+    }
+
+    if (_primaryTarget)
+        return _primaryTarget->getSize();
+
+    return _size;
 }
 
 std::unique_ptr<PixelArray> readPixels(const Rect& src)
@@ -202,7 +225,7 @@ void draw(const Texture& texture, const Transform& transform, const Vec2& anchor
     dstRect.setTopLeft(pos - (dstRect.getSize() * anchor));
 
     // cull using the logical resolution (camera/view is already in logical/world coords)
-    const Vec2 rendRes = getResolution();
+    const Vec2 rendRes = getCurrentResolution();
     if (dstRect.getRight() < 0.0 || dstRect.x >= rendRes.x || dstRect.getBottom() < 0.0 ||
         dstRect.y >= rendRes.y)
     {
@@ -245,7 +268,7 @@ void draw(const Texture& texture, const Rect& dst)
     dstRect.x -= camera::getActivePos().x;
     dstRect.y -= camera::getActivePos().y;
 
-    const Vec2 rendRes = getResolution();
+    const Vec2 rendRes = getCurrentResolution();
     if (dstRect.getRight() < 0.0 || dstRect.x >= rendRes.x || dstRect.getBottom() < 0.0 ||
         dstRect.y >= rendRes.y)
         return;
@@ -286,7 +309,7 @@ void drawBatch(
     const auto srcSDLRect = static_cast<SDL_FRect>(clipArea);
     const Vec2 clipSize = clipArea.getSize();
     const Vec2 cameraPos = camera::getActivePos();
-    const Vec2 rendRes = getResolution();
+    const Vec2 rendRes = getCurrentResolution();
 
     SDL_FlipMode flipAxis = SDL_FLIP_NONE;
     if (texture.flip.h)
@@ -351,7 +374,7 @@ void drawBatchNDArray(
     const auto srcSDLRect = static_cast<SDL_FRect>(clipArea);
     const Vec2 clipSize = clipArea.getSize();
     const Vec2 cameraPos = camera::getActivePos();
-    const Vec2 rendRes = getResolution();
+    const Vec2 rendRes = getCurrentResolution();
 
     SDL_FlipMode flipAxis = SDL_FLIP_NONE;
     if (texture.flip.h)
@@ -418,7 +441,7 @@ void _bind(nb::module_& module)
     auto subRenderer = module.def_submodule("renderer", "Functions for rendering graphics");
 
     subRenderer.def("set_default_scale_mode", &setDefaultScaleMode, "scale_mode"_a, R"doc(
-Set the default TextureScaleMode for new textures.
+Set the default TextureScaleMode for new textures. The factory default is TextureScaleMode.LINEAR.
 
 Args:
     scale_mode (TextureScaleMode): The default scaling/filtering mode to use for new textures.
@@ -442,31 +465,32 @@ Raises:
         )doc");
 
     subRenderer.def("present", &present, nb::call_guard<nb::gil_scoped_release>(), R"doc(
-Present the rendered content to the screen.
-
-This finalizes the current frame and displays it. Should be called after
+Present the rendered content to the screen. This finalizes the current frame and displays it. Should be called after
 all drawing operations for the frame are complete.
     )doc");
 
-    subRenderer.def("set_resolution", &setResolution, "width"_a, "height"_a, R"doc(
-Set the resolution of the main renderer for rendering.
-
-This defines the coordinate system for rendering and how it maps to the actual output resolution.
+    subRenderer.def("set_present_resolution", &setPresentResolution, "width"_a, "height"_a, R"doc(
+Set a custom resolution for rendering. This creates an internal render target of the specified size,
+and all rendering will be done to that target, which is then scaled up to the actual screen resolution when presented.
 
 Args:
-    width (int): The width of the resolution.
-    height (int): The height of the resolution.
+    width (int): The width of the render target in pixels.
+    height (int): The height of the render target in pixels.
+
+Raises:
+    ValueError: If width or height are not positive integers.
     )doc");
 
-    subRenderer.def("get_resolution", &getResolution, R"doc(
-Get the resolution of the current render target for rendering.
+    subRenderer.def("get_current_resolution", &getCurrentResolution, R"doc(
+Get the resolution of the current render target for rendering. If a custom render target is set, this will return
+the size of it. Otherwise, it returns the presenting resolution of the renderer.
 
 Returns:
-    Vec2: The width and height of the resolution.
+    Vec2: The width and height of the current resolution.
     )doc");
 
     subRenderer.def("set_target", &setTarget, "target"_a = nb::none(), R"doc(
-Set the current render target to the provided Texture, or unset if None.
+Set the current render target to the provided Texture.
 
 Args:
     target (Texture, optional): A Texture created with TextureAccess.TARGET, or None to unset.
