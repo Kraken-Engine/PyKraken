@@ -1,6 +1,6 @@
 #include "Mixer.hpp"
 
-#include <nanobind/stl/shared_ptr.h>
+#include <nanobind/stl/unique_ptr.h>
 #include <nanobind/stl/string.h>
 
 #include <algorithm>
@@ -43,7 +43,7 @@ static Sint64 _secondsToMs(double seconds);
 static SDL_PropertiesID _buildPlayOptions(bool looping, double fadeInSeconds);
 static Sint64 _fadeOutFramesForTrack(MIX_Track* track, double fadeOutSeconds);
 
-std::shared_ptr<Sample> loadSample(const std::string& path, const bool predecode)
+std::unique_ptr<Sample> loadSample(const std::string& path, const bool predecode)
 {
     MIX_Audio* audio = MIX_LoadAudio(_mixer, path.c_str(), predecode);
     if (audio == nullptr)
@@ -53,10 +53,10 @@ std::shared_ptr<Sample> loadSample(const std::string& path, const bool predecode
         );
     }
 
-    return std::shared_ptr<Sample>(new Sample(audio));
+    return std::unique_ptr<Sample>(new Sample(audio));
 }
 
-std::shared_ptr<Stream> loadStream(const std::string& path, const bool predecode)
+std::unique_ptr<Stream> loadStream(const std::string& path, const bool predecode)
 {
     MIX_Audio* audio = MIX_LoadAudio(_mixer, path.c_str(), predecode);
     if (audio == nullptr)
@@ -66,7 +66,7 @@ std::shared_ptr<Stream> loadStream(const std::string& path, const bool predecode
         );
     }
 
-    return std::shared_ptr<Stream>(new Stream(audio));
+    return std::unique_ptr<Stream>(new Stream(audio));
 }
 
 void setMasterVolume(float volume)

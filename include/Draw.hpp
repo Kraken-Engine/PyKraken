@@ -76,7 +76,7 @@ void polygon(const Polygon& polygon, const Color& color, bool filled = true);
 void polygons(const std::vector<Polygon>& polygons, const Color& color, bool filled = true);
 
 void geometry(
-    const std::shared_ptr<Texture>& texture, const std::vector<Vertex>& vertices,
+    const Texture* texture, const std::vector<Vertex>& vertices,
     const std::vector<int>& indices = {}
 );
 

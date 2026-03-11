@@ -20,8 +20,8 @@ void _bind(nb::module_& module);
 void _init();
 void _quit();
 
-std::shared_ptr<Sample> loadSample(const std::string& path, bool predecode = true);
-std::shared_ptr<Stream> loadStream(const std::string& path, bool predecode = false);
+std::unique_ptr<Sample> loadSample(const std::string& path, bool predecode = true);
+std::unique_ptr<Stream> loadStream(const std::string& path, bool predecode = false);
 void setMasterVolume(float volume);
 float getMasterVolume();
 
@@ -76,7 +76,7 @@ class Sample : public Audio
 
     explicit Sample(MIX_Audio* sdlAudio);
 
-    friend std::shared_ptr<Sample> loadSample(const std::string& path, bool predecode);
+    friend std::unique_ptr<Sample> loadSample(const std::string& path, bool predecode);
 };
 
 class Stream : public Audio
@@ -102,7 +102,7 @@ class Stream : public Audio
     int m_trackIndex = -1;     // -1 means not attached to a track (stopped/paused)
     Sint64 m_savedFrames = 0;  // remembered playback position when paused
 
-    friend std::shared_ptr<Stream> loadStream(const std::string& path, bool predecode);
+    friend std::unique_ptr<Stream> loadStream(const std::string& path, bool predecode);
 };
 }  // namespace mixer
 }  // namespace kn

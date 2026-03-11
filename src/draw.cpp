@@ -1,7 +1,6 @@
 #include "Draw.hpp"
 
 #include <nanobind/stl/optional.h>
-#include <nanobind/stl/shared_ptr.h>
 #include <nanobind/stl/vector.h>
 
 #include <algorithm>
@@ -715,8 +714,7 @@ void polygons(const std::vector<Polygon>& polygons, const Color& color, const bo
 }
 
 void geometry(
-    const std::shared_ptr<Texture>& texture, const std::vector<Vertex>& vertices,
-    const std::vector<int>& indices
+    const Texture* texture, const std::vector<Vertex>& vertices, const std::vector<int>& indices
 )
 {
     if (!rend)

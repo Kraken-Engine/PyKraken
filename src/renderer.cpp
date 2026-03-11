@@ -1,10 +1,7 @@
 #include "Renderer.hpp"
 
-#include <nanobind/stl/shared_ptr.h>
 #include <nanobind/stl/unique_ptr.h>
 #include <nanobind/stl/vector.h>
-
-#include <memory>
 
 #include "Camera.hpp"
 #include "Log.hpp"
