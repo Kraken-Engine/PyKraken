@@ -79,14 +79,14 @@ double outBounce(double t);
 double inOutBounce(double t);
 }  // namespace ease
 
-class EasingAnimation
+class Tween
 {
   public:
     Vec2 startPos{};
     Vec2 endPos{};
 
-    EasingAnimation(ease::EasingFunction easeFunc, double duration);
-    ~EasingAnimation() = default;
+    Tween(ease::EasingFunction easeFunc, double duration);
+    ~Tween() = default;
 
     Vec2 step();
 

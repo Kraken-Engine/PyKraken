@@ -4,7 +4,6 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
 
-#include <memory>
 #include <vector>
 
 #include "Color.hpp"
@@ -29,15 +28,17 @@ SDL_Renderer* _get();
 SDL_GPUDevice* _getGPUDevice();
 
 void clear(const Color& color = {});
-void clear(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255);
 void present();
-Vec2 getTargetResolution();
+
+void setResolution(int width, int height);
+Vec2 getResolution();
+
 std::unique_ptr<PixelArray> readPixels(const Rect& src = {});
 
 void setDefaultScaleMode(TextureScaleMode scaleMode);
 TextureScaleMode getDefaultScaleMode();
 
-void setTarget(const std::shared_ptr<Texture>& target);
+void setTarget(const Texture* target);
 
 void draw(
     const Texture& texture, const Transform& transform = {}, const Vec2& anchor = Anchor::TOP_LEFT,

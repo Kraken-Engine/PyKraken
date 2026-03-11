@@ -775,6 +775,7 @@ Returns:
 
         .def(
             "add_fixed_update", &World::addFixedUpdate, "callback"_a,
+            nb::sig("def add_fixed_update(self, callback: Callable[[], None]) -> None"),
             R"doc(Add a callback function to be executed during each physics step.)doc"
         )
         .def(
@@ -785,6 +786,7 @@ Returns:
                 return func;
             },
             "callback"_a,
+            nb::sig("def fixed_callback(self, callback: Callable[[], None]) -> Callable[[], None]"),
             R"doc(A decorator to register a function as a physics update callback.)doc"
         )
         .def(

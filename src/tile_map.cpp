@@ -520,11 +520,11 @@ void TileLayer::draw()
 
     // Compute visible tile range from the active camera and clamp to map bounds
     const Vec2 camPos = camera::getActivePos();
-    const Vec2 targetRes = renderer::getTargetResolution();
+    const Vec2 rendRes = renderer::getResolution();
     const double camLeft = camPos.x;
     const double camTop = camPos.y;
-    const double camRight = camLeft + targetRes.x;
-    const double camBottom = camTop + targetRes.y;
+    const double camRight = camLeft + rendRes.x;
+    const double camBottom = camTop + rendRes.y;
 
     auto camMinX = static_cast<int>(std::floor((camLeft - offset.x) / tileW));
     auto camMinY = static_cast<int>(std::floor((camTop - offset.y) / tileH));

@@ -21,9 +21,14 @@ namespace kn::renderer
 static SDL_Renderer* _renderer = nullptr;
 static SDL_GPUDevice* _gpuDevice = nullptr;
 static TextureScaleMode _defaultScaleMode = TextureScaleMode::LINEAR;
+static Texture* _primaryTarget = nullptr;
+
+static Vec2 _size{};
 
 void _init(SDL_Window* window, const int width, const int height)
 {
+    _size = {width, height};
+
     _renderer = SDL_CreateGPURenderer(nullptr, window);
     if (_renderer == nullptr)
         throw std::runtime_error("Renderer failed to create: " + std::string(SDL_GetError()));
@@ -68,42 +73,16 @@ void clear(const Color& color)
         throw std::runtime_error("Failed to clear renderer: " + std::string(SDL_GetError()));
 }
 
-void clear(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a)
-{
-    if (!SDL_SetRenderDrawColor(_renderer, r, g, b, a))
-        throw std::runtime_error("Failed to set render draw color: " + std::string(SDL_GetError()));
-    if (!SDL_RenderClear(_renderer))
-        throw std::runtime_error("Failed to clear renderer: " + std::string(SDL_GetError()));
-}
-
-Vec2 getTargetResolution()
-{
-    if (SDL_Texture* target = SDL_GetRenderTarget(_renderer); target)
-    {
-        float w, h;
-        if (!SDL_GetTextureSize(target, &w, &h))
-            throw std::runtime_error(
-                "Failed to get render target size: " + std::string(SDL_GetError())
-            );
-        return {w, h};
-    }
-
-    int w, h;
-    if (!SDL_GetRenderLogicalPresentation(_renderer, &w, &h, nullptr))
-        throw std::runtime_error(
-            "Failed to get logical presentation size: " + std::string(SDL_GetError())
-        );
-    return {w, h};
-}
-
-void setTarget(const std::shared_ptr<Texture>& target)
+void setTarget(const Texture* target)
 {
     if (!_renderer)
         throw std::runtime_error("Renderer not yet initialized");
 
     if (!target)
     {
-        if (!SDL_SetRenderTarget(_renderer, nullptr))
+        if (!SDL_SetRenderTarget(
+                _renderer, (_primaryTarget != nullptr) ? _primaryTarget->getSDL() : nullptr
+            ))
             throw std::runtime_error(
                 "Failed to unset render target: " + std::string(SDL_GetError())
             );
@@ -144,8 +123,55 @@ TextureScaleMode getDefaultScaleMode()
 
 void present()
 {
+    // Regular present if no custom renderer size
+    if (_primaryTarget == nullptr)
+    {
+        if (!SDL_RenderPresent(_renderer))
+            throw std::runtime_error("Failed to present renderer: " + std::string(SDL_GetError()));
+        return;
+    }
+
+    // Hold old cam pos and set pos to origin
+    auto currCamera = camera::_getActiveCamera();
+    Vec2 cameraPos;
+    if (currCamera)
+    {
+        cameraPos = currCamera->getPos();
+        currCamera->setPos({});
+    }
+
+    // Truly reset render target since SetTarget bit my butt
+    if (!SDL_SetRenderTarget(_renderer, nullptr))
+        throw std::runtime_error("Failed to unset render target: " + std::string(SDL_GetError()));
+
+    // Draw custom render size, scaled up to true renderer
+    draw(*_primaryTarget, Rect{_size});
+
+    // Finally present
     if (!SDL_RenderPresent(_renderer))
         throw std::runtime_error("Failed to present renderer: " + std::string(SDL_GetError()));
+
+    // Restore custom renderer size and cam pos
+    setTarget(_primaryTarget);
+    if (currCamera)
+        currCamera->setPos(cameraPos);
+}
+
+void setResolution(const int width, const int height)
+{
+    if (_primaryTarget != nullptr)
+    {
+        delete _primaryTarget;
+        _primaryTarget = nullptr;
+    }
+
+    _primaryTarget = new Texture(width, height, TextureScaleMode::NEAREST);
+    setTarget(_primaryTarget);
+}
+
+Vec2 getResolution()
+{
+    return _primaryTarget ? _primaryTarget->getSize() : _size;
 }
 
 std::unique_ptr<PixelArray> readPixels(const Rect& src)
@@ -160,8 +186,6 @@ std::unique_ptr<PixelArray> readPixels(const Rect& src)
 
 void draw(const Texture& texture, const Transform& transform, const Vec2& anchor, const Vec2& pivot)
 {
-    if (!_renderer)
-        throw std::runtime_error("Renderer not yet initialized");
     if (!texture.getSDL())
         throw std::runtime_error("Invalid texture provided for drawing");
 
@@ -177,10 +201,10 @@ void draw(const Texture& texture, const Transform& transform, const Vec2& anchor
     const Vec2 pos = transform.pos - camera::getActivePos();
     dstRect.setTopLeft(pos - (dstRect.getSize() * anchor));
 
-    // cull if completely outside the screen
-    const Vec2 targetRes = getTargetResolution();
-    if (dstRect.getRight() < 0.0 || dstRect.x >= targetRes.x || dstRect.getBottom() < 0.0 ||
-        dstRect.y >= targetRes.y)
+    // cull using the logical resolution (camera/view is already in logical/world coords)
+    const Vec2 rendRes = getResolution();
+    if (dstRect.getRight() < 0.0 || dstRect.x >= rendRes.x || dstRect.getBottom() < 0.0 ||
+        dstRect.y >= rendRes.y)
     {
         return;
     }
@@ -208,8 +232,6 @@ void draw(const Texture& texture, const Transform& transform, const Vec2& anchor
 
 void draw(const Texture& texture, const Rect& dst)
 {
-    if (!_renderer)
-        throw std::runtime_error("Renderer not yet initialized");
     if (!texture.getSDL())
         throw std::runtime_error("Invalid texture provided for drawing");
     if (texture.getAlpha() == 0.0f)
@@ -223,9 +245,9 @@ void draw(const Texture& texture, const Rect& dst)
     dstRect.x -= camera::getActivePos().x;
     dstRect.y -= camera::getActivePos().y;
 
-    const Vec2 targetRes = getTargetResolution();
-    if (dstRect.getRight() < 0.0 || dstRect.x >= targetRes.x || dstRect.getBottom() < 0.0 ||
-        dstRect.y >= targetRes.y)
+    const Vec2 rendRes = getResolution();
+    if (dstRect.getRight() < 0.0 || dstRect.x >= rendRes.x || dstRect.getBottom() < 0.0 ||
+        dstRect.y >= rendRes.y)
         return;
 
     const auto dstSDLRect = static_cast<SDL_FRect>(dstRect);
@@ -250,8 +272,6 @@ void drawBatch(
     const Vec2& pivot
 )
 {
-    if (!_renderer)
-        throw std::runtime_error("Renderer not yet initialized");
     if (!texture.getSDL())
         throw std::runtime_error("Invalid texture provided for drawing");
     if (transforms.empty())
@@ -266,7 +286,7 @@ void drawBatch(
     const auto srcSDLRect = static_cast<SDL_FRect>(clipArea);
     const Vec2 clipSize = clipArea.getSize();
     const Vec2 cameraPos = camera::getActivePos();
-    const Vec2 targetRes = getTargetResolution();
+    const Vec2 rendRes = getResolution();
 
     SDL_FlipMode flipAxis = SDL_FLIP_NONE;
     if (texture.flip.h)
@@ -283,8 +303,8 @@ void drawBatch(
         const Vec2 pos = transform.pos - cameraPos;
         dstRect.setTopLeft(pos - (dstRect.getSize() * anchor));
 
-        if (dstRect.getRight() < 0.0 || dstRect.x >= targetRes.x || dstRect.getBottom() < 0.0 ||
-            dstRect.y >= targetRes.y)
+        if (dstRect.getRight() < 0.0 || dstRect.x >= rendRes.x || dstRect.getBottom() < 0.0 ||
+            dstRect.y >= rendRes.y)
             continue;
 
         const auto dstSDLRect = static_cast<SDL_FRect>(dstRect);
@@ -306,8 +326,6 @@ void drawBatchNDArray(
     const Vec2& pivot
 )
 {
-    if (!_renderer)
-        throw std::runtime_error("Renderer not yet initialized");
     if (!texture.getSDL())
         throw std::runtime_error("Invalid texture provided for drawing");
 
@@ -319,9 +337,9 @@ void drawBatchNDArray(
 
     if (n == 0)
         return;
-    if (cols != 2 && cols != 3 && cols != 5)
+    if (cols < 2 || cols > 5)
         throw std::invalid_argument(
-            "Expected array with 2, 3, or 5 columns [x, y, (angle,) (scale_x, scale_y)]"
+            "Expected array with 2, 3, 4, or 5 columns [x, y, (angle), (scale or scale_x, scale_y)]"
         );
 
     const Rect clipArea = texture.getClipArea();
@@ -333,7 +351,7 @@ void drawBatchNDArray(
     const auto srcSDLRect = static_cast<SDL_FRect>(clipArea);
     const Vec2 clipSize = clipArea.getSize();
     const Vec2 cameraPos = camera::getActivePos();
-    const Vec2 targetRes = getTargetResolution();
+    const Vec2 rendRes = getResolution();
 
     SDL_FlipMode flipAxis = SDL_FLIP_NONE;
     if (texture.flip.h)
@@ -348,16 +366,26 @@ void drawBatchNDArray(
         const size_t row = i * cols;
         const Vec2 pos = Vec2{data[row], data[row + 1]} - cameraPos;
         const double angle = (cols >= 3) ? data[row + 2] : 0.0;
-        const Vec2 scale = (cols == 5) ? Vec2{data[row + 3], data[row + 4]} : Vec2{1.0, 1.0};
 
+        Vec2 scale{1.0};
+        if (cols == 4)
+        {
+            scale.x = data[row + 3];
+            scale.y = scale.x;
+        }
+        else if (cols == 5)
+        {
+            scale.x = data[row + 3];
+            scale.y = data[row + 4];
+        }
         if (scale.isZero())
             continue;
 
         Rect dstRect{0.0, 0.0, clipSize * scale};
         dstRect.setTopLeft(pos - (dstRect.getSize() * anchor));
 
-        if (dstRect.getRight() < 0.0 || dstRect.x >= targetRes.x || dstRect.getBottom() < 0.0 ||
-            dstRect.y >= targetRes.y)
+        if (dstRect.getRight() < 0.0 || dstRect.x >= rendRes.x || dstRect.getBottom() < 0.0 ||
+            dstRect.y >= rendRes.y)
             continue;
 
         const auto dstSDLRect = static_cast<SDL_FRect>(dstRect);
@@ -403,7 +431,7 @@ Returns:
     TextureScaleMode: The current default scaling/filtering mode.
     )doc");
 
-    subRenderer.def("clear", nb::overload_cast<const Color&>(&clear), "color"_a = Color{}, R"doc(
+    subRenderer.def("clear", &clear, "color"_a = Color{}, R"doc(
 Clear the renderer with the specified color.
 
 Args:
@@ -413,19 +441,6 @@ Raises:
     ValueError: If color values are not between 0 and 255.
         )doc");
 
-    subRenderer.def(
-        "clear", nb::overload_cast<uint8_t, uint8_t, uint8_t, uint8_t>(&clear), "r"_a, "g"_a, "b"_a,
-        "a"_a = 255, R"doc(
-Clear the renderer with the specified color.
-
-Args:
-    r (int): Red component (0-255).
-    g (int): Green component (0-255).
-    b (int): Blue component (0-255).
-    a (int, optional): Alpha component (0-255). Defaults to 255.
-    )doc"
-    );
-
     subRenderer.def("present", &present, nb::call_guard<nb::gil_scoped_release>(), R"doc(
 Present the rendered content to the screen.
 
@@ -433,22 +448,31 @@ This finalizes the current frame and displays it. Should be called after
 all drawing operations for the frame are complete.
     )doc");
 
-    subRenderer.def("get_target_resolution", &getTargetResolution, R"doc(
-Get the resolution of the current render target.
-If no target is set, returns the logical presentation resolution.
+    subRenderer.def("set_resolution", &setResolution, "width"_a, "height"_a, R"doc(
+Set the resolution of the main renderer for rendering.
 
-Returns:
-    Vec2: The width and height of the render target.
+This defines the coordinate system for rendering and how it maps to the actual output resolution.
+
+Args:
+    width (int): The width of the resolution.
+    height (int): The height of the resolution.
     )doc");
 
-    subRenderer.def("set_target", &setTarget, "target"_a, R"doc(
+    subRenderer.def("get_resolution", &getResolution, R"doc(
+Get the resolution of the current render target for rendering.
+
+Returns:
+    Vec2: The width and height of the resolution.
+    )doc");
+
+    subRenderer.def("set_target", &setTarget, "target"_a = nb::none(), R"doc(
 Set the current render target to the provided Texture, or unset if None.
 
 Args:
-    target (Texture, optional): Texture created with TextureAccess.TARGET, or None to unset.
+    target (Texture, optional): A Texture created with TextureAccess.TARGET, or None to unset.
 
 Raises:
-    RuntimeError: If the renderer is not initialized or the texture is not a TARGET texture.
+    RuntimeError: If the texture is not a TARGET texture.
         )doc");
 
     subRenderer.def(
@@ -519,16 +543,17 @@ the layout:
 
 - **2 columns** ``[x, y]`` — position only (angle=0, scale=1).
 - **3 columns** ``[x, y, angle]`` — position + rotation (scale=1).
+- **4 columns** ``[x, y, angle, scale]`` — position + rotation + uniform scale.
 - **5 columns** ``[x, y, angle, scale_x, scale_y]`` — full transform.
 
 Args:
     texture (Texture): The texture to render.
-    transforms (numpy.ndarray): float64 array with shape ``(N, 2|3|5)``.
+    transforms (numpy.ndarray): float64 array with shape ``(N, 2|3|4|5)``.
     anchor (Vec2, optional): The anchor point (0.0-1.0). Defaults to top left (0, 0).
     pivot (Vec2, optional): The rotation pivot (0.0-1.0). Defaults to center (0.5, 0.5).
 
 Raises:
-    ValueError: If the array does not have 2, 3, or 5 columns.
+    ValueError: If the array does not have 2, 3, 4, or 5 columns.
         )doc"
     );
 }

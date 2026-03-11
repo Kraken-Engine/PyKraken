@@ -66,139 +66,86 @@ void unbind(const std::string& name)
     _inputBindings.erase(name);
 }
 
+// Returns the maximum activation strength [0, 1] across all bindings for a given action.
+// Digital inputs (keys, buttons) contribute 1.0 when active.
+// Analog inputs contribute their absolute deflection in the matching direction.
+static double getStrength(const std::string& name)
+{
+    const auto it = _inputBindings.find(name);
+    if (it == _inputBindings.end())
+        return 0.0;
+
+    const Vec2 leftStick = gamepad::getLeftStick();
+    const Vec2 rightStick = gamepad::getRightStick();
+
+    double strength = 0.0;
+
+    for (const auto& action : it->second)
+    {
+        std::visit(
+            overloaded{
+                [&](const SDL_Scancode scan)
+                {
+                    if (key::isPressed(scan))
+                        strength = std::max(strength, 1.0);
+                },
+                [&](const Keycode key)
+                {
+                    if (key::isPressed(key))
+                        strength = std::max(strength, 1.0);
+                },
+                [&](const MouseButton mButton)
+                {
+                    if (mouse::isPressed(mButton))
+                        strength = std::max(strength, 1.0);
+                },
+                [&](const SDL_GamepadButton cButton)
+                {
+                    if (gamepad::isPressed(cButton, action.padSlot))
+                        strength = std::max(strength, 1.0);
+                },
+                [&](const std::pair<SDL_GamepadAxis, bool>& axisPair)
+                {
+                    auto [axis, isPositive] = axisPair;
+
+                    auto process = [&](const int a, const double value)
+                    {
+                        if (axis == a && ((isPositive && value > 0) || (!isPositive && value < 0)))
+                            strength = std::max(strength, std::abs(value));
+                    };
+
+                    process(SDL_GAMEPAD_AXIS_LEFTX, leftStick.x);
+                    process(SDL_GAMEPAD_AXIS_LEFTY, leftStick.y);
+                    process(SDL_GAMEPAD_AXIS_RIGHTX, rightStick.x);
+                    process(SDL_GAMEPAD_AXIS_RIGHTY, rightStick.y);
+                },
+            },
+            action.data
+        );
+    }
+
+    return strength;
+}
+
 Vec2 getDirection(
     const std::string& up, const std::string& right, const std::string& down,
     const std::string& left
 )
 {
-    Vec2 directionVec;
-    const Vec2 leftStick = gamepad::getLeftStick();
-    const Vec2 rightStick = gamepad::getRightStick();
-
-    const auto processActions = [&](const std::string& name, double& axisValue, const int direction)
-    {
-        const auto it = _inputBindings.find(name);
-        if (it == _inputBindings.end())
-            return;
-
-        for (const auto& action : it->second)
-        {
-            std::visit(
-                overloaded{
-                    [&](const SDL_Scancode scan)
-                    {
-                        if (key::isPressed(scan))
-                            axisValue += direction;
-                    },
-                    [&](const Keycode key)
-                    {
-                        if (key::isPressed(key))
-                            axisValue += direction;
-                    },
-                    [&](const MouseButton mButton)
-                    {
-                        if (mouse::isPressed(mButton))
-                            axisValue += direction;
-                    },
-                    [&](const SDL_GamepadButton cButton)
-                    {
-                        if (gamepad::isPressed(cButton, action.padSlot))
-                            axisValue += direction;
-                    },
-                    [&](const std::pair<SDL_GamepadAxis, bool>& axisPair)
-                    {
-                        auto [axis, isPositive] = axisPair;
-
-                        auto process = [&](const int a, const double value)
-                        {
-                            if (axis == a &&
-                                ((isPositive && value > 0) || (!isPositive && value < 0)))
-                                axisValue += value;
-                        };
-
-                        process(SDL_GAMEPAD_AXIS_LEFTX, leftStick.x);
-                        process(SDL_GAMEPAD_AXIS_LEFTY, leftStick.y);
-                        process(SDL_GAMEPAD_AXIS_RIGHTX, rightStick.x);
-                        process(SDL_GAMEPAD_AXIS_RIGHTY, rightStick.y);
-                    },
-                },
-                action.data
-            );
-        }
+    Vec2 direction{
+        getStrength(right) - getStrength(left),
+        getStrength(down) - getStrength(up),
     };
 
-    processActions(up, directionVec.y, -1);
-    processActions(right, directionVec.x, 1);
-    processActions(down, directionVec.y, 1);
-    processActions(left, directionVec.x, -1);
+    if (direction.getLengthSquared() > 1.0)
+        direction.normalize();
 
-    directionVec.normalize();
-
-    return directionVec;
+    return direction;
 }
 
 double getAxis(const std::string& negative, const std::string& positive)
 {
-    double axisValue = 0.0;
-    const Vec2 leftStick = gamepad::getLeftStick();
-    const Vec2 rightStick = gamepad::getRightStick();
-
-    const auto processActions = [&](const std::string& name, const int direction)
-    {
-        const auto it = _inputBindings.find(name);
-        if (it == _inputBindings.end())
-            return;
-
-        for (const auto& action : it->second)
-        {
-            std::visit(
-                overloaded{
-                    [&](const SDL_Scancode scan)
-                    {
-                        if (key::isPressed(scan))
-                            axisValue += direction;
-                    },
-                    [&](const Keycode key)
-                    {
-                        if (key::isPressed(key))
-                            axisValue += direction;
-                    },
-                    [&](const MouseButton mButton)
-                    {
-                        if (mouse::isPressed(mButton))
-                            axisValue += direction;
-                    },
-                    [&](const SDL_GamepadButton cButton)
-                    {
-                        if (gamepad::isPressed(cButton, action.padSlot))
-                            axisValue += direction;
-                    },
-                    [&](const std::pair<SDL_GamepadAxis, bool>& axisPair)
-                    {
-                        auto [axis, isPositive] = axisPair;
-
-                        auto process = [&](const int a, const double value)
-                        {
-                            if (axis == a &&
-                                ((isPositive && value > 0) || (!isPositive && value < 0)))
-                                axisValue += value * direction;
-                        };
-
-                        process(SDL_GAMEPAD_AXIS_LEFTX, leftStick.x);
-                        process(SDL_GAMEPAD_AXIS_LEFTY, leftStick.y);
-                        process(SDL_GAMEPAD_AXIS_RIGHTX, rightStick.x);
-                        process(SDL_GAMEPAD_AXIS_RIGHTY, rightStick.y);
-                    },
-                },
-                action.data
-            );
-        }
-    };
-
-    processActions(negative, -1);
-    processActions(positive, 1);
-
-    return std::clamp(axisValue, -1.0, 1.0);
+    return std::clamp(getStrength(positive) - getStrength(negative), -1.0, 1.0);
 }
 
 bool isPressed(const std::string& name)
@@ -216,8 +163,8 @@ bool isPressed(const std::string& name)
                     [](const SDL_Scancode scan) -> bool { return key::isPressed(scan); },
                     [](const Keycode key) -> bool { return key::isPressed(key); },
                     [](const MouseButton mButton) -> bool { return mouse::isPressed(mButton); },
-                    [](const SDL_GamepadButton cButton) -> bool
-                    { return gamepad::isPressed(cButton); },
+                    [&](const SDL_GamepadButton cButton) -> bool
+                    { return gamepad::isPressed(cButton, action.padSlot); },
                     [](const std::pair<SDL_GamepadAxis, bool>&) -> bool { return false; },
                 },
                 action.data
@@ -241,8 +188,8 @@ bool isJustPressed(const std::string& name)
                     [](const SDL_Scancode scan) -> bool { return key::isJustPressed(scan); },
                     [](const Keycode key) -> bool { return key::isJustPressed(key); },
                     [](const MouseButton mButton) -> bool { return mouse::isJustPressed(mButton); },
-                    [](const SDL_GamepadButton cButton) -> bool
-                    { return gamepad::isJustPressed(cButton); },
+                    [&](const SDL_GamepadButton cButton) -> bool
+                    { return gamepad::isJustPressed(cButton, action.padSlot); },
                     [](const std::pair<SDL_GamepadAxis, bool>&) -> bool { return false; },
                 },
                 action.data
@@ -267,8 +214,8 @@ bool isJustReleased(const std::string& name)
                     [](const Keycode key) -> bool { return key::isJustReleased(key); },
                     [](const MouseButton mButton) -> bool
                     { return mouse::isJustReleased(mButton); },
-                    [](const SDL_GamepadButton cButton) -> bool
-                    { return gamepad::isJustReleased(cButton); },
+                    [&](const SDL_GamepadButton cButton) -> bool
+                    { return gamepad::isJustReleased(cButton, action.padSlot); },
                     [](const std::pair<SDL_GamepadAxis, bool>&) -> bool { return false; },
                 },
                 action.data

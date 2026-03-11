@@ -451,8 +451,8 @@ Returns:
         )doc")
 
         // Dunder methods
-        .def("__eq__", &PolarCoordinate::operator==)
-        .def("__ne__", &PolarCoordinate::operator!=)
+        .def(nb::self == nb::self)
+        .def(nb::self != nb::self)
         .def(
             "__str__", [](const PolarCoordinate& p) -> std::string
             { return "(" + std::to_string(p.angle) + ", " + std::to_string(p.radius) + ")"; }
@@ -772,6 +772,8 @@ Returns:
         .def(nb::self + nb::self)
         .def(nb::self += nb::self)
         .def(-nb::self)
+        .def(nb::self - nb::self)
+        .def(nb::self -= nb::self)
         .def("__bool__", [](const Vec2& v) -> bool { return static_cast<bool>(v); })
         .def(nb::self / double())
         .def(nb::self / nb::self)

@@ -4,7 +4,7 @@
 
 namespace kn
 {
-static Vec2 _cameraPos;
+static Vec2 _cameraPos{};
 Camera* Camera::active = nullptr;
 
 Camera::Camera(const Vec2& pos)
@@ -49,7 +49,7 @@ namespace camera
 {
 Vec2 getActivePos()
 {
-    return {std::floor(_cameraPos.x), std::floor(_cameraPos.y)};
+    return _cameraPos.floored();
 }
 
 Vec2 worldToScreen(const Vec2& worldPos)
@@ -60,6 +60,11 @@ Vec2 worldToScreen(const Vec2& worldPos)
 Vec2 screenToWorld(const Vec2& screenPos)
 {
     return screenPos + getActivePos();
+}
+
+Camera* _getActiveCamera()
+{
+    return Camera::active;
 }
 
 void _bind(nb::module_& module)

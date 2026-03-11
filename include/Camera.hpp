@@ -33,6 +33,7 @@ class Camera
 namespace camera
 {
 void _bind(nb::module_& module);
+Camera* _getActiveCamera();
 
 Vec2 getActivePos();
 

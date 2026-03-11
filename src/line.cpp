@@ -1,6 +1,7 @@
 #include "Line.hpp"
 
 #include <nanobind/make_iterator.h>
+#include <nanobind/operators.h>
 
 #include "Math.hpp"
 
@@ -115,8 +116,8 @@ Args:
             "index"_a
         )
         .def("__len__", [](const Line&) -> int { return 4; })
-        .def("__eq__", &Line::operator==, "other"_a)
-        .def("__ne__", &Line::operator!=, "other"_a);
+        .def(nb::self == nb::self)
+        .def(nb::self != nb::self);
 
     auto subLine = module.def_submodule("line");
 

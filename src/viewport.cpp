@@ -14,7 +14,7 @@ std::vector<Rect> layout(const uint8_t count, const ViewportMode mode)
     if (count > 4 || count < 2)
         throw std::runtime_error("'count' must be between 2 and 4");
 
-    const Vec2 rRes = renderer::getTargetResolution();
+    const Vec2 rendRes = renderer::getResolution();
     std::vector<Rect> viewports;
     viewports.reserve(count);
 
@@ -22,7 +22,7 @@ std::vector<Rect> layout(const uint8_t count, const ViewportMode mode)
     {
     case 4:
     {
-        const Vec2 vpSize = rRes * 0.5;
+        const Vec2 vpSize = rendRes * 0.5;
         viewports.push_back({0.0, 0.0, vpSize});
         viewports.push_back({vpSize.x, 0.0, vpSize});
         viewports.push_back({0.0, vpSize.y, vpSize});
@@ -31,10 +31,10 @@ std::vector<Rect> layout(const uint8_t count, const ViewportMode mode)
     }
     case 3:
     {
-        const Vec2 vpSize = rRes * 0.5;
+        const Vec2 vpSize = rendRes * 0.5;
         viewports.push_back({0.0, 0.0, vpSize});
         viewports.push_back({vpSize.x, 0.0, vpSize});
-        viewports.push_back({0.0, vpSize.y, {rRes.x, vpSize.y}});
+        viewports.push_back({0.0, vpSize.y, {rendRes.x, vpSize.y}});
         break;
     }
     case 2:
@@ -43,14 +43,14 @@ std::vector<Rect> layout(const uint8_t count, const ViewportMode mode)
         {
         case ViewportMode::HORIZONTAL:
         {
-            const Vec2 vpSize{rRes.x, rRes.y * 0.5};
+            const Vec2 vpSize{rendRes.x, rendRes.y * 0.5};
             viewports.push_back({0.0, 0.0, vpSize});
             viewports.push_back({0.0, vpSize.y, vpSize});
             break;
         }
         case ViewportMode::VERTICAL:
         {
-            const Vec2 vpSize{rRes.x * 0.5, rRes.y};
+            const Vec2 vpSize{rendRes.x * 0.5, rendRes.y};
             viewports.push_back({0.0, 0.0, vpSize});
             viewports.push_back({vpSize.x, 0.0, vpSize});
             break;

@@ -39,6 +39,10 @@ def fix_stub(path: Path) -> None:
         lines.insert(insert_idx, import_block)
         text = "\n".join(lines)
 
+    # Ensure Callable is imported when used in nb::sig annotations
+    if "Callable" in text and "import Callable" not in text:
+        text = "from collections.abc import Callable\n" + text
+
     if text != original:
         path.write_text(text, encoding="utf-8")
 
@@ -50,6 +54,13 @@ def main() -> None:
             # __init__.pyi: just strip self-referencing _pykraken. prefixes
             text = pyi.read_text(encoding="utf-8")
             fixed = re.sub(r"(?<!\w)_pykraken\.([A-Za-z_]\w*)", r"\1", text)
+            # Ensure Callable is imported when used in nb::sig annotations
+            if "Callable" in fixed and "import Callable" not in fixed:
+                fixed = re.sub(
+                    r"(from collections\.abc import .+)",
+                    r"\1, Callable",
+                    fixed,
+                )
             if fixed != text:
                 pyi.write_text(fixed, encoding="utf-8")
         else:

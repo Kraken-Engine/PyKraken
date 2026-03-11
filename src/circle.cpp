@@ -1,6 +1,7 @@
 #include "Circle.hpp"
 
 #include <nanobind/make_iterator.h>
+#include <nanobind/operators.h>
 
 #include "Line.hpp"
 #include "Rect.hpp"
@@ -159,9 +160,8 @@ Return a copy of the circle.
 
         .def("__len__", [](const Circle&) -> int { return 3; })
 
-        .def("__eq__", &Circle::operator==, "other"_a)
-
-        .def("__ne__", &Circle::operator!=, "other"_a);
+        .def(nb::self == nb::self)
+        .def(nb::self != nb::self);
 }
 }  // namespace circle
 }  // namespace kn

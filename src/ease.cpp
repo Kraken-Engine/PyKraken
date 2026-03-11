@@ -15,13 +15,13 @@
 
 namespace kn
 {
-EasingAnimation::EasingAnimation(ease::EasingFunction easeFunc, const double duration)
+Tween::Tween(ease::EasingFunction easeFunc, const double duration)
     : easingFunc(std::move(easeFunc)),
       duration(duration)
 {
 }
 
-Vec2 EasingAnimation::step()
+Vec2 Tween::step()
 {
     if (state == State::PAUSED || state == State::DONE)
         return getCurrentPosition();
@@ -36,7 +36,7 @@ Vec2 EasingAnimation::step()
     return getCurrentPosition();
 }
 
-Vec2 EasingAnimation::getCurrentPosition() const
+Vec2 Tween::getCurrentPosition() const
 {
     double t = elapsedTime / duration;
     t = std::max(0.0, std::min(t, 1.0));
@@ -44,30 +44,30 @@ Vec2 EasingAnimation::getCurrentPosition() const
     return math::lerp(startPos, endPos, easedT);
 }
 
-void EasingAnimation::pause()
+void Tween::pause()
 {
     state = State::PAUSED;
 }
 
-void EasingAnimation::resume()
+void Tween::resume()
 {
     if (state != State::DONE)
         state = State::PLAYING;
 }
 
-void EasingAnimation::restart()
+void Tween::restart()
 {
     elapsedTime = forward ? 0.0 : duration;
     state = State::PLAYING;
 }
 
-void EasingAnimation::reverse()
+void Tween::reverse()
 {
     forward = !forward;
     state = State::PLAYING;
 }
 
-bool EasingAnimation::isDone() const
+bool Tween::isDone() const
 {
     return state == State::DONE;
 }
@@ -283,7 +283,7 @@ void _bind(nb::module_& module)
 {
     using namespace nb::literals;
 
-    auto subEase = module.def_submodule("ease", "Easing functions and animation utilities");
+    auto subEase = module.def_submodule("ease", "Easing functions for animations.");
 
     subEase.def("linear", &linear, "t"_a, R"doc(
 Linear easing.
@@ -564,49 +564,53 @@ Returns:
     float: Eased result.
     )doc");
 
-    nb::class_<EasingAnimation>(module, "EasingAnimation", R"doc(
+    nb::class_<Tween>(module, "Tween", R"doc(
 A class for animating values over time using easing functions.
 
 This class supports pausing, resuming, reversing, and checking progress.
     )doc")
 
-        .def(nb::init<EasingFunction, double>(), "ease_func"_a, "duration"_a,
-            nb::sig("def __init__(self, ease_func: Callable[[float], float], duration: float) -> None"),
+        .def(
+            nb::init<EasingFunction, double>(), "ease_func"_a, "duration"_a,
+            nb::sig(
+                "def __init__(self, ease_func: Callable[[float], float], duration: float) -> None"
+            ),
             R"doc(
-Create an EasingAnimation.
+Create a Tween.
 
 Args:
     ease_func (Callable[[float], float]): Easing function that maps [0, 1] → [0, 1].
     duration (float): Time in seconds for full animation.
-    )doc")
+    )doc"
+        )
 
-        .def_rw("start_pos", &EasingAnimation::startPos, R"doc(
+        .def_rw("start_pos", &Tween::startPos, R"doc(
 The starting position of the animation.
     )doc")
-        .def_rw("end_pos", &EasingAnimation::endPos, R"doc(
+        .def_rw("end_pos", &Tween::endPos, R"doc(
 The ending position of the animation.
     )doc")
 
-        .def_prop_ro("is_done", &EasingAnimation::isDone, R"doc(
+        .def_prop_ro("is_done", &Tween::isDone, R"doc(
 Check whether the animation has finished.
     )doc")
 
-        .def("step", &EasingAnimation::step, R"doc(
+        .def("step", &Tween::step, R"doc(
 Advance the animation and get its current position.
 
 Returns:
     Vec2: Interpolated position.
     )doc")
-        .def("pause", &EasingAnimation::pause, R"doc(
+        .def("pause", &Tween::pause, R"doc(
 Pause the animation's progression.
     )doc")
-        .def("resume", &EasingAnimation::resume, R"doc(
+        .def("resume", &Tween::resume, R"doc(
 Resume the animation from its current state.
     )doc")
-        .def("restart", &EasingAnimation::restart, R"doc(
+        .def("restart", &Tween::restart, R"doc(
 Restart the animation from the beginning.
     )doc")
-        .def("reverse", &EasingAnimation::reverse, R"doc(
+        .def("reverse", &Tween::reverse, R"doc(
 Reverse the direction of the animation.
     )doc");
 }

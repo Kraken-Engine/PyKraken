@@ -1,5 +1,7 @@
 #include "Capsule.hpp"
 
+#include <nanobind/operators.h>
+
 #include <algorithm>
 #include <string>
 
@@ -98,8 +100,8 @@ Returns:
         )doc")
         .def("__copy__", &Capsule::copy)
         .def("__deepcopy__", [](const Capsule& self, nb::dict) { return self.copy(); })
-        .def("__eq__", &Capsule::operator==)
-        .def("__ne__", &Capsule::operator!=)
+        .def(nb::self == nb::self)
+        .def(nb::self != nb::self)
         .def(
             "__repr__",
             [](const Capsule& self) -> std::string

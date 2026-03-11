@@ -1,6 +1,7 @@
 #include "Color.hpp"
 
 #include <nanobind/make_iterator.h>
+#include <nanobind/operators.h>
 #include <nanobind/stl/string.h>
 
 #include <algorithm>
@@ -18,8 +19,9 @@ std::string Color::toHex() const
 {
     std::stringstream ss;
 
-    ss << std::hex << std::uppercase << std::setfill('0') << std::setw(2) << r << std::setw(2) << g
-       << std::setw(2) << b << std::setw(2) << a;
+    ss << std::hex << std::uppercase << std::setfill('0') << std::setw(2)
+       << static_cast<int>(r) << std::setw(2) << static_cast<int>(g) << std::setw(2)
+       << static_cast<int>(b) << std::setw(2) << static_cast<int>(a);
 
     return "#" + ss.str();
 }
@@ -331,8 +333,7 @@ Note: 0 = fully transparent, 255 = fully opaque
         )doc")
 
         .def_prop_rw(
-            "hex", &Color::toHex,
-            [](Color& self, const std::string& hex) { self.fromHex(hex); },
+            "hex", &Color::toHex, [](Color& self, const std::string& hex) { self.fromHex(hex); },
             R"doc(
 Get or set the color as a hex string.
 
@@ -342,7 +343,8 @@ When setting, accepts various hex formats (see from_hex for details).
 Example:
     color.hex = "#FF00FF"     # Set to magenta
     print(color.hex)          # Returns "#FF00FFFF"
-        )doc")
+        )doc"
+        )
         .def_prop_rw(
             "hsv",
             [](const Color& self) -> nb::tuple
@@ -439,14 +441,14 @@ Returns:
 
         .def("__len__", [](const Color&) -> int { return 4; })
 
-        .def("__eq__", &Color::operator==, "other"_a)
-        .def("__ne__", &Color::operator!=, "other"_a)
+        .def(nb::self == nb::self)
+        .def(nb::self != nb::self)
 
         .def("__neg__", &Color::operator-)
 
-        .def("__mul__", &Color::operator*, "scalar"_a)
+        .def(nb::self * double())
         .def("__rmul__", &Color::operator*, "scalar"_a)
-        .def("__truediv__", &Color::operator/, "scalar"_a)
+        .def(nb::self / double())
 
         .def_prop_ro_static("BLACK", [](const nb::object&) { return BLACK; })
         .def_prop_ro_static("WHITE", [](const nb::object&) { return WHITE; })
@@ -478,9 +480,7 @@ This module provides functions for color manipulation and conversion,
 as well as commonly used color constants for convenience.
     )doc");
 
-    subColor.def(
-        "from_hex",
-        [](const std::string& hex) { return fromHex(hex); }, "hex"_a, R"doc(
+    subColor.def("from_hex", [](const std::string& hex) { return fromHex(hex); }, "hex"_a, R"doc(
 Create a Color from a hex string.
 
 Supports multiple hex formats:

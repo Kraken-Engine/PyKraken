@@ -66,11 +66,11 @@ void circle(const Circle& circle, const Color& color, const double thickness, co
         return;
 
     const Vec2 cameraPos = camera::getActivePos();
-    const Vec2 targetRes = renderer::getTargetResolution();
+    const Vec2 rendRes = renderer::getResolution();
 
     const Vec2 center = circle.pos - cameraPos;
     if (center.x + circle.radius < 0.0 || center.y + circle.radius < 0.0 ||
-        center.x - circle.radius >= targetRes.x || center.y - circle.radius >= targetRes.y)
+        center.x - circle.radius >= rendRes.x || center.y - circle.radius >= rendRes.y)
     {
         return;
     }
@@ -98,7 +98,7 @@ void circles(
         return;
 
     const Vec2 cameraPos = camera::getActivePos();
-    const Vec2 targetRes = renderer::getTargetResolution();
+    const Vec2 rendRes = renderer::getResolution();
 
     for (const Circle& circle : circles)
     {
@@ -107,7 +107,7 @@ void circles(
 
         const Vec2 center = circle.pos - cameraPos;
         if (center.x + circle.radius < 0.0 || center.y + circle.radius < 0.0 ||
-            center.x - circle.radius >= targetRes.x || center.y - circle.radius >= targetRes.y)
+            center.x - circle.radius >= rendRes.x || center.y - circle.radius >= rendRes.y)
         {
             continue;
         }
@@ -134,7 +134,7 @@ void capsule(
         return;
 
     const Vec2 cameraPos = camera::getActivePos();
-    const Vec2 targetRes = renderer::getTargetResolution();
+    const Vec2 rendRes = renderer::getResolution();
 
     const double radius = capsule.radius;
     const Vec2 p1 = capsule.p1 - cameraPos;
@@ -144,7 +144,7 @@ void capsule(
     const double minY = std::min(p1.y, p2.y) - radius;
     const double maxX = std::max(p1.x, p2.x) + radius;
     const double maxY = std::max(p1.y, p2.y) + radius;
-    if (maxX < 0.0 || maxY < 0.0 || minX >= targetRes.x || minY >= targetRes.y)
+    if (maxX < 0.0 || maxY < 0.0 || minX >= rendRes.x || minY >= rendRes.y)
         return;
 
     const bool filled = (thickness <= 0.0 || thickness >= radius);
@@ -163,7 +163,7 @@ void capsules(
         throw std::runtime_error("Renderer not yet initialized");
 
     const Vec2 cameraPos = camera::getActivePos();
-    const Vec2 targetRes = renderer::getTargetResolution();
+    const Vec2 rendRes = renderer::getResolution();
 
     for (const auto& c : capsules)
     {
@@ -178,7 +178,7 @@ void capsules(
         const double minY = std::min(p1.y, p2.y) - radius;
         const double maxX = std::max(p1.x, p2.x) + radius;
         const double maxY = std::max(p1.y, p2.y) + radius;
-        if (maxX < 0.0 || maxY < 0.0 || minX >= targetRes.x || minY >= targetRes.y)
+        if (maxX < 0.0 || maxY < 0.0 || minX >= rendRes.x || minY >= rendRes.y)
             continue;
 
         const bool filled = (thickness <= 0.0 || thickness >= radius);
@@ -197,9 +197,9 @@ void point(Vec2 point, const Color& color)
     if (color.a == 0)
         return;
 
-    const Vec2 targetRes = renderer::getTargetResolution();
+    const Vec2 rendRes = renderer::getResolution();
     point -= camera::getActivePos();
-    if (point.x < 0.0 || point.y < 0.0 || point.x >= targetRes.x || point.y >= targetRes.y)
+    if (point.x < 0.0 || point.y < 0.0 || point.x >= rendRes.x || point.y >= rendRes.y)
         return;
 
     if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
@@ -224,11 +224,11 @@ void points(const std::vector<Vec2>& points, const Color& color)
     sdlPoints.reserve(points.size());
 
     const Vec2 cameraPos = camera::getActivePos();
-    const Vec2 targetRes = renderer::getTargetResolution();
+    const Vec2 rendRes = renderer::getResolution();
     for (Vec2 point : points)
     {
         point -= cameraPos;
-        if (point.x >= 0.0 && point.y >= 0.0 && point.x < targetRes.x && point.y < targetRes.y)
+        if (point.x >= 0.0 && point.y >= 0.0 && point.x < rendRes.x && point.y < rendRes.y)
             sdlPoints.push_back(static_cast<SDL_FPoint>(point));
     }
 
@@ -261,13 +261,13 @@ void pointsFromNDArray(
     sdlPoints.reserve(n);
 
     const auto* data = arr.data();
-    const Vec2 targetRes = renderer::getTargetResolution();
+    const Vec2 rendRes = renderer::getResolution();
     const Vec2 cameraPos = camera::getActivePos();
     for (size_t i = 0; i < n; ++i)
     {
         Vec2 pos = {data[i * 2], data[i * 2 + 1]};
         pos -= cameraPos;
-        if (pos.x >= 0.0 && pos.y >= 0.0 && pos.x < targetRes.x && pos.y < targetRes.y)
+        if (pos.x >= 0.0 && pos.y >= 0.0 && pos.x < rendRes.x && pos.y < rendRes.y)
             sdlPoints.push_back(static_cast<SDL_FPoint>(pos));
     }
 
@@ -406,9 +406,9 @@ void rect(
 
     rect.setTopLeft(rect.getTopLeft() - camera::getActivePos());
 
-    const Vec2 targetRes = renderer::getTargetResolution();
-    if (rect.getRight() < 0.0 || rect.getBottom() < 0.0 || rect.x >= targetRes.x ||
-        rect.y >= targetRes.y)
+    const Vec2 rendRes = renderer::getResolution();
+    if (rect.getRight() < 0.0 || rect.getBottom() < 0.0 || rect.x >= rendRes.x ||
+        rect.y >= rendRes.y)
     {
         return;
     }
@@ -520,7 +520,7 @@ void rects(
         throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
 
     const Vec2 cameraPos = camera::getActivePos();
-    const Vec2 targetRes = renderer::getTargetResolution();
+    const Vec2 rendRes = renderer::getResolution();
 
     // Convert to SDL_FRect array with camera offset
     std::vector<SDL_FRect> sdlRects;
@@ -532,7 +532,7 @@ void rects(
 
         const double x = rect.x - cameraPos.x;
         const double y = rect.y - cameraPos.y;
-        if (x + rect.w < 0.0 || y + rect.h < 0.0 || x >= targetRes.x || y >= targetRes.y)
+        if (x + rect.w < 0.0 || y + rect.h < 0.0 || x >= rendRes.x || y >= rendRes.y)
             continue;
 
         const SDL_FRect sdlRect{
@@ -823,12 +823,12 @@ void sector(
         return;
 
     const Vec2 cameraPos = camera::getActivePos();
-    const Vec2 targetRes = renderer::getTargetResolution();
+    const Vec2 rendRes = renderer::getResolution();
     const Vec2 center = circle.pos - cameraPos;
 
     // Basic culling
     if (center.x + circle.radius < 0.0 || center.y + circle.radius < 0.0 ||
-        center.x - circle.radius >= targetRes.x || center.y - circle.radius >= targetRes.y)
+        center.x - circle.radius >= rendRes.x || center.y - circle.radius >= rendRes.y)
     {
         return;
     }

@@ -397,6 +397,7 @@ Args:
 
                 return self.parallel(effectVec);
             },
+            nb::sig("def parallel(self, *effects: fx.Effect) -> Orchestrator"),
             R"doc(
 Add multiple effects to run in parallel.
 

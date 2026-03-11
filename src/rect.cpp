@@ -1,6 +1,7 @@
 #include "Rect.hpp"
 
 #include <nanobind/make_iterator.h>
+#include <nanobind/operators.h>
 #include <nanobind/stl/string.h>
 
 #include <string>
@@ -494,8 +495,8 @@ Raises:
     ValueError: If width or height is <= 0.
         )doc")
 
-        .def("__eq__", &Rect::operator==, "other"_a)
-        .def("__ne__", &Rect::operator!=, "other"_a)
+        .def(nb::self == nb::self)
+        .def(nb::self != nb::self)
         .def("__bool__", [](const Rect& rect) -> bool { return rect.w > 0 && rect.h > 0; })
         .def(
             "__str__",
