@@ -32,6 +32,17 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
 
+      - name: Set up vcpkg for Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          if (Test-Path C:\vcpkg) {
+            Remove-Item -Recurse -Force C:\vcpkg
+          }
+          git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
+          git -C C:\vcpkg checkout 1e199d32ad53aab1defda61ce41c380302e3f95c
+          C:\vcpkg\bootstrap-vcpkg.bat
+
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.2.0
         env:
@@ -40,7 +51,7 @@ jobs:
           CIBW_SKIP: "*-musllinux_* *-win32"
           CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux_2_28_x86_64
 
-          # --- Windows: vcpkg is pre-installed on GitHub runners ---
+          # --- Windows: use vcpkg ---
           CIBW_ENVIRONMENT_WINDOWS: >
             VCPKG_ROOT=C:/vcpkg
             VCPKG_DEFAULT_TRIPLET=x64-windows-release
