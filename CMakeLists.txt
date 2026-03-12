@@ -42,33 +42,61 @@ if (NOT SKBUILD)
 endif()
 
 include(FetchContent)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
 find_package(Python 3.12
   REQUIRED COMPONENTS Interpreter Development.Module
   OPTIONAL_COMPONENTS Development.SABIModule)
-
 find_package(nanobind CONFIG REQUIRED)
 
-# SDL_mixer options (built via FetchContent, not vcpkg)
-# BUILD_SHARED_LIBS must be OFF so SDL_mixer looks for SDL3::SDL3 (generic alias)
-# instead of SDL3::SDL3-shared, which doesn't exist with static vcpkg triplets.
-set(BUILD_SHARED_LIBS           OFF CACHE BOOL "" FORCE)
-set(SDLMIXER_MIDI_NATIVE       OFF CACHE BOOL "" FORCE)
+# SDL3 and friends --------------------------------------------
+find_package(SDL3 CONFIG REQUIRED)
+find_package(SDL3_ttf CONFIG REQUIRED)
+
+# find_package(SDL3_image CONFIG REQUIRED)
+set(SDLIMAGE_ANI  OFF CACHE BOOL "" FORCE)
+set(SDLIMAGE_AVIF OFF CACHE BOOL "" FORCE)
+set(SDLIMAGE_BMP  OFF CACHE BOOL "" FORCE)
+set(SDLIMAGE_GIF  OFF CACHE BOOL "" FORCE)
+set(SDLIMAGE_LBM  OFF CACHE BOOL "" FORCE)
+set(SDLIMAGE_PCX  OFF CACHE BOOL "" FORCE)
+set(SDLIMAGE_PNM  OFF CACHE BOOL "" FORCE)
+set(SDLIMAGE_QOI  OFF CACHE BOOL "" FORCE)
+set(SDLIMAGE_TIF  OFF CACHE BOOL "" FORCE)
+set(SDLIMAGE_WEBP OFF CACHE BOOL "" FORCE)
+set(SDLIMAGE_XCF  OFF CACHE BOOL "" FORCE)
+set(SDLIMAGE_XPM  OFF CACHE BOOL "" FORCE)
+set(SDLIMAGE_XV   OFF CACHE BOOL "" FORCE)
+set(SDLIMAGE_VENDORED ON CACHE BOOL "" FORCE)
+FetchContent_Declare(SDL_image
+  GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
+  GIT_TAG        release-3.4.0
+  GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(SDL_image)
+
 set(SDLMIXER_GME               OFF CACHE BOOL "" FORCE)
 set(SDLMIXER_WAVPACK           OFF CACHE BOOL "" FORCE)
 set(SDLMIXER_MOD               OFF CACHE BOOL "" FORCE)
-set(SDLMIXER_MOD_XMP           OFF CACHE BOOL "" FORCE)
-set(SDLMIXER_OPUS              ON CACHE BOOL "" FORCE)
-set(SDLMIXER_MP3_MPG123        ON CACHE BOOL "" FORCE)
-set(SDLMIXER_VORBIS_VORBISFILE ON CACHE BOOL "" FORCE)
-set(SDLMIXER_FLAC_LIBFLAC      ON CACHE BOOL "" FORCE)
+set(SDLMIXER_MIDI              OFF CACHE BOOL "" FORCE)
+set(SDLMIXER_AIFF              OFF CACHE BOOL "" FORCE)
+set(SDLMIXER_VOC               OFF CACHE BOOL "" FORCE)
+set(SDLMIXER_AU                OFF CACHE BOOL "" FORCE)
+set(SDLMIXER_MP3_DRMP3         OFF CACHE BOOL "" FORCE)
+set(SDLMIXER_VORBIS_STB        OFF CACHE BOOL "" FORCE)
+set(SDLMIXER_FLAC_LIBFLAC      OFF CACHE BOOL "" FORCE)
 set(SDLMIXER_VENDORED          ON CACHE BOOL "" FORCE)
+FetchContent_Declare(SDL_mixer
+  GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer.git
+  GIT_TAG        release-3.2.0
+  GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(SDL_mixer)
+# ------------------------------------------------------------
 
-find_package(SDL3 CONFIG REQUIRED)
-find_package(SDL3_image CONFIG REQUIRED)
-find_package(SDL3_ttf CONFIG REQUIRED)
 find_package(box2d CONFIG REQUIRED)
 
+# Used by tmxlite and SDL image
 find_package(zstd CONFIG QUIET)
 if(NOT zstd_FOUND)
   find_package(PkgConfig REQUIRED)
@@ -86,16 +114,10 @@ FetchContent_Declare(tmxlite
   SOURCE_SUBDIR  tmxlite
 )
 set(TMXLITE_STATIC_LIB ON CACHE BOOL "" FORCE)
-set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "" FORCE)
+set(USE_ZSTD ON CACHE BOOL "" FORCE)  # Big boy compression
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "" FORCE)  # tmxlite is old
 FetchContent_MakeAvailable(tmxlite)
 set_target_properties(tmxlite PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
-FetchContent_Declare(SDL_mixer
-  GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer.git
-  GIT_TAG        prerelease-3.1.2
-  GIT_SHALLOW    TRUE
-)
-FetchContent_MakeAvailable(SDL_mixer)
 
 nanobind_add_module(
   _pykraken
