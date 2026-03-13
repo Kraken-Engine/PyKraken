@@ -40,11 +40,11 @@ class Vec2
     double x = 0.0;
     double y = 0.0;
 
-    static Vec2 ZERO();
-    static Vec2 LEFT();
-    static Vec2 RIGHT();
-    static Vec2 UP();
-    static Vec2 DOWN();
+    const static Vec2 ZERO;
+    const static Vec2 LEFT;
+    const static Vec2 RIGHT;
+    const static Vec2 UP;
+    const static Vec2 DOWN;
 
     Vec2() = default;
     ~Vec2() = default;

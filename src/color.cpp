@@ -152,6 +152,26 @@ Color& Color::operator/=(const double scalar)
     return *this;
 }
 
+const Color Color::BLACK = {0, 0, 0};
+const Color Color::WHITE = {255, 255, 255};
+const Color Color::RED = {255, 0, 0};
+const Color Color::GREEN = {0, 255, 0};
+const Color Color::BLUE = {0, 0, 255};
+const Color Color::YELLOW = {255, 255, 0};
+const Color Color::MAGENTA = {255, 0, 255};
+const Color Color::CYAN = {0, 255, 255};
+const Color Color::GRAY = {128, 128, 128};
+const Color Color::DARK_GRAY = {64, 64, 64};
+const Color Color::LIGHT_GRAY = {192, 192, 192};
+const Color Color::ORANGE = {255, 165, 0};
+const Color Color::BROWN = {139, 69, 19};
+const Color Color::PINK = {255, 192, 203};
+const Color Color::PURPLE = {128, 0, 128};
+const Color Color::NAVY = {0, 0, 128};
+const Color Color::TEAL = {0, 128, 128};
+const Color(Color::OLIVE) = {128, 128, 0};
+const Color(Color::MAROON) = {128, 0, 0};
+
 namespace color
 {
 Color fromHex(std::string_view hex)
@@ -469,28 +489,64 @@ Returns:
         .def(nb::self / double())
         .def(nb::self /= double(), nb::rv_policy::none)
 
-        .def_prop_ro_static("BLACK", [](const nb::object&) { return BLACK; })
-        .def_prop_ro_static("WHITE", [](const nb::object&) { return WHITE; })
-        .def_prop_ro_static("RED", [](const nb::object&) { return RED; })
-        .def_prop_ro_static("GREEN", [](const nb::object&) { return GREEN; })
-        .def_prop_ro_static("BLUE", [](const nb::object&) { return BLUE; })
-        .def_prop_ro_static("YELLOW", [](const nb::object&) { return YELLOW; })
-        .def_prop_ro_static("MAGENTA", [](const nb::object&) { return MAGENTA; })
-        .def_prop_ro_static("CYAN", [](const nb::object&) { return CYAN; })
-        .def_prop_ro_static("GRAY", [](const nb::object&) { return GRAY; })
-        .def_prop_ro_static("GREY", [](const nb::object&) { return GRAY; })
-        .def_prop_ro_static("DARK_GRAY", [](const nb::object&) { return DARK_GRAY; })
-        .def_prop_ro_static("DARK_GREY", [](const nb::object&) { return DARK_GRAY; })
-        .def_prop_ro_static("LIGHT_GRAY", [](const nb::object&) { return LIGHT_GRAY; })
-        .def_prop_ro_static("LIGHT_GREY", [](const nb::object&) { return LIGHT_GRAY; })
-        .def_prop_ro_static("ORANGE", [](const nb::object&) { return ORANGE; })
-        .def_prop_ro_static("BROWN", [](const nb::object&) { return BROWN; })
-        .def_prop_ro_static("PINK", [](const nb::object&) { return PINK; })
-        .def_prop_ro_static("PURPLE", [](const nb::object&) { return PURPLE; })
-        .def_prop_ro_static("NAVY", [](const nb::object&) { return NAVY; })
-        .def_prop_ro_static("TEAL", [](const nb::object&) { return TEAL; })
-        .def_prop_ro_static("OLIVE", [](const nb::object&) { return OLIVE; })
-        .def_prop_ro_static("MAROON", [](const nb::object&) { return MAROON; });
+        .def_prop_ro_static(
+            "BLACK", [](const nb::object&) { return Color::BLACK; }, "(0, 0, 0, 255)"
+        )
+        .def_prop_ro_static(
+            "WHITE", [](const nb::object&) { return Color::WHITE; }, "(255, 255, 255, 255)"
+        )
+        .def_prop_ro_static(
+            "RED", [](const nb::object&) { return Color::RED; }, "(255, 0, 0, 255)"
+        )
+        .def_prop_ro_static(
+            "GREEN", [](const nb::object&) { return Color::GREEN; }, "(0, 255, 0, 255)"
+        )
+        .def_prop_ro_static(
+            "BLUE", [](const nb::object&) { return Color::BLUE; }, "(0, 0, 255, 255)"
+        )
+        .def_prop_ro_static(
+            "YELLOW", [](const nb::object&) { return Color::YELLOW; }, "(255, 255, 0, 255)"
+        )
+        .def_prop_ro_static(
+            "MAGENTA", [](const nb::object&) { return Color::MAGENTA; }, "(255, 0, 255, 255)"
+        )
+        .def_prop_ro_static(
+            "CYAN", [](const nb::object&) { return Color::CYAN; }, "(0, 255, 255, 255)"
+        )
+        .def_prop_ro_static(
+            "GRAY", [](const nb::object&) { return Color::GRAY; }, "(128, 128, 128, 255)"
+        )
+        .def_prop_ro_static(
+            "DARK_GRAY", [](const nb::object&) { return Color::DARK_GRAY; }, "(64, 64, 64, 255)"
+        )
+        .def_prop_ro_static(
+            "LIGHT_GRAY", [](const nb::object&) { return Color::LIGHT_GRAY; },
+            "(192, 192, 192, 255)"
+        )
+        .def_prop_ro_static(
+            "ORANGE", [](const nb::object&) { return Color::ORANGE; }, "(255, 165, 0, 255)"
+        )
+        .def_prop_ro_static(
+            "BROWN", [](const nb::object&) { return Color::BROWN; }, "(165, 42, 42, 255)"
+        )
+        .def_prop_ro_static(
+            "PINK", [](const nb::object&) { return Color::PINK; }, "(255, 192, 203, 255)"
+        )
+        .def_prop_ro_static(
+            "PURPLE", [](const nb::object&) { return Color::PURPLE; }, "(128, 0, 128, 255)"
+        )
+        .def_prop_ro_static(
+            "NAVY", [](const nb::object&) { return Color::NAVY; }, "(0, 0, 128, 255)"
+        )
+        .def_prop_ro_static(
+            "TEAL", [](const nb::object&) { return Color::TEAL; }, "(0, 128, 128, 255)"
+        )
+        .def_prop_ro_static(
+            "OLIVE", [](const nb::object&) { return Color::OLIVE; }, "(128, 128, 0, 255)"
+        )
+        .def_prop_ro_static(
+            "MAROON", [](const nb::object&) { return Color::MAROON; }, "(128, 0, 0, 255)"
+        );
 
     auto subColor = module.def_submodule("color", R"doc(
 Color utility functions and predefined color constants.

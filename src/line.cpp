@@ -19,7 +19,7 @@ void _bind(nb::module_& module)
     using namespace nb::literals;
 
     nb::class_<Line>(module, "Line", R"doc(
-A 2D line segment defined by two points: A and B.
+A 2D line segment defined by two points.
 You can access or modify points using `.a`, `.b`, or directly via `.ax`, `.ay`, `.bx`, `.by`.
     )doc")
         .def(nb::init(), R"doc(

@@ -23,15 +23,33 @@ void _bind(const nb::module_& module)
     nb::class_<Anchor>(module, "Anchor", R"doc(
 Anchor positions returning Vec2 values for alignment.
     )doc")
-        .def_prop_ro_static("TOP_LEFT", [](const nb::object&) { return Anchor::TOP_LEFT; })
-        .def_prop_ro_static("TOP_MID", [](const nb::object&) { return Anchor::TOP_MID; })
-        .def_prop_ro_static("TOP_RIGHT", [](const nb::object&) { return Anchor::TOP_RIGHT; })
-        .def_prop_ro_static("MID_LEFT", [](const nb::object&) { return Anchor::MID_LEFT; })
-        .def_prop_ro_static("CENTER", [](const nb::object&) { return Anchor::CENTER; })
-        .def_prop_ro_static("MID_RIGHT", [](const nb::object&) { return Anchor::MID_RIGHT; })
-        .def_prop_ro_static("BOTTOM_LEFT", [](const nb::object&) { return Anchor::BOTTOM_LEFT; })
-        .def_prop_ro_static("BOTTOM_MID", [](const nb::object&) { return Anchor::BOTTOM_MID; })
-        .def_prop_ro_static("BOTTOM_RIGHT", [](const nb::object&) { return Anchor::BOTTOM_RIGHT; });
+        .def_prop_ro_static(
+            "TOP_LEFT", [](const nb::object&) { return Anchor::TOP_LEFT; }, "(0.0, 0.0)"
+        )
+        .def_prop_ro_static(
+            "TOP_MID", [](const nb::object&) { return Anchor::TOP_MID; }, "(0.5, 0.0)"
+        )
+        .def_prop_ro_static(
+            "TOP_RIGHT", [](const nb::object&) { return Anchor::TOP_RIGHT; }, "(1.0, 0.0)"
+        )
+        .def_prop_ro_static(
+            "MID_LEFT", [](const nb::object&) { return Anchor::MID_LEFT; }, "(0.0, 0.5)"
+        )
+        .def_prop_ro_static(
+            "CENTER", [](const nb::object&) { return Anchor::CENTER; }, "(0.5, 0.5)"
+        )
+        .def_prop_ro_static(
+            "MID_RIGHT", [](const nb::object&) { return Anchor::MID_RIGHT; }, "(1.0, 0.5)"
+        )
+        .def_prop_ro_static(
+            "BOTTOM_LEFT", [](const nb::object&) { return Anchor::BOTTOM_LEFT; }, "(0.0, 1.0)"
+        )
+        .def_prop_ro_static(
+            "BOTTOM_MID", [](const nb::object&) { return Anchor::BOTTOM_MID; }, "(0.5, 1.0)"
+        )
+        .def_prop_ro_static(
+            "BOTTOM_RIGHT", [](const nb::object&) { return Anchor::BOTTOM_RIGHT; }, "(1.0, 1.0)"
+        );
 
     // Define Align enum
     nb::enum_<Align>(module, "Align", R"doc(

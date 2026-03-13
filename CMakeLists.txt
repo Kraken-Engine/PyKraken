@@ -75,6 +75,10 @@ FetchContent_Declare(SDL_image
 )
 FetchContent_MakeAvailable(SDL_image)
 
+# NOTE:
+# SDL3_ttf must be found *after* SDL_image is fetched/built on Windows CI.
+# Otherwise a transitive dependency can define PNG::PNG first, and SDL_image's
+# vendored libpng path will fail trying to create the same alias target.
 find_package(SDL3_ttf CONFIG REQUIRED)
 
 set(SDLMIXER_GME               OFF CACHE BOOL "" FORCE)

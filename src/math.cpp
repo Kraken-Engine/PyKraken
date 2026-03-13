@@ -15,30 +15,11 @@
 
 namespace kn
 {
-Vec2 Vec2::ZERO()
-{
-    return {};
-}
-
-Vec2 Vec2::LEFT()
-{
-    return {-1.0, 0.0};
-}
-
-Vec2 Vec2::RIGHT()
-{
-    return {1.0, 0.0};
-}
-
-Vec2 Vec2::UP()
-{
-    return {0.0, -1.0};
-}
-
-Vec2 Vec2::DOWN()
-{
-    return {0.0, 1.0};
-}
+const Vec2 Vec2::ZERO = {0.0, 0.0};
+const Vec2 Vec2::LEFT = {-1.0, 0.0};
+const Vec2 Vec2::RIGHT = {1.0, 0.0};
+const Vec2 Vec2::UP = {0.0, -1.0};
+const Vec2 Vec2::DOWN = {0.0, 1.0};
 
 Vec2 PolarCoordinate::toCartesian() const
 {
@@ -567,11 +548,21 @@ Args:
             "Return a Vec2 with both components set to y."
         )
 
-        .def_prop_ro_static("ZERO", [](const nb::object&) -> Vec2 { return Vec2::ZERO(); })
-        .def_prop_ro_static("LEFT", [](const nb::object&) -> Vec2 { return Vec2::LEFT(); })
-        .def_prop_ro_static("RIGHT", [](const nb::object&) -> Vec2 { return Vec2::RIGHT(); })
-        .def_prop_ro_static("UP", [](const nb::object&) -> Vec2 { return Vec2::UP(); })
-        .def_prop_ro_static("DOWN", [](const nb::object&) -> Vec2 { return Vec2::DOWN(); })
+        .def_prop_ro_static(
+            "ZERO", [](const nb::object&) -> Vec2 { return Vec2::ZERO; }, "(0.0, 0.0)"
+        )
+        .def_prop_ro_static(
+            "LEFT", [](const nb::object&) -> Vec2 { return Vec2::LEFT; }, "(-1.0, 0.0)"
+        )
+        .def_prop_ro_static(
+            "RIGHT", [](const nb::object&) -> Vec2 { return Vec2::RIGHT; }, "(1.0, 0.0)"
+        )
+        .def_prop_ro_static(
+            "UP", [](const nb::object&) -> Vec2 { return Vec2::UP; }, "(0.0, -1.0)"
+        )
+        .def_prop_ro_static(
+            "DOWN", [](const nb::object&) -> Vec2 { return Vec2::DOWN; }, "(0.0, 1.0)"
+        )
 
         // Methods
         .def("copy", &Vec2::copy, R"doc(
@@ -715,8 +706,7 @@ Returns:
     Vec2: A new vector with rounded components.
         )doc")
         .def(
-            "as_ints",
-            [](const Vec2& v) -> nb::tuple
+            "as_ints", [](const Vec2& v) -> nb::tuple
             { return nb::make_tuple(static_cast<int>(v.x), static_cast<int>(v.y)); },
             R"doc(
 Return the vector components truncated to integers as a tuple.
