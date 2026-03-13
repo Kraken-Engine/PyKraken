@@ -109,7 +109,9 @@ endif()
 
 FetchContent_Declare(tmxlite
   GIT_REPOSITORY https://github.com/fallahn/tmxlite.git
-  GIT_TAG        v1.4.4
+  # Use the upstream branch (master) which includes fixes not present in the
+  # v1.4.4 release (project version and CMake minimum updates).
+  GIT_TAG        master
   GIT_SHALLOW    TRUE
   SOURCE_SUBDIR  tmxlite
 )

@@ -39,22 +39,6 @@ jobs:
           vcpkgDirectory: "C:/vcpkg"
           vcpkgJsonGlob: "vcpkg.json"
 
-        # Fallback: if the action isn't available in the runner, clone and bootstrap using the manifest baseline
-      - name: Ensure vcpkg at manifest baseline (fallback)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $baseline = (Get-Content $GITHUB_WORKSPACE\vcpkg.json | ConvertFrom-Json).'builtin-baseline'
-          if (-not $baseline) {
-            Write-Host "No builtin-baseline found"; exit 0
-          }
-          if (Test-Path C:\vcpkg) {
-            Remove-Item -Recurse -Force C:\vcpkg
-          }
-          git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
-          git -C C:\vcpkg checkout $baseline
-          C:\vcpkg\bootstrap-vcpkg.bat
-
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.2.0
         env:
