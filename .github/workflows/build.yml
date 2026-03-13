@@ -32,15 +32,27 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
 
-      - name: Set up vcpkg for Windows
+      - name: Set up vcpkg using run-vcpkg action
+        if: runner.os == 'Windows'
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: "C:/vcpkg"
+          vcpkgJsonGlob: "vcpkg.json"
+
+        # Fallback: if the action isn't available in the runner, clone and bootstrap using the manifest baseline
+      - name: Ensure vcpkg at manifest baseline (fallback)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
+          $baseline = (Get-Content $GITHUB_WORKSPACE\vcpkg.json | ConvertFrom-Json).'builtin-baseline'
+          if (-not $baseline) {
+            Write-Host "No builtin-baseline found"; exit 0
+          }
           if (Test-Path C:\vcpkg) {
             Remove-Item -Recurse -Force C:\vcpkg
           }
           git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
-          git -C C:\vcpkg checkout 1e199d32ad53aab1defda61ce41c380302e3f95c
+          git -C C:\vcpkg checkout $baseline
           C:\vcpkg\bootstrap-vcpkg.bat
 
       - name: Build wheels

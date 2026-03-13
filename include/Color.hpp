@@ -60,8 +60,12 @@ struct Color
 
     // Division and multiplication by scalar between 0.0 and 1.0
     Color operator*(double scalar) const;
+    Color& operator*=(double scalar);
     Color operator/(double scalar) const;
+    Color& operator/=(double scalar);
 };
+
+Color operator*(double scalar, const Color& color);
 
 constexpr Color BLACK = {0, 0, 0};
 constexpr Color WHITE = {255, 255, 255};

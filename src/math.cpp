@@ -770,22 +770,20 @@ Returns:
 
         // Arithmetic dunder methods
         .def(nb::self + nb::self)
-        .def(nb::self += nb::self)
+        .def(nb::self += nb::self, nb::rv_policy::none)
         .def(-nb::self)
         .def(nb::self - nb::self)
-        .def(nb::self -= nb::self)
+        .def(nb::self -= nb::self, nb::rv_policy::none)
         .def("__bool__", [](const Vec2& v) -> bool { return static_cast<bool>(v); })
         .def(nb::self / double())
         .def(nb::self / nb::self)
-        .def(nb::self /= double())
-        .def(nb::self /= nb::self)
+        .def(nb::self /= double(), nb::rv_policy::none)
+        .def(nb::self /= nb::self, nb::rv_policy::none)
         .def(nb::self * nb::self)
         .def(nb::self * double())
-        .def(
-            "__rmul__", [](const Vec2& self, const double s) { return self * s; }, "scalar"_a
-        )
-        .def(nb::self *= nb::self)
-        .def(nb::self *= double())
+        .def(double() * nb::self)
+        .def(nb::self *= nb::self, nb::rv_policy::none)
+        .def(nb::self *= double(), nb::rv_policy::none)
 
         // Hash and comparison dunder methods
         .def(

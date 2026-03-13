@@ -19,9 +19,9 @@ std::string Color::toHex() const
 {
     std::stringstream ss;
 
-    ss << std::hex << std::uppercase << std::setfill('0') << std::setw(2)
-       << static_cast<int>(r) << std::setw(2) << static_cast<int>(g) << std::setw(2)
-       << static_cast<int>(b) << std::setw(2) << static_cast<int>(a);
+    ss << std::hex << std::uppercase << std::setfill('0') << std::setw(2) << static_cast<int>(r)
+       << std::setw(2) << static_cast<int>(g) << std::setw(2) << static_cast<int>(b) << std::setw(2)
+       << static_cast<int>(a);
 
     return "#" + ss.str();
 }
@@ -116,6 +116,17 @@ Color Color::operator*(const double scalar) const
     return {clamp(r * scalar), clamp(g * scalar), clamp(b * scalar), a};
 }
 
+Color& Color::operator*=(const double scalar)
+{
+    *this = *this * scalar;
+    return *this;
+}
+
+Color operator*(const double scalar, const Color& color)
+{
+    return color * scalar;
+}
+
 Color Color::operator/(const double scalar) const
 {
     if (scalar == 0.0)
@@ -133,6 +144,12 @@ Color Color::operator/(const double scalar) const
     { return static_cast<uint8_t>(std::clamp(value, 0.0, 255.0)); };
 
     return {clamp(r / scalar), clamp(g / scalar), clamp(b / scalar), a};
+}
+
+Color& Color::operator/=(const double scalar)
+{
+    *this = *this / scalar;
+    return *this;
 }
 
 namespace color
@@ -444,11 +461,13 @@ Returns:
         .def(nb::self == nb::self)
         .def(nb::self != nb::self)
 
-        .def("__neg__", &Color::operator-)
+        .def(-nb::self)
 
         .def(nb::self * double())
-        .def("__rmul__", &Color::operator*, "scalar"_a)
+        .def(double() * nb::self)
+        .def(nb::self *= double(), nb::rv_policy::none)
         .def(nb::self / double())
+        .def(nb::self /= double(), nb::rv_policy::none)
 
         .def_prop_ro_static("BLACK", [](const nb::object&) { return BLACK; })
         .def_prop_ro_static("WHITE", [](const nb::object&) { return WHITE; })

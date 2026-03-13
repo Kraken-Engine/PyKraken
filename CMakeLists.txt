@@ -115,7 +115,6 @@ FetchContent_Declare(tmxlite
 )
 set(TMXLITE_STATIC_LIB ON CACHE BOOL "" FORCE)
 set(USE_ZSTD ON CACHE BOOL "" FORCE)  # Big boy compression
-set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "" FORCE)  # tmxlite is old
 FetchContent_MakeAvailable(tmxlite)
 set_target_properties(tmxlite PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
