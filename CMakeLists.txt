@@ -51,7 +51,6 @@ find_package(nanobind CONFIG REQUIRED)
 
 # SDL3 and friends --------------------------------------------
 find_package(SDL3 CONFIG REQUIRED)
-find_package(SDL3_ttf CONFIG REQUIRED)
 
 # find_package(SDL3_image CONFIG REQUIRED)
 set(SDLIMAGE_ANI  OFF CACHE BOOL "" FORCE)
@@ -75,6 +74,8 @@ FetchContent_Declare(SDL_image
   GIT_SHALLOW    TRUE
 )
 FetchContent_MakeAvailable(SDL_image)
+
+find_package(SDL3_ttf CONFIG REQUIRED)
 
 set(SDLMIXER_GME               OFF CACHE BOOL "" FORCE)
 set(SDLMIXER_WAVPACK           OFF CACHE BOOL "" FORCE)
