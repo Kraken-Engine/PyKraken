@@ -68,6 +68,11 @@ set(SDLIMAGE_XCF  OFF CACHE BOOL "" FORCE)
 set(SDLIMAGE_XPM  OFF CACHE BOOL "" FORCE)
 set(SDLIMAGE_XV   OFF CACHE BOOL "" FORCE)
 set(SDLIMAGE_VENDORED ON CACHE BOOL "" FORCE)
+if(WIN32)
+  # Prevent SDL_image from building its vendored libpng on Windows runners
+  # which can conflict with vcpkg-provided libpng (duplicate PNG::PNG target).
+  set(SDLIMAGE_PNG_VENDORED OFF CACHE BOOL "Disable vendored libpng on Windows" FORCE)
+endif()
 FetchContent_Declare(SDL_image
   GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
   GIT_TAG        release-3.4.0
