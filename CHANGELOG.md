@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Some more pytest scripts for important functions and objects.
 - New `renderer.set_present_resolution` function for setting the resolution at which the final rendered image is presented to the screen.
 - `math.DEG2RAD` and `math.RAD2DEG` constants for converting between degrees and radians.
+- Added optional `handle_close` parameter to `window.create` for whether the window should handle the window quit event and close itself, or leave it to the user to handle.
 
 ### Changed
 - Migrated the Python binding layer from `pybind11` to `nanobind` for improved performance and smaller binary sizes.
@@ -35,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `input.is_pressed()`, `input.is_just_pressed()`, and `input.is_just_released()` now respect the gamepad slot specified in each `InputAction`.
 - A lot of physics bindings didn't have docstrings, now they do.
 - `Color.hex` property getter was writing raw int bytes instead of hex-formatted integers, producing invalid UTF-8 strings.
+- `log` submodule functions were still logging even when disabled.
 
 ## [1.6.1] - 2026-02-15
 

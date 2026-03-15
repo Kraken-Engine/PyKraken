@@ -40,19 +40,10 @@
 constexpr const char* getPlatform();
 constexpr const char* getArchitecture();
 
-#define KRAKEN_MAJOR_VERSION 1
-#define KRAKEN_MINOR_VERSION 6
-#define KRAKEN_MICRO_VERSION 2
-#define KRAKEN_VERSION_STRING KRAKEN_MAJOR_VERSION "." KRAKEN_MINOR_VERSION "." KRAKEN_MICRO_VERSION
-
 static void init(const bool debug = false)
 {
     if (debug)
         kn::log::_init();
-
-    kn::log::info(
-        "Kraken Engine v{}.{}.{}", KRAKEN_MAJOR_VERSION, KRAKEN_MINOR_VERSION, KRAKEN_MICRO_VERSION
-    );
 
     // log platform and architecture
     kn::log::info("Platform: {} ({})", getPlatform(), getArchitecture());
