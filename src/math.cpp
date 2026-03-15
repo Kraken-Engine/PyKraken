@@ -706,7 +706,7 @@ Returns:
     Vec2: A new vector with rounded components.
         )doc")
         .def(
-            "as_ints", [](const Vec2& v) -> nb::tuple
+            "as_ints", [](const Vec2& v) -> nb::typed<nb::tuple, int, int>
             { return nb::make_tuple(static_cast<int>(v.x), static_cast<int>(v.y)); },
             R"doc(
 Return the vector components truncated to integers as a tuple.

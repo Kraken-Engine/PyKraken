@@ -384,7 +384,7 @@ Example:
         )
         .def_prop_rw(
             "hsv",
-            [](const Color& self) -> nb::tuple
+            [](const Color& self) -> nb::typed<nb::tuple, double, double, double, double>
             {
                 const auto [h, s, v, a] = self.toHSV();
                 return nb::make_tuple(h, s, v, a);

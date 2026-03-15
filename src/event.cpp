@@ -1,9 +1,8 @@
 #include "Event.hpp"
 
+#include <SDL3/SDL.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
-
-#include <SDL3/SDL.h>
 
 #include <unordered_map>
 
@@ -71,7 +70,8 @@ const std::vector<Event> poll()
         switch (event.type)
         {
         case SDL_EVENT_QUIT:
-            window::close();
+            if (window::_handlesClose())
+                window::close();
             break;
         case SDL_EVENT_DISPLAY_ORIENTATION:
         case SDL_EVENT_DISPLAY_ADDED:

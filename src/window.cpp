@@ -1,9 +1,8 @@
 #include "Window.hpp"
 
-#include <nanobind/stl/string.h>
-
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
+#include <nanobind/stl/string.h>
 
 #include <stdexcept>
 
@@ -28,13 +27,19 @@ namespace window
 static SDL_Window* _window = nullptr;
 static bool _isOpen = false;
 static int _scale = 1;
+static bool _handleClose = true;
 
 SDL_Window* _get()
 {
     return _window;
 }
 
-void create(const std::string& title, const int width, const int height)
+bool _handlesClose()
+{
+    return _handleClose;
+}
+
+void create(const std::string& title, const int width, const int height, const bool handleClose)
 {
     if (_window)
         throw std::runtime_error("Window already created");
@@ -74,6 +79,8 @@ void create(const std::string& title, const int width, const int height)
     );
     font::_init();
     text::_init();
+
+    _handleClose = handleClose;
 }
 
 bool isOpen()
@@ -199,13 +206,15 @@ void _bind(nb::module_& module)
 
     auto subWindow = module.def_submodule("window", "Window related functions");
 
-    subWindow.def("create", &create, "title"_a, "width"_a, "height"_a, R"doc(
+    subWindow
+        .def("create", &create, "title"_a, "width"_a, "height"_a, "handle_close"_a = true, R"doc(
 Create a window with the requested title and resolution.
 
 Args:
     title (str): Non-empty title no longer than 255 characters.
     width (int): The window width, must be positive.
     height (int): The window height, must be positive.
+    handle_close (bool): Whether to automatically handle the window quit event.
 
 Raises:
     RuntimeError: If a window already exists or SDL window creation fails.

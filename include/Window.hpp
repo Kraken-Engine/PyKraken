@@ -13,10 +13,11 @@ namespace window
 {
 void _bind(nb::module_& module);
 void _quit();
+bool _handlesClose();
 
 SDL_Window* _get();
 
-void create(const std::string& title, int width, int height);
+void create(const std::string& title, int width, int height, bool handleClose = true);
 
 bool isOpen();
 
