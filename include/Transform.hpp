@@ -14,9 +14,9 @@ namespace kn
 {
 struct Transform
 {
-    Vec2 pos{0.0, 0.0};
-    double angle = 0.0;  // In radians
-    Vec2 scale{1.0, 1.0};
+    Vec2 pos{};
+    double angle{};  // In radians
+    Vec2 scale{1.0};
 
     explicit operator b2Transform() const;
 };

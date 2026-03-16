@@ -43,31 +43,28 @@ Attributes:
     scale (Vec2): Scale component.
     )doc")
         .def(
-            "__init__",
-            [](Transform* self, std::optional<Vec2> pos, double angle,
-               const nb::object& scaleObj) -> void
-            {
-                Vec2 scale{1.0};
-                if (!scaleObj.is_none())
-                {
-                    const bool isNumeric = nb::isinstance<nb::int_>(scaleObj) ||
-                                           nb::isinstance<nb::float_>(scaleObj);
-                    if (isNumeric || nb::isinstance<Vec2>(scaleObj))
-                        scale = isNumeric ? Vec2{nb::cast<double>(scaleObj)}
-                                          : nb::cast<Vec2>(scaleObj);
-                    else
-                        throw nb::type_error("scale must be a number or Vec2");
-                }
-                new (self) Transform{pos.value_or(Vec2{}), angle, scale};
-            },
-            "pos"_a = nb::none(), "angle"_a = 0.0, "scale"_a = nb::none(), R"doc(
+            nb::init<Vec2, double, Vec2>(), "pos"_a = Vec2{}, "angle"_a = 0.0,
+            "scale"_a = Vec2{1.0}, R"doc(
 Initialize a Transform with optional keyword arguments.
 
 Args:
     pos (Vec2): Position component. Defaults to (0, 0).
     angle (float): Rotation in radians. Defaults to 0.
-    scale (Vec2): Scale multiplier. Defaults to (1, 1).
-        )doc"
+    scale (Vec2): Scale component. Defaults to (1, 1).
+            )doc"
+        )
+        .def(
+            "__init__",
+            [](Transform* self, const Vec2& pos, const double angle, const double scale) -> void
+            { new (self) Transform{pos, angle, Vec2{scale}}; }, "pos"_a = Vec2{}, "angle"_a = 0.0,
+            "scale"_a = 1.0, R"doc(
+Initialize a Transform with optional keyword arguments.
+
+Args:
+    pos (Vec2): Position component. Defaults to (0, 0).
+    angle (float): Rotation in radians. Defaults to 0.
+    scale (float): Uniform scale multiplier. Defaults to 1.
+            )doc"
         )
         .def_rw("pos", &Transform::pos, R"doc(
 The position component as a Vec2.
