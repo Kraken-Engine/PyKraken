@@ -108,23 +108,7 @@ jobs:
       - name: Install from Wheel
         shell: bash
         run: |
-          python -m pip install --upgrade pip
-
-          WHEELS=(dist/*.whl)
-
-          if [ -e "${WHEELS[0]}" ]; then
-            echo "Installing wheel: ${WHEELS[0]}"
-            pip install "${WHEELS[0]}"
-          else
-            echo "Error: No .whl files found in dist/"
-            exit 1
-          fi
-
-          if [ -f "dev-requirements.txt" ]; then
-            pip install -r dev-requirements.txt
-          else
-            echo "Warning: dev-requirements.txt not found, skipping."
-          fi
+          ./scripts/install_wheels.sh
 
       - name: Run tests
         run: python -m pytest tests -q
