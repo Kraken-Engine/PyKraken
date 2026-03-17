@@ -36,7 +36,6 @@ jobs:
         if: runner.os == 'Windows'
         uses: lukka/run-vcpkg@v11
         with:
-          runVcpkgInstall: true
           vcpkgJsonGlob: "vcpkg.json"
 
       - name: Build wheels
@@ -45,7 +44,6 @@ jobs:
           CIBW_BUILD_FRONTEND: "build[uv]"
           CIBW_BUILD: "cp312-*"
           CIBW_SKIP: "*-musllinux_* *-win32"
-          # CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux_2_28_x86_64
 
           # --- Windows: use vcpkg ---
           CIBW_ENVIRONMENT_WINDOWS: >
