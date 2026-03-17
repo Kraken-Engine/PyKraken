@@ -539,7 +539,9 @@ StaticBody World::fromMapLayer(const tilemap::Layer& layer)
         }
         else if (shape == tmx::Object::Shape::Polygon)
         {
-            body.addCollider(Polygon(obj.getVertices()));
+            Polygon poly(obj.getVertices());
+            poly.translate(obj.transform.pos);
+            body.addCollider(poly);
         }
         // Skipping Point, Polyline (Lines), Ellipse, Text
     }
