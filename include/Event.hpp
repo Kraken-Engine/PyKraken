@@ -1,23 +1,27 @@
 #pragma once
-#include <pybind11/pybind11.h>
 
-namespace py = pybind11;
+#include <nanobind/nanobind.h>
+
+#include <string>
+#include <vector>
+
+namespace nb = nanobind;
 
 namespace kn
 {
 struct Event
 {
     uint32_t type;
-    py::dict data;
+    nb::dict data;
 
     explicit Event(uint32_t type);
 
-    [[nodiscard]] py::object getAttr(const std::string& name) const;
+    [[nodiscard]] nb::object getAttr(const std::string& name) const;
 };
 
 namespace event
 {
-void _bind(py::module_& module);
+void _bind(nb::module_& module);
 
 const std::vector<Event> poll();
 

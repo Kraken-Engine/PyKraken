@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "builtin-baseline": "1e199d32ad53aab1defda61ce41c380302e3f95c",
+  "dependencies": [
+    "box2d",
+    "sdl3",
+    {
+      "name": "sdl3-ttf",
+      "features": [
+        "harfbuzz"
+      ]
+    },
+    "zstd"
+  ],
+  "overrides": [
+    {
+      "name": "box2d",
+      "version": "3.1.1"
+    },
+    {
+      "name": "sdl3",
+      "version": "3.4.0"
+    },
+    {
+      "name": "sdl3-ttf",
+      "version": "3.2.2"
+    }
+  ]
+}

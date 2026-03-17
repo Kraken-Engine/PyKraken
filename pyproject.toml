@@ -1,23 +1,13 @@
-[build-system]
-requires = ["scikit-build-core", "pybind11"]
-build-backend = "scikit_build_core.build"
-
 [project]
 name = "kraken-engine"
-version = "1.6.1"
-dependencies = [
-  "pydantic==2.12.3",
-]
-authors = [
-  { name = "Derrick Martinez" },
-]
+version = "1.6.2"
 description = "Python bindings for Kraken Engine"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
+authors = [{ name = "Derrick Martinez" }]
 classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
@@ -27,6 +17,7 @@ classifiers = [
   "Operating System :: MacOS",
   "Operating System :: POSIX :: Linux",
 ]
+dependencies = ["pydantic==2.12.3"]
 license = "MIT"
 license-files = ["LICENSE"]
 
@@ -37,5 +28,15 @@ license-files = ["LICENSE"]
 "Release Notes" = "https://github.com/Kraken-Engine/PyKraken/releases"
 "Source" = "https://github.com/Kraken-Engine/PyKraken"
 
+[build-system]
+requires = ["scikit-build-core >=0.11.6", "nanobind >=2.12.0"]
+build-backend = "scikit_build_core.build"
+
 [tool.scikit-build]
+minimum-version = "0.4"
+build-dir = "build/{wheel_tag}"
+wheel.py-api = "cp312"
 wheel.packages = ["src/pykraken"]
+
+[tool.cibuildwheel]
+build-verbosity = 1

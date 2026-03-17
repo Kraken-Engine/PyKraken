@@ -1,7 +1,8 @@
 #include "Texture.hpp"
 
+#include <nanobind/stl/string.h>
+
 #include <SDL3_image/SDL_image.h>
-#include <pybind11/native_enum.h>
 
 #include "Camera.hpp"
 #include "Color.hpp"
@@ -171,6 +172,11 @@ Vec2 Texture::getSize() const
     return {m_width, m_height};
 }
 
+Rect Texture::getRect() const
+{
+    return {0, 0, m_width, m_height};
+}
+
 Rect Texture::getClipArea() const
 {
     return m_clipArea;
@@ -233,25 +239,25 @@ SDL_Texture* Texture::getSDL() const
 
 namespace texture
 {
-void _bind(const py::module_& module)
+void _bind(const nb::module_& module)
 {
-    py::native_enum<TextureAccess>(module, "TextureAccess", "enum.IntEnum", R"doc(
+    using namespace nb::literals;
+
+    nb::enum_<TextureAccess>(module, "TextureAccess", R"doc(
 Texture access mode for GPU textures.
     )doc")
         .value("STATIC", TextureAccess::STATIC, "Static texture")
-        .value("TARGET", TextureAccess::TARGET, "Render target texture")
-        .finalize();
+        .value("TARGET", TextureAccess::TARGET, "Render target texture");
 
-    py::native_enum<TextureScaleMode>(module, "TextureScaleMode", "enum.IntEnum", R"doc(
+    nb::enum_<TextureScaleMode>(module, "TextureScaleMode", R"doc(
 Texture scaling and filtering modes.
     )doc")
         .value("NEAREST", TextureScaleMode::NEAREST, "Nearest-neighbor scaling")
         .value("LINEAR", TextureScaleMode::LINEAR, "Linear filtering")
         .value("PIXEL_ART", TextureScaleMode::PIXELART, "Pixel-art friendly scaling")
-        .value("DEFAULT", TextureScaleMode::DEFAULT, "Renderer default scaling")
-        .finalize();
+        .value("DEFAULT", TextureScaleMode::DEFAULT, "Renderer default scaling");
 
-    py::classh<Texture> texture(module, "Texture", R"doc(
+    nb::class_<Texture> texture(module, "Texture", R"doc(
 Represents a hardware-accelerated image that can be efficiently rendered.
 
 Textures are optimized for fast rendering operations and support various effects
@@ -259,18 +265,18 @@ like rotation, flipping, tinting, alpha blending, and different blend modes.
 They can be created from image files or pixel arrays.
     )doc");
 
-    py::classh<Texture::Flip>(texture, "Flip", R"doc(
+    nb::class_<Texture::Flip>(texture, "Flip", R"doc(
 Controls horizontal and vertical flipping of a texture during rendering.
 
 Used to mirror textures along the horizontal and/or vertical axes without
 creating additional texture data.
     )doc")
-        .def_readwrite("h", &Texture::Flip::h, R"doc(
+        .def_rw("h", &Texture::Flip::h, R"doc(
 Enable or disable horizontal flipping.
 
 When True, the texture is mirrored horizontally (left-right flip).
         )doc")
-        .def_readwrite("v", &Texture::Flip::v, R"doc(
+        .def_rw("v", &Texture::Flip::v, R"doc(
 Enable or disable vertical flipping.
 
 When True, the texture is mirrored vertically (top-bottom flip).
@@ -278,9 +284,8 @@ When True, the texture is mirrored vertically (top-bottom flip).
 
     texture
         .def(
-            py::init<const std::string&, TextureScaleMode, TextureAccess>(), py::arg("file_path"),
-            py::arg("scale_mode") = TextureScaleMode::DEFAULT,
-            py::arg("access") = TextureAccess::STATIC, R"doc(
+            nb::init<const std::string&, TextureScaleMode, TextureAccess>(), "file_path"_a,
+            "scale_mode"_a = TextureScaleMode::DEFAULT, "access"_a = TextureAccess::STATIC, R"doc(
 Create a Texture by loading an image from a file.
 If no scale mode is provided, the default renderer scale mode is used.
 
@@ -295,9 +300,8 @@ Raises:
         )doc"
         )
         .def(
-            py::init<const PixelArray&, TextureScaleMode, TextureAccess>(), py::arg("pixel_array"),
-            py::arg("scale_mode") = TextureScaleMode::DEFAULT,
-            py::arg("access") = TextureAccess::STATIC, R"doc(
+            nb::init<const PixelArray&, TextureScaleMode, TextureAccess>(), "pixel_array"_a,
+            "scale_mode"_a = TextureScaleMode::DEFAULT, "access"_a = TextureAccess::STATIC, R"doc(
 Create a Texture from an existing PixelArray.
 If no scale mode is provided, the default renderer scale mode is used.
 
@@ -311,8 +315,8 @@ Raises:
         )doc"
         )
         .def(
-            py::init<int, int, TextureScaleMode>(), py::arg("width"), py::arg("height"),
-            py::arg("scale_mode") = TextureScaleMode::DEFAULT, R"doc(
+            nb::init<int, int, TextureScaleMode>(), "width"_a, "height"_a,
+            "scale_mode"_a = TextureScaleMode::DEFAULT, R"doc(
 Create a (render target) Texture with the specified size.
 If no scale mode is provided, the default renderer scale mode is used.
 
@@ -326,29 +330,36 @@ Raises:
         )doc"
         )
 
-        .def_readwrite("flip", &Texture::flip, R"doc(
+        .def_rw("flip", &Texture::flip, R"doc(
 The flip settings for horizontal and vertical mirroring.
 
 Controls whether the texture is flipped horizontally and/or vertically during rendering.
         )doc")
 
-        .def_property("alpha", &Texture::getAlpha, &Texture::setAlpha, R"doc(
+        .def_prop_rw("alpha", &Texture::getAlpha, &Texture::setAlpha, R"doc(
 Get or set the alpha modulation of the texture as a float between `0.0` and `1.0`.
         )doc")
-        .def_property("clip_area", &Texture::getClipArea, &Texture::setClipArea, R"doc(
+        .def_prop_rw("clip_area", &Texture::getClipArea, &Texture::setClipArea, R"doc(
 Get or set the clip area (atlas region) of the texture.
         )doc")
-        .def_property("tint", &Texture::getTint, &Texture::setTint, R"doc(
+        .def_prop_rw("tint", &Texture::getTint, &Texture::setTint, R"doc(
 Get or set the color tint applied to the texture.
         )doc")
-        .def_property_readonly("width", &Texture::getWidth, R"doc(
+        .def_prop_ro("width", &Texture::getWidth, R"doc(
 The width of the texture in pixels.
         )doc")
-        .def_property_readonly("height", &Texture::getHeight, R"doc(
+        .def_prop_ro("height", &Texture::getHeight, R"doc(
 The height of the texture in pixels.
         )doc")
-        .def_property_readonly("size", &Texture::getSize, R"doc(
+        .def_prop_ro("size", &Texture::getSize, R"doc(
 The dimensions of the texture as a `Vec2`.
+        )doc")
+
+        .def("get_rect", &Texture::getRect, R"doc(
+Return a Rect with position (0, 0) and the texture's dimensions.
+
+Returns:
+    Rect: A rectangle representing the texture's bounds.
         )doc")
 
         .def("make_additive", &Texture::makeAdditive, R"doc(

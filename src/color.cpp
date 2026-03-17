@@ -1,5 +1,10 @@
 #include "Color.hpp"
 
+#include <nanobind/make_iterator.h>
+#include <nanobind/operators.h>
+#include <nanobind/stl/string.h>
+
+#include <algorithm>
 #include <iomanip>
 #include <sstream>
 
@@ -14,8 +19,9 @@ std::string Color::toHex() const
 {
     std::stringstream ss;
 
-    ss << std::hex << std::uppercase << std::setfill('0') << std::setw(2) << r << std::setw(2) << g
-       << std::setw(2) << b << std::setw(2) << a;
+    ss << std::hex << std::uppercase << std::setfill('0') << std::setw(2) << static_cast<int>(r)
+       << std::setw(2) << static_cast<int>(g) << std::setw(2) << static_cast<int>(b) << std::setw(2)
+       << static_cast<int>(a);
 
     return "#" + ss.str();
 }
@@ -110,6 +116,17 @@ Color Color::operator*(const double scalar) const
     return {clamp(r * scalar), clamp(g * scalar), clamp(b * scalar), a};
 }
 
+Color& Color::operator*=(const double scalar)
+{
+    *this = *this * scalar;
+    return *this;
+}
+
+Color operator*(const double scalar, const Color& color)
+{
+    return color * scalar;
+}
+
 Color Color::operator/(const double scalar) const
 {
     if (scalar == 0.0)
@@ -128,6 +145,32 @@ Color Color::operator/(const double scalar) const
 
     return {clamp(r / scalar), clamp(g / scalar), clamp(b / scalar), a};
 }
+
+Color& Color::operator/=(const double scalar)
+{
+    *this = *this / scalar;
+    return *this;
+}
+
+const Color Color::BLACK = {0, 0, 0};
+const Color Color::WHITE = {255, 255, 255};
+const Color Color::RED = {255, 0, 0};
+const Color Color::GREEN = {0, 255, 0};
+const Color Color::BLUE = {0, 0, 255};
+const Color Color::YELLOW = {255, 255, 0};
+const Color Color::MAGENTA = {255, 0, 255};
+const Color Color::CYAN = {0, 255, 255};
+const Color Color::GRAY = {128, 128, 128};
+const Color Color::DARK_GRAY = {64, 64, 64};
+const Color Color::LIGHT_GRAY = {192, 192, 192};
+const Color Color::ORANGE = {255, 165, 0};
+const Color Color::BROWN = {139, 69, 19};
+const Color Color::PINK = {255, 192, 203};
+const Color Color::PURPLE = {128, 0, 128};
+const Color Color::NAVY = {0, 0, 128};
+const Color Color::TEAL = {0, 128, 128};
+const Color(Color::OLIVE) = {128, 128, 0};
+const Color(Color::MAROON) = {128, 0, 0};
 
 namespace color
 {
@@ -265,20 +308,22 @@ Color grayscale(const Color& color)
     return {gray, gray, gray, color.a};
 }
 
-void _bind(py::module_& module)
+void _bind(nb::module_& module)
 {
-    py::classh<Color>(module, "Color", R"doc(
+    using namespace nb::literals;
+
+    nb::class_<Color>(module, "Color", R"doc(
 Represents an RGBA color.
 
 Each channel (r, g, b, a) is an 8-bit unsigned integer.
     )doc")
 
-        .def(py::init(), R"doc(
+        .def(nb::init(), R"doc(
 Create a Color with default values (0, 0, 0, 255).
         )doc")
         .def(
-            py::init<uint8_t, uint8_t, uint8_t, uint8_t>(), py::arg("r"), py::arg("g"),
-            py::arg("b"), py::arg("a") = 255, R"doc(
+            nb::init<uint8_t, uint8_t, uint8_t, uint8_t>(), "r"_a, "g"_a, "b"_a, "a"_a = 255,
+            R"doc(
 Create a Color from RGBA components.
 
 Args:
@@ -286,37 +331,37 @@ Args:
     g (int): Green value [0-255].
     b (int): Blue value [0-255].
     a (int, optional): Alpha value [0-255]. Defaults to 255.
-        )doc"
+            )doc"
         )
         .def(
-            py::init([](const std::string& hex) -> Color { return fromHex(hex); }), py::arg("hex"),
-            R"doc(
+            "__init__", [](Color* self, const std::string& hex) -> void
+            { new (self) Color(fromHex(hex)); }, "hex"_a, R"doc(
 Create a Color from a hex string.
 
 Args:
     hex (str): Hex color string (with or without '#' prefix).
-        )doc"
+            )doc"
         )
 
-        .def_readwrite("r", &Color::r, R"doc(
+        .def_rw("r", &Color::r, R"doc(
 Red channel value.
 
 Type: int
 Range: 0-255 (8-bit unsigned integer)
         )doc")
-        .def_readwrite("g", &Color::g, R"doc(
+        .def_rw("g", &Color::g, R"doc(
 Green channel value.
 
 Type: int
 Range: 0-255 (8-bit unsigned integer)
         )doc")
-        .def_readwrite("b", &Color::b, R"doc(
+        .def_rw("b", &Color::b, R"doc(
 Blue channel value.
 
 Type: int
 Range: 0-255 (8-bit unsigned integer)
         )doc")
-        .def_readwrite("a", &Color::a, R"doc(
+        .def_rw("a", &Color::a, R"doc(
 Alpha (transparency) channel value.
 
 Type: int
@@ -324,7 +369,9 @@ Range: 0-255 (8-bit unsigned integer)
 Note: 0 = fully transparent, 255 = fully opaque
         )doc")
 
-        .def_property("hex", &Color::toHex, &Color::fromHex, R"doc(
+        .def_prop_rw(
+            "hex", &Color::toHex, [](Color& self, const std::string& hex) { self.fromHex(hex); },
+            R"doc(
 Get or set the color as a hex string.
 
 When getting, returns an 8-digit hex string in the format "#RRGGBBAA".
@@ -333,24 +380,25 @@ When setting, accepts various hex formats (see from_hex for details).
 Example:
     color.hex = "#FF00FF"     # Set to magenta
     print(color.hex)          # Returns "#FF00FFFF"
-        )doc")
-        .def_property(
+        )doc"
+        )
+        .def_prop_rw(
             "hsv",
-            [](const Color& self)
+            [](const Color& self) -> nb::typed<nb::tuple, double, double, double, double>
             {
                 const auto [h, s, v, a] = self.toHSV();
-                return std::make_tuple(h, s, v, a);
+                return nb::make_tuple(h, s, v, a);
             },
-            [](Color& self, const py::sequence& hsvSeq)
+            [](Color& self, const nb::sequence& hsvSeq)
             {
-                const size_t seqSize = hsvSeq.size();
+                const size_t seqSize = nb::len(hsvSeq);
                 if (seqSize < 3 || seqSize > 4)
                     throw std::invalid_argument("HSV tuple must have 3 or 4 elements.");
 
-                const auto h = hsvSeq[0].cast<double>();
-                const auto s = hsvSeq[1].cast<double>();
-                const auto v = hsvSeq[2].cast<double>();
-                const auto a = seqSize == 4 ? hsvSeq[3].cast<double>() : 1.0;
+                const auto h = nb::cast<double>(hsvSeq[0]);
+                const auto s = nb::cast<double>(hsvSeq[1]);
+                const auto v = nb::cast<double>(hsvSeq[2]);
+                const auto a = seqSize == 4 ? nb::cast<double>(hsvSeq[3]) : 1.0;
 
                 self.fromHSV({h, s, v, a});
             },
@@ -401,8 +449,9 @@ Returns:
         )
 
         .def(
-            "__iter__", [](const Color& c) -> py::iterator
-            { return py::make_iterator(&c.r, &c.r + 4); }, py::keep_alive<0, 1>()
+            "__iter__", [](const Color& c) -> nb::iterator
+            { return nb::make_iterator(nb::type<Color>(), "iterator", &c.r, &c.r + 4); },
+            nb::keep_alive<0, 1>()
         )
 
         .def(
@@ -410,10 +459,10 @@ Returns:
             [](const Color& c, const size_t i) -> int
             {
                 if (i >= 4)
-                    throw py::index_error();
+                    throw nb::index_error();
                 return *(&c.r + i);
             },
-            py::arg("index")
+            "index"_a
         )
 
         .def(
@@ -421,45 +470,83 @@ Returns:
             [](Color& c, const size_t i, const uint8_t value) -> void
             {
                 if (i >= 4)
-                    throw py::index_error();
+                    throw nb::index_error();
                 *(&c.r + i) = value;
             },
-            py::arg("index"), py::arg("value")
+            "index"_a, "value"_a
         )
 
         .def("__len__", [](const Color&) -> int { return 4; })
 
-        .def("__eq__", &Color::operator==, py::arg("other"))
-        .def("__ne__", &Color::operator!=, py::arg("other"))
+        .def(nb::self == nb::self)
+        .def(nb::self != nb::self)
 
-        .def("__neg__", &Color::operator-)
+        .def(-nb::self)
 
-        .def("__mul__", &Color::operator*, py::arg("scalar"))
-        .def("__rmul__", &Color::operator*, py::arg("scalar"))
-        .def("__truediv__", &Color::operator/, py::arg("scalar"))
+        .def(nb::self * double())
+        .def(double() * nb::self)
+        .def(nb::self *= double(), nb::rv_policy::none)
+        .def(nb::self / double())
+        .def(nb::self /= double(), nb::rv_policy::none)
 
-        .def_property_readonly_static("BLACK", [](const py::object&) { return BLACK; })
-        .def_property_readonly_static("WHITE", [](const py::object&) { return WHITE; })
-        .def_property_readonly_static("RED", [](const py::object&) { return RED; })
-        .def_property_readonly_static("GREEN", [](const py::object&) { return GREEN; })
-        .def_property_readonly_static("BLUE", [](const py::object&) { return BLUE; })
-        .def_property_readonly_static("YELLOW", [](const py::object&) { return YELLOW; })
-        .def_property_readonly_static("MAGENTA", [](const py::object&) { return MAGENTA; })
-        .def_property_readonly_static("CYAN", [](const py::object&) { return CYAN; })
-        .def_property_readonly_static("GRAY", [](const py::object&) { return GRAY; })
-        .def_property_readonly_static("GREY", [](const py::object&) { return GRAY; })
-        .def_property_readonly_static("DARK_GRAY", [](const py::object&) { return DARK_GRAY; })
-        .def_property_readonly_static("DARK_GREY", [](const py::object&) { return DARK_GRAY; })
-        .def_property_readonly_static("LIGHT_GRAY", [](const py::object&) { return LIGHT_GRAY; })
-        .def_property_readonly_static("LIGHT_GREY", [](const py::object&) { return LIGHT_GRAY; })
-        .def_property_readonly_static("ORANGE", [](const py::object&) { return ORANGE; })
-        .def_property_readonly_static("BROWN", [](const py::object&) { return BROWN; })
-        .def_property_readonly_static("PINK", [](const py::object&) { return PINK; })
-        .def_property_readonly_static("PURPLE", [](const py::object&) { return PURPLE; })
-        .def_property_readonly_static("NAVY", [](const py::object&) { return NAVY; })
-        .def_property_readonly_static("TEAL", [](const py::object&) { return TEAL; })
-        .def_property_readonly_static("OLIVE", [](const py::object&) { return OLIVE; })
-        .def_property_readonly_static("MAROON", [](const py::object&) { return MAROON; });
+        .def_prop_ro_static(
+            "BLACK", [](const nb::object&) { return Color::BLACK; }, "(0, 0, 0, 255)"
+        )
+        .def_prop_ro_static(
+            "WHITE", [](const nb::object&) { return Color::WHITE; }, "(255, 255, 255, 255)"
+        )
+        .def_prop_ro_static(
+            "RED", [](const nb::object&) { return Color::RED; }, "(255, 0, 0, 255)"
+        )
+        .def_prop_ro_static(
+            "GREEN", [](const nb::object&) { return Color::GREEN; }, "(0, 255, 0, 255)"
+        )
+        .def_prop_ro_static(
+            "BLUE", [](const nb::object&) { return Color::BLUE; }, "(0, 0, 255, 255)"
+        )
+        .def_prop_ro_static(
+            "YELLOW", [](const nb::object&) { return Color::YELLOW; }, "(255, 255, 0, 255)"
+        )
+        .def_prop_ro_static(
+            "MAGENTA", [](const nb::object&) { return Color::MAGENTA; }, "(255, 0, 255, 255)"
+        )
+        .def_prop_ro_static(
+            "CYAN", [](const nb::object&) { return Color::CYAN; }, "(0, 255, 255, 255)"
+        )
+        .def_prop_ro_static(
+            "GRAY", [](const nb::object&) { return Color::GRAY; }, "(128, 128, 128, 255)"
+        )
+        .def_prop_ro_static(
+            "DARK_GRAY", [](const nb::object&) { return Color::DARK_GRAY; }, "(64, 64, 64, 255)"
+        )
+        .def_prop_ro_static(
+            "LIGHT_GRAY", [](const nb::object&) { return Color::LIGHT_GRAY; },
+            "(192, 192, 192, 255)"
+        )
+        .def_prop_ro_static(
+            "ORANGE", [](const nb::object&) { return Color::ORANGE; }, "(255, 165, 0, 255)"
+        )
+        .def_prop_ro_static(
+            "BROWN", [](const nb::object&) { return Color::BROWN; }, "(165, 42, 42, 255)"
+        )
+        .def_prop_ro_static(
+            "PINK", [](const nb::object&) { return Color::PINK; }, "(255, 192, 203, 255)"
+        )
+        .def_prop_ro_static(
+            "PURPLE", [](const nb::object&) { return Color::PURPLE; }, "(128, 0, 128, 255)"
+        )
+        .def_prop_ro_static(
+            "NAVY", [](const nb::object&) { return Color::NAVY; }, "(0, 0, 128, 255)"
+        )
+        .def_prop_ro_static(
+            "TEAL", [](const nb::object&) { return Color::TEAL; }, "(0, 128, 128, 255)"
+        )
+        .def_prop_ro_static(
+            "OLIVE", [](const nb::object&) { return Color::OLIVE; }, "(128, 128, 0, 255)"
+        )
+        .def_prop_ro_static(
+            "MAROON", [](const nb::object&) { return Color::MAROON; }, "(128, 0, 0, 255)"
+        );
 
     auto subColor = module.def_submodule("color", R"doc(
 Color utility functions and predefined color constants.
@@ -468,7 +555,7 @@ This module provides functions for color manipulation and conversion,
 as well as commonly used color constants for convenience.
     )doc");
 
-    subColor.def("from_hex", &fromHex, py::arg("hex"), R"doc(
+    subColor.def("from_hex", [](const std::string& hex) { return fromHex(hex); }, "hex"_a, R"doc(
 Create a Color from a hex string.
 
 Supports multiple hex formats:
@@ -492,8 +579,7 @@ Examples:
 
     subColor.def(
         "from_hsv", [](const double h, const double s, const double v, const double a)
-        { return fromHSV({h, s, v, a}); }, py::arg("h"), py::arg("s"), py::arg("v"),
-        py::arg("a") = 1.0, R"doc(
+        { return fromHSV({h, s, v, a}); }, "h"_a, "s"_a, "v"_a, "a"_a = 1.0, R"doc(
 Create a Color from HSV(A) values.
 
 Args:
@@ -504,7 +590,7 @@ Args:
         )doc"
     );
 
-    subColor.def("lerp", &lerp, py::arg("a"), py::arg("b"), py::arg("t"), R"doc(
+    subColor.def("lerp", &lerp, "a"_a, "b"_a, "t"_a, R"doc(
 Linearly interpolate between two colors.
 
 Performs component-wise linear interpolation between start and end colors.
@@ -523,7 +609,7 @@ Examples:
     lerp(Color.BLACK, Color.WHITE, 0.25) # Dark gray
         )doc");
 
-    subColor.def("invert", &invert, py::arg("color"), R"doc(
+    subColor.def("invert", &invert, "color"_a, R"doc(
 Return the inverse of a color by flipping RGB channels.
 
 The alpha channel is preserved unchanged.
@@ -538,7 +624,7 @@ Example:
     invert(Color(255, 0, 128, 200))  # Returns Color(0, 255, 127, 200)
         )doc");
 
-    subColor.def("grayscale", &grayscale, py::arg("color"), R"doc(
+    subColor.def("grayscale", &grayscale, "color"_a, R"doc(
 Convert a color to grayscale.
 
 Args:

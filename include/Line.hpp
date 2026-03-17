@@ -1,8 +1,8 @@
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn
 {
@@ -37,7 +37,7 @@ class Line
 
 namespace line
 {
-void _bind(py::module_& module);
+void _bind(nb::module_& module);
 
 Line move(const Line& line, const Vec2& offset);
 }  // namespace line

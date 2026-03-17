@@ -223,8 +223,10 @@ void _tick()
     _delta *= _scale;
 }
 
-void _bind(py::module_& module)
+void _bind(nb::module_& module)
 {
+    using namespace nb::literals;
+
     auto subTime = module.def_submodule("time", "Time related functions");
 
     subTime.def("get_delta", &getDelta, R"doc(
@@ -239,7 +241,7 @@ Returns:
     float: The time elapsed since the last frame, in seconds.
         )doc");
 
-    subTime.def("set_max_delta", &setMaxDelta, py::arg("max_delta"), R"doc(
+    subTime.def("set_max_delta", &setMaxDelta, "max_delta"_a, R"doc(
 Set the maximum allowed delta time between frames.
 
 Args:
@@ -255,7 +257,7 @@ Returns:
     float: The current FPS based on the last frame time.
         )doc");
 
-    subTime.def("set_target", &setTarget, py::arg("frame_rate"), R"doc(
+    subTime.def("set_target", &setTarget, "frame_rate"_a, R"doc(
 Set the target framerate for the application.
 
 Args:
@@ -269,7 +271,7 @@ Returns:
     float: The total elapsed time since program start, in seconds.
         )doc");
 
-    subTime.def("delay", &delay, py::arg("milliseconds"), R"doc(
+    subTime.def("delay", &delay, "milliseconds"_a, R"doc(
 Delay the program execution for the specified duration.
 
 This function pauses execution for the given number of milliseconds.
@@ -280,7 +282,7 @@ Args:
     milliseconds (int): The number of milliseconds to delay.
         )doc");
 
-    subTime.def("set_scale", &setScale, py::arg("scale"), R"doc(
+    subTime.def("set_scale", &setScale, "scale"_a, R"doc(
 Set the global time scale factor.
 
 Args:
@@ -296,14 +298,14 @@ Returns:
     float: The current time scale factor.
         )doc");
 
-    py::classh<Timer>(module, "Timer", R"doc(
+    nb::class_<Timer>(module, "Timer", R"doc(
 A timer for tracking countdown durations with pause/resume functionality.
 
 The Timer class provides a simple countdown timer that can be started, paused,
 and resumed. It's useful for implementing time-based game mechanics like
 cooldowns, temporary effects, or timed events.
     )doc")
-        .def(py::init<double>(), py::arg("duration"), R"doc(
+        .def(nb::init<double>(), "duration"_a, R"doc(
 Create a new Timer instance with the specified duration.
 
 Args:
@@ -313,25 +315,25 @@ Raises:
     RuntimeError: If duration is less than or equal to 0.
     )doc")
 
-        .def_property_readonly("done", &Timer::isDone, R"doc(
+        .def_prop_ro("done", &Timer::isDone, R"doc(
 bool: True if the timer has finished counting down, False otherwise.
 
 A timer is considered done when the elapsed time since start (excluding
 paused time) equals or exceeds the specified duration.
     )doc")
-        .def_property_readonly("time_remaining", &Timer::timeRemaining, R"doc(
+        .def_prop_ro("time_remaining", &Timer::timeRemaining, R"doc(
 float: The remaining time in seconds before the timer completes.
 
 Returns the full duration if the timer hasn't been started, or 0.0 if
 the timer has already finished.
     )doc")
-        .def_property_readonly("elapsed_time", &Timer::elapsedTime, R"doc(
+        .def_prop_ro("elapsed_time", &Timer::elapsedTime, R"doc(
 float: The time elapsed since the timer was started, in seconds.
 
 Returns 0.0 if the timer hasn't been started. This includes time spent
 while paused, giving you the total wall-clock time since start().
     )doc")
-        .def_property_readonly("progress", &Timer::progress, R"doc(
+        .def_prop_ro("progress", &Timer::progress, R"doc(
 float: The completion progress of the timer as a value between 0.0 and 1.0.
 
 Returns 0.0 if the timer hasn't been started, and 1.0 when the timer

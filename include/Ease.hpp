@@ -1,12 +1,12 @@
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 #include <functional>
 
 #include "Math.hpp"
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn
 {
@@ -14,7 +14,7 @@ namespace ease
 {
 using EasingFunction = std::function<double(double)>;
 
-void _bind(py::module_& module);
+void _bind(nb::module_& module);
 
 double linear(double t);
 
@@ -79,14 +79,14 @@ double outBounce(double t);
 double inOutBounce(double t);
 }  // namespace ease
 
-class EasingAnimation
+class Tween
 {
   public:
     Vec2 startPos{};
     Vec2 endPos{};
 
-    EasingAnimation(ease::EasingFunction easeFunc, double duration);
-    ~EasingAnimation() = default;
+    Tween(ease::EasingFunction easeFunc, double duration);
+    ~Tween() = default;
 
     Vec2 step();
 

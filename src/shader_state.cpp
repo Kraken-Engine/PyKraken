@@ -1,3 +1,6 @@
+#include <nanobind/ndarray.h>
+#include <nanobind/stl/string.h>
+
 #include <algorithm>
 #include <vector>
 
@@ -155,14 +158,16 @@ void _quit()
     _shaderStates.clear();
 }
 
-void _bind(py::module_& module)
+void _bind(nb::module_& module)
 {
-    py::classh<ShaderState>(
-        module, "ShaderState", "Encapsulates a GPU shader and its associated render state."
+    using namespace nb::literals;
+
+    nb::class_<ShaderState>(
+        module, "ShaderState", R"doc(Encapsulates a GPU shader and its associated render state.)doc"
     )
         .def(
-            py::init<const std::string&, Uint32>(), py::arg("fragment_file_path"),
-            py::arg("uniform_buffer_count") = 0, R"doc(
+            nb::init<const std::string&, Uint32>(), "fragment_file_path"_a,
+            "uniform_buffer_count"_a = 0, R"doc(
 Create a ShaderState from the specified fragment shader file.
 
 Args:
@@ -179,18 +184,18 @@ Unbinds the current shader state, reverting to the default render state.
             )doc")
         .def(
             "set_uniform",
-            [](const ShaderState& self, Uint32 binding, py::buffer dataBuf)
+            [](const ShaderState& self, Uint32 binding,
+               nb::ndarray<nb::c_contig, nb::device::cpu> dataBuf)
             {
-                py::buffer_info info(dataBuf.request());
-                if (info.ndim != 1)
+                if (dataBuf.ndim() != 1)
                 {
                     throw std::runtime_error("Data must be a 1D buffer or bytes object");
                 }
-                const void* ptr = info.ptr;
-                const size_t nbytes = static_cast<size_t>(info.size * info.itemsize);
+                const void* ptr = dataBuf.data();
+                const size_t nbytes = dataBuf.nbytes();
                 self.setUniform(binding, ptr, nbytes);
             },
-            py::arg("binding"), py::arg("data"), R"doc(
+            "binding"_a, "data"_a, R"doc(
 Set uniform data for the fragment shader at the specified binding point.
 
 Args:

@@ -1,7 +1,6 @@
 #include "Viewport.hpp"
 
-#include <pybind11/native_enum.h>
-#include <pybind11/stl.h>
+#include <nanobind/stl/vector.h>
 
 #include "Rect.hpp"
 #include "Renderer.hpp"
@@ -15,7 +14,7 @@ std::vector<Rect> layout(const uint8_t count, const ViewportMode mode)
     if (count > 4 || count < 2)
         throw std::runtime_error("'count' must be between 2 and 4");
 
-    const Vec2 rRes = renderer::getTargetResolution();
+    const Vec2 rendRes = renderer::getCurrentResolution();
     std::vector<Rect> viewports;
     viewports.reserve(count);
 
@@ -23,7 +22,7 @@ std::vector<Rect> layout(const uint8_t count, const ViewportMode mode)
     {
     case 4:
     {
-        const Vec2 vpSize = rRes * 0.5;
+        const Vec2 vpSize = rendRes * 0.5;
         viewports.push_back({0.0, 0.0, vpSize});
         viewports.push_back({vpSize.x, 0.0, vpSize});
         viewports.push_back({0.0, vpSize.y, vpSize});
@@ -32,10 +31,10 @@ std::vector<Rect> layout(const uint8_t count, const ViewportMode mode)
     }
     case 3:
     {
-        const Vec2 vpSize = rRes * 0.5;
+        const Vec2 vpSize = rendRes * 0.5;
         viewports.push_back({0.0, 0.0, vpSize});
         viewports.push_back({vpSize.x, 0.0, vpSize});
-        viewports.push_back({0.0, vpSize.y, {rRes.x, vpSize.y}});
+        viewports.push_back({0.0, vpSize.y, {rendRes.x, vpSize.y}});
         break;
     }
     case 2:
@@ -44,14 +43,14 @@ std::vector<Rect> layout(const uint8_t count, const ViewportMode mode)
         {
         case ViewportMode::HORIZONTAL:
         {
-            const Vec2 vpSize{rRes.x, rRes.y * 0.5};
+            const Vec2 vpSize{rendRes.x, rendRes.y * 0.5};
             viewports.push_back({0.0, 0.0, vpSize});
             viewports.push_back({0.0, vpSize.y, vpSize});
             break;
         }
         case ViewportMode::VERTICAL:
         {
-            const Vec2 vpSize{rRes.x * 0.5, rRes.y};
+            const Vec2 vpSize{rendRes.x * 0.5, rendRes.y};
             viewports.push_back({0.0, 0.0, vpSize});
             viewports.push_back({vpSize.x, 0.0, vpSize});
             break;
@@ -80,19 +79,20 @@ void unset()
         throw std::runtime_error(std::string("viewport::unset failed: ") + SDL_GetError());
 }
 
-void _bind(py::module_& module)
+void _bind(nb::module_& module)
 {
-    py::native_enum<ViewportMode>(module, "ViewportMode", "enum.IntEnum", R"doc(
+    using namespace nb::literals;
+
+    nb::enum_<ViewportMode>(module, "ViewportMode", R"doc(
 Viewport layout mode for split-screen layouts.
     )doc")
         .value("VERTICAL", ViewportMode::VERTICAL, "Split viewports vertically")
-        .value("HORIZONTAL", ViewportMode::HORIZONTAL, "Split viewports horizontally")
-        .finalize();
+        .value("HORIZONTAL", ViewportMode::HORIZONTAL, "Split viewports horizontally");
 
-    py::module_ subViewport = module.def_submodule("viewport", "Viewport management functions");
+    auto subViewport = module.def_submodule("viewport", "Viewport management functions");
 
     subViewport.def(
-        "layout", &layout, py::arg("count"), py::arg("mode") = ViewportMode::VERTICAL,
+        "layout", &layout, "count"_a, "mode"_a = ViewportMode::VERTICAL,
         R"doc(
 Layout the screen into multiple viewports.
 The viewports are created with the current renderer target resolution in mind.
@@ -107,7 +107,7 @@ Returns:
                     )doc"
     );
 
-    subViewport.def("set", &set, py::arg("rect"), R"doc(
+    subViewport.def("set", &set, "rect"_a, R"doc(
 Set the current viewport to the given rectangle.
 
 Args:

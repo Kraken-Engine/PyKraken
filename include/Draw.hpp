@@ -1,7 +1,7 @@
 #pragma once
 
-#include <pybind11/numpy.h>
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
+#include <nanobind/ndarray.h>
 
 #include <memory>
 #include <vector>
@@ -9,7 +9,7 @@
 #include "Color.hpp"
 #include "Math.hpp"
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn
 {
@@ -29,7 +29,7 @@ struct Vertex
 
 namespace draw
 {
-void _bind(py::module_& module);
+void _bind(nb::module_& module);
 void _init(SDL_Renderer* renderer);
 
 void circle(const Circle& circle, const Color& color, double thickness = 0.0, int numSegments = 24);
@@ -55,7 +55,7 @@ void ellipses(
 void point(Vec2 point, const Color& color);
 void points(const std::vector<Vec2>& points, const Color& color);
 void pointsFromNDArray(
-    const py::array_t<double, py::array::c_style | py::array::forcecast>& arr, const Color& color
+    nb::ndarray<const double, nb::ndim<2>, nb::c_contig, nb::device::cpu> arr, const Color& color
 );
 
 void line(Line line, const Color& color, double thickness = 1.0);
@@ -76,7 +76,7 @@ void polygon(const Polygon& polygon, const Color& color, bool filled = true);
 void polygons(const std::vector<Polygon>& polygons, const Color& color, bool filled = true);
 
 void geometry(
-    const std::shared_ptr<Texture>& texture, const std::vector<Vertex>& vertices,
+    const Texture* texture, const std::vector<Vertex>& vertices,
     const std::vector<int>& indices = {}
 );
 

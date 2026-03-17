@@ -1,7 +1,6 @@
 #include "Constants.hpp"
 
 #include <SDL3/SDL.h>
-#include <pybind11/native_enum.h>
 
 #include "Math.hpp"
 #include "_globals.hpp"
@@ -18,47 +17,50 @@ const kn::Vec2 kn::Anchor::BOTTOM_RIGHT = {1.0, 1.0};
 
 namespace kn::constants
 {
-void _bind(const py::module_& module)
+void _bind(const nb::module_& module)
 {
     // Define Anchor "enum" (class with static constants)
-    py::classh<Anchor>(module, "Anchor", R"doc(
+    nb::class_<Anchor>(module, "Anchor", R"doc(
 Anchor positions returning Vec2 values for alignment.
     )doc")
-        .def_property_readonly_static(
-            "TOP_LEFT", [](const py::object&) { return Anchor::TOP_LEFT; }
+        .def_prop_ro_static(
+            "TOP_LEFT", [](const nb::object&) { return Anchor::TOP_LEFT; }, "(0.0, 0.0)"
         )
-        .def_property_readonly_static("TOP_MID", [](const py::object&) { return Anchor::TOP_MID; })
-        .def_property_readonly_static(
-            "TOP_RIGHT", [](const py::object&) { return Anchor::TOP_RIGHT; }
+        .def_prop_ro_static(
+            "TOP_MID", [](const nb::object&) { return Anchor::TOP_MID; }, "(0.5, 0.0)"
         )
-        .def_property_readonly_static(
-            "MID_LEFT", [](const py::object&) { return Anchor::MID_LEFT; }
+        .def_prop_ro_static(
+            "TOP_RIGHT", [](const nb::object&) { return Anchor::TOP_RIGHT; }, "(1.0, 0.0)"
         )
-        .def_property_readonly_static("CENTER", [](const py::object&) { return Anchor::CENTER; })
-        .def_property_readonly_static(
-            "MID_RIGHT", [](const py::object&) { return Anchor::MID_RIGHT; }
+        .def_prop_ro_static(
+            "MID_LEFT", [](const nb::object&) { return Anchor::MID_LEFT; }, "(0.0, 0.5)"
         )
-        .def_property_readonly_static(
-            "BOTTOM_LEFT", [](const py::object&) { return Anchor::BOTTOM_LEFT; }
+        .def_prop_ro_static(
+            "CENTER", [](const nb::object&) { return Anchor::CENTER; }, "(0.5, 0.5)"
         )
-        .def_property_readonly_static(
-            "BOTTOM_MID", [](const py::object&) { return Anchor::BOTTOM_MID; }
+        .def_prop_ro_static(
+            "MID_RIGHT", [](const nb::object&) { return Anchor::MID_RIGHT; }, "(1.0, 0.5)"
         )
-        .def_property_readonly_static(
-            "BOTTOM_RIGHT", [](const py::object&) { return Anchor::BOTTOM_RIGHT; }
+        .def_prop_ro_static(
+            "BOTTOM_LEFT", [](const nb::object&) { return Anchor::BOTTOM_LEFT; }, "(0.0, 1.0)"
+        )
+        .def_prop_ro_static(
+            "BOTTOM_MID", [](const nb::object&) { return Anchor::BOTTOM_MID; }, "(0.5, 1.0)"
+        )
+        .def_prop_ro_static(
+            "BOTTOM_RIGHT", [](const nb::object&) { return Anchor::BOTTOM_RIGHT; }, "(1.0, 1.0)"
         );
 
     // Define Align enum
-    py::native_enum<Align>(module, "Align", "enum.IntEnum", R"doc(
+    nb::enum_<Align>(module, "Align", R"doc(
 Horizontal alignment options for layout and text.
     )doc")
         .value("LEFT", Align::Left, "Left alignment")
         .value("CENTER", Align::Center, "Center alignment")
-        .value("RIGHT", Align::Right, "Right alignment")
-        .finalize();
+        .value("RIGHT", Align::Right, "Right alignment");
 
     // Define event types
-    py::native_enum<SDL_EventType>(module, "EventType", "enum.IntEnum", R"doc(
+    nb::enum_<SDL_EventType>(module, "EventType", R"doc(
 SDL event type constants for input and system events.
     )doc")
         .value("QUIT", SDL_EVENT_QUIT, "Quit requested")
@@ -223,11 +225,10 @@ SDL event type constants for input and system events.
         .value("PINCH_UPDATE", SDL_EVENT_PINCH_UPDATE, "Pinch gesture updated")
         .value("PINCH_END", SDL_EVENT_PINCH_END, "Pinch gesture ended")
 
-        .export_values()
-        .finalize();
+        .export_values();
 
     // Mouse buttons
-    py::native_enum<MouseButton>(module, "MouseButton", "enum.IntEnum", R"doc(
+    nb::enum_<MouseButton>(module, "MouseButton", R"doc(
 Mouse button identifiers.
     )doc")
         .value("M_LEFT", MouseButton::Left, "Left mouse button")
@@ -235,11 +236,10 @@ Mouse button identifiers.
         .value("M_RIGHT", MouseButton::Right, "Right mouse button")
         .value("M_SIDE1", MouseButton::Side1, "First side mouse button")
         .value("M_SIDE2", MouseButton::Side2, "Second side mouse button")
-        .export_values()
-        .finalize();
+        .export_values();
 
     // Pen Axis
-    py::native_enum<SDL_PenAxis>(module, "PenAxis", "enum.IntEnum", R"doc(
+    nb::enum_<SDL_PenAxis>(module, "PenAxis", R"doc(
 Stylus/pen axis identifiers for pen motion data.
     )doc")
         .value("P_PRESSURE", SDL_PEN_AXIS_PRESSURE, "Pen pressure axis")
@@ -249,11 +249,10 @@ Stylus/pen axis identifiers for pen motion data.
         .value("P_ROTATION", SDL_PEN_AXIS_ROTATION, "Pen rotation axis")
         .value("P_SLIDER", SDL_PEN_AXIS_SLIDER, "Pen slider axis")
         .value("P_TANGENTIAL_PRESSURE", SDL_PEN_AXIS_TANGENTIAL_PRESSURE, "Pen tangential pressure")
-        .export_values()
-        .finalize();
+        .export_values();
 
     // Scancodes
-    py::native_enum<SDL_Scancode>(module, "Scancode", "enum.IntEnum", R"doc(
+    nb::enum_<SDL_Scancode>(module, "Scancode", R"doc(
 Keyboard scancodes representing physical key locations.
     )doc")
         .value("S_a", SDL_SCANCODE_A, "The physical A key")
@@ -416,11 +415,10 @@ Keyboard scancodes representing physical key locations.
         .value("S_CALL", SDL_SCANCODE_CALL, "The physical Call key")
         .value("S_ENDCALL", SDL_SCANCODE_ENDCALL, "The physical End Call key")
 
-        .export_values()
-        .finalize();
+        .export_values();
 
     // Keycodes
-    py::native_enum<Keycode>(module, "Keycode", "enum.IntEnum", R"doc(
+    nb::enum_<Keycode>(module, "Keycode", R"doc(
 Keyboard keycodes representing logical keys.
     )doc")
         .value("K_UNKNOWN", Keycode::K_UNKNOWN, "Unknown key")
@@ -589,11 +587,10 @@ Keyboard keycodes representing logical keys.
         .value("K_SOFTRIGHT", Keycode::K_SOFTRIGHT, "The symbolic Soft Right key")
         .value("K_CALL", Keycode::K_CALL, "The symbolic Call key")
         .value("K_ENDCALL", Keycode::K_ENDCALL, "The symbolic End Call key")
-        .export_values()
-        .finalize();
+        .export_values();
 
     // Gamepad buttons
-    py::native_enum<SDL_GamepadButton>(module, "GamepadButton", "enum.IntEnum", R"doc(
+    nb::enum_<SDL_GamepadButton>(module, "GamepadButton", R"doc(
 Gamepad button identifiers.
     )doc")
         .value("C_SOUTH", SDL_GAMEPAD_BUTTON_SOUTH, "South face button")
@@ -611,11 +608,10 @@ Gamepad button identifiers.
         .value("C_DPAD_DOWN", SDL_GAMEPAD_BUTTON_DPAD_DOWN, "D-pad down")
         .value("C_DPAD_LEFT", SDL_GAMEPAD_BUTTON_DPAD_LEFT, "D-pad left")
         .value("C_DPAD_RIGHT", SDL_GAMEPAD_BUTTON_DPAD_RIGHT, "D-pad right")
-        .export_values()
-        .finalize();
+        .export_values();
 
     // Gamepad axes
-    py::native_enum<SDL_GamepadAxis>(module, "GamepadAxis", "enum.IntEnum", R"doc(
+    nb::enum_<SDL_GamepadAxis>(module, "GamepadAxis", R"doc(
 Gamepad axis identifiers.
     )doc")
         .value("C_LX", SDL_GAMEPAD_AXIS_LEFTX, "Left stick X axis")
@@ -624,11 +620,10 @@ Gamepad axis identifiers.
         .value("C_RY", SDL_GAMEPAD_AXIS_RIGHTY, "Right stick Y axis")
         .value("C_LTRIGGER", SDL_GAMEPAD_AXIS_LEFT_TRIGGER, "Left trigger axis")
         .value("C_RTRIGGER", SDL_GAMEPAD_AXIS_RIGHT_TRIGGER, "Right trigger axis")
-        .export_values()
-        .finalize();
+        .export_values();
 
     // Gamepad types
-    py::native_enum<SDL_GamepadType>(module, "GamepadType", "enum.IntEnum", R"doc(
+    nb::enum_<SDL_GamepadType>(module, "GamepadType", R"doc(
 Gamepad device type identifiers.
     )doc")
         .value("C_STANDARD", SDL_GAMEPAD_TYPE_STANDARD, "Standard gamepad")
@@ -652,7 +647,6 @@ Gamepad device type identifiers.
             "C_SWITCH_JOYCON_PAIR", SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_PAIR,
             "Nintendo Switch Joy-Con pair"
         )
-        .export_values()
-        .finalize();
+        .export_values();
 }
 }  // namespace kn::constants

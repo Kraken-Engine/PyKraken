@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) when possible.
 
+## [1.6.2] - 2026-03-17
+
+### Added
+- New `Vec2` non-mutating methods: `.floored()`, `.ceiled()`, and `.rounded()` for coordinate manipulation.
+- `Rect` constructor for accepting only a `Vec2` size parameter.
+- New `draw_batch` function for efficiently drawing a texture with many varying transforms.
+    - Comes with an override for passing an ndarray of transforms for even faster drawing - good for particle sims.
+- `Texture.get_rect()` method for getting the dimensions of a texture as a `Rect` object.
+- Debug info messages now show GPU driver information.
+- Some more pytest scripts for important functions and objects.
+- New `renderer.set_present_resolution` function for setting the resolution at which the final rendered image is presented to the screen.
+- `math.DEG2RAD` and `math.RAD2DEG` constants for converting between degrees and radians.
+- Added optional `handle_close` parameter to `window.create` for whether the window should handle the window quit event and close itself, or leave it to the user to handle.
+
+### Changed
+- Migrated the Python binding layer from `pybind11` to `nanobind` for improved performance and smaller binary sizes.
+    - In my testing, migrating the same engine API from pybind11 to nanobind increased transform-heavy sprite throughput by about 8–9× under the same Python script and workload.
+- Wheels now build against the Python 3.12 stable ABI, allowing a single binary to work across future Python versions.
+- Renamed `EasingAnimation` class to `Tween` to follow common terminology.
+- `renderer.get_target_resolution` function renamed to `renderer.get_current_resolution` for clarity.
+
+### Removed
+- `math.to_deg()` and `math.to_rad()` functions have been removed in favor of `math.DEG2RAD` and `math.RAD2DEG` constants for conversion.
+- Removed lesser used `renderer.clear` function that accepted 4 separate color components.
+
+### Fixed
+- `input.get_direction()` no longer stacks redundant bindings on the same axis, which caused biased directions after normalization. It also now preserves partial analog stick deflection instead of always normalizing to a unit vector.
+- `input.get_axis()` no longer double-negates analog values for negative-direction bindings.
+- `input.is_pressed()`, `input.is_just_pressed()`, and `input.is_just_released()` now respect the gamepad slot specified in each `InputAction`.
+- A lot of physics bindings didn't have docstrings, now they do.
+- `Color.hex` property getter was writing raw int bytes instead of hex-formatted integers, producing invalid UTF-8 strings.
+- `log` submodule functions were still logging even when disabled.
+
 ## [1.6.1] - 2026-02-15
 
 ### Added

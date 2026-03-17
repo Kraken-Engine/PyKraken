@@ -1,8 +1,8 @@
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn
 {
@@ -39,6 +39,6 @@ bool contains(const Circle& outer, const Circle& inner);
 bool contains(const Circle& circle, const Rect& rect);
 bool contains(const Circle& circle, const Line& line);
 
-void _bind(py::module_& module);
+void _bind(nb::module_& module);
 }  // namespace collision
 }  // namespace kn

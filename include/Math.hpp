@@ -1,10 +1,12 @@
 #pragma once
 
 #include <SDL3/SDL.h>
-#include <pybind11/pybind11.h>
 #include <box2d/box2d.h>
+#include <nanobind/nanobind.h>
 
-namespace py = pybind11;
+#include <ostream>
+
+namespace nb = nanobind;
 
 namespace kn
 {
@@ -38,11 +40,11 @@ class Vec2
     double x = 0.0;
     double y = 0.0;
 
-    static Vec2 ZERO();
-    static Vec2 LEFT();
-    static Vec2 RIGHT();
-    static Vec2 UP();
-    static Vec2 DOWN();
+    const static Vec2 ZERO;
+    const static Vec2 LEFT;
+    const static Vec2 RIGHT;
+    const static Vec2 UP;
+    const static Vec2 DOWN;
 
     Vec2() = default;
     ~Vec2() = default;
@@ -98,6 +100,15 @@ class Vec2
     void moveToward(const Vec2& target, double maxStep);
 
     Vec2 movedToward(const Vec2& target, double maxStep) const;
+
+    [[nodiscard]] Vec2 floored() const;
+    [[nodiscard]] Vec2 ceiled() const;
+    [[nodiscard]] Vec2 rounded() const;
+
+    friend std::ostream& operator<<(std::ostream& os, const Vec2& v)
+    {
+        return os << "<" << v.x << ", " << v.y << ">";
+    }
 
     Vec2 operator-() const;  // Unary negation
 
@@ -171,7 +182,7 @@ Vec2 operator*(double lhs, const Vec2& rhs);
 
 namespace math
 {
-void _bind(py::module_& module);
+void _bind(nb::module_& module);
 
 Vec2 fromPolar(double rad, double radius);
 

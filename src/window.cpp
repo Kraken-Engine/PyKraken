@@ -2,6 +2,7 @@
 
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
+#include <nanobind/stl/string.h>
 
 #include <stdexcept>
 
@@ -26,13 +27,19 @@ namespace window
 static SDL_Window* _window = nullptr;
 static bool _isOpen = false;
 static int _scale = 1;
+static bool _handleClose = true;
 
 SDL_Window* _get()
 {
     return _window;
 }
 
-void create(const std::string& title, const int width, const int height)
+bool _handlesClose()
+{
+    return _handleClose;
+}
+
+void create(const std::string& title, const int width, const int height, const bool handleClose)
 {
     if (_window)
         throw std::runtime_error("Window already created");
@@ -72,6 +79,8 @@ void create(const std::string& title, const int width, const int height)
     );
     font::_init();
     text::_init();
+
+    _handleClose = handleClose;
 }
 
 bool isOpen()
@@ -191,17 +200,21 @@ void _quit()
     }
 }
 
-void _bind(py::module_& module)
+void _bind(nb::module_& module)
 {
+    using namespace nb::literals;
+
     auto subWindow = module.def_submodule("window", "Window related functions");
 
-    subWindow.def("create", &create, py::arg("title"), py::arg("width"), py::arg("height"), R"doc(
+    subWindow
+        .def("create", &create, "title"_a, "width"_a, "height"_a, "handle_close"_a = true, R"doc(
 Create a window with the requested title and resolution.
 
 Args:
     title (str): Non-empty title no longer than 255 characters.
     width (int): The window width, must be positive.
     height (int): The window height, must be positive.
+    handle_close (bool): Whether to automatically handle the window quit event.
 
 Raises:
     RuntimeError: If a window already exists or SDL window creation fails.
@@ -222,7 +235,7 @@ Marks the window as closed, typically used to signal the main loop to exit.
 This doesn't destroy the window immediately but sets the close flag.
     )doc");
 
-    subWindow.def("set_fullscreen", &setFullscreen, py::arg("fullscreen"), R"doc(
+    subWindow.def("set_fullscreen", &setFullscreen, "fullscreen"_a, R"doc(
 Set the fullscreen mode of the window.
 
 Args:
@@ -248,7 +261,7 @@ Raises:
 Get the current size of the window.
 
 Returns:
-    tuple[float, float]: The window size as (width, height).
+    Vec2: The window size as (width, height).
 
 Raises:
     RuntimeError: If the window is not initialized.
@@ -275,7 +288,7 @@ Raises:
     RuntimeError: If the window is not initialized.
     )doc");
 
-    subWindow.def("set_title", &setTitle, py::arg("title"), R"doc(
+    subWindow.def("set_title", &setTitle, "title"_a, R"doc(
 Set the title of the window.
 
 Args:
@@ -286,7 +299,7 @@ Raises:
     ValueError: If title is empty or exceeds 255 characters.
     )doc");
 
-    subWindow.def("set_icon", &setIcon, py::arg("path"), R"doc(
+    subWindow.def("set_icon", &setIcon, "path"_a, R"doc(
 Set the window icon from an image file.
 
 Args:
@@ -296,7 +309,7 @@ Raises:
     RuntimeError: If the window is not initialized or icon setting fails.
     )doc");
 
-    subWindow.def("save_screenshot", &saveScreenshot, py::arg("path"), R"doc(
+    subWindow.def("save_screenshot", &saveScreenshot, "path"_a, R"doc(
 Save a screenshot of the current frame to a file.
 
 Args:

@@ -1,10 +1,10 @@
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn::constants
 {
-void _bind(const py::module_& module);
+void _bind(const nb::module_& module);
 }  // namespace kn::constants

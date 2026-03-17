@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 #include <memory>
 #include <vector>
@@ -8,7 +8,7 @@
 #include "Color.hpp"
 #include "Math.hpp"
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn
 {
@@ -78,6 +78,6 @@ class Mask
 
 namespace mask
 {
-void _bind(const py::module_& module);
+void _bind(const nb::module_& module);
 }  // namespace mask
 }  // namespace kn

@@ -1,10 +1,10 @@
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 #include "Math.hpp"
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn
 {
@@ -32,7 +32,8 @@ class Camera
 
 namespace camera
 {
-void _bind(py::module_& module);
+void _bind(nb::module_& module);
+Camera* _getActiveCamera();
 
 Vec2 getActivePos();
 

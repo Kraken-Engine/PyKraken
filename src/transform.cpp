@@ -1,7 +1,8 @@
 #include "Transform.hpp"
 
 #include <box2d/box2d.h>
-#include <pybind11/stl.h>
+#include <nanobind/stl/optional.h>
+#include <nanobind/stl/vector.h>
 
 namespace kn
 {
@@ -29,9 +30,11 @@ Transform composePair(const Transform& parent, Transform child)
     return child;
 }
 
-void _bind(py::module_& module)
+void _bind(nb::module_& module)
 {
-    py::classh<Transform>(module, "Transform", R"doc(
+    using namespace nb::literals;
+
+    nb::class_<Transform>(module, "Transform", R"doc(
 Transform represents a 2D transformation with position, rotation, and scale.
 
 Attributes:
@@ -40,47 +43,36 @@ Attributes:
     scale (Vec2): Scale component.
     )doc")
         .def(
-            py::init(
-                [](const py::object& posObj, double angle, const py::object& scaleObj) -> Transform
-                {
-                    try
-                    {
-                        const auto pos = posObj.is_none() ? Vec2{} : posObj.cast<Vec2>();
-                        Vec2 scale{1.0};
-                        if (!scaleObj.is_none())
-                        {
-                            const bool isNumeric = py::isinstance<py::int_>(scaleObj) ||
-                                                   py::isinstance<py::float_>(scaleObj);
-                            scale = isNumeric ? Vec2{scaleObj.cast<double>()}
-                                              : scaleObj.cast<Vec2>();
-                        }
-                        return {pos, angle, scale};
-                    }
-                    catch (const py::cast_error&)
-                    {
-                        throw py::type_error(
-                            "Invalid type for Transform arguments, expected Vec2 for pos and scale"
-                        );
-                    }
-                }
-            ),
-            py::arg("pos") = py::none(), py::arg("angle") = 0.0, py::arg("scale") = py::none(),
-            R"doc(
+            nb::init<Vec2, double, Vec2>(), "pos"_a = Vec2{}, "angle"_a = 0.0,
+            "scale"_a = Vec2{1.0}, R"doc(
 Initialize a Transform with optional keyword arguments.
 
 Args:
     pos (Vec2): Position component. Defaults to (0, 0).
     angle (float): Rotation in radians. Defaults to 0.
-    scale (Vec2): Scale multiplier. Defaults to (1, 1).
-        )doc"
+    scale (Vec2): Scale component. Defaults to (1, 1).
+            )doc"
         )
-        .def_readwrite("pos", &Transform::pos, R"doc(
+        .def(
+            "__init__",
+            [](Transform* self, const Vec2& pos, const double angle, const double scale) -> void
+            { new (self) Transform{pos, angle, Vec2{scale}}; }, "pos"_a = Vec2{}, "angle"_a = 0.0,
+            "scale"_a = 1.0, R"doc(
+Initialize a Transform with optional keyword arguments.
+
+Args:
+    pos (Vec2): Position component. Defaults to (0, 0).
+    angle (float): Rotation in radians. Defaults to 0.
+    scale (float): Uniform scale multiplier. Defaults to 1.
+            )doc"
+        )
+        .def_rw("pos", &Transform::pos, R"doc(
 The position component as a Vec2.
         )doc")
-        .def_readwrite("angle", &Transform::angle, R"doc(
+        .def_rw("angle", &Transform::angle, R"doc(
 The rotation component in radians.
         )doc")
-        .def_readwrite("scale", &Transform::scale, R"doc(
+        .def_rw("scale", &Transform::scale, R"doc(
 The scale component as a Vec2.
         )doc");
 
@@ -90,18 +82,18 @@ Submodule for Transform-related functionality.
 
     subTransform.def(
         "compose",
-        [](const py::args& args) -> Transform
+        [](const nb::args& args) -> Transform
         {
             if (args.size() < 2)
             {
-                throw py::value_error("compose requires at least two Transform arguments");
+                throw nb::value_error("compose requires at least two Transform arguments");
             }
 
-            auto result = args[0].cast<Transform>();
+            auto result = nb::cast<Transform>(args[0]);
 
             for (size_t i = 1; i < args.size(); ++i)
             {
-                const auto& child = args[i].cast<Transform>();
+                const auto& child = nb::cast<Transform>(args[i]);
                 result = composePair(result, child);
             }
 
@@ -121,20 +113,20 @@ Returns:
 
     subTransform.def(
         "compose_chain",
-        [](const py::args& args) -> std::vector<Transform>
+        [](const nb::args& args) -> std::vector<Transform>
         {
             if (args.size() < 2)
             {
-                throw py::value_error("compose_chain requires at least two Transform arguments");
+                throw nb::value_error("compose_chain requires at least two Transform arguments");
             }
 
             std::vector<Transform> worlds;
             worlds.reserve(args.size());
 
-            auto world = args[0].cast<Transform>();
+            auto world = nb::cast<Transform>(args[0]);
             for (size_t i = 1; i < args.size(); ++i)
             {
-                const auto& local = args[i].cast<Transform>();
+                const auto& local = nb::cast<Transform>(args[i]);
                 world = composePair(world, local);
                 worlds.push_back(world);
             }

@@ -1,11 +1,11 @@
 #pragma once
 
 #include <SDL3/SDL.h>
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 #include "_globals.hpp"
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn
 {
@@ -14,8 +14,6 @@ struct Event;
 
 namespace mouse
 {
-void _bind(py::module_& module);
-
 Vec2 getPos();
 
 Vec2 getRel();
@@ -41,5 +39,7 @@ bool isHidden();
 void _clearStates();
 
 void _handleEvents(const SDL_Event& sdlEvent, const Event& e);
+
+void _bind(nb::module_& module);
 }  // namespace mouse
 }  // namespace kn

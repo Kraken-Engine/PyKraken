@@ -1,7 +1,10 @@
 #include "Orchestrator.hpp"
 
-#include <pybind11/functional.h>
+#include <nanobind/stl/function.h>
+#include <nanobind/stl/optional.h>
+#include <nanobind/stl/shared_ptr.h>
 
+#include <algorithm>
 #include <cmath>
 #include <random>
 
@@ -136,7 +139,7 @@ void Orchestrator::setTarget(Transform* target)
     m_target = target;
 }
 
-Orchestrator& Orchestrator::addStep(const std::vector<std::shared_ptr<Effect>>& effects)
+Orchestrator& Orchestrator::parallel(const std::vector<std::shared_ptr<Effect>>& effects)
 {
     if (m_finalized)
     {
@@ -158,9 +161,9 @@ Orchestrator& Orchestrator::addStep(const std::vector<std::shared_ptr<Effect>>& 
     return *this;
 }
 
-Orchestrator& Orchestrator::addStep(std::shared_ptr<Effect> effect)
+Orchestrator& Orchestrator::then(std::shared_ptr<Effect> effect)
 {
-    return addStep(std::vector<std::shared_ptr<Effect>>{std::move(effect)});
+    return parallel(std::vector<std::shared_ptr<Effect>>{std::move(effect)});
 }
 
 void Orchestrator::finalize()
@@ -309,15 +312,19 @@ void _tick()
         orch->update(dt);
 }
 
-void _bind(py::module_& module)
+void _bind(nb::module_& module)
 {
+    using namespace nb::literals;
+
+    auto subFx = module.def_submodule("fx", R"doc()doc");
+
     // ----- Effect base class (not directly instantiable) -----
-    py::classh<Effect>(module, "Effect", R"doc(
+    nb::class_<Effect>(subFx, "Effect", R"doc(
 Base class for timeline effects. Not directly instantiable.
     )doc");
 
     // ----- Orchestrator -----
-    py::classh<Orchestrator>(module, "Orchestrator", R"doc(
+    nb::class_<Orchestrator>(module, "Orchestrator", R"doc(
 Timeline animator for Transform objects.
 
 Allows chaining effects to create complex animations that play over time.
@@ -340,43 +347,34 @@ Methods:
     rewind(): Reset the animation to the beginning without stopping.
     )doc")
         .def(
-            py::init(
-                [](const py::object& target) -> Orchestrator
+            "__init__",
+            [](Orchestrator* self, const nb::object& target) -> void
+            {
+                Orchestrator orch;
+                if (nb::isinstance<Transform>(target))
                 {
-                    if (target.is_none())
-                        throw py::type_error(
-                            "target must be a Transform or an object with a 'transform' attribute, not None"
-                        );
-
-                    Orchestrator orch;
-
-                    // Try to get transform attribute first
-                    if (py::hasattr(target, "transform"))
-                    {
-                        auto transformAttr = target.attr("transform");
-                        auto* transform = transformAttr.cast<Transform*>();
-                        orch.setTarget(transform);
-                    }
-                    else
-                    {
-                        // Try direct Transform cast
-                        try
-                        {
-                            auto* transform = target.cast<Transform*>();
-                            orch.setTarget(transform);
-                        }
-                        catch (const py::cast_error&)
-                        {
-                            throw py::type_error(
-                                "target must be a Transform or an object with a 'transform' attribute"
-                            );
-                        }
-                    }
-                    return orch;
+                    orch.setTarget(nb::cast<Transform*>(target));
                 }
-            ),
-            py::arg("target"),
-            R"doc(
+                else if (nb::hasattr(target, "transform"))
+                {
+                    auto transformAttr = target.attr("transform");
+                    if (nb::isinstance<Transform>(transformAttr))
+                        orch.setTarget(nb::cast<Transform*>(transformAttr));
+                    else
+                        throw nb::type_error(
+                            "The 'transform' attribute must be a Transform instance"
+                        );
+                }
+                else
+                {
+                    throw nb::type_error(
+                        "Target must be a Transform or an object with a 'transform' attribute"
+                    );
+                }
+
+                new (self) Orchestrator(std::move(orch));
+            },
+            "target"_a, R"doc(
 Create an Orchestrator for animating transforms.
 
 Args:
@@ -385,23 +383,21 @@ Args:
         )
         .def(
             "parallel",
-            [](Orchestrator& self, const py::args& effects) -> Orchestrator&
+            [](Orchestrator& self, const nb::args& effects) -> Orchestrator&
             {
                 std::vector<std::shared_ptr<Effect>> effectVec;
                 effectVec.reserve(effects.size());
                 for (const auto& arg : effects)
                 {
-                    try
-                    {
-                        effectVec.push_back(arg.cast<std::shared_ptr<Effect>>());
-                    }
-                    catch (const py::cast_error&)
-                    {
-                        throw py::type_error("parallel() arguments must be Effect objects");
-                    }
+                    if (nb::isinstance<Effect>(arg))
+                        effectVec.push_back(nb::cast<std::shared_ptr<Effect>>(arg));
+                    else
+                        throw nb::type_error("parallel() arguments must all be Effect objects");
                 }
-                return self.addStep(effectVec);
+
+                return self.parallel(effectVec);
             },
+            nb::sig("def parallel(self, *effects: fx.Effect) -> Orchestrator"),
             R"doc(
 Add multiple effects to run in parallel.
 
@@ -412,9 +408,7 @@ Returns:
     Orchestrator: Self for method chaining.
              )doc"
         )
-        .def(
-            "then", [](Orchestrator& self, const std::shared_ptr<Effect>& effect) -> Orchestrator&
-            { return self.addStep(effect); }, py::arg("effect"), R"doc(
+        .def("then", &Orchestrator::then, "effect"_a, R"doc(
 Add a single effect to the timeline.
 
 Args:
@@ -422,8 +416,7 @@ Args:
 
 Returns:
     Orchestrator: Self for method chaining.
-             )doc"
-        )
+             )doc")
         .def("finalize", &Orchestrator::finalize, R"doc(
 Finalize the orchestrator, preventing further edits.
 
@@ -446,41 +439,32 @@ Stop the animation and reset to the beginning.
         .def("rewind", &Orchestrator::rewind, R"doc(
 Reset the animation to the beginning without stopping.
              )doc")
-        .def_property_readonly("finalized", &Orchestrator::isFinalized, R"doc(
+        .def_prop_ro("finalized", &Orchestrator::isFinalized, R"doc(
 Whether the orchestrator has been finalized.
              )doc")
-        .def_property_readonly("playing", &Orchestrator::isPlaying, R"doc(
+        .def_prop_ro("playing", &Orchestrator::isPlaying, R"doc(
 Whether the animation is currently playing.
              )doc")
-        .def_property_readonly("finished", &Orchestrator::isFinished, R"doc(
+        .def_prop_ro("finished", &Orchestrator::isFinished, R"doc(
 Whether the animation has completed.
              )doc")
-        .def_property("looping", &Orchestrator::isLooping, &Orchestrator::setLooping, R"doc(
+        .def_prop_rw("looping", &Orchestrator::isLooping, &Orchestrator::setLooping, R"doc(
 Whether the animation should loop when finished.
              )doc");
 
     // ----- fx functions (private, accessed via pykraken/fx.py) -----
-    module.def(
-        "_fx_move_to",
-        [](const Vec2& pos, double dur, const py::object& easeObj) -> std::shared_ptr<Effect>
+    subFx.def(
+        "move_to",
+        [](const Vec2& pos, double dur,
+           std::optional<std::function<double(double)>> easeFunc) -> std::shared_ptr<Effect>
         {
             auto effect = std::make_shared<MoveToEffect>();
             effect->targetPos = pos;
             effect->duration = dur;
-            if (!easeObj.is_none())
-            {
-                try
-                {
-                    effect->easing = easeObj.cast<std::function<double(double)>>();
-                }
-                catch (const py::cast_error&)
-                {
-                    throw py::type_error("ease must be a callable (float) -> float");
-                }
-            }
+            effect->easing = easeFunc.value_or([](double t) { return t; });
             return effect;
         },
-        py::arg("pos"), py::arg("dur") = 0.0, py::arg("ease") = py::none(),
+        "pos"_a, "dur"_a = 0.0, "ease"_a = nb::none(),
         R"doc(
 Create a move-to effect.
 
@@ -494,47 +478,27 @@ Returns:
         )doc"
     );
 
-    module.def(
-        "_fx_scale_to",
-        [](const py::object& scaleObj, double dur,
-           const py::object& easeObj) -> std::shared_ptr<Effect>
+    subFx.def(
+        "scale_to",
+        [](const nb::object& scaleObj, double dur,
+           std::optional<std::function<double(double)>> easeFunc) -> std::shared_ptr<Effect>
         {
             auto effect = std::make_shared<ScaleToEffect>();
+
             if (scaleObj.is_none())
-            {
-                effect->targetScale = {1.0, 1.0};
-            }
-            else if (py::isinstance<py::float_>(scaleObj) || py::isinstance<py::int_>(scaleObj))
-            {
-                double s = scaleObj.cast<double>();
-                effect->targetScale = {s, s};
-            }
+                effect->targetScale = Vec2{1.0};
+            else if (nb::isinstance<nb::float_>(scaleObj) || nb::isinstance<nb::int_>(scaleObj))
+                effect->targetScale = Vec2{nb::cast<double>(scaleObj)};
+            else if (nb::isinstance<Vec2>(scaleObj))
+                effect->targetScale = nb::cast<Vec2>(scaleObj);
             else
-            {
-                try
-                {
-                    effect->targetScale = scaleObj.cast<Vec2>();
-                }
-                catch (const py::cast_error&)
-                {
-                    throw py::type_error("scale must be a number or Vec2");
-                }
-            }
+                throw nb::type_error("scale must be a number or Vec2");
+
             effect->duration = dur;
-            if (!easeObj.is_none())
-            {
-                try
-                {
-                    effect->easing = easeObj.cast<std::function<double(double)>>();
-                }
-                catch (const py::cast_error&)
-                {
-                    throw py::type_error("ease must be a callable (float) -> float");
-                }
-            }
+            effect->easing = easeFunc.value_or([](double t) { return t; });
             return effect;
         },
-        py::arg("scale") = py::none(), py::arg("dur") = 0.0, py::arg("ease") = py::none(),
+        "scale"_a = nb::none(), "dur"_a = 0.0, "ease"_a = nb::none(),
         R"doc(
 Create a scale-to effect.
 
@@ -548,30 +512,19 @@ Returns:
         )doc"
     );
 
-    module.def(
-        "_fx_rotate_to",
+    subFx.def(
+        "rotate_to",
         [](double angle, bool clockwise, double dur,
-           const py::object& easeObj) -> std::shared_ptr<Effect>
+           std::optional<std::function<double(double)>> easeFunc) -> std::shared_ptr<Effect>
         {
             auto effect = std::make_shared<RotateToEffect>();
             effect->targetAngle = angle;
             effect->clockwise = clockwise;
             effect->duration = dur;
-            if (!easeObj.is_none())
-            {
-                try
-                {
-                    effect->easing = easeObj.cast<std::function<double(double)>>();
-                }
-                catch (const py::cast_error&)
-                {
-                    throw py::type_error("ease must be a callable (float) -> float");
-                }
-            }
+            effect->easing = easeFunc.value_or([](double t) { return t; });
             return effect;
         },
-        py::arg("angle"), py::arg("clockwise") = true, py::arg("dur") = 0.0,
-        py::arg("ease") = py::none(),
+        "angle"_a, "clockwise"_a = true, "dur"_a = 0.0, "ease"_a = nb::none(),
         R"doc(
 Create a rotate-to effect.
 
@@ -586,30 +539,19 @@ Returns:
         )doc"
     );
 
-    module.def(
-        "_fx_rotate_by",
+    subFx.def(
+        "rotate_by",
         [](double delta, bool clockwise, double dur,
-           const py::object& easeObj) -> std::shared_ptr<Effect>
+           std::optional<std::function<double(double)>> easeFunc) -> std::shared_ptr<Effect>
         {
             auto effect = std::make_shared<RotateByEffect>();
             effect->deltaAngle = delta;
             effect->clockwise = clockwise;
             effect->duration = dur;
-            if (!easeObj.is_none())
-            {
-                try
-                {
-                    effect->easing = easeObj.cast<std::function<double(double)>>();
-                }
-                catch (const py::cast_error&)
-                {
-                    throw py::type_error("ease must be a callable (float) -> float");
-                }
-            }
+            effect->easing = easeFunc.value_or([](double t) { return t; });
             return effect;
         },
-        py::arg("delta"), py::arg("clockwise") = true, py::arg("dur") = 0.0,
-        py::arg("ease") = py::none(),
+        "delta"_a, "clockwise"_a = true, "dur"_a = 0.0, "ease"_a = nb::none(),
         R"doc(
 Create a rotate-by effect.
 
@@ -624,8 +566,8 @@ Returns:
         )doc"
     );
 
-    module.def(
-        "_fx_shake",
+    subFx.def(
+        "shake",
         [](double amp, double freq, double dur) -> std::shared_ptr<Effect>
         {
             auto effect = std::make_shared<ShakeEffect>();
@@ -634,7 +576,7 @@ Returns:
             effect->duration = dur;
             return effect;
         },
-        py::arg("amp"), py::arg("freq"), py::arg("dur"),
+        "amp"_a, "freq"_a, "dur"_a,
         R"doc(
 Create a shake effect.
 
@@ -648,8 +590,8 @@ Returns:
         )doc"
     );
 
-    module.def(
-        "_fx_call",
+    subFx.def(
+        "call",
         [](const std::function<void()>& callback) -> std::shared_ptr<Effect>
         {
             auto effect = std::make_shared<CallEffect>();
@@ -657,7 +599,7 @@ Returns:
             effect->duration = 0.0;  // Instant
             return effect;
         },
-        py::arg("callback"), R"doc(
+        "callback"_a, R"doc(
 Create an effect that calls a function.
 
 Args:
@@ -668,8 +610,8 @@ Returns:
         )doc"
     );
 
-    module.def(
-        "_fx_wait",
+    subFx.def(
+        "wait",
         [](double dur) -> std::shared_ptr<Effect>
         {
             // Create a dummy effect that just waits
@@ -678,7 +620,7 @@ Returns:
             effect->duration = dur;
             return effect;
         },
-        py::arg("dur"), R"doc(
+        "dur"_a, R"doc(
 Create a wait/delay effect.
 
 Args:

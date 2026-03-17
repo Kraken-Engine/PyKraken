@@ -1,5 +1,7 @@
 #include "Collision.hpp"
 
+#include <algorithm>
+
 #include "Circle.hpp"
 #include "Line.hpp"
 #include "Math.hpp"
@@ -285,14 +287,15 @@ bool overlap(const Rect& rect, const Polygon& polygon)
     return overlap(polygon, rect);
 }
 
-void _bind(py::module_& module)
+void _bind(nb::module_& module)
 {
+    using namespace nb::literals;
+
     auto subCollision = module.def_submodule("collision", "Collision detection functions");
 
     // overlap functions
-    subCollision.def(
-        "overlap", py::overload_cast<const Rect&, const Rect&>(&overlap), py::arg("a"),
-        py::arg("b"), R"doc(
+    subCollision
+        .def("overlap", nb::overload_cast<const Rect&, const Rect&>(&overlap), "a"_a, "b"_a, R"doc(
 Check whether two rectangles overlap.
 
 Args:
@@ -301,11 +304,10 @@ Args:
 
 Returns:
     bool: True if the rectangles overlap.
-                     )doc"
-    );
+                     )doc");
     subCollision.def(
-        "overlap", py::overload_cast<const Rect&, const Circle&>(&overlap), py::arg("rect"),
-        py::arg("circle"), R"doc(
+        "overlap", nb::overload_cast<const Rect&, const Circle&>(&overlap), "rect"_a, "circle"_a,
+        R"doc(
 Check whether a rectangle and a circle overlap.
 
 Args:
@@ -317,8 +319,8 @@ Returns:
                      )doc"
     );
     subCollision.def(
-        "overlap", py::overload_cast<const Rect&, const Line&>(&overlap), py::arg("rect"),
-        py::arg("line"), R"doc(
+        "overlap", nb::overload_cast<const Rect&, const Line&>(&overlap), "rect"_a, "line"_a,
+        R"doc(
 Check whether a rectangle and a line overlap.
 
 Args:
@@ -330,8 +332,8 @@ Returns:
                      )doc"
     );
     subCollision.def(
-        "overlap", py::overload_cast<const Rect&, const Vec2&>(&overlap), py::arg("rect"),
-        py::arg("point"), R"doc(
+        "overlap", nb::overload_cast<const Rect&, const Vec2&>(&overlap), "rect"_a, "point"_a,
+        R"doc(
 Check whether a rectangle contains a point.
 
 Args:
@@ -343,8 +345,7 @@ Returns:
                      )doc"
     );
     subCollision.def(
-        "overlap", py::overload_cast<const Circle&, const Circle&>(&overlap), py::arg("a"),
-        py::arg("b"), R"doc(
+        "overlap", nb::overload_cast<const Circle&, const Circle&>(&overlap), "a"_a, "b"_a, R"doc(
 Check whether two circles overlap.
 
 Args:
@@ -356,8 +357,8 @@ Returns:
                      )doc"
     );
     subCollision.def(
-        "overlap", py::overload_cast<const Circle&, const Rect&>(&overlap), py::arg("circle"),
-        py::arg("rect"), R"doc(
+        "overlap", nb::overload_cast<const Circle&, const Rect&>(&overlap), "circle"_a, "rect"_a,
+        R"doc(
 Check whether a circle and a rectangle overlap.
 
 Args:
@@ -369,8 +370,8 @@ Returns:
                      )doc"
     );
     subCollision.def(
-        "overlap", py::overload_cast<const Circle&, const Line&>(&overlap), py::arg("circle"),
-        py::arg("line"), R"doc(
+        "overlap", nb::overload_cast<const Circle&, const Line&>(&overlap), "circle"_a, "line"_a,
+        R"doc(
 Check whether a circle and a line overlap.
 
 Args:
@@ -382,8 +383,8 @@ Returns:
                      )doc"
     );
     subCollision.def(
-        "overlap", py::overload_cast<const Circle&, const Vec2&>(&overlap), py::arg("circle"),
-        py::arg("point"), R"doc(
+        "overlap", nb::overload_cast<const Circle&, const Vec2&>(&overlap), "circle"_a, "point"_a,
+        R"doc(
 Check whether a circle contains a point.
 
 Args:
@@ -394,9 +395,8 @@ Returns:
     bool: True if the circle contains the point.
                      )doc"
     );
-    subCollision.def(
-        "overlap", py::overload_cast<const Line&, const Line&>(&overlap), py::arg("a"),
-        py::arg("b"), R"doc(
+    subCollision
+        .def("overlap", nb::overload_cast<const Line&, const Line&>(&overlap), "a"_a, "b"_a, R"doc(
 Check whether two lines overlap (intersect).
 
 Args:
@@ -405,11 +405,10 @@ Args:
 
 Returns:
     bool: True if the lines intersect.
-                     )doc"
-    );
+                     )doc");
     subCollision.def(
-        "overlap", py::overload_cast<const Line&, const Rect&>(&overlap), py::arg("line"),
-        py::arg("rect"), R"doc(
+        "overlap", nb::overload_cast<const Line&, const Rect&>(&overlap), "line"_a, "rect"_a,
+        R"doc(
 Check whether a line and a rectangle overlap.
 
 Args:
@@ -421,8 +420,8 @@ Returns:
                     )doc"
     );
     subCollision.def(
-        "overlap", py::overload_cast<const Line&, const Circle&>(&overlap), py::arg("line"),
-        py::arg("circle"), R"doc(
+        "overlap", nb::overload_cast<const Line&, const Circle&>(&overlap), "line"_a, "circle"_a,
+        R"doc(
 Check whether a line and a circle overlap.
 
 Args:
@@ -434,8 +433,8 @@ Returns:
                      )doc"
     );
     subCollision.def(
-        "overlap", py::overload_cast<const Vec2&, const Rect&>(&overlap), py::arg("point"),
-        py::arg("rect"), R"doc(
+        "overlap", nb::overload_cast<const Vec2&, const Rect&>(&overlap), "point"_a, "rect"_a,
+        R"doc(
 Check whether a point is inside a rectangle.
 
 Args:
@@ -447,8 +446,8 @@ Returns:
                      )doc"
     );
     subCollision.def(
-        "overlap", py::overload_cast<const Vec2&, const Circle&>(&overlap), py::arg("point"),
-        py::arg("circle"), R"doc(
+        "overlap", nb::overload_cast<const Vec2&, const Circle&>(&overlap), "point"_a, "circle"_a,
+        R"doc(
 Check whether a point is inside a circle.
 
 Args:
@@ -462,8 +461,8 @@ Returns:
 
     // contains functions
     subCollision.def(
-        "contains", py::overload_cast<const Rect&, const Rect&>(&contains), py::arg("outer"),
-        py::arg("inner"), R"doc(
+        "contains", nb::overload_cast<const Rect&, const Rect&>(&contains), "outer"_a, "inner"_a,
+        R"doc(
 Check whether one rectangle completely contains another rectangle.
 
 Args:
@@ -475,8 +474,8 @@ Returns:
                      )doc"
     );
     subCollision.def(
-        "contains", py::overload_cast<const Rect&, const Circle&>(&contains), py::arg("rect"),
-        py::arg("circle"), R"doc(
+        "contains", nb::overload_cast<const Rect&, const Circle&>(&contains), "rect"_a, "circle"_a,
+        R"doc(
 Check whether a rectangle completely contains a circle.
 
 Args:
@@ -488,8 +487,8 @@ Returns:
                      )doc"
     );
     subCollision.def(
-        "contains", py::overload_cast<const Rect&, const Line&>(&contains), py::arg("rect"),
-        py::arg("line"), R"doc(
+        "contains", nb::overload_cast<const Rect&, const Line&>(&contains), "rect"_a, "line"_a,
+        R"doc(
 Check whether a rectangle completely contains a line.
 
 Args:
@@ -501,8 +500,8 @@ Returns:
                      )doc"
     );
     subCollision.def(
-        "contains", py::overload_cast<const Circle&, const Circle&>(&contains), py::arg("outer"),
-        py::arg("inner"), R"doc(
+        "contains", nb::overload_cast<const Circle&, const Circle&>(&contains), "outer"_a,
+        "inner"_a, R"doc(
 Check whether one circle completely contains another circle.
 
 Args:
@@ -514,8 +513,8 @@ Returns:
                      )doc"
     );
     subCollision.def(
-        "contains", py::overload_cast<const Circle&, const Rect&>(&contains), py::arg("circle"),
-        py::arg("rect"), R"doc(
+        "contains", nb::overload_cast<const Circle&, const Rect&>(&contains), "circle"_a, "rect"_a,
+        R"doc(
 Check whether a circle completely contains a rectangle.
 
 Args:
@@ -527,8 +526,8 @@ Returns:
                      )doc"
     );
     subCollision.def(
-        "contains", py::overload_cast<const Circle&, const Line&>(&contains), py::arg("circle"),
-        py::arg("line"), R"doc(
+        "contains", nb::overload_cast<const Circle&, const Line&>(&contains), "circle"_a, "line"_a,
+        R"doc(
 Check whether a circle completely contains a line.
 
 Args:
@@ -541,8 +540,8 @@ Returns:
     );
 
     subCollision.def(
-        "overlap", py::overload_cast<const Polygon&, const Vec2&>(&overlap), py::arg("polygon"),
-        py::arg("point"), R"doc(
+        "overlap", nb::overload_cast<const Polygon&, const Vec2&>(&overlap), "polygon"_a, "point"_a,
+        R"doc(
 Check whether a polygon contains a point.
 
 Args:
@@ -555,8 +554,8 @@ Returns:
     );
 
     subCollision.def(
-        "overlap", py::overload_cast<const Vec2&, const Polygon&>(&overlap), py::arg("point"),
-        py::arg("polygon"), R"doc(
+        "overlap", nb::overload_cast<const Vec2&, const Polygon&>(&overlap), "point"_a, "polygon"_a,
+        R"doc(
 Check whether a point is inside a polygon.
 
 Args:
@@ -569,8 +568,8 @@ Returns:
     );
 
     subCollision.def(
-        "overlap", py::overload_cast<const Polygon&, const Rect&>(&overlap), py::arg("polygon"),
-        py::arg("rect"), R"doc(
+        "overlap", nb::overload_cast<const Polygon&, const Rect&>(&overlap), "polygon"_a, "rect"_a,
+        R"doc(
 Check whether a polygon and a rectangle overlap.
 
 Args:
@@ -583,8 +582,8 @@ Returns:
     );
 
     subCollision.def(
-        "overlap", py::overload_cast<const Rect&, const Polygon&>(&overlap), py::arg("rect"),
-        py::arg("polygon"), R"doc(
+        "overlap", nb::overload_cast<const Rect&, const Polygon&>(&overlap), "rect"_a, "polygon"_a,
+        R"doc(
 Check whether a rectangle and a polygon overlap.
 
 Args:

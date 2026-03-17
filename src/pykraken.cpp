@@ -1,6 +1,5 @@
 // clang-format off
 #include "opaque_types.hpp"
-#include "pykraken_version.hpp"
 // clang-format on
 
 #include "AnimationController.hpp"
@@ -46,10 +45,6 @@ static void init(const bool debug = false)
     if (debug)
         kn::log::_init();
 
-    kn::log::info(
-        "Kraken Engine v{}.{}.{}", KRAKEN_MAJOR_VERSION, KRAKEN_MINOR_VERSION, KRAKEN_MICRO_VERSION
-    );
-
     // log platform and architecture
     kn::log::info("Platform: {} ({})", getPlatform(), getArchitecture());
 
@@ -86,9 +81,11 @@ static void quit()
         SDL_Quit();
 }
 
-PYBIND11_MODULE(_core, m)
+NB_MODULE(_pykraken, m)
 {
-    m.def("init", &init, py::arg("debug") = false, R"doc(
+    using namespace nb::literals;
+
+    m.def("init", &init, "debug"_a = false, R"doc(
 Initialize the Kraken engine subsystems.
 
 Args:

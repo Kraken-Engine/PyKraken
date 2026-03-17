@@ -1,9 +1,9 @@
 #pragma once
 
 #include <SDL3/SDL.h>
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn
 {
@@ -11,12 +11,13 @@ class Vec2;
 
 namespace window
 {
-void _bind(py::module_& module);
+void _bind(nb::module_& module);
 void _quit();
+bool _handlesClose();
 
 SDL_Window* _get();
 
-void create(const std::string& title, int width, int height);
+void create(const std::string& title, int width, int height, bool handleClose = true);
 
 bool isOpen();
 

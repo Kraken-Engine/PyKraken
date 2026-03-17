@@ -1,7 +1,7 @@
 #pragma once
 
 #include <box2d/box2d.h>
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 #include <functional>
 #include <vector>
@@ -12,7 +12,7 @@
 #include "physics/bodies/RigidBody.hpp"
 #include "physics/bodies/StaticBody.hpp"
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn
 {
@@ -29,7 +29,7 @@ class Layer;
 
 namespace physics
 {
-void _bind(py::module_& module);
+void _bind(nb::module_& module);
 void _tick();
 
 void setFixedDelta(float fixedDelta);
@@ -114,7 +114,7 @@ class World
 
     bool isValid() const;
 
-    void addFixedUpdate(py::object callback);
+    void addFixedUpdate(nb::object callback);
     void clearFixedUpdates();
 
     b2WorldId _getWorldId() const;
@@ -122,9 +122,9 @@ class World
   private:
     struct FixedUpdateCallback
     {
-        py::object callback;
-        py::weakref weakOwner;
-        py::object unboundMethod;
+        nb::object callback;
+        nb::object weakOwner;
+        nb::object unboundMethod;
         bool isBound = false;
     };
 

@@ -1,10 +1,10 @@
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 #include <chrono>
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn
 {
@@ -42,7 +42,7 @@ class Timer
 
 namespace time
 {
-void _bind(py::module_& module);
+void _bind(nb::module_& module);
 
 double getDelta();
 

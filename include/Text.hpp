@@ -1,7 +1,7 @@
 #pragma once
 
 #include <SDL3_ttf/SDL_ttf.h>
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 #include <string>
 
@@ -9,7 +9,7 @@
 #include "Math.hpp"
 #include "_globals.hpp"
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn
 {
@@ -18,7 +18,7 @@ class Font;
 
 namespace text
 {
-void _bind(const py::module_& module);
+void _bind(const nb::module_& module);
 void _init();
 void _quit();
 void _cleanupTexts();  // Clean up all text objects before text engine is destroyed

@@ -1,6 +1,9 @@
 #include "Capsule.hpp"
 
+#include <nanobind/operators.h>
+
 #include <algorithm>
+#include <string>
 
 #include "Rect.hpp"
 
@@ -49,28 +52,27 @@ bool Capsule::operator!=(const Capsule& other) const
 
 namespace capsule
 {
-void _bind(const py::module_& module)
+void _bind(const nb::module_& module)
 {
-    py::classh<Capsule>(module, "Capsule", R"doc(
+    using namespace nb::literals;
+
+    nb::class_<Capsule>(module, "Capsule", R"doc(
 Represents a capsule shape with two points and a radius.
     )doc")
-        .def(py::init<>(), R"doc(
+        .def(nb::init<>(), R"doc(
 Create a capsule with default values.
         )doc")
-        .def(
-            py::init<const Vec2&, const Vec2&, double>(), py::arg("p1"), py::arg("p2"),
-            py::arg("radius"), R"doc(
+        .def(nb::init<const Vec2&, const Vec2&, double>(), "p1"_a, "p2"_a, "radius"_a, R"doc(
 Create a capsule from two points and a radius.
 
 Args:
     p1 (Vec2): The first point.
     p2 (Vec2): The second point.
     radius (float): The radius of the capsule.
-        )doc"
-        )
+        )doc")
         .def(
-            py::init<double, double, double, double, double>(), py::arg("x1"), py::arg("y1"),
-            py::arg("x2"), py::arg("y2"), py::arg("radius"), R"doc(
+            nb::init<double, double, double, double, double>(), "x1"_a, "y1"_a, "x2"_a, "y2"_a,
+            "radius"_a, R"doc(
 Create a capsule from coordinates and a radius.
 
 Args:
@@ -81,9 +83,9 @@ Args:
     radius (float): The radius of the capsule.
         )doc"
         )
-        .def_readwrite("p1", &Capsule::p1, "The first point.")
-        .def_readwrite("p2", &Capsule::p2, "The second point.")
-        .def_readwrite("radius", &Capsule::radius, "The radius.")
+        .def_rw("p1", &Capsule::p1, "The first point.")
+        .def_rw("p2", &Capsule::p2, "The second point.")
+        .def_rw("radius", &Capsule::radius, "The radius.")
         .def("as_rect", &Capsule::asRect, R"doc(
 Get the axis-aligned bounding box of the capsule.
 
@@ -97,16 +99,16 @@ Returns:
     Capsule: The copy.
         )doc")
         .def("__copy__", &Capsule::copy)
-        .def("__deepcopy__", [](const Capsule& self, py::dict) { return self.copy(); })
-        .def("__eq__", &Capsule::operator==)
-        .def("__ne__", &Capsule::operator!=)
+        .def("__deepcopy__", [](const Capsule& self, nb::dict) { return self.copy(); })
+        .def(nb::self == nb::self)
+        .def(nb::self != nb::self)
         .def(
             "__repr__",
-            [](const Capsule& self)
+            [](const Capsule& self) -> std::string
             {
-                return "Capsule(p1=" + std::to_string(self.p1.x) + ", " + std::to_string(self.p1.y) +
-                       ", p2=" + std::to_string(self.p2.x) + ", " + std::to_string(self.p2.y) +
-                       ", radius=" + std::to_string(self.radius) + ")";
+                return "Capsule(p1=" + std::to_string(self.p1.x) + ", " +
+                       std::to_string(self.p1.y) + ", p2=" + std::to_string(self.p2.x) + ", " +
+                       std::to_string(self.p2.y) + ", radius=" + std::to_string(self.radius) + ")";
             }
         );
 }

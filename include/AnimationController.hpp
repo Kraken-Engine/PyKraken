@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 #include <memory>
 #include <unordered_map>
@@ -14,7 +14,7 @@ class Texture;
 
 namespace animation_controller
 {
-void _bind(const py::module_& module);
+void _bind(const nb::module_& module);
 
 void _tick();
 }  // namespace animation_controller

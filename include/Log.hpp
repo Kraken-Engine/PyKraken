@@ -1,15 +1,15 @@
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 #include <spdlog/spdlog.h>
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn::log
 {
 void _init();
 
-void _bind(py::module_& module);
+void _bind(nb::module_& module);
 
 extern bool _loggerEnabled;
 

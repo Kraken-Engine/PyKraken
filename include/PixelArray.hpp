@@ -1,7 +1,7 @@
 #pragma once
 
 #include <SDL3/SDL.h>
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 #include <memory>
 #include <string>
@@ -9,7 +9,7 @@
 #include "Rect.hpp"
 #include "_globals.hpp"
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace kn
 {
@@ -73,7 +73,7 @@ class PixelArray
 
 namespace pixel_array
 {
-void _bind(py::module_& module);
+void _bind(nb::module_& module);
 
 std::unique_ptr<PixelArray> flip(const PixelArray& pixelArray, bool flipX, bool flipY);
 
