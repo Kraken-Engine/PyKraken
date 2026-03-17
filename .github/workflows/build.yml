@@ -108,6 +108,7 @@ jobs:
       - name: Install from Wheel
         shell: bash
         run: |
+          chmod +x scripts/install_wheels.sh
           ./scripts/install_wheels.sh
 
       - name: Run tests
