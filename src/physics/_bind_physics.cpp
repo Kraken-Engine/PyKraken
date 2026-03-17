@@ -47,7 +47,7 @@ Returns:
     float: The fixed time step in seconds.
     )doc");
     subPhysics.def("set_max_substeps", &setMaxSubsteps, "max_substeps"_a, R"doc(
-Set the maximum number of substeps for physics stepping.
+Set the maximum number of substeps for physics stepping. Default is 4.
 
 Args:
     max_substeps (int): The number of substeps per time step.
