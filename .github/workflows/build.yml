@@ -100,8 +100,11 @@ jobs:
       - name: Download wheels
         uses: actions/download-artifact@v7
         with:
-          name: wheels-${{ runner.os == 'Windows' && 'windows' || (runner.os == 'macOS' && 'macos' || 'linux') }}
           path: dist
+          pattern: |
+            ${{ runner.os == 'Windows' && '*win_amd64.whl' || '' }}
+            ${{ runner.os == 'macOS' && '*macosx*.whl' || '' }}
+            ${{ runner.os == 'Linux' && '*manylinux*.whl' || '' }}
 
       - name: Install from Wheel
         run: |
