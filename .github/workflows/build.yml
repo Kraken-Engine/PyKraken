@@ -36,6 +36,7 @@ jobs:
         if: runner.os == 'Windows'
         uses: lukka/run-vcpkg@v11
         with:
+          vcpkgDirectory: "C:/vcpkg"
           vcpkgJsonGlob: "vcpkg.json"
 
       - name: Build wheels
