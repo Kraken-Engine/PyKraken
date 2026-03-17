@@ -33,9 +33,6 @@ static float _accumulator = 0.0f;
 
 void _tick()
 {
-    if (_fixedDelta <= 0.0f)
-        return;
-
     _accumulator += static_cast<float>(time::getDelta());
 
     // Limit accumulator to avoid "spiral of death"
@@ -99,6 +96,8 @@ float getFixedDelta()
 
 void setMaxSubsteps(const int maxSubsteps)
 {
+    if (maxSubsteps < 1)
+        throw std::invalid_argument("Max substeps must be at least 1.");
     _maxSubsteps = maxSubsteps;
 }
 
@@ -539,7 +538,9 @@ StaticBody World::fromMapLayer(const tilemap::Layer& layer)
         }
         else if (shape == tmx::Object::Shape::Polygon)
         {
-            body.addCollider(Polygon(obj.getVertices()));
+            Polygon poly(obj.getVertices());
+            poly.translate(obj.transform.pos);
+            body.addCollider(poly);
         }
         // Skipping Point, Polyline (Lines), Ellipse, Text
     }
