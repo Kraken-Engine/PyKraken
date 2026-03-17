@@ -111,12 +111,7 @@ void Map::load(const std::string& tmxPath)
                 const auto& pos = tmxObject.getPosition();
                 mapObj.transform.pos = {pos.x, pos.y};
                 const auto& aabb = tmxObject.getAABB();
-                mapObj.m_rect = {
-                    aabb.left,
-                    aabb.top,
-                    aabb.width + aabb.left,
-                    aabb.height + aabb.top,
-                };
+                mapObj.m_rect = {aabb.left, aabb.top, aabb.width, aabb.height};
                 mapObj.m_tileId = tmxObject.getTileID();
                 mapObj.m_shape = tmxObject.getShape();
                 mapObj.transform.angle = math::toRadians(
