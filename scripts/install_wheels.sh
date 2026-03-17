@@ -1,23 +1,18 @@
 #!/usr/bin/env bash
 set -e
 
-echo "--- Upgrading pip ---"
-python -m pip install --upgrade pip
-
 echo "--- Searching for wheels ---"
 # This finds any .whl file inside the dist folder, even in subdirectories
 WHEEL=$(find dist -name "*.whl" | head -n 1)
 
-if [ -z "$WHEEL" ]; then
-    echo "Error: No .whl files found in dist/"
-    # Let's list what IS there to help debug
-    echo "Current directory contents:"
-    ls -R
+if [ -n "$WHEEL" ]; then
+    echo "Installing wheel file: $WHEEL"
+    pip install "$WHEEL"
+else
+    echo "Error: No wheel file or unpacked metadata found."
+    ls -R dist
     exit 1
 fi
-
-echo "Installing: $WHEEL"
-pip install "$WHEEL"
 
 echo "--- Installing dev-requirements ---"
 if [ -f "dev-requirements.txt" ]; then
