@@ -112,4 +112,7 @@ jobs:
           ./scripts/install_wheels.sh
 
       - name: Run tests
-        run: python -m pytest tests -q
+        run: |
+          mv src _src_backup
+          python -m pytest tests -q
+          mv _src_backup src
