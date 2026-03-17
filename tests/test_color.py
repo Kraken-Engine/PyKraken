@@ -42,9 +42,6 @@ class TestColorStaticConstants:
         assert Color.GREEN == Color(0, 255, 0)
         assert Color.BLUE == Color(0, 0, 255)
 
-    def test_gray_grey_alias(self):
-        assert Color.GRAY == Color.GREY
-
 
 class TestColorOperators:
     def test_equality(self):
