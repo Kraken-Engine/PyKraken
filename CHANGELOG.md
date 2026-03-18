@@ -9,7 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Tilemap objects with polygon shapes were not being transformed to their correct world positions, causing them to render and collide in the wrong place.
-- Tilemap object AABBs right and bottom coordinates were being set to the width and height of the object instead of the actual right and bottom positions.
 
 ## [1.6.2] - 2026-03-17
 

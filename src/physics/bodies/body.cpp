@@ -188,7 +188,7 @@ Transform Body::getTransform() const
 {
     _checkValid();
     const b2Transform xf = b2Body_GetTransform(m_bodyId);
-    return {{xf.p.x, xf.p.y}, b2Rot_GetAngle(xf.q), {1.0f, 1.0f}};
+    return {{xf.p.x, xf.p.y}, b2Rot_GetAngle(xf.q), {1.0, 1.0}};
 }
 
 bool Body::isValid() const
