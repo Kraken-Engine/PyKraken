@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) when possible.
 
+## [1.6.4] - 2026-03-23
+
+### Added
+- `CharacterBody` additions:
+  - `MotionMode` enum (`GROUNDED`, `FLOATING`) and corresponding `motion_mode` property.
+  - Movement properties: `max_speed`, `acceleration`, `friction`, `stop_speed`, and `air_steer`.
+  - Collision state properties: `on_floor`, `on_ceiling`, and `on_wall`.
+  - Shape property: `capsule_shape`.
+- Math & Vectors:
+  - `math.move_toward(current, target, max_delta)` function.
+  - `Vec2`: Added in-place rounding methods (`floor`, `ceil`, `round`) and surface sliding methods (`slide`, `slid`).
+
+### Changed
+- `Map` and `PixelArray` `set_at` / `get_at` methods now require two integers (x, y) instead of a `Vec2` for improved type safety.
+
+### Fixed
+- Passing an empty rect to `renderer.read_pixels` now correctly reads the entire render target instead of crashing.
+- `CharacterBody.move_and_slide` now uses Box2D's Mover API, utilizing a geometric solver to eliminate snagging on floor seams and provide smoother sliding along complex surfaces.
+- `Event.type` now returns an `EventType` enum type instead of an integer (for built-in event types; user events still return integers).
+
+### Removed
+- `CharacterBody` removals:
+  - `floor_max_angle` and `floor_snap_distance` properties.
+  - `is_on_floor()`, `is_on_ceiling()`, and `is_on_wall()` methods (replaced by the new properties mentioned in "Added").
+
 ## [1.6.3] - 2026-03-17
 
 ### Fixed

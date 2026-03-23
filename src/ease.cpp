@@ -1,5 +1,7 @@
 #include "Ease.hpp"
 
+#include <nanobind/stl/function.h>
+
 #include <cmath>
 #include <utility>
 
@@ -570,19 +572,13 @@ A class for animating values over time using easing functions.
 This class supports pausing, resuming, reversing, and checking progress.
     )doc")
 
-        .def(
-            nb::init<EasingFunction, double>(), "ease_func"_a, "duration"_a,
-            nb::sig(
-                "def __init__(self, ease_func: Callable[[float], float], duration: float) -> None"
-            ),
-            R"doc(
+        .def(nb::init<EasingFunction, double>(), "ease_func"_a, "duration"_a, R"doc(
 Create a Tween.
 
 Args:
     ease_func (Callable[[float], float]): Easing function that maps [0, 1] → [0, 1].
     duration (float): Time in seconds for full animation.
-    )doc"
-        )
+    )doc")
 
         .def_rw("start_pos", &Tween::startPos, R"doc(
 The starting position of the animation.

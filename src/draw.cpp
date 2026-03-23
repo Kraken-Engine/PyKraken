@@ -76,13 +76,9 @@ void circle(const Circle& circle, const Color& color, const double thickness, co
 
     const bool filled = (thickness <= 0.0 || thickness >= circle.radius);
     if (filled)
-    {
         _ellipseFilled(center, circle.radius, circle.radius, color, numSegments);
-    }
     else
-    {
         _ellipseOutline(center, circle.radius, circle.radius, color, thickness, numSegments);
-    }
 }
 
 void circles(
@@ -1390,7 +1386,10 @@ void _bind(nb::module_& module)
             "__init__",
             [](Vertex* self, const Vec2& position, std::optional<Color> color,
                std::optional<Vec2> texCoord) -> void
-            { new (self) Vertex{position, color.value_or(Color::WHITE), texCoord.value_or(Vec2{})}; },
+            {
+                new (self)
+                    Vertex{position, color.value_or(Color::WHITE), texCoord.value_or(Vec2{})};
+            },
             "position"_a, "color"_a = nb::none(), "tex_coord"_a = nb::none(),
             R"doc(
 Create a new Vertex.

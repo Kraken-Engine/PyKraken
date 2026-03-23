@@ -60,7 +60,7 @@ struct CastHit
     Body body;
     Vec2 point;
     Vec2 normal;
-    float fraction = 0.0f;
+    float fraction;
 };
 
 class World
@@ -114,22 +114,14 @@ class World
 
     bool isValid() const;
 
-    void addFixedUpdate(nb::object callback);
+    void addFixedUpdate(std::function<void(float)> callback);
     void clearFixedUpdates();
 
     b2WorldId _getWorldId() const;
 
   private:
-    struct FixedUpdateCallback
-    {
-        nb::object callback;
-        nb::object weakOwner;
-        nb::object unboundMethod;
-        bool isBound = false;
-    };
-
     b2WorldId m_worldId = b2_nullWorldId;
-    std::vector<FixedUpdateCallback> m_fixedUpdateCallbacks;
+    std::vector<std::function<void(float)>> m_fixedUpdateCallbacks;
 
     struct QueryContext
     {

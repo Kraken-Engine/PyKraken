@@ -120,15 +120,13 @@ int PixelArray::getAlpha() const
     return alpha;
 }
 
-Color PixelArray::getAt(const Vec2& coord) const
+Color PixelArray::getAt(const int x, const int y) const
 {
-    if (coord.x < 0 || coord.x >= m_surface->w || coord.y < 0 || coord.y >= m_surface->h)
+    if (x < 0 || x >= m_surface->w || y < 0 || y >= m_surface->h)
         throw std::out_of_range("Coordinates out of bounds for pixel array");
 
     auto* pixels = static_cast<uint8_t*>(m_surface->pixels);
     const int pitch = m_surface->pitch;
-    const auto x = static_cast<int>(coord.x);
-    const auto y = static_cast<int>(coord.y);
 
     const uint32_t pixel = *reinterpret_cast<uint32_t*>(pixels + y * pitch + x * sizeof(uint32_t));
 
@@ -139,15 +137,13 @@ Color PixelArray::getAt(const Vec2& coord) const
     return color;
 }
 
-void PixelArray::setAt(const Vec2& coord, const Color& color) const
+void PixelArray::setAt(const int x, const int y, const Color& color) const
 {
-    if (coord.x < 0 || coord.x >= m_surface->w || coord.y < 0 || coord.y >= m_surface->h)
+    if (x < 0 || x >= m_surface->w || y < 0 || y >= m_surface->h)
         throw std::out_of_range("Coordinates out of bounds for pixel array");
 
     auto* pixels = static_cast<uint8_t*>(m_surface->pixels);
     const int pitch = m_surface->pitch;
-    const auto x = static_cast<int>(coord.x);
-    const auto y = static_cast<int>(coord.y);
 
     const auto formatDetails = SDL_GetPixelFormatDetails(m_surface->format);
     const uint32_t pixel = SDL_MapRGBA(formatDetails, nullptr, color.r, color.g, color.b, color.a);
@@ -763,11 +759,12 @@ Raises:
     RuntimeError: If the blit operation fails.
         )doc"
         )
-        .def("get_at", &PixelArray::getAt, "coord"_a, R"doc(
+        .def("get_at", &PixelArray::getAt, "x"_a, "y"_a, R"doc(
 Get the color of a pixel at the specified coordinates.
 
 Args:
-    coord (Vec2): The coordinates of the pixel as (x, y).
+    x (int): The x-coordinate of the pixel.
+    y (int): The y-coordinate of the pixel.
 
 Returns:
     Color: The color of the pixel at the specified coordinates.
@@ -775,11 +772,12 @@ Returns:
 Raises:
     IndexError: If coordinates are outside the pixel array bounds.
         )doc")
-        .def("set_at", &PixelArray::setAt, "coord"_a, "color"_a, R"doc(
+        .def("set_at", &PixelArray::setAt, "x"_a, "y"_a, "color"_a, R"doc(
 Set the color of a pixel at the specified coordinates.
 
 Args:
-    coord (Vec2): The coordinates of the pixel as (x, y).
+    x (int): The x-coordinate of the pixel.
+    y (int): The y-coordinate of the pixel.
     color (Color): The color to set the pixel to.
 
 Raises:

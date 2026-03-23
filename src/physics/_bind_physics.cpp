@@ -1,4 +1,6 @@
 #include <nanobind/operators.h>
+#include <nanobind/stl/function.h>
+#include <nanobind/stl/vector.h>
 
 #include "Capsule.hpp"
 #include "Circle.hpp"
@@ -297,14 +299,26 @@ Args:
     world (World): The physics world to create the body in.
         )doc");
 
-    nb::class_<CharacterBody, Body>(subPhysics, "CharacterBody", R"doc(
+    nb::class_<CharacterBody, Body> charBody(subPhysics, "CharacterBody", R"doc(
 A kinematic physics body designed for player-controlled characters.
 
 Character bodies use a move-and-slide algorithm for movement and collision
 resolution. They automatically detect floor, wall, and ceiling contacts and
 slide along surfaces rather than bouncing off them. Ideal for platformer
 characters, NPCs, or any entity that needs precise movement control.
+        )doc");
+
+    nb::enum_<CharacterBody::MotionMode>(charBody, "MotionMode", R"doc(
+The motion mode for the character body.
         )doc")
+        .value("GROUNDED", CharacterBody::MotionMode::Grounded, R"doc(
+The character is affected by gravity and can stand on floors.
+        )doc")
+        .value("FLOATING", CharacterBody::MotionMode::Floating, R"doc(
+The character is not affected by gravity and can move freely in the air.
+        )doc");
+
+    charBody
         .def(nb::init<World&>(), "world"_a, R"doc(
 Create a new character body in the specified world.
 
@@ -314,34 +328,55 @@ Add colliders with ``add_collider`` before calling ``move_and_slide``.
 Args:
     world (World): The physics world to create the body in.
         )doc")
+
+        .def_rw(
+            "motion_mode", &CharacterBody::motionMode, R"doc(The motion mode of the character.)doc"
+        )
         .def_rw(
             "velocity", &CharacterBody::velocity, R"doc(The velocity of the character body.)doc"
         )
         .def_rw(
             "mass", &CharacterBody::mass,
-            R"doc(The mass of the character body. Default is 80.0.)doc"
+            R"doc(The simulated mass of the character for pushing rigid bodies.)doc"
         )
         .def_rw(
-            "floor_max_angle", &CharacterBody::floorMaxAngle,
-            R"doc(Maximum angle (in radians) to consider a surface as a floor. Default is ~45 degrees.)doc"
+            "max_speed", &CharacterBody::maxSpeed,
+            R"doc(The maximum speed the character can move.)doc"
         )
         .def_rw(
-            "floor_snap_distance", &CharacterBody::floorSnapDistance,
-            R"doc(Distance in pixels to probe downward for floor detection. Default is 5.0.)doc"
+            "acceleration", &CharacterBody::acceleration,
+            R"doc(The acceleration applied when moving.)doc"
+        )
+        .def_rw(
+            "friction", &CharacterBody::friction,
+            R"doc(The friction applied when on the ground.)doc"
+        )
+        .def_rw(
+            "stop_speed", &CharacterBody::stopSpeed,
+            R"doc(The speed threshold below which the character will stop moving.)doc"
+        )
+        .def_rw(
+            "air_steer", &CharacterBody::airSteer,
+            R"doc(The control factor for steering while in the air (0.0 to 1.0).)doc"
         )
 
-        .def(
-            "is_on_floor", &CharacterBody::isOnFloor,
+        .def_prop_rw(
+            "capsule_shape", &CharacterBody::getCapsuleShape, &CharacterBody::setCapsuleShape,
+            R"doc(The capsule shape used for ground detection and collision casting.)doc"
+        )
+        .def_prop_ro(
+            "on_floor", &CharacterBody::isOnFloor,
             R"doc(Whether the character is currently on a floor surface.)doc"
         )
-        .def(
-            "is_on_ceiling", &CharacterBody::isOnCeiling,
+        .def_prop_ro(
+            "on_ceiling", &CharacterBody::isOnCeiling,
             R"doc(Whether the character is currently touching a ceiling.)doc"
         )
-        .def(
-            "is_on_wall", &CharacterBody::isOnWall,
+        .def_prop_ro(
+            "on_wall", &CharacterBody::isOnWall,
             R"doc(Whether the character is currently touching a wall.)doc"
         )
+
         .def(
             "move_and_slide", &CharacterBody::moveAndSlide, "delta"_a = -1.0,
             R"doc(
@@ -762,19 +797,59 @@ Raises:
             )doc")
 
         .def(
-            "add_fixed_update", &World::addFixedUpdate, "callback"_a,
-            nb::sig("def add_fixed_update(self, callback: Callable[[], None]) -> None"),
+            "add_fixed_update",
+            [](World& self, nb::typed<nb::callable, void(float)> callback) -> void
+            {
+                if (nb::hasattr(callback, "__self__") &&
+                    !nb::getattr(callback, "__self__").is_none())
+                {
+                    nb::object selfObj = callback.attr("__self__");
+                    nb::object weakOwner = nb::weakref(selfObj);
+                    nb::object unboundMethod = callback.attr("__func__");
+                    self.addFixedUpdate(
+                        [weakOwner, unboundMethod](float delta)
+                        {
+                            nb::object owner = weakOwner();
+                            if (!owner.is_none())
+                                unboundMethod(owner, delta);
+                        }
+                    );
+                }
+                else
+                {
+                    // For lambdas and regular functions, keep a strong reference
+                    self.addFixedUpdate([callback](float delta) { callback(delta); });
+                }
+            },
+            "callback"_a,
             R"doc(Add a callback function to be executed during each physics step.)doc"
         )
         .def(
             "fixed_callback",
-            [](World& self, const nb::object& func)
+            [](World& self,
+               nb::typed<nb::callable, void(float)> func) -> nb::typed<nb::callable, void(float)>
             {
-                self.addFixedUpdate(func);
+                if (nb::hasattr(func, "__self__") && !nb::getattr(func, "__self__").is_none())
+                {
+                    nb::object selfObj = func.attr("__self__");
+                    nb::object weakOwner = nb::weakref(selfObj);
+                    nb::object unboundMethod = func.attr("__func__");
+                    self.addFixedUpdate(
+                        [weakOwner, unboundMethod](float delta)
+                        {
+                            nb::object owner = weakOwner();
+                            if (!owner.is_none())
+                                unboundMethod(owner, delta);
+                        }
+                    );
+                }
+                else
+                {
+                    self.addFixedUpdate([func](float delta) { func(delta); });
+                }
                 return func;
             },
             "callback"_a,
-            nb::sig("def fixed_callback(self, callback: Callable[[], None]) -> Callable[[], None]"),
             R"doc(A decorator to register a function as a physics update callback.)doc"
         )
         .def(
