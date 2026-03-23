@@ -74,13 +74,11 @@ class Vec2
     [[nodiscard]] double getAngle() const;
 
     void rotate(double rad);
-
     Vec2 rotated(double rad) const;
 
     [[nodiscard]] PolarCoordinate toPolar() const;
 
     void scaleToLength(double scalar);
-
     Vec2 scaledToLength(double scalar) const;
 
     [[nodiscard]] Vec2 project(const Vec2& other) const;
@@ -90,20 +88,25 @@ class Vec2
     [[nodiscard]] Vec2 reflect(const Vec2& other) const;
 
     void normalize();
-
     Vec2 normalized() const;
 
     [[nodiscard]] double distanceTo(const Vec2& other) const;
-
     [[nodiscard]] double distanceSquaredTo(const Vec2& other) const;
 
     void moveToward(const Vec2& target, double maxStep);
-
     Vec2 movedToward(const Vec2& target, double maxStep) const;
 
+    void floor();
     [[nodiscard]] Vec2 floored() const;
+
+    void ceil();
     [[nodiscard]] Vec2 ceiled() const;
+
+    void round();
     [[nodiscard]] Vec2 rounded() const;
+
+    void slide(const Vec2& normal);
+    Vec2 slid(const Vec2& normal) const;
 
     friend std::ostream& operator<<(std::ostream& os, const Vec2& v)
     {
@@ -203,5 +206,7 @@ double dot(const Vec2& a, const Vec2& b);
 double cross(const Vec2& a, const Vec2& b);
 
 double angleBetween(const Vec2& a, const Vec2& b);
+
+double moveToward(double current, double target, double maxStep);
 }  // namespace math
 }  // namespace kn

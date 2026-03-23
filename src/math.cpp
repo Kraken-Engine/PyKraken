@@ -180,9 +180,21 @@ Vec2 Vec2::movedToward(const Vec2& target, const double maxStep) const
     return result;
 }
 
+void Vec2::floor()
+{
+    x = std::floor(x);
+    y = std::floor(y);
+}
+
 Vec2 Vec2::floored() const
 {
     return {std::floor(x), std::floor(y)};
+}
+
+void Vec2::ceil()
+{
+    x = std::ceil(x);
+    y = std::ceil(y);
 }
 
 Vec2 Vec2::ceiled() const
@@ -190,9 +202,25 @@ Vec2 Vec2::ceiled() const
     return {std::ceil(x), std::ceil(y)};
 }
 
+void Vec2::round()
+{
+    x = std::round(x);
+    y = std::round(y);
+}
+
 Vec2 Vec2::rounded() const
 {
     return {std::round(x), std::round(y)};
+}
+
+void Vec2::slide(const Vec2& normal)
+{
+    *this -= normal * math::dot(*this, normal);
+}
+
+Vec2 Vec2::slid(const Vec2& normal) const
+{
+    return *this - normal * math::dot(*this, normal);
 }
 
 Vec2 Vec2::operator-() const
@@ -366,6 +394,18 @@ double angleBetween(const Vec2& a, const Vec2& b)
     const double dotProduct = dot(a, b);
     const double cosTheta = dotProduct / lengths;
     return std::acos(std::clamp(cosTheta, -1.0, 1.0));
+}
+
+double moveToward(const double current, const double target, const double maxStep)
+{
+    if (maxStep <= 0.0)
+        return current;
+
+    const double diff = target - current;
+    if (std::abs(diff) <= maxStep)
+        return target;
+
+    return current + std::copysign(maxStep, diff);
 }
 
 void _bind(nb::module_& module)
@@ -687,11 +727,17 @@ Args:
 Returns:
     Vec2: A new vector moved toward the target.
         )doc")
+        .def("floor", &Vec2::floor, R"doc(
+Floor both components of this Vec2 in-place.
+        )doc")
         .def("floored", &Vec2::floored, R"doc(
 Return a new Vec2 with both components floored to the nearest integer.
 
 Returns:
     Vec2: A new vector with floored components.
+        )doc")
+        .def("ceil", &Vec2::ceil, R"doc(
+Ceil both components of this Vec2 in-place.
         )doc")
         .def("ceiled", &Vec2::ceiled, R"doc(
 Return a new Vec2 with both components ceiled to the nearest integer.
@@ -699,16 +745,36 @@ Return a new Vec2 with both components ceiled to the nearest integer.
 Returns:
     Vec2: A new vector with ceiled components.
         )doc")
+        .def("round", &Vec2::round, R"doc(
+Round both components of this Vec2 in-place.
+        )doc")
         .def("rounded", &Vec2::rounded, R"doc(
 Return a new Vec2 with both components rounded to the nearest integer.
 
 Returns:
     Vec2: A new vector with rounded components.
         )doc")
+        .def("slide", &Vec2::slide, "normal"_a, R"doc(
+Slide this Vec2 along a surface defined by a normal vector.
+
+Args:
+    normal (Vec2): The normal vector defining the surface.
+
+Returns:
+    Vec2: A new vector slid along the surface.
+        )doc")
+        .def("slid", &Vec2::slid, "normal"_a, R"doc(
+Return a new Vec2 slid along a surface defined by a normal vector.
+
+Args:
+    normal (Vec2): The normal vector defining the surface.
+
+Returns:
+    Vec2: A new vector slid along the surface.
+        )doc")
         .def(
             "as_ints", [](const Vec2& v) -> nb::typed<nb::tuple, int, int>
-            { return nb::make_tuple(static_cast<int>(v.x), static_cast<int>(v.y)); },
-            R"doc(
+            { return nb::make_tuple(static_cast<int>(v.x), static_cast<int>(v.y)); }, R"doc(
 Return the vector components truncated to integers as a tuple.
 
 Returns:
@@ -914,6 +980,18 @@ Args:
 
 Returns:
     float: The angle between the vectors in radians [0, π].
+        )doc");
+
+    subMath.def("move_toward", &moveToward, "current"_a, "target"_a, "delta"_a, R"doc(
+Move a value toward a target by a maximum delta.
+
+Args:
+    current (float): The current value.
+    target (float): The target value.
+    delta (float): The maximum amount to move toward the target.
+
+Returns:
+    float: The new value after moving toward the target.
         )doc");
 }
 }  // namespace math

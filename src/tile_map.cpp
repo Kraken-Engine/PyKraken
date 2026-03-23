@@ -1,7 +1,15 @@
 #include <nanobind/make_iterator.h>
 #include <nanobind/stl/bind_vector.h>
+
+#include "TileMap.hpp"
+
+// clang-format off
+#include "opaque_types.hpp"
+// clang-format on
+
 #include <nanobind/stl/shared_ptr.h>
 #include <nanobind/stl/string.h>
+#include <nanobind/stl/vector.h>
 
 #include <tmxlite/ImageLayer.hpp>
 #include <tmxlite/TileLayer.hpp>
@@ -11,7 +19,6 @@
 #include "Line.hpp"
 #include "Polygon.hpp"
 #include "Renderer.hpp"
-#include "TileMap.hpp"
 
 #ifndef M_PI
 #define M_PI 3.1415926535897932384626433832795

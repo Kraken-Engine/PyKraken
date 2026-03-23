@@ -21,8 +21,6 @@ Event::Event(const uint32_t type)
 
 nb::object Event::getAttr(const std::string& name) const
 {
-    if (name == "type")
-        return nb::int_(type);
     if (data.contains(name))
         return data[name.c_str()];
 
@@ -323,12 +321,25 @@ void _bind(nb::module_& module)
 Represents a single input event such as keyboard, mouse, or gamepad activity.
 
 Attributes:
-    type (int): Event type. Additional fields are accessed dynamically.
+    type (EventType | int): Event type. Built-in Kraken events are returned as
+        EventType values. Custom user events are returned as integers.
         )doc")
 
-        .def_ro("type", &Event::type, R"doc(
-The event type (e.g., KEY_DOWN, MOUSE_BUTTON_UP).
-        )doc")
+        .def_prop_ro(
+            "type",
+            [](const Event& e) -> nb::object
+            {
+                if (e.type < SDL_EVENT_USER)
+                    return nb::cast(static_cast<SDL_EventType>(e.type));
+                return nb::int_(e.type);
+            },
+            nb::sig("def type(self) -> EventType | int"), R"doc(
+The event type.
+
+Built-in Kraken events are returned as EventType values.
+Custom user events are returned as integers.
+            )doc"
+        )
 
         .def("__getattr__", &Event::getAttr);
 

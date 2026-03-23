@@ -49,9 +49,9 @@ class PixelArray
 
     [[nodiscard]] int getAlpha() const;
 
-    [[nodiscard]] Color getAt(const Vec2& coord) const;
+    [[nodiscard]] Color getAt(int x, int y) const;
 
-    void setAt(const Vec2& coord, const Color& color) const;
+    void setAt(int x, int y, const Color& color) const;
 
     [[nodiscard]] int getWidth() const;
 

@@ -111,8 +111,19 @@ jobs:
           chmod +x scripts/install_wheels.sh
           ./scripts/install_wheels.sh
 
+      - name: Setup Xvfb on Linux
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libgl1-mesa-dri libgl1
+
       - name: Run tests
+        shell: bash
         run: |
           mv src _src_backup
-          python -m pytest tests -q
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            xvfb-run -s "-screen 0 1920x1080x24" python -m pytest tests -q
+          else
+            python -m pytest tests -q
+          fi
           mv _src_backup src

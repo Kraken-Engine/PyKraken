@@ -30,6 +30,15 @@ void _init(SDL_Window* window, const int width, const int height)
 
     _renderer = SDL_CreateGPURenderer(nullptr, window);
     if (_renderer == nullptr)
+    {
+        log::warn(
+            "SDL_GPU backend failed to initialize, falling back to legacy renderer. Reason: {}",
+            SDL_GetError()
+        );
+        _renderer = SDL_CreateRenderer(window, nullptr);
+    }
+
+    if (_renderer == nullptr)
         throw std::runtime_error("Renderer failed to create: " + std::string(SDL_GetError()));
 
     _gpuDevice = SDL_GetGPURendererDevice(_renderer);
@@ -37,22 +46,31 @@ void _init(SDL_Window* window, const int width, const int height)
     SDL_SetRenderLogicalPresentation(_renderer, width, height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
     SDL_SetRenderDrawBlendMode(_renderer, SDL_BLENDMODE_BLEND);
 
-    const SDL_PropertiesID gpuProperties = SDL_GetGPUDeviceProperties(_gpuDevice);
-    const char* gpuName =
-        SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_NAME_STRING, "Unknown Device");
-    const char* driverName = SDL_GetStringProperty(
-        gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_NAME_STRING, "Unknown Driver"
-    );
-    const char* driverVersion = SDL_GetStringProperty(
-        gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_VERSION_STRING, "Unknown Version"
-    );
-    const char* driverInfo =
-        SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_INFO_STRING, "No Info");
+    if (_gpuDevice)
+    {
+        const SDL_PropertiesID gpuProperties = SDL_GetGPUDeviceProperties(_gpuDevice);
+        const char* gpuName =
+            SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_NAME_STRING, "Unknown");
+        const char* driverName =
+            SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_NAME_STRING, "Unknown");
+        const char* driverVersion = SDL_GetStringProperty(
+            gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_VERSION_STRING, "Unknown"
+        );
+        const char* driverInfo =
+            SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_INFO_STRING, "None");
 
-    log::info("GPU Device: {}", gpuName);
-    log::info("GPU Driver: {}", driverName);
-    log::info("GPU Driver Version: {}", driverVersion);
-    log::info("GPU Driver Info: {}", driverInfo);
+        log::info("GPU Device: {}", gpuName);
+        log::info("GPU Driver: {}", driverName);
+        log::info("GPU Driver Version: {}", driverVersion);
+        log::info("GPU Driver Info: {}", driverInfo);
+    }
+    else
+    {
+        const SDL_PropertiesID rendererProperties = SDL_GetRendererProperties(_renderer);
+        const char* backend =
+            SDL_GetStringProperty(rendererProperties, SDL_PROP_RENDERER_NAME_STRING, "Unknown");
+        log::info("Using fallback renderer backend: {}", backend);
+    }
 }
 
 void _quit()
@@ -198,8 +216,13 @@ Vec2 getCurrentResolution()
 
 std::unique_ptr<PixelArray> readPixels(const Rect& src)
 {
+    if (src.w < 0.0 || src.h < 0.0)
+        throw std::invalid_argument("Source rectangle must have positive width and height");
+
     const auto sdlRect = static_cast<SDL_Rect>(src);
-    SDL_Surface* surface = SDL_RenderReadPixels(_renderer, &sdlRect);
+    const bool hasSize = (src.w > 0.0 && src.h > 0.0);
+
+    SDL_Surface* surface = SDL_RenderReadPixels(_renderer, hasSize ? &sdlRect : nullptr);
     if (!surface)
         throw std::runtime_error("Failed to read pixels: " + std::string(SDL_GetError()));
 
@@ -350,9 +373,6 @@ void drawBatchNDArray(
 {
     if (!texture.getSDL())
         throw std::runtime_error("Invalid texture provided for drawing");
-
-    if (arr.ndim() != 2)
-        throw std::invalid_argument("Expected 2D array");
 
     const auto n = static_cast<size_t>(arr.shape(0));
     const auto cols = static_cast<size_t>(arr.shape(1));
@@ -531,7 +551,8 @@ Args:
 Read pixel data from the renderer within the specified rectangle.
 
 Args:
-    src (Rect, optional): The rectangle area to read pixels from. Defaults to entire renderer if None.
+    src (Rect, optional): The rectangle area to read pixels from.
+        Defaults to entire renderer if None or area has no width or height.
 
 Returns:
     PixelArray: An array containing the pixel data.

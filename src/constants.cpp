@@ -98,6 +98,8 @@ SDL event type constants for input and system events.
             "DISPLAY_USABLE_BOUNDS_CHANGED", SDL_EVENT_DISPLAY_USABLE_BOUNDS_CHANGED,
             "Usable display bounds changed"
         )
+        .value("DISPLAY_FIRST", SDL_EVENT_DISPLAY_FIRST, "First display event")
+        .value("DISPLAY_LAST", SDL_EVENT_DISPLAY_LAST, "Last display event")
 
         // Window events
         .value("WINDOW_SHOWN", SDL_EVENT_WINDOW_SHOWN, "Window shown")
@@ -105,6 +107,14 @@ SDL event type constants for input and system events.
         .value("WINDOW_EXPOSED", SDL_EVENT_WINDOW_EXPOSED, "Window needs redraw")
         .value("WINDOW_MOVED", SDL_EVENT_WINDOW_MOVED, "Window moved")
         .value("WINDOW_RESIZED", SDL_EVENT_WINDOW_RESIZED, "Window resized")
+        .value(
+            "WINDOW_PIXEL_SIZE_CHANGED", SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED,
+            "Window pixel size changed"
+        )
+        .value(
+            "WINDOW_METAL_VIEW_RESIZED", SDL_EVENT_WINDOW_METAL_VIEW_RESIZED,
+            "Window Metal view resized"
+        )
         .value("WINDOW_MINIMIZED", SDL_EVENT_WINDOW_MINIMIZED, "Window minimized")
         .value("WINDOW_MAXIMIZED", SDL_EVENT_WINDOW_MAXIMIZED, "Window maximized")
         .value("WINDOW_RESTORED", SDL_EVENT_WINDOW_RESTORED, "Window restored")
@@ -129,6 +139,8 @@ SDL event type constants for input and system events.
         .value("WINDOW_LEAVE_FULLSCREEN", SDL_EVENT_WINDOW_LEAVE_FULLSCREEN, "Left fullscreen")
         .value("WINDOW_DESTROYED", SDL_EVENT_WINDOW_DESTROYED, "Window destroyed")
         .value("WINDOW_HDR_STATE_CHANGED", SDL_EVENT_WINDOW_HDR_STATE_CHANGED, "HDR state changed")
+        .value("WINDOW_FIRST", SDL_EVENT_WINDOW_FIRST, "First window event")
+        .value("WINDOW_LAST", SDL_EVENT_WINDOW_LAST, "Last window event")
 
         // Keyboard events
         .value("KEY_DOWN", SDL_EVENT_KEY_DOWN, "Key pressed or repeating while held")
@@ -154,6 +166,23 @@ SDL event type constants for input and system events.
         .value("MOUSE_WHEEL", SDL_EVENT_MOUSE_WHEEL, "Mouse wheel scrolled")
         .value("MOUSE_ADDED", SDL_EVENT_MOUSE_ADDED, "Mouse connected")
         .value("MOUSE_REMOVED", SDL_EVENT_MOUSE_REMOVED, "Mouse disconnected")
+
+        // Joystick events
+        .value("JOYSTICK_AXIS_MOTION", SDL_EVENT_JOYSTICK_AXIS_MOTION, "Joystick axis motion")
+        .value("JOYSTICK_BALL_MOTION", SDL_EVENT_JOYSTICK_BALL_MOTION, "Joystick trackball motion")
+        .value("JOYSTICK_HAT_MOTION", SDL_EVENT_JOYSTICK_HAT_MOTION, "Joystick hat motion")
+        .value("JOYSTICK_BUTTON_DOWN", SDL_EVENT_JOYSTICK_BUTTON_DOWN, "Joystick button pressed")
+        .value("JOYSTICK_BUTTON_UP", SDL_EVENT_JOYSTICK_BUTTON_UP, "Joystick button released")
+        .value("JOYSTICK_ADDED", SDL_EVENT_JOYSTICK_ADDED, "Joystick connected")
+        .value("JOYSTICK_REMOVED", SDL_EVENT_JOYSTICK_REMOVED, "Joystick disconnected")
+        .value(
+            "JOYSTICK_BATTERY_UPDATED", SDL_EVENT_JOYSTICK_BATTERY_UPDATED,
+            "Joystick battery updated"
+        )
+        .value(
+            "JOYSTICK_UPDATE_COMPLETE", SDL_EVENT_JOYSTICK_UPDATE_COMPLETE,
+            "Joystick update complete"
+        )
 
         // Gamepad events
         .value("GAMEPAD_AXIS_MOTION", SDL_EVENT_GAMEPAD_AXIS_MOTION, "Gamepad axis moved")
@@ -224,6 +253,15 @@ SDL event type constants for input and system events.
         .value("PINCH_BEGIN", SDL_EVENT_PINCH_BEGIN, "Pinch gesture began")
         .value("PINCH_UPDATE", SDL_EVENT_PINCH_UPDATE, "Pinch gesture updated")
         .value("PINCH_END", SDL_EVENT_PINCH_END, "Pinch gesture ended")
+
+        // Reserved / internal / user events
+        .value("PRIVATE0", SDL_EVENT_PRIVATE0, "Private event 0")
+        .value("PRIVATE1", SDL_EVENT_PRIVATE1, "Private event 1")
+        .value("PRIVATE2", SDL_EVENT_PRIVATE2, "Private event 2")
+        .value("PRIVATE3", SDL_EVENT_PRIVATE3, "Private event 3")
+        .value("POLL_SENTINEL", SDL_EVENT_POLL_SENTINEL, "Internal poll sentinel")
+        .value("USER", SDL_EVENT_USER, "User event base")
+        .value("LAST", SDL_EVENT_LAST, "Last event value")
 
         .export_values();
 

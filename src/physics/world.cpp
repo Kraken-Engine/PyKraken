@@ -50,30 +50,16 @@ void _tick()
                 bool shouldRemove = false;
                 try
                 {
-                    if (it->isBound)
-                    {
-                        nb::object owner = it->weakOwner();
-                        if (owner.is_none())
-                            shouldRemove = true;
-                        else
-                            it->unboundMethod(owner, _fixedDelta);
-                    }
-                    else
-                    {
-                        it->callback(_fixedDelta);
-                    }
+                    it->operator()(_fixedDelta);
                 }
-                catch (const nb::python_error& e)
+                catch (const std::exception& e)
                 {
                     throw std::runtime_error(
                         "An error occurred in a fixed update callback: " + std::string(e.what())
                     );
                 }
 
-                if (shouldRemove)
-                    it = world->m_fixedUpdateCallbacks.erase(it);
-                else
-                    ++it;
+                ++it;
             }
 
             b2World_Step(world->m_worldId, _fixedDelta, _maxSubsteps);
@@ -106,28 +92,12 @@ int getMaxSubsteps()
     return _maxSubsteps;
 }
 
-void World::addFixedUpdate(nb::object callback)
+void World::addFixedUpdate(std::function<void(float)> callback)
 {
-    if (callback.is_none())
-        throw std::invalid_argument("Callback cannot be None.");
+    if (!callback)
+        throw std::invalid_argument("Callback cannot be null.");
 
-    if (!nb::hasattr(callback, "__call__"))
-        throw std::invalid_argument("Callback must be a callable object.");
-
-    FixedUpdateCallback wrapper;
-    if (nb::hasattr(callback, "__self__") && !nb::getattr(callback, "__self__").is_none())
-    {
-        nb::object self = callback.attr("__self__");
-        wrapper.isBound = true;
-        wrapper.weakOwner = nb::weakref(self);
-        wrapper.unboundMethod = callback.attr("__func__");
-    }
-    else
-    {
-        wrapper.isBound = false;
-        wrapper.callback = std::move(callback);
-    }
-    m_fixedUpdateCallbacks.push_back(std::move(wrapper));
+    m_fixedUpdateCallbacks.push_back(std::move(callback));
 }
 
 void World::clearFixedUpdates()

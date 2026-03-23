@@ -47,20 +47,20 @@ Rect Mask::getRect() const
     return {0, 0, m_width, m_height};
 }
 
-bool Mask::getAt(const Vec2& pos) const
+bool Mask::getAt(const int x, const int y) const
 {
-    if (pos.x < 0 || pos.x >= m_width || pos.y < 0 || pos.y >= m_height)
+    if (x < 0 || x >= m_width || y < 0 || y >= m_height)
         return false;
 
-    return m_maskData[static_cast<int>(pos.y * m_width + pos.x)];
+    return m_maskData[static_cast<int>(y * m_width + x)];
 }
 
-void Mask::setAt(const Vec2& pos, const bool value)
+void Mask::setAt(const int x, const int y, const bool value)
 {
-    if (pos.x < 0 || pos.x >= m_width || pos.y < 0 || pos.y >= m_height)
+    if (x < 0 || x >= m_width || y < 0 || y >= m_height)
         return;
 
-    m_maskData[static_cast<int>(pos.y * m_width + pos.x)] = value;
+    m_maskData[static_cast<int>(y * m_width + x)] = value;
 }
 
 int Mask::getOverlapArea(const Mask& other, const Vec2& offset) const
@@ -100,8 +100,8 @@ Mask Mask::getOverlapMask(const Mask& other, const Vec2& offset) const
 
     for (int y = yStart; y < yEnd; ++y)
         for (int x = xStart; x < xEnd; ++x)
-            if (getAt({x, y}) && other.getAt({x + xOffset, y + yOffset}))
-                overlapMask.setAt({x - xStart, y - yStart}, true);
+            if (getAt(x, y) && other.getAt(x + xOffset, y + yOffset))
+                overlapMask.setAt(x - xStart, y - yStart, true);
 
     return overlapMask;
 }
@@ -248,7 +248,7 @@ bool Mask::collideMask(const Mask& other, const Vec2& offset) const
 
     for (int y = yStart; y < yEnd; ++y)
         for (int x = xStart; x < xEnd; ++x)
-            if (getAt({x, y}) && other.getAt({x + xOffset, y + yOffset}))
+            if (getAt(x, y) && other.getAt(x + xOffset, y + yOffset))
                 return true;
 
     return false;
@@ -270,7 +270,7 @@ std::vector<Vec2> Mask::getCollisionPoints(const Mask& other, const Vec2& offset
 
     for (int y = yStart; y < yEnd; ++y)
         for (int x = xStart; x < xEnd; ++x)
-            if (getAt({x, y}) && other.getAt({x + xOffset, y + yOffset}))
+            if (getAt(x, y) && other.getAt(x + xOffset, y + yOffset))
                 collisionPoints.emplace_back(x, y);
 
     return collisionPoints;
@@ -374,20 +374,22 @@ Create a copy of this mask.
 Returns:
     Mask: A new Mask with the same dimensions and pixel data.
         )doc")
-        .def("get_at", &Mask::getAt, "pos"_a, R"doc(
+        .def("get_at", &Mask::getAt, "x"_a, "y"_a, R"doc(
 Get the pixel value at a specific position.
 
 Args:
-    pos (Vec2): The position to check.
+    x (int): The x-coordinate of the position to check.
+    y (int): The y-coordinate of the position to check.
 
 Returns:
     bool: True if the pixel is solid (above threshold), False otherwise.
         )doc")
-        .def("set_at", &Mask::setAt, "pos"_a, "value"_a, R"doc(
+        .def("set_at", &Mask::setAt, "x"_a, "y"_a, "value"_a, R"doc(
 Set the pixel value at a specific position.
 
 Args:
-    pos (Vec2): The position to set.
+    x (int): The x-coordinate of the position to set.
+    y (int): The y-coordinate of the position to set.
     value (bool): The pixel value (True for solid, False for transparent).
         )doc")
         .def(

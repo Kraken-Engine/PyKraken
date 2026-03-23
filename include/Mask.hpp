@@ -29,9 +29,9 @@ class Mask
 
     [[nodiscard]] Rect getRect() const;
 
-    [[nodiscard]] bool getAt(const Vec2& pos) const;
+    [[nodiscard]] bool getAt(int x, int y) const;
 
-    void setAt(const Vec2& pos, bool value);
+    void setAt(int x, int y, bool value);
 
     [[nodiscard]] int getOverlapArea(const Mask& other, const Vec2& offset = {}) const;
 

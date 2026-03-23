@@ -316,7 +316,9 @@ void _bind(nb::module_& module)
 {
     using namespace nb::literals;
 
-    auto subFx = module.def_submodule("fx", R"doc()doc");
+    auto subFx = module.def_submodule("fx", R"doc(
+Predefined effects for use with the Orchestrator.
+    )doc");
 
     // ----- Effect base class (not directly instantiable) -----
     nb::class_<Effect>(subFx, "Effect", R"doc(
@@ -464,8 +466,7 @@ Whether the animation should loop when finished.
             effect->easing = easeFunc.value_or([](double t) { return t; });
             return effect;
         },
-        "pos"_a, "dur"_a = 0.0, "ease"_a = nb::none(),
-        R"doc(
+        "pos"_a, "dur"_a = 0.0, "ease"_a = nb::none(), R"doc(
 Create a move-to effect.
 
 Args:
@@ -498,8 +499,7 @@ Returns:
             effect->easing = easeFunc.value_or([](double t) { return t; });
             return effect;
         },
-        "scale"_a = nb::none(), "dur"_a = 0.0, "ease"_a = nb::none(),
-        R"doc(
+        "scale"_a = nb::none(), "dur"_a = 0.0, "ease"_a = nb::none(), R"doc(
 Create a scale-to effect.
 
 Args:
@@ -524,8 +524,7 @@ Returns:
             effect->easing = easeFunc.value_or([](double t) { return t; });
             return effect;
         },
-        "angle"_a, "clockwise"_a = true, "dur"_a = 0.0, "ease"_a = nb::none(),
-        R"doc(
+        "angle"_a, "clockwise"_a = true, "dur"_a = 0.0, "ease"_a = nb::none(), R"doc(
 Create a rotate-to effect.
 
 Args:
