@@ -1,7 +1,7 @@
 #include "Mixer.hpp"
 
-#include <nanobind/stl/unique_ptr.h>
 #include <nanobind/stl/string.h>
+#include <nanobind/stl/unique_ptr.h>
 
 #include <algorithm>
 #include <limits>
@@ -45,6 +45,9 @@ static Sint64 _fadeOutFramesForTrack(MIX_Track* track, double fadeOutSeconds);
 
 std::unique_ptr<Sample> loadSample(const std::string& path, const bool predecode)
 {
+    if (_mixer == nullptr)
+        throw std::runtime_error("Mixer not initialized");
+
     MIX_Audio* audio = MIX_LoadAudio(_mixer, path.c_str(), predecode);
     if (audio == nullptr)
     {
@@ -58,6 +61,9 @@ std::unique_ptr<Sample> loadSample(const std::string& path, const bool predecode
 
 std::unique_ptr<Stream> loadStream(const std::string& path, const bool predecode)
 {
+    if (_mixer == nullptr)
+        throw std::runtime_error("Mixer not initialized");
+
     MIX_Audio* audio = MIX_LoadAudio(_mixer, path.c_str(), predecode);
     if (audio == nullptr)
     {
@@ -72,11 +78,17 @@ std::unique_ptr<Stream> loadStream(const std::string& path, const bool predecode
 void setMasterVolume(float volume)
 {
     volume = std::clamp(volume, 0.0f, 1.0f);
+    if (_mixer == nullptr)
+        throw std::runtime_error("Mixer not initialized");
+
     MIX_SetMixerGain(_mixer, volume);
 }
 
 float getMasterVolume()
 {
+    if (_mixer == nullptr)
+        throw std::runtime_error("Mixer not initialized");
+
     return MIX_GetMixerGain(_mixer);
 }
 
@@ -642,7 +654,8 @@ void _init()
 {
     if (!MIX_Init())
     {
-        throw std::runtime_error(std::string("Failed to initialize SDL_mixer: ") + SDL_GetError());
+        kn::log::warn("Failed to initialize SDL_mixer: {}. Audio disabled.", SDL_GetError());
+        return;
     }
 
     kn::log::info(
@@ -653,7 +666,8 @@ void _init()
     _mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, nullptr);
     if (_mixer == nullptr)
     {
-        throw std::runtime_error(std::string("Failed to create mixer device: ") + SDL_GetError());
+        kn::log::warn("Failed to create mixer device: {}. Audio disabled.", SDL_GetError());
+        return;
     }
 
     const SDL_PropertiesID mixerProps = MIX_GetMixerProperties(_mixer);
@@ -665,14 +679,21 @@ void _init()
         _tracks[i].track = MIX_CreateTrack(_mixer);
         if (_tracks[i].track == nullptr)
         {
-            throw std::runtime_error(
-                std::string("Failed to create mixer track ") + std::to_string(i) + ": " +
-                SDL_GetError()
+            kn::log::warn(
+                "Failed to create mixer track {}: {}. Continuing with fewer tracks.",
+                std::to_string(i), SDL_GetError()
             );
+            _tracks[i].track = nullptr;
+            continue;
         }
     }
 
-    kn::log::info("Initialized mixer with {} tracks.", MAX_TRACKS);
+    int createdTracks = 0;
+    for (const auto& t : _tracks)
+        if (t.track)
+            ++createdTracks;
+
+    kn::log::info("Initialized mixer with {} tracks.", createdTracks);
 }
 
 void _quit()
