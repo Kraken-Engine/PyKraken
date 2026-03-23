@@ -30,6 +30,15 @@ void _init(SDL_Window* window, const int width, const int height)
 
     _renderer = SDL_CreateGPURenderer(nullptr, window);
     if (_renderer == nullptr)
+    {
+        log::warn(
+            "SDL_GPU backend failed to initialize, falling back to legacy renderer. Reason: {}",
+            SDL_GetError()
+        );
+        _renderer = SDL_CreateRenderer(window, nullptr);
+    }
+
+    if (_renderer == nullptr)
         throw std::runtime_error("Renderer failed to create: " + std::string(SDL_GetError()));
 
     _gpuDevice = SDL_GetGPURendererDevice(_renderer);
@@ -37,22 +46,31 @@ void _init(SDL_Window* window, const int width, const int height)
     SDL_SetRenderLogicalPresentation(_renderer, width, height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
     SDL_SetRenderDrawBlendMode(_renderer, SDL_BLENDMODE_BLEND);
 
-    const SDL_PropertiesID gpuProperties = SDL_GetGPUDeviceProperties(_gpuDevice);
-    const char* gpuName =
-        SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_NAME_STRING, "Unknown Device");
-    const char* driverName = SDL_GetStringProperty(
-        gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_NAME_STRING, "Unknown Driver"
-    );
-    const char* driverVersion = SDL_GetStringProperty(
-        gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_VERSION_STRING, "Unknown Version"
-    );
-    const char* driverInfo =
-        SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_INFO_STRING, "No Info");
+    if (_gpuDevice)
+    {
+        const SDL_PropertiesID gpuProperties = SDL_GetGPUDeviceProperties(_gpuDevice);
+        const char* gpuName =
+            SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_NAME_STRING, "Unknown");
+        const char* driverName =
+            SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_NAME_STRING, "Unknown");
+        const char* driverVersion = SDL_GetStringProperty(
+            gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_VERSION_STRING, "Unknown"
+        );
+        const char* driverInfo =
+            SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_INFO_STRING, "None");
 
-    log::info("GPU Device: {}", gpuName);
-    log::info("GPU Driver: {}", driverName);
-    log::info("GPU Driver Version: {}", driverVersion);
-    log::info("GPU Driver Info: {}", driverInfo);
+        log::info("GPU Device: {}", gpuName);
+        log::info("GPU Driver: {}", driverName);
+        log::info("GPU Driver Version: {}", driverVersion);
+        log::info("GPU Driver Info: {}", driverInfo);
+    }
+    else
+    {
+        const SDL_PropertiesID rendererProperties = SDL_GetRendererProperties(_renderer);
+        const char* backend =
+            SDL_GetStringProperty(rendererProperties, SDL_PROP_RENDERER_NAME_STRING, "Unknown");
+        log::info("Using fallback renderer backend: {}", backend);
+    }
 }
 
 void _quit()
