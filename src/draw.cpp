@@ -2,6 +2,7 @@
 
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/vector.h>
+#include <nanobind/stl/string.h>
 
 #include <algorithm>
 #include <array>

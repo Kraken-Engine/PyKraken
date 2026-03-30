@@ -3,7 +3,12 @@
   "builtin-baseline": "1e199d32ad53aab1defda61ce41c380302e3f95c",
   "dependencies": [
     "box2d",
-    "sdl3",
+    {
+      "name": "sdl3",
+      "features": [
+        "vulkan"
+      ]
+    },
     {
       "name": "sdl3-ttf",
       "features": [

@@ -1,6 +1,7 @@
 #include "Capsule.hpp"
 
 #include <nanobind/operators.h>
+#include <nanobind/stl/string.h>
 
 #include <algorithm>
 #include <string>

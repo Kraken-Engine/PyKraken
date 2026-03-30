@@ -1,5 +1,6 @@
 #include "Renderer.hpp"
 
+#include <nanobind/stl/optional.h>
 #include <nanobind/stl/unique_ptr.h>
 #include <nanobind/stl/vector.h>
 
@@ -28,20 +29,43 @@ void _init(SDL_Window* window, const int width, const int height)
 {
     _size = {width, height};
 
-    _renderer = SDL_CreateGPURenderer(nullptr, window);
-    if (_renderer == nullptr)
+    // Attempt to force Vulkan
+    _gpuDevice = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV, true, "vulkan");
+    if (_gpuDevice)
+        _renderer = SDL_CreateGPURenderer(_gpuDevice, window);
+
+    // Fallback to default GPU renderer if Vulkan failed or wasn't available
+    if (!_renderer)
     {
         log::warn(
-            "SDL_GPU backend failed to initialize, falling back to legacy renderer. Reason: {}",
+            "Failed to initialize Vulkan backend, trying default GPU renderer. Reason: {}",
+            SDL_GetError()
+        );
+
+        if (_gpuDevice)
+        {
+            SDL_DestroyGPUDevice(_gpuDevice);
+            _gpuDevice = nullptr;
+        }
+
+        _renderer = SDL_CreateGPURenderer(nullptr, window);
+    }
+
+    // Fallback to legacy renderer
+    if (!_renderer)
+    {
+        log::warn(
+            "GPU backend failed to initialize, falling back to legacy renderer. Reason: {}",
             SDL_GetError()
         );
         _renderer = SDL_CreateRenderer(window, nullptr);
     }
 
-    if (_renderer == nullptr)
+    if (!_renderer)
         throw std::runtime_error("Renderer failed to create: " + std::string(SDL_GetError()));
 
-    _gpuDevice = SDL_GetGPURendererDevice(_renderer);
+    if (!_gpuDevice)
+        _gpuDevice = SDL_GetGPURendererDevice(_renderer);
 
     SDL_SetRenderLogicalPresentation(_renderer, width, height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
     SDL_SetRenderDrawBlendMode(_renderer, SDL_BLENDMODE_BLEND);
@@ -51,8 +75,7 @@ void _init(SDL_Window* window, const int width, const int height)
         const SDL_PropertiesID gpuProperties = SDL_GetGPUDeviceProperties(_gpuDevice);
         const char* gpuName =
             SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_NAME_STRING, "Unknown");
-        const char* driverName =
-            SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_NAME_STRING, "Unknown");
+        const char* driverName = SDL_GetGPUDeviceDriver(_gpuDevice);
         const char* driverVersion = SDL_GetStringProperty(
             gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_VERSION_STRING, "Unknown"
         );
@@ -60,21 +83,35 @@ void _init(SDL_Window* window, const int width, const int height)
             SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_INFO_STRING, "None");
 
         log::info("GPU Device: {}", gpuName);
-        log::info("GPU Driver: {}", driverName);
+        log::info("GPU Driver: {}", (driverName ? driverName : "Unknown"));
         log::info("GPU Driver Version: {}", driverVersion);
         log::info("GPU Driver Info: {}", driverInfo);
+
+        if (driverName && std::string(driverName) == "direct3d12")
+        {
+            log::warn(
+                "Direct3D 12 backend detected. Please be aware that excessive texture swapping in "
+                "a single frame can cause descriptor heap exhaustion and visual artifacts on this "
+                "backend. Consider using Vulkan, texture atlases, or manual texture sorting if you "
+                "encounter issues."
+            );
+        }
     }
     else
     {
-        const SDL_PropertiesID rendererProperties = SDL_GetRendererProperties(_renderer);
-        const char* backend =
-            SDL_GetStringProperty(rendererProperties, SDL_PROP_RENDERER_NAME_STRING, "Unknown");
-        log::info("Using fallback renderer backend: {}", backend);
+        const char* rendererName = SDL_GetRendererName(_renderer);
+        log::info("Using fallback renderer: {}", rendererName);
     }
 }
 
 void _quit()
 {
+    if (_primaryTarget)
+    {
+        delete _primaryTarget;
+        _primaryTarget = nullptr;
+    }
+
     if (_renderer)
     {
         SDL_DestroyRenderer(_renderer);
@@ -314,7 +351,7 @@ void draw(const Texture& texture, const Rect& dst)
 
 void drawBatch(
     const Texture& texture, const std::vector<Transform>& transforms, const Vec2& anchor,
-    const Vec2& pivot
+    const Vec2& pivot, const std::optional<std::vector<Rect>>& clipRects
 )
 {
     if (!texture.getSDL())
@@ -322,14 +359,12 @@ void drawBatch(
     if (transforms.empty())
         return;
 
-    const Rect clipArea = texture.getClipArea();
-    if (clipArea.w <= 0.0 || clipArea.h <= 0.0)
+    const Rect textureClipArea = texture.getClipArea();
+    if (textureClipArea.w <= 0.0 || textureClipArea.h <= 0.0)
         return;
     if (texture.getAlpha() == 0.0f)
         return;
 
-    const auto srcSDLRect = static_cast<SDL_FRect>(clipArea);
-    const Vec2 clipSize = clipArea.getSize();
     const Vec2 cameraPos = camera::getActivePos();
     const Vec2 rendRes = getCurrentResolution();
 
@@ -339,10 +374,20 @@ void drawBatch(
     if (texture.flip.v)
         flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_VERTICAL);
 
-    for (const auto& transform : transforms)
+    for (size_t i = 0; i < transforms.size(); ++i)
     {
+        const auto& transform = transforms[i];
         if (transform.scale.isZero())
             continue;
+
+        // Use per-instance clip rect if provided, otherwise use texture's clip area
+        const Rect& clipArea = (clipRects && i < clipRects->size()) ? (*clipRects)[i]
+                                                                    : textureClipArea;
+        if (clipArea.w <= 0.0 || clipArea.h <= 0.0)
+            continue;
+
+        const auto srcSDLRect = static_cast<SDL_FRect>(clipArea);
+        const Vec2 clipSize = clipArea.getSize();
 
         Rect dstRect{0.0, 0.0, clipSize * transform.scale};
         const Vec2 pos = transform.pos - cameraPos;
@@ -368,7 +413,7 @@ void drawBatch(
 void drawBatchNDArray(
     const Texture& texture,
     nb::ndarray<const double, nb::ndim<2>, nb::c_contig, nb::device::cpu> arr, const Vec2& anchor,
-    const Vec2& pivot
+    const Vec2& pivot, Batcher* batcher
 )
 {
     if (!texture.getSDL())
@@ -379,49 +424,95 @@ void drawBatchNDArray(
 
     if (n == 0)
         return;
-    if (cols < 2 || cols > 5)
+    if (cols < 2 || cols > 5 && cols != 9)
         throw std::invalid_argument(
-            "Expected array with 2, 3, 4, or 5 columns [x, y, (angle), (scale or scale_x, scale_y)]"
+            "Expected array with 2-5 or 9 columns: [x, y, (angle), (scale or scale_x, scale_y), "
+            "(clip_left, clip_top, clip_width, clip_height)]"
         );
 
-    const Rect clipArea = texture.getClipArea();
-    if (clipArea.w <= 0.0 || clipArea.h <= 0.0)
+    const Rect textureClipArea = texture.getClipArea();
+    if (textureClipArea.w <= 0.0 || textureClipArea.h <= 0.0)
         return;
-    if (texture.getAlpha() == 0.0f)
+    const float alpha = texture.getAlpha();
+    if (alpha == 0.0f)
         return;
 
-    const auto srcSDLRect = static_cast<SDL_FRect>(clipArea);
-    const Vec2 clipSize = clipArea.getSize();
     const Vec2 cameraPos = camera::getActivePos();
     const Vec2 rendRes = getCurrentResolution();
+    SDL_Texture* sdlTexture = texture.getSDL();
 
-    SDL_FlipMode flipAxis = SDL_FLIP_NONE;
-    if (texture.flip.h)
-        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_HORIZONTAL);
-    if (texture.flip.v)
-        flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_VERTICAL);
+    const Color tint = texture.getTint();
+    const SDL_FColor vertexColor =
+        {static_cast<float>(tint.r) / 255.0f, static_cast<float>(tint.g) / 255.0f,
+         static_cast<float>(tint.b) / 255.0f, alpha};
 
-    const auto* data = arr.data();
+    const float texW = static_cast<float>(texture.getWidth());
+    const float texH = static_cast<float>(texture.getHeight());
+
+    const float t_u1 = static_cast<float>(textureClipArea.x) / texW;
+    const float t_v1 = static_cast<float>(textureClipArea.y) / texH;
+    const float t_u2 = static_cast<float>(textureClipArea.getRight()) / texW;
+    const float t_v2 = static_cast<float>(textureClipArea.getBottom()) / texH;
+
+    std::vector<SDL_Vertex>* pVertices;
+    std::vector<int>* pIndices;
+    std::vector<SDL_Vertex> localVertices;
+    std::vector<int> localIndices;
+
+    if (batcher)
+    {
+        batcher->vertices.clear();
+        batcher->indices.clear();
+        pVertices = &batcher->vertices;
+        pIndices = &batcher->indices;
+    }
+    else
+    {
+        localVertices.reserve(n * 4);
+        localIndices.reserve(n * 6);
+        pVertices = &localVertices;
+        pIndices = &localIndices;
+    }
+
+    const double* data = arr.data();
+
+    std::vector<SDL_Vertex>& vertices = *pVertices;
+    std::vector<int>& indices = *pIndices;
 
     for (size_t i = 0; i < n; ++i)
     {
-        const size_t row = i * cols;
-        const Vec2 pos = Vec2{data[row], data[row + 1]} - cameraPos;
-        const double angle = (cols >= 3) ? data[row + 2] : 0.0;
+        const double* row = data + i * cols;
+        const Vec2 pos = Vec2{row[0], row[1]} - cameraPos;
+        const double angle = (cols >= 3) ? row[2] : 0.0;
 
         Vec2 scale{1.0};
-        if (cols == 4)
+        if (cols >= 5)
         {
-            scale.x = data[row + 3];
-            scale.y = scale.x;
+            if (cols == 5)
+            {
+                scale.x = row[3];
+                scale.y = scale.x;
+            }
+            else if (cols >= 6)
+            {
+                scale.x = row[3];
+                scale.y = row[4];
+            }
         }
-        else if (cols == 5)
+        else if (cols == 4)
         {
-            scale.x = data[row + 3];
-            scale.y = data[row + 4];
+            scale.x = row[3];
+            scale.y = scale.x;
         }
         if (scale.isZero())
             continue;
+
+        Rect clipArea = (cols >= 9) ? Rect{row[5], row[6], row[7], row[8]} : textureClipArea;
+
+        if (clipArea.w <= 0.0 || clipArea.h <= 0.0)
+            continue;
+
+        const Vec2 clipSize = clipArea.getSize();
 
         Rect dstRect{0.0, 0.0, clipSize * scale};
         dstRect.setTopLeft(pos - (dstRect.getSize() * anchor));
@@ -430,17 +521,101 @@ void drawBatchNDArray(
             dstRect.y >= rendRes.y)
             continue;
 
-        const auto dstSDLRect = static_cast<SDL_FRect>(dstRect);
-        const auto pivotPoint = static_cast<SDL_FPoint>(dstRect.getSize() * pivot);
+        float u1, v1, u2, v2;
+        if (cols >= 9)
+        {
+            u1 = static_cast<float>(clipArea.x) / texW;
+            v1 = static_cast<float>(clipArea.y) / texH;
+            u2 = static_cast<float>(clipArea.getRight()) / texW;
+            v2 = static_cast<float>(clipArea.getBottom()) / texH;
+        }
+        else
+        {
+            u1 = t_u1;
+            v1 = t_v1;
+            u2 = t_u2;
+            v2 = t_v2;
+        }
 
-        if (!SDL_RenderTextureRotated(
-                _renderer, texture.getSDL(), &srcSDLRect, &dstSDLRect, TO_DEGREES(angle),
-                &pivotPoint, flipAxis
+        if (texture.flip.h)
+            std::swap(u1, u2);
+        if (texture.flip.v)
+            std::swap(v1, v2);
+
+        const float w = static_cast<float>(dstRect.w);
+        const float h = static_cast<float>(dstRect.h);
+
+        const float pivotX = w * static_cast<float>(pivot.x);
+        const float pivotY = h * static_cast<float>(pivot.y);
+
+        const float dx = static_cast<float>(dstRect.x) + pivotX;
+        const float dy = static_cast<float>(dstRect.y) + pivotY;
+
+        const float x1 = -pivotX;
+        const float y1 = -pivotY;
+        const float x2 = w - pivotX;
+        const float y2 = h - pivotY;
+
+        const int base = static_cast<int>(vertices.size());
+
+        if (angle == 0.0)
+        {
+            vertices.push_back({{dx + x1, dy + y1}, vertexColor, {u1, v1}});
+            vertices.push_back({{dx + x2, dy + y1}, vertexColor, {u2, v1}});
+            vertices.push_back({{dx + x2, dy + y2}, vertexColor, {u2, v2}});
+            vertices.push_back({{dx + x1, dy + y2}, vertexColor, {u1, v2}});
+        }
+        else
+        {
+            const float c = std::cos(static_cast<float>(angle));
+            const float s = std::sin(static_cast<float>(angle));
+
+            vertices.push_back(
+                {{dx + x1 * c - y1 * s, dy + x1 * s + y1 * c}, vertexColor, {u1, v1}}
+            );
+            vertices.push_back(
+                {{dx + x2 * c - y1 * s, dy + x2 * s + y1 * c}, vertexColor, {u2, v1}}
+            );
+            vertices.push_back(
+                {{dx + x2 * c - y2 * s, dy + x2 * s + y2 * c}, vertexColor, {u2, v2}}
+            );
+            vertices.push_back(
+                {{dx + x1 * c - y2 * s, dy + x1 * s + y2 * c}, vertexColor, {u1, v2}}
+            );
+        }
+
+        indices.push_back(base + 0);
+        indices.push_back(base + 1);
+        indices.push_back(base + 2);
+        indices.push_back(base + 0);
+        indices.push_back(base + 2);
+        indices.push_back(base + 3);
+    }
+
+    if (!vertices.empty())
+    {
+        if (!SDL_RenderGeometry(
+                _renderer, sdlTexture, vertices.data(), static_cast<int>(vertices.size()),
+                indices.data(), static_cast<int>(indices.size())
             ))
         {
-            throw std::runtime_error("Failed to render texture: " + std::string(SDL_GetError()));
+            throw std::runtime_error("Failed to render geometry: " + std::string(SDL_GetError()));
         }
     }
+}
+
+void Batcher::preallocate(size_t nSprites)
+{
+    vertices.reserve(nSprites * 4);
+    indices.reserve(nSprites * 6);
+}
+
+void Batcher::free()
+{
+    vertices.clear();
+    vertices.shrink_to_fit();
+    indices.clear();
+    indices.shrink_to_fit();
 }
 
 SDL_Renderer* _get()
@@ -458,6 +633,21 @@ void _bind(nb::module_& module)
     using namespace nb::literals;
 
     auto subRenderer = module.def_submodule("renderer", "Functions for rendering graphics");
+
+    nb::class_<Batcher>(subRenderer, "Batcher", R"doc(
+A reusable memory buffer for batched rendering, designed for maximum throughput.
+        )doc")
+        .def(nb::init<>())
+        .def("preallocate", &Batcher::preallocate, "n_sprites"_a, R"doc(
+Preallocate internal buffers for a specific number of sprites.
+This prevents runtime allocations when drawing large batches.
+
+Args:
+    n_sprites (int): The number of sprites to preallocate capacity for.
+        )doc")
+        .def("free", &Batcher::free, R"doc(
+Free the allocated internal memory.
+        )doc");
 
     subRenderer.def("set_default_scale_mode", &setDefaultScaleMode, "scale_mode"_a, R"doc(
 Set the default TextureScaleMode for new textures. The factory default is TextureScaleMode.LINEAR.
@@ -484,8 +674,9 @@ Raises:
         )doc");
 
     subRenderer.def("present", &present, nb::call_guard<nb::gil_scoped_release>(), R"doc(
-Present the rendered content to the screen. This finalizes the current frame and displays it. Should be called after
-all drawing operations for the frame are complete.
+Present the rendered content to the screen.
+This finalizes the current frame and displays it.
+Should be called after all drawing operations for the frame are complete.
     )doc");
 
     subRenderer.def("set_present_resolution", &setPresentResolution, "width"_a, "height"_a, R"doc(
@@ -563,7 +754,8 @@ Raises:
 
     subRenderer.def(
         "draw_batch", &drawBatch, "texture"_a, "transforms"_a, "anchor"_a = Anchor::TOP_LEFT,
-        "pivot"_a = Anchor::CENTER, nb::call_guard<nb::gil_scoped_release>(), R"doc(
+        "pivot"_a = Anchor::CENTER, "clip_rects"_a = nb::none(),
+        nb::call_guard<nb::gil_scoped_release>(), R"doc(
 Render a texture multiple times with different transforms in a single batch call.
 
 This is significantly faster than calling draw() in a loop because it avoids
@@ -572,6 +764,8 @@ per-call Python/C++ dispatch overhead.
 Args:
     texture (Texture): The texture to render.
     transforms (Sequence[Transform]): A list of transforms (position, rotation, scale).
+    clip_rects (Sequence[Rect], optional): Per-instance clip rectangles. If provided, these override
+        the texture's clip area for each instance. If None, all instances use the texture's clip area.
     anchor (Vec2, optional): The anchor point (0.0-1.0). Defaults to top left (0, 0).
     pivot (Vec2, optional): The rotation pivot (0.0-1.0). Defaults to center (0.5, 0.5).
         )doc"
@@ -579,7 +773,8 @@ Args:
 
     subRenderer.def(
         "draw_batch", &drawBatchNDArray, "texture"_a, "transforms"_a, "anchor"_a = Anchor::TOP_LEFT,
-        "pivot"_a = Anchor::CENTER, nb::call_guard<nb::gil_scoped_release>(), R"doc(
+        "pivot"_a = Anchor::CENTER, "batcher"_a = nb::none(),
+        nb::call_guard<nb::gil_scoped_release>(), R"doc(
 Render a texture multiple times using a NumPy array for maximum throughput.
 
 Each row of the array describes one instance. The number of columns determines
@@ -589,15 +784,22 @@ the layout:
 - **3 columns** ``[x, y, angle]`` — position + rotation (scale=1).
 - **4 columns** ``[x, y, angle, scale]`` — position + rotation + uniform scale.
 - **5 columns** ``[x, y, angle, scale_x, scale_y]`` — full transform.
+- **6-8 columns** — not valid; extend to 9 columns for per-instance clipping.
+- **9 columns** ``[x, y, angle, scale_x, scale_y, clip_left, clip_top, clip_width, clip_height]`` — full transform + per-instance clip rect.
+
+Per-instance clip rectangles (columns 5-8) override the texture's clip area for that instance.
+If you only have some of your instances needing custom clip rects, the best approach is to
+use the ``draw_batch`` function with Transform objects and optional clip_rects list instead.
 
 Args:
     texture (Texture): The texture to render.
-    transforms (numpy.ndarray): float64 array with shape ``(N, 2|3|4|5)``.
+    transforms (numpy.ndarray): float64 array with shape ``(N, 2|3|4|5|9)``.
     anchor (Vec2, optional): The anchor point (0.0-1.0). Defaults to top left (0, 0).
     pivot (Vec2, optional): The rotation pivot (0.0-1.0). Defaults to center (0.5, 0.5).
+    batcher (Batcher, optional): Pre-allocated rendering buffer for higher performance.
 
 Raises:
-    ValueError: If the array does not have 2, 3, 4, or 5 columns.
+    ValueError: If the array does not have 2, 3, 4, 5, or 9 columns.
         )doc"
     );
 }

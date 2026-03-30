@@ -4,6 +4,7 @@
 #include <nanobind/nanobind.h>
 
 #include <string>
+#include <filesystem>
 
 #include "Color.hpp"
 #include "Math.hpp"
@@ -34,7 +35,7 @@ void _quit();  // Clean up all fonts and shut down TTF
 class Font
 {
   public:
-    Font(const std::string& fileDir, int ptSize);
+    Font(const std::filesystem::path& fileDir, int ptSize);
     ~Font();
 
     void setAlignment(Align alignment) const;

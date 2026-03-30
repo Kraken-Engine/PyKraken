@@ -1,8 +1,9 @@
 #include "Texture.hpp"
 
-#include <nanobind/stl/string.h>
-
 #include <SDL3_image/SDL_image.h>
+#include <nanobind/stl/filesystem.h>
+
+#include <string>
 
 #include "Camera.hpp"
 #include "Color.hpp"
@@ -32,6 +33,8 @@ Texture::Texture(const int width, const int height, const TextureScaleMode scale
     m_width = width;
     m_height = height;
     m_clipArea = {0, 0, m_width, m_height};
+
+    SDL_SetTextureBlendMode(m_texPtr, SDL_BLENDMODE_BLEND);
 }
 
 Texture::Texture(
@@ -77,10 +80,13 @@ Texture::Texture(
     m_width = static_cast<int>(w);
     m_height = static_cast<int>(h);
     m_clipArea = {0, 0, m_width, m_height};
+
+    SDL_SetTextureBlendMode(m_texPtr, SDL_BLENDMODE_BLEND);
 }
 
 Texture::Texture(
-    const std::string& filePath, const TextureScaleMode scaleMode, const TextureAccess access
+    const std::filesystem::path& filePath, const TextureScaleMode scaleMode,
+    const TextureAccess access
 )
 {
     if (filePath.empty())
@@ -88,13 +94,13 @@ Texture::Texture(
 
     if (access == TextureAccess::STATIC)
     {
-        m_texPtr = IMG_LoadTexture(renderer::_get(), filePath.c_str());
+        m_texPtr = IMG_LoadTexture(renderer::_get(), filePath.string().c_str());
         if (!m_texPtr)
             throw std::runtime_error("Failed to load texture: " + std::string(SDL_GetError()));
     }
     else if (access == TextureAccess::TARGET)
     {
-        SDL_Surface* surface = IMG_Load(filePath.c_str());
+        SDL_Surface* surface = IMG_Load(filePath.string().c_str());
         if (!surface)
             throw std::runtime_error(
                 "Failed to load image from file: " + std::string(SDL_GetError())
@@ -146,6 +152,8 @@ Texture::Texture(
     m_width = static_cast<int>(w);
     m_height = static_cast<int>(h);
     m_clipArea = {0, 0, m_width, m_height};
+
+    SDL_SetTextureBlendMode(m_texPtr, SDL_BLENDMODE_BLEND);
 }
 
 Texture::~Texture()
@@ -155,6 +163,34 @@ Texture::~Texture()
         SDL_DestroyTexture(m_texPtr);
         m_texPtr = nullptr;
     }
+}
+
+Texture::Texture(Texture&& other) noexcept
+    : flip(other.flip),
+      m_width(other.m_width),
+      m_height(other.m_height),
+      m_clipArea(other.m_clipArea),
+      m_texPtr(other.m_texPtr)
+{
+    other.m_texPtr = nullptr;
+}
+
+Texture& Texture::operator=(Texture&& other) noexcept
+{
+    if (this != &other)
+    {
+        if (m_texPtr)
+            SDL_DestroyTexture(m_texPtr);
+
+        flip = other.flip;
+        m_width = other.m_width;
+        m_height = other.m_height;
+        m_clipArea = other.m_clipArea;
+        m_texPtr = other.m_texPtr;
+        other.m_texPtr = nullptr;
+    }
+
+    return *this;
 }
 
 int Texture::getWidth() const
@@ -211,9 +247,8 @@ float Texture::getAlpha() const
 {
     float alphaMod;
     if (!SDL_GetTextureAlphaModFloat(m_texPtr, &alphaMod))
-    {
         throw std::runtime_error("Failed to get texture alpha mod: " + std::string(SDL_GetError()));
-    }
+
     return alphaMod;
 }
 
@@ -284,13 +319,13 @@ When True, the texture is mirrored vertically (top-bottom flip).
 
     texture
         .def(
-            nb::init<const std::string&, TextureScaleMode, TextureAccess>(), "file_path"_a,
+            nb::init<const std::filesystem::path&, TextureScaleMode, TextureAccess>(), "file_path"_a,
             "scale_mode"_a = TextureScaleMode::DEFAULT, "access"_a = TextureAccess::STATIC, R"doc(
 Create a Texture by loading an image from a file.
 If no scale mode is provided, the default renderer scale mode is used.
 
 Args:
-    file_path (str): Path to the image file to load.
+    file_path (str | os.PathLike[str]): Path to the image file to load.
     scale_mode (TextureScaleMode, optional): Scaling/filtering mode for the texture.
     access (TextureAccess, optional): Texture access type (STATIC or TARGET).
 

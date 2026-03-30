@@ -2,6 +2,7 @@
 
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/unique_ptr.h>
+#include <nanobind/stl/filesystem.h>
 
 #include <algorithm>
 #include <limits>
@@ -43,32 +44,32 @@ static Sint64 _secondsToMs(double seconds);
 static SDL_PropertiesID _buildPlayOptions(bool looping, double fadeInSeconds);
 static Sint64 _fadeOutFramesForTrack(MIX_Track* track, double fadeOutSeconds);
 
-std::unique_ptr<Sample> loadSample(const std::string& path, const bool predecode)
+std::unique_ptr<Sample> loadSample(const std::filesystem::path& path, const bool predecode)
 {
     if (_mixer == nullptr)
         throw std::runtime_error("Mixer not initialized");
 
-    MIX_Audio* audio = MIX_LoadAudio(_mixer, path.c_str(), predecode);
+    MIX_Audio* audio = MIX_LoadAudio(_mixer, path.string().c_str(), predecode);
     if (audio == nullptr)
     {
         throw std::runtime_error(
-            std::string("Failed to load sample '") + path + "': " + SDL_GetError()
+            std::string("Failed to load sample '") + path.string() + "': " + SDL_GetError()
         );
     }
 
     return std::unique_ptr<Sample>(new Sample(audio));
 }
 
-std::unique_ptr<Stream> loadStream(const std::string& path, const bool predecode)
+std::unique_ptr<Stream> loadStream(const std::filesystem::path& path, const bool predecode)
 {
     if (_mixer == nullptr)
         throw std::runtime_error("Mixer not initialized");
 
-    MIX_Audio* audio = MIX_LoadAudio(_mixer, path.c_str(), predecode);
+    MIX_Audio* audio = MIX_LoadAudio(_mixer, path.string().c_str(), predecode);
     if (audio == nullptr)
     {
         throw std::runtime_error(
-            std::string("Failed to load stream '") + path + "': " + SDL_GetError()
+            std::string("Failed to load stream '") + path.string() + "': " + SDL_GetError()
         );
     }
 
@@ -818,27 +819,33 @@ void _bind(nb::module_& module)
                 seconds (float): Target position in seconds from the start.
         )doc");
 
-    subMixer.def("load_sample", &loadSample, "path"_a, "predecode"_a = true, R"doc(
+    subMixer.def(
+        "load_sample", &loadSample, nb::call_guard<nb::gil_scoped_release>(), "path"_a,
+        "predecode"_a = true, R"doc(
         Load an audio sample (SFX) from disk.
 
         Args:
-            path (str): File path to load.
+            path (str | os.PathLike[str]): File path to load.
             predecode (bool): Whether to decode into memory now. Defaults to True.
 
         Returns:
             Sample: The loaded audio object.
-    )doc");
+        )doc"
+    );
 
-    subMixer.def("load_stream", &loadStream, "path"_a, "predecode"_a = false, R"doc(
+    subMixer.def(
+        "load_stream", &loadStream, nb::call_guard<nb::gil_scoped_release>(), "path"_a,
+        "predecode"_a = false, R"doc(
         Load an audio stream (Music) from disk.
 
         Args:
-            path (str): File path to load.
+            path (str | os.PathLike[str]): File path to load.
             predecode (bool): Whether to decode into memory now. Defaults to False.
 
         Returns:
             Stream: The loaded audio object.
-    )doc");
+    )doc"
+    );
 
     subMixer.def("set_master_volume", &setMasterVolume, "volume"_a, R"doc(
         Set the global mixer gain.

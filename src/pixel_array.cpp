@@ -1,4 +1,5 @@
 #include <SDL3_image/SDL_image.h>
+#include <nanobind/stl/filesystem.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/unique_ptr.h>
 
@@ -31,12 +32,12 @@ PixelArray::PixelArray(const Vec2& size)
         throw std::runtime_error("PixelArray failed to create: " + std::string(SDL_GetError()));
 }
 
-PixelArray::PixelArray(const std::string& filePath)
+PixelArray::PixelArray(const std::filesystem::path& filePath)
 {
-    m_surface = IMG_Load(filePath.c_str());
+    m_surface = IMG_Load(filePath.string().c_str());
     if (!m_surface)
         throw std::runtime_error(
-            "Failed to load pixel array from file '" + filePath +
+            "Failed to load pixel array from file '" + filePath.string() +
             "': " + std::string(SDL_GetError())
         );
 }
@@ -665,11 +666,11 @@ Args:
 Raises:
     RuntimeError: If pixel array creation fails.
         )doc")
-        .def(nb::init<const std::string&>(), "file_path"_a, R"doc(
+        .def(nb::init<const std::filesystem::path&>(), "file_path"_a, R"doc(
 Create a PixelArray by loading an image from a file.
 
 Args:
-    file_path (str): Path to the image file to load.
+    file_path (str | os.PathLike[str]): Path to the image file to load.
 
 Raises:
     RuntimeError: If the file cannot be loaded or doesn't exist.
@@ -719,7 +720,7 @@ Returns:
     Vec2: The pixel array size as (width, height).
         )doc")
 
-        .def("fill", &PixelArray::fill, "color"_a, R"doc(
+        .def("fill", &PixelArray::fill, nb::call_guard<nb::gil_scoped_release>(), "color"_a, R"doc(
 Fill the entire pixel array with a solid color.
 
 Args:
@@ -730,7 +731,8 @@ Args:
             nb::overload_cast<
                 const PixelArray&, const Vec2&, const Vec2&,
                 const Rect&>(&PixelArray::blit, nb::const_),
-            "pixel_array"_a, "pos"_a, "anchor"_a = Anchor::TOP_LEFT, "src"_a = Rect{}, R"doc(
+            nb::call_guard<nb::gil_scoped_release>(), "pixel_array"_a, "pos"_a,
+            "anchor"_a = Anchor::TOP_LEFT, "src"_a = Rect{}, R"doc(
 Blit (copy) another pixel array onto this pixel array at the specified position with anchor alignment.
 
 Args:
@@ -747,7 +749,8 @@ Raises:
             "blit",
             nb::overload_cast<
                 const PixelArray&, const Rect&, const Rect&>(&PixelArray::blit, nb::const_),
-            "pixel_array"_a, "dst"_a, "src"_a = Rect{}, R"doc(
+            nb::call_guard<nb::gil_scoped_release>(), "pixel_array"_a, "dst"_a, "src"_a = Rect{},
+            R"doc(
 Blit (copy) another pixel array onto this pixel array with specified destination and source rectangles.
 
 Args:
@@ -783,7 +786,7 @@ Args:
 Raises:
     IndexError: If coordinates are outside the pixel array bounds.
         )doc")
-        .def("copy", &PixelArray::copy, R"doc(
+        .def("copy", &PixelArray::copy, nb::call_guard<nb::gil_scoped_release>(), R"doc(
 Create a copy of this pixel array.
 
 Returns:
@@ -799,7 +802,8 @@ Returns:
     Rect: A rectangle with position (0, 0) and the pixel array's dimensions.
         )doc")
         .def(
-            "scroll", &PixelArray::scroll, "dx"_a, "dy"_a, "scroll_mode"_a,
+            "scroll", &PixelArray::scroll, nb::call_guard<nb::gil_scoped_release>(), "dx"_a, "dy"_a,
+            "scroll_mode"_a,
             R"doc(
 Scroll the pixel array's contents by the specified offset.
 
@@ -817,7 +821,8 @@ Args:
         module.def_submodule("pixel_array", "Functions for manipulating PixelArray objects");
 
     subPixelArray.def(
-        "flip", &flip, "pixel_array"_a, "flip_x"_a, "flip_y"_a,
+        "flip", &flip, nb::call_guard<nb::gil_scoped_release>(), "pixel_array"_a, "flip_x"_a,
+        "flip_y"_a,
         R"doc(
 Flip a pixel array horizontally, vertically, or both.
 
@@ -834,7 +839,9 @@ Raises:
     )doc"
     );
 
-    subPixelArray.def("scale_to", &scaleTo, "pixel_array"_a, "size"_a, R"doc(
+    subPixelArray.def(
+        "scale_to", &scaleTo, nb::call_guard<nb::gil_scoped_release>(), "pixel_array"_a, "size"_a,
+        R"doc(
 Scale a pixel array to a new exact size.
 
 Args:
@@ -846,11 +853,12 @@ Returns:
 
 Raises:
     RuntimeError: If pixel array creation or scaling fails.
-    )doc");
+    )doc"
+    );
 
     subPixelArray.def(
-        "scale_by", nb::overload_cast<const PixelArray&, double>(&scaleBy), "pixel_array"_a,
-        "factor"_a, R"doc(
+        "scale_by", nb::overload_cast<const PixelArray&, double>(&scaleBy),
+        nb::call_guard<nb::gil_scoped_release>(), "pixel_array"_a, "factor"_a, R"doc(
 Scale a pixel array by a given factor.
 
 Args:
@@ -867,7 +875,9 @@ Raises:
     )doc"
     );
 
-    subPixelArray.def("rotate", &rotate, "pixel_array"_a, "angle"_a, R"doc(
+    subPixelArray.def(
+        "rotate", &rotate, nb::call_guard<nb::gil_scoped_release>(), "pixel_array"_a, "angle"_a,
+        R"doc(
 Rotate a pixel array by a given angle.
 
 Args:
@@ -880,10 +890,12 @@ Returns:
 
 Raises:
     RuntimeError: If pixel array rotation fails.
-    )doc");
+    )doc"
+    );
 
     subPixelArray.def(
-        "box_blur", &boxBlur, "pixel_array"_a, "radius"_a, "repeat_edge_pixels"_a = true, R"doc(
+        "box_blur", &boxBlur, nb::call_guard<nb::gil_scoped_release>(), "pixel_array"_a, "radius"_a,
+        "repeat_edge_pixels"_a = true, R"doc(
 Apply a box blur effect to a pixel array.
 
 Box blur creates a uniform blur effect by averaging pixels within a square kernel.
@@ -904,7 +916,8 @@ Raises:
     );
 
     subPixelArray.def(
-        "gaussian_blur", &gaussianBlur, "pixel_array"_a, "radius"_a, "repeat_edge_pixels"_a = true,
+        "gaussian_blur", &gaussianBlur, nb::call_guard<nb::gil_scoped_release>(), "pixel_array"_a,
+        "radius"_a, "repeat_edge_pixels"_a = true,
         R"doc(
 Apply a Gaussian blur effect to a pixel array.
 
@@ -926,7 +939,8 @@ Raises:
     )doc"
     );
 
-    subPixelArray.def("invert", &invert, "pixel_array"_a, R"doc(
+    subPixelArray
+        .def("invert", &invert, nb::call_guard<nb::gil_scoped_release>(), "pixel_array"_a, R"doc(
 Invert the colors of a pixel array.
 
 Creates a negative image effect by inverting each color channel (RGB).
@@ -942,7 +956,8 @@ Raises:
     RuntimeError: If pixel array creation fails.
     )doc");
 
-    subPixelArray.def("grayscale", &grayscale, "pixel_array"_a, R"doc(
+    subPixelArray.def(
+        "grayscale", &grayscale, nb::call_guard<nb::gil_scoped_release>(), "pixel_array"_a, R"doc(
 Convert a pixel array to grayscale.
 
 Converts the pixel array to grayscale using the standard luminance formula:
@@ -959,7 +974,8 @@ Returns:
 
 Raises:
     RuntimeError: If pixel array creation fails.
-    )doc");
+    )doc"
+    );
 }
 }  // namespace pixel_array
 }  // namespace kn

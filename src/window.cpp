@@ -2,6 +2,7 @@
 
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
+#include <nanobind/stl/filesystem.h>
 #include <nanobind/stl/string.h>
 
 #include <stdexcept>
@@ -160,20 +161,20 @@ std::string getTitle()
     return {title};
 }
 
-void setIcon(const std::string& path)
+void setIcon(const std::filesystem::path& path)
 {
     if (!_window)
         throw std::runtime_error("Window not initialized");
 
-    SDL_Surface* iconSurface = IMG_Load(path.c_str());
+    SDL_Surface* iconSurface = IMG_Load(path.string().c_str());
     if (!iconSurface)
-        throw std::runtime_error("Failed to load icon: " + path);
+        throw std::runtime_error("Failed to load icon: " + path.string());
 
     SDL_SetWindowIcon(_window, iconSurface);
     SDL_DestroySurface(iconSurface);
 }
 
-void saveScreenshot(const std::string& filePath)
+void saveScreenshot(const std::filesystem::path& filePath)
 {
     if (!_window)
         throw std::runtime_error("Window not initialized");
@@ -182,7 +183,7 @@ void saveScreenshot(const std::string& filePath)
     if (!shotSurface)
         throw std::runtime_error("Failed to read pixels: " + std::string(SDL_GetError()));
 
-    if (!IMG_SavePNG(shotSurface, filePath.c_str()))
+    if (!IMG_SavePNG(shotSurface, filePath.string().c_str()))
     {
         SDL_DestroySurface(shotSurface);
         throw std::runtime_error("Failed to save screenshot: " + std::string(SDL_GetError()));
@@ -303,7 +304,7 @@ Raises:
 Set the window icon from an image file.
 
 Args:
-    path (str): The file path to the image to use as the icon.
+    path (str | os.PathLike[str]): The file path to the image to use as the icon.
 
 Raises:
     RuntimeError: If the window is not initialized or icon setting fails.
@@ -313,7 +314,7 @@ Raises:
 Save a screenshot of the current frame to a file.
 
 Args:
-    path (str): The path to save the screenshot to.
+    path (str | os.PathLike[str]): The path to save the screenshot to.
 
 Raises:
     RuntimeError: If the window is not initialized or the screenshot cannot be saved.

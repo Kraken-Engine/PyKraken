@@ -1,8 +1,6 @@
 from ._pykraken import *
 from .shader_uniform import ShaderUniform
 
-from importlib.metadata import version
-
 _original_init = init
 
 def _init(debug: bool = False) -> None:
@@ -15,9 +13,16 @@ def _init(debug: bool = False) -> None:
     Raises:
         RuntimeError: If initialization fails.
     """
+    if debug:
+        import faulthandler
+        faulthandler.enable()
 
     _original_init(debug=debug)
-    ver = version("kraken-engine")
-    log.info(f"Kraken Engine v{ver}")
+    try:
+        from importlib.metadata import version
+        ver = version("kraken-engine")
+        log.info(f"Kraken Engine v{ver}")
+    except Exception:
+        pass
 
 init = _init
