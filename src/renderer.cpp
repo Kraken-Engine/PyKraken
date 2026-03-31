@@ -419,11 +419,12 @@ void drawBatchNDArray(
     if (!texture.getSDL())
         throw std::runtime_error("Invalid texture provided for drawing");
 
-    const auto n = static_cast<size_t>(arr.shape(0));
-    const auto cols = static_cast<size_t>(arr.shape(1));
+    const size_t n = arr.shape(0);
+    const size_t cols = arr.shape(1);
 
     if (n == 0)
         return;
+
     if (cols < 2 || cols > 5 && cols != 9)
         throw std::invalid_argument(
             "Expected array with 2-5 or 9 columns: [x, y, (angle), (scale or scale_x, scale_y), "
@@ -433,6 +434,7 @@ void drawBatchNDArray(
     const Rect textureClipArea = texture.getClipArea();
     if (textureClipArea.w <= 0.0 || textureClipArea.h <= 0.0)
         return;
+
     const float alpha = texture.getAlpha();
     if (alpha == 0.0f)
         return;
@@ -442,17 +444,15 @@ void drawBatchNDArray(
     SDL_Texture* sdlTexture = texture.getSDL();
 
     const Color tint = texture.getTint();
-    const SDL_FColor vertexColor =
-        {static_cast<float>(tint.r) / 255.0f, static_cast<float>(tint.g) / 255.0f,
-         static_cast<float>(tint.b) / 255.0f, alpha};
+    const auto vertexColor = static_cast<SDL_FColor>(tint);
 
-    const float texW = static_cast<float>(texture.getWidth());
-    const float texH = static_cast<float>(texture.getHeight());
+    const double texW = texture.getWidth();
+    const double texH = texture.getHeight();
 
-    const float t_u1 = static_cast<float>(textureClipArea.x) / texW;
-    const float t_v1 = static_cast<float>(textureClipArea.y) / texH;
-    const float t_u2 = static_cast<float>(textureClipArea.getRight()) / texW;
-    const float t_v2 = static_cast<float>(textureClipArea.getBottom()) / texH;
+    const auto t_u1 = static_cast<float>(textureClipArea.x / texW);
+    const auto t_v1 = static_cast<float>(textureClipArea.y / texH);
+    const auto t_u2 = static_cast<float>(textureClipArea.getRight() / texW);
+    const auto t_v2 = static_cast<float>(textureClipArea.getBottom() / texH);
 
     std::vector<SDL_Vertex>* pVertices;
     std::vector<int>* pIndices;
@@ -486,28 +486,16 @@ void drawBatchNDArray(
         const double angle = (cols >= 3) ? row[2] : 0.0;
 
         Vec2 scale{1.0};
-        if (cols >= 5)
-        {
-            if (cols == 5)
-            {
-                scale.x = row[3];
-                scale.y = scale.x;
-            }
-            else if (cols >= 6)
-            {
-                scale.x = row[3];
-                scale.y = row[4];
-            }
-        }
-        else if (cols == 4)
+        if (cols >= 4)
         {
             scale.x = row[3];
-            scale.y = scale.x;
+            scale.y = (cols == 4) ? scale.x : row[4];
         }
+
         if (scale.isZero())
             continue;
 
-        Rect clipArea = (cols >= 9) ? Rect{row[5], row[6], row[7], row[8]} : textureClipArea;
+        Rect clipArea = (cols == 9) ? Rect{row[5], row[6], row[7], row[8]} : textureClipArea;
 
         if (clipArea.w <= 0.0 || clipArea.h <= 0.0)
             continue;
@@ -522,12 +510,12 @@ void drawBatchNDArray(
             continue;
 
         float u1, v1, u2, v2;
-        if (cols >= 9)
+        if (cols == 9)
         {
-            u1 = static_cast<float>(clipArea.x) / texW;
-            v1 = static_cast<float>(clipArea.y) / texH;
-            u2 = static_cast<float>(clipArea.getRight()) / texW;
-            v2 = static_cast<float>(clipArea.getBottom()) / texH;
+            u1 = static_cast<float>(clipArea.x / texW);
+            v1 = static_cast<float>(clipArea.y / texH);
+            u2 = static_cast<float>(clipArea.getRight() / texW);
+            v2 = static_cast<float>(clipArea.getBottom() / texH);
         }
         else
         {
@@ -542,19 +530,16 @@ void drawBatchNDArray(
         if (texture.flip.v)
             std::swap(v1, v2);
 
-        const float w = static_cast<float>(dstRect.w);
-        const float h = static_cast<float>(dstRect.h);
+        const double pivotX = dstRect.w * pivot.x;
+        const double pivotY = dstRect.h * pivot.y;
 
-        const float pivotX = w * static_cast<float>(pivot.x);
-        const float pivotY = h * static_cast<float>(pivot.y);
+        const auto dx = static_cast<float>(dstRect.x + pivotX);
+        const auto dy = static_cast<float>(dstRect.y + pivotY);
 
-        const float dx = static_cast<float>(dstRect.x) + pivotX;
-        const float dy = static_cast<float>(dstRect.y) + pivotY;
-
-        const float x1 = -pivotX;
-        const float y1 = -pivotY;
-        const float x2 = w - pivotX;
-        const float y2 = h - pivotY;
+        const auto x1 = static_cast<float>(-pivotX);
+        const auto y1 = static_cast<float>(-pivotY);
+        const auto x2 = static_cast<float>(dstRect.w - pivotX);
+        const auto y2 = static_cast<float>(dstRect.h - pivotY);
 
         const int base = static_cast<int>(vertices.size());
 
@@ -567,8 +552,8 @@ void drawBatchNDArray(
         }
         else
         {
-            const float c = std::cos(static_cast<float>(angle));
-            const float s = std::sin(static_cast<float>(angle));
+            const auto c = static_cast<float>(std::cos(angle));
+            const auto s = static_cast<float>(std::sin(angle));
 
             vertices.push_back(
                 {{dx + x1 * c - y1 * s, dy + x1 * s + y1 * c}, vertexColor, {u1, v1}}
@@ -584,23 +569,23 @@ void drawBatchNDArray(
             );
         }
 
-        indices.push_back(base + 0);
+        indices.push_back(base);
         indices.push_back(base + 1);
         indices.push_back(base + 2);
-        indices.push_back(base + 0);
+        indices.push_back(base);
         indices.push_back(base + 2);
         indices.push_back(base + 3);
     }
 
-    if (!vertices.empty())
+    if (vertices.empty())
+        return;
+
+    if (!SDL_RenderGeometry(
+            _renderer, sdlTexture, vertices.data(), static_cast<int>(vertices.size()),
+            indices.data(), static_cast<int>(indices.size())
+        ))
     {
-        if (!SDL_RenderGeometry(
-                _renderer, sdlTexture, vertices.data(), static_cast<int>(vertices.size()),
-                indices.data(), static_cast<int>(indices.size())
-            ))
-        {
-            throw std::runtime_error("Failed to render geometry: " + std::string(SDL_GetError()));
-        }
+        throw std::runtime_error("Failed to render geometry: " + std::string(SDL_GetError()));
     }
 }
 
