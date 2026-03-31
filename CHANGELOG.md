@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) when possible.
 
+## [1.6.5] - 2026-03-31
+
+### Added
+- New `renderer.Batcher` class for batch draw memory preallocation and management.
+- When `debug` mode is enabled, the engine now attempts to provide more detailed error messages and stack traces for segfaults using the `faulthandler` module.
+- Log warning about excessive texture swapping in a single frame when using Direct3D 12.
+- The list-based `renderer.draw_batch` function now accepts an optional list of `Rect` objects for per-instance clipping.
+- About the ndarray-based `renderer.draw_batch` function:
+  - 9-column arrays now accepted for per-instance clipping (x, y, width, height).
+  - Optional `Batcher` parameter for using preallocated memory for batch drawing, significantly improving performance.
+  - Manually batch draw all transformed textures instead of relying on SDL's backend, improving performance.
+
+### Changed
+- Vulkan is now the default rendering backend on all platforms, falling back to the system's default graphics API if Vulkan is not supported.
+- Functions with parameters for file or directory paths now accept `PathLike` objects in addition to strings for improved flexibility and type safety.
+
+### Fixed
+- When drawing multiple different textures excessively within a single frame (swapping) on Windows, the engine would segfault likely due to descriptor heap exhaustion on Direct3D 12. The engine now uses Vulkan on Windows by default, if available, which in turn also improves performance.
+- MP3 files were not loading due to a missing decoder in the backend. Fix should also encompass FLAC and OGG files.
+
 ## [1.6.4] - 2026-03-23
 
 ### Added

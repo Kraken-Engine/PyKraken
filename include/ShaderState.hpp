@@ -4,6 +4,7 @@
 #include <nanobind/nanobind.h>
 
 #include <string>
+#include <filesystem>
 
 namespace nb = nanobind;
 
@@ -18,7 +19,7 @@ void _quit();
 class ShaderState
 {
   public:
-    ShaderState(const std::string& fragmentFilePath, Uint32 uniformBufferCount = 0);
+    ShaderState(const std::filesystem::path& fragmentFilePath, Uint32 uniformBufferCount = 0);
     ~ShaderState();
 
     void bind() const;

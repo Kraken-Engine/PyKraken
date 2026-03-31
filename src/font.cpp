@@ -1,6 +1,7 @@
 #include "Font.hpp"
 
 #include <nanobind/stl/string.h>
+#include <nanobind/stl/filesystem.h>
 
 #include <algorithm>
 #include <cmath>
@@ -21,17 +22,17 @@ static std::vector<Font*> _fontInstances;
 static std::mutex _fontsMutex;
 }  // namespace font
 
-Font::Font(const std::string& fileDir, int ptSize)
+Font::Font(const std::filesystem::path& fileDir, int ptSize)
 {
     if (ptSize < 8)
         ptSize = 8;
 
-    if (fileDir == "kraken-clean")
+    if (fileDir.string() == "kraken-clean")
     {
         SDL_IOStream* rw = SDL_IOFromMem(SpaceGrotesk_ttf, SpaceGrotesk_ttf_len);
         m_font = TTF_OpenFontIO(rw, true, static_cast<float>(ptSize));
     }
-    else if (fileDir == "kraken-retro")
+    else if (fileDir.string() == "kraken-retro")
     {
         SDL_IOStream* rw = SDL_IOFromMem(Minecraftia_Regular_ttf, Minecraftia_Regular_ttf_len);
         const int ptSizeFixed = (ptSize + 4) / 8 * 8;  // Round to the nearest multiple of 8
@@ -39,7 +40,7 @@ Font::Font(const std::string& fileDir, int ptSize)
     }
     else
     {
-        m_font = TTF_OpenFont(fileDir.c_str(), static_cast<float>(ptSize));
+        m_font = TTF_OpenFont(fileDir.string().c_str(), static_cast<float>(ptSize));
     }
 
     if (!m_font)
@@ -324,12 +325,12 @@ Note:
     call kn.window.create(...) first, which initializes the font engine.
     )doc")
         .def(
-            nb::init<const std::string&, int>(), "file_dir"_a, "pt_size"_a,
+            nb::init<const std::filesystem::path&, int>(), "file_dir"_a, "pt_size"_a,
             R"doc(
 Create a Font.
 
 Args:
-    file_dir (str): Path to a .ttf font file, or one of the built-in names
+    file_dir (str | os.PathLike[str]): Path to a .ttf font file, or one of the built-in names
                     "kraken-clean" or "kraken-retro".
     pt_size (int): The point size. Values below 8 are clamped to 8. For
                    "kraken-retro", the size is rounded to the nearest multiple

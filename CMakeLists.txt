@@ -88,9 +88,6 @@ set(SDLMIXER_MIDI              OFF CACHE BOOL "" FORCE)
 set(SDLMIXER_AIFF              OFF CACHE BOOL "" FORCE)
 set(SDLMIXER_VOC               OFF CACHE BOOL "" FORCE)
 set(SDLMIXER_AU                OFF CACHE BOOL "" FORCE)
-set(SDLMIXER_MP3_DRMP3         OFF CACHE BOOL "" FORCE)
-set(SDLMIXER_VORBIS_STB        OFF CACHE BOOL "" FORCE)
-set(SDLMIXER_FLAC_LIBFLAC      OFF CACHE BOOL "" FORCE)
 set(SDLMIXER_VENDORED          ON CACHE BOOL "" FORCE)
 FetchContent_Declare(SDL_mixer
   GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer.git
@@ -227,34 +224,29 @@ if(WIN32 AND _VCPKG_DLLS)
 endif()
 
 nanobind_add_stub(
-  pykraken_stub
+  _pykraken_stub
   MODULE _pykraken
+
   PYTHON_PATH $<TARGET_FILE_DIR:_pykraken>
   DEPENDS _pykraken
+
   RECURSIVE
-  OUTPUT_PATH _pykraken
-  OUTPUT
-    _pykraken/_pykraken/__init__.pyi
-    _pykraken/_pykraken/physics.pyi
-  MARKER_FILE _pykraken/py.typed
+
+  OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}
+  MARKER_FILE py.typed
 )
 
-# Fix stub imports: nanobind generates "import _pykraken" (absolute) which type
-# checkers can't resolve from inside the _pykraken package. Rewrite to relative
-# imports so _pykraken.Vec2 becomes Vec2 imported from the package __init__.
-# Then copy stubs into source tree so editable installs expose types to Pylance.
-add_custom_command(TARGET pykraken_stub POST_BUILD
-  COMMAND ${Python_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/scripts/fix_stub_imports.py"
-    "${CMAKE_CURRENT_BINARY_DIR}/_pykraken/_pykraken"
-  COMMAND ${CMAKE_COMMAND} -E copy_directory
-    "${CMAKE_CURRENT_BINARY_DIR}/_pykraken/_pykraken"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/pykraken/_pykraken"
-  COMMAND ${CMAKE_COMMAND} -E copy
-    "${CMAKE_CURRENT_BINARY_DIR}/_pykraken/py.typed"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/pykraken/py.typed"
+add_custom_command(
+  TARGET _pykraken_stub POST_BUILD
+  COMMAND ${Python_EXECUTABLE} "${CMAKE_SOURCE_DIR}/scripts/clean_stubs.py" "${CMAKE_CURRENT_BINARY_DIR}/_pykraken"
+  COMMENT "Running custom stub cleanup script..."
 )
 
-# Install stubs for wheel builds
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/_pykraken/_pykraken/ DESTINATION pykraken/_pykraken FILES_MATCHING PATTERN "*.pyi")
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/_pykraken/_pykraken/__init__.pyi DESTINATION pykraken RENAME _pykraken.pyi)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/_pykraken/py.typed DESTINATION pykraken)
+install(
+  DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/_pykraken/
+  DESTINATION pykraken
+)
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/py.typed
+  DESTINATION pykraken
+)

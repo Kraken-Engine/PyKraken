@@ -4,6 +4,7 @@
 #include <nanobind/nanobind.h>
 
 #include <memory>
+#include <filesystem>
 #include <string>
 
 #include "Rect.hpp"
@@ -29,7 +30,7 @@ class PixelArray
     PixelArray() = default;
     explicit PixelArray(SDL_Surface* sdlSurface);
     explicit PixelArray(const Vec2& size);
-    explicit PixelArray(const std::string& filePath);
+    explicit PixelArray(const std::filesystem::path& filePath);
     ~PixelArray();
 
     void fill(const Color& color) const;

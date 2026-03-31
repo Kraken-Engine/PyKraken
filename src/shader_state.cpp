@@ -1,4 +1,5 @@
 #include <nanobind/ndarray.h>
+#include <nanobind/stl/filesystem.h>
 #include <nanobind/stl/string.h>
 
 #include <algorithm>
@@ -12,12 +13,14 @@ namespace kn
 // Static registry to track all shader states for proper cleanup
 static std::vector<ShaderState*> _shaderStates;
 
-ShaderState::ShaderState(const std::string& fragmentFilePath, const Uint32 uniformBufferCount)
+ShaderState::ShaderState(
+    const std::filesystem::path& fragmentFilePath, const Uint32 uniformBufferCount
+)
 {
-    const char* ext = SDL_strrchr(fragmentFilePath.c_str(), '.');
+    const char* ext = SDL_strrchr(fragmentFilePath.string().c_str(), '.');
     if (ext == nullptr)
     {
-        throw std::runtime_error("Shader file has no extension: " + fragmentFilePath);
+        throw std::runtime_error("Shader file has no extension: " + fragmentFilePath.string());
     }
 
     SDL_GPUShaderFormat formats = SDL_GetGPUShaderFormats(renderer::_getGPUDevice());
@@ -53,10 +56,10 @@ ShaderState::ShaderState(const std::string& fragmentFilePath, const Uint32 unifo
     }
 
     size_t codeSize;
-    void* code = SDL_LoadFile(fragmentFilePath.c_str(), &codeSize);
+    void* code = SDL_LoadFile(fragmentFilePath.string().c_str(), &codeSize);
     if (code == nullptr)
     {
-        throw std::runtime_error("Failed to load shader from disk: " + fragmentFilePath);
+        throw std::runtime_error("Failed to load shader from disk: " + fragmentFilePath.string());
     }
 
     SDL_GPUShaderCreateInfo shaderInfo{};
@@ -162,16 +165,16 @@ void _bind(nb::module_& module)
 {
     using namespace nb::literals;
 
-    nb::class_<ShaderState>(
-        module, "ShaderState", R"doc(Encapsulates a GPU shader and its associated render state.)doc"
-    )
+    nb::class_<ShaderState>(module, "ShaderState", R"doc(
+Encapsulates a GPU shader and its associated render state.
+        )doc")
         .def(
-            nb::init<const std::string&, Uint32>(), "fragment_file_path"_a,
+            nb::init<const std::filesystem::path&, Uint32>(), "fragment_file_path"_a,
             "uniform_buffer_count"_a = 0, R"doc(
 Create a ShaderState from the specified fragment shader file.
 
 Args:
-    fragment_file_path (str): Path to the fragment shader file.
+    fragment_file_path (str | os.PathLike[str]): Path to the fragment shader file.
     uniform_buffer_count (int, optional): Number of uniform buffers used by the shader. Default is 0.
             )doc"
         )

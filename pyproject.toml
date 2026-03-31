@@ -1,6 +1,6 @@
 [project]
 name = "kraken-engine"
-version = "1.6.4"
+version = "1.6.5"
 description = "Python bindings for Kraken Engine"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -22,9 +22,9 @@ license = "MIT"
 license-files = ["LICENSE"]
 
 [project.urls]
-"Homepage" = "https://docs.krakenengine.org/"
+"Homepage" = "https://krakenengine.org/"
 "Issues" = "https://github.com/Kraken-Engine/PyKraken/issues"
-"Documentation" = "https://docs.krakenengine.org/docs/getting-started/introduction"
+"Documentation" = "https://krakenengine.org/docs"
 "Release Notes" = "https://github.com/Kraken-Engine/PyKraken/releases"
 "Source" = "https://github.com/Kraken-Engine/PyKraken"
 

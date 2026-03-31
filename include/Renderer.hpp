@@ -5,6 +5,7 @@
 #include <nanobind/ndarray.h>
 
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include "Color.hpp"
@@ -22,6 +23,8 @@ enum class TextureScaleMode;
 
 namespace renderer
 {
+class Batcher;
+
 void _bind(nb::module_& module);
 void _init(SDL_Window* window, int width, int height);
 void _quit();
@@ -50,13 +53,36 @@ void draw(const Texture& texture, const Rect& dst);
 
 void drawBatch(
     const Texture& texture, const std::vector<Transform>& transforms,
-    const Vec2& anchor = Anchor::TOP_LEFT, const Vec2& pivot = Anchor::CENTER
+    const Vec2& anchor = Anchor::TOP_LEFT, const Vec2& pivot = Anchor::CENTER,
+    const std::optional<std::vector<Rect>>& clipRects = std::nullopt
 );
 
 void drawBatchNDArray(
     const Texture& texture,
     nb::ndarray<const double, nb::ndim<2>, nb::c_contig, nb::device::cpu> arr,
-    const Vec2& anchor = Anchor::TOP_LEFT, const Vec2& pivot = Anchor::CENTER
+    const Vec2& anchor = Anchor::TOP_LEFT, const Vec2& pivot = Anchor::CENTER,
+    Batcher* batcher = nullptr
 );
+
+class Batcher
+{
+  public:
+    Batcher() = default;
+    ~Batcher() = default;
+
+    void preallocate(size_t nSprites);
+    void free();
+
+  private:
+    friend void drawBatchNDArray(
+        const Texture& texture,
+        nb::ndarray<const double, nb::ndim<2>, nb::c_contig, nb::device::cpu> arr,
+        const Vec2& anchor, const Vec2& pivot, Batcher* batcher
+    );
+
+    std::vector<SDL_Vertex> vertices;
+    std::vector<int> indices;
+};
+
 }  // namespace renderer
 }  // namespace kn

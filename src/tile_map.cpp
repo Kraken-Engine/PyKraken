@@ -10,6 +10,7 @@
 #include <nanobind/stl/shared_ptr.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
+#include <nanobind/stl/filesystem.h>
 
 #include <tmxlite/ImageLayer.hpp>
 #include <tmxlite/TileLayer.hpp>
@@ -32,14 +33,14 @@ namespace kn
 {
 namespace tilemap
 {
-void Map::load(const std::string& tmxPath)
+void Map::load(const std::filesystem::path& tmxPath)
 {
     tmx::Map tmxMap;
-    if (!tmxMap.load(tmxPath))
-        throw std::runtime_error("Failed to load TMX map from path: " + tmxPath);
+    if (!tmxMap.load(tmxPath.string()))
+        throw std::runtime_error("Failed to load TMX map from path: " + tmxPath.string());
 
     if (tmxMap.getTilesets().size() >= static_cast<size_t>(std::numeric_limits<uint8_t>::max()))
-        throw std::runtime_error("Too many tilesets in TMX map: " + tmxPath);
+        throw std::runtime_error("Too many tilesets in TMX map: " + tmxPath.string());
 
     m_orient = tmxMap.getOrientation();
     m_renderOrder = tmxMap.getRenderOrder();
@@ -1488,7 +1489,7 @@ Methods:
 Load a TMX file from path.
 
 Args:
-    tmx_path (str): Path to the TMX file to load.
+    tmx_path (str | os.PathLike[str]): Path to the TMX file to load.
         )doc")
         .def("draw", &Map::draw, R"doc(Draw all layers.)doc")
         .def("get_layer", &Map::getLayer, "name"_a, nb::rv_policy::reference_internal, R"doc(

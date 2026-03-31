@@ -3,7 +3,7 @@
 #include <SDL3/SDL.h>
 #include <nanobind/nanobind.h>
 
-#include <string>
+#include <filesystem>
 
 #include "Math.hpp"
 #include "Rect.hpp"
@@ -26,7 +26,7 @@ enum class TextureScaleMode
     NEAREST = SDL_SCALEMODE_NEAREST,
     LINEAR = SDL_SCALEMODE_LINEAR,
     PIXELART = SDL_SCALEMODE_PIXELART,
-    DEFAULT
+    DEFAULT,
 };
 
 class Texture
@@ -44,10 +44,15 @@ class Texture
         TextureAccess access = TextureAccess::STATIC
     );
     Texture(
-        const std::string& filePath, TextureScaleMode scaleMode = TextureScaleMode::DEFAULT,
+        const std::filesystem::path& filePath, TextureScaleMode scaleMode = TextureScaleMode::DEFAULT,
         TextureAccess access = TextureAccess::STATIC
     );
     ~Texture();
+
+    Texture(const Texture&) = delete;
+    Texture& operator=(const Texture&) = delete;
+    Texture(Texture&&) noexcept;
+    Texture& operator=(Texture&&) noexcept;
 
     [[nodiscard]] int getWidth() const;
 

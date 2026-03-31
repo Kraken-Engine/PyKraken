@@ -1,7 +1,8 @@
-#include <algorithm>
-#include <filesystem>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
+
+#include <algorithm>
+#include <filesystem>
 
 #include "AnimationController.hpp"
 #include "Log.hpp"

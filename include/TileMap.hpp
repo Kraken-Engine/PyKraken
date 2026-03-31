@@ -5,6 +5,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <filesystem>
 #include <tmxlite/Map.hpp>
 #include <vector>
 
@@ -284,7 +285,7 @@ class Map
     ~Map() = default;
 
     void draw();
-    void load(const std::string& tmxPath);
+    void load(const std::filesystem::path& tmxPath);
 
     [[nodiscard]] tmx::Orientation getOrientation() const;
     [[nodiscard]] tmx::RenderOrder getRenderOrder() const;

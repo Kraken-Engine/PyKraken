@@ -3,6 +3,8 @@
 #include <SDL3/SDL.h>
 #include <nanobind/nanobind.h>
 
+#include <filesystem>
+
 namespace nb = nanobind;
 
 namespace kn
@@ -35,8 +37,8 @@ void setTitle(const std::string& title);
 
 std::string getTitle();
 
-void setIcon(const std::string& path);
+void setIcon(const std::filesystem::path& path);
 
-void saveScreenshot(const std::string& filePath);
+void saveScreenshot(const std::filesystem::path& filePath);
 }  // namespace window
 }  // namespace kn
