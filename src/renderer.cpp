@@ -743,7 +743,7 @@ Raises:
         nb::call_guard<nb::gil_scoped_release>(), R"doc(
 Render a texture multiple times with different transforms in a single batch call.
 
-This is significantly faster than calling draw() in a loop because it avoids
+This is much faster than calling draw() in a loop because it avoids
 per-call Python/C++ dispatch overhead.
 
 Args:
@@ -760,7 +760,8 @@ Args:
         "draw_batch", &drawBatchNDArray, "texture"_a, "transforms"_a, "anchor"_a = Anchor::TOP_LEFT,
         "pivot"_a = Anchor::CENTER, "batcher"_a = nb::none(),
         nb::call_guard<nb::gil_scoped_release>(), R"doc(
-Render a texture multiple times using a NumPy array for maximum throughput.
+Render a texture multiple times using a NumPy array for maximum throughput. This is *the* fastest way to render large batches of sprites,
+being significantly faster than the list-based draw_batch() due to no-copy viewing of contiguous array data.
 
 Each row of the array describes one instance. The number of columns determines
 the layout:
@@ -769,12 +770,7 @@ the layout:
 - **3 columns** ``[x, y, angle]`` — position + rotation (scale=1).
 - **4 columns** ``[x, y, angle, scale]`` — position + rotation + uniform scale.
 - **5 columns** ``[x, y, angle, scale_x, scale_y]`` — full transform.
-- **6-8 columns** — not valid; extend to 9 columns for per-instance clipping.
 - **9 columns** ``[x, y, angle, scale_x, scale_y, clip_left, clip_top, clip_width, clip_height]`` — full transform + per-instance clip rect.
-
-Per-instance clip rectangles (columns 5-8) override the texture's clip area for that instance.
-If you only have some of your instances needing custom clip rects, the best approach is to
-use the ``draw_batch`` function with Transform objects and optional clip_rects list instead.
 
 Args:
     texture (Texture): The texture to render.
