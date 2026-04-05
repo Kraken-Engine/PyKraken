@@ -861,8 +861,8 @@ void ObjectGroup::draw()
         case tmx::Object::Shape::Polygon:
         {
             Polygon polygon{obj.getVertices()};
-            polygon.translate(renderOffset);
-            draw::polygon(polygon, drawColor, true);
+            polygon.move(renderOffset);
+            draw::polygon(polygon, drawColor);
             break;
         }
 

@@ -70,38 +70,34 @@ void _init(SDL_Window* window, const int width, const int height)
     SDL_SetRenderLogicalPresentation(_renderer, width, height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
     SDL_SetRenderDrawBlendMode(_renderer, SDL_BLENDMODE_BLEND);
 
-    if (_gpuDevice)
-    {
-        const SDL_PropertiesID gpuProperties = SDL_GetGPUDeviceProperties(_gpuDevice);
-        const char* gpuName =
-            SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_NAME_STRING, "Unknown");
-        const char* driverName = SDL_GetGPUDeviceDriver(_gpuDevice);
-        const char* driverVersion = SDL_GetStringProperty(
-            gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_VERSION_STRING, "Unknown"
-        );
-        const char* driverInfo =
-            SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_INFO_STRING, "None");
-
-        log::info("GPU Device: {}", gpuName);
-        log::info("GPU Driver: {}", (driverName ? driverName : "Unknown"));
-        log::info("GPU Driver Version: {}", driverVersion);
-        log::info("GPU Driver Info: {}", driverInfo);
-
-        if (driverName && std::string(driverName) == "direct3d12")
-        {
-            log::warn(
-                "Direct3D 12 backend detected. Please be aware that excessive texture swapping in "
-                "a single frame can cause descriptor heap exhaustion and visual artifacts on this "
-                "backend. Consider using Vulkan, texture atlases, or manual texture sorting if you "
-                "encounter issues."
-            );
-        }
-    }
-    else
+    if (!_gpuDevice)
     {
         const char* rendererName = SDL_GetRendererName(_renderer);
-        log::info("Using fallback renderer: {}", rendererName);
+        log::info("Initialized renderer: {}", rendererName);
+        return;
     }
+
+    const SDL_PropertiesID gpuProperties = SDL_GetGPUDeviceProperties(_gpuDevice);
+    const char* gpuName =
+        SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_NAME_STRING, "Unknown");
+    const char* driverName = SDL_GetGPUDeviceDriver(_gpuDevice);
+    const char* driverVersion =
+        SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_VERSION_STRING, "Unknown");
+    const char* driverInfo =
+        SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_INFO_STRING, "None");
+
+    log::info("GPU Device: {}", gpuName);
+    log::info("GPU Driver: {}", (driverName ? driverName : "Unknown"));
+    log::info("GPU Driver Version: {}", driverVersion);
+    log::info("GPU Driver Info: {}", driverInfo);
+
+    if (driverName && std::string(driverName) == "direct3d12")
+        log::warn(
+            "Direct3D 12 backend detected. Please be aware that excessive texture swapping in a "
+            "single frame can cause descriptor heap exhaustion and visual artifacts on this "
+            "backend. Consider using Vulkan, texture atlases, or manual texture sorting if you "
+            "encounter issues."
+        );
 }
 
 void _quit()
@@ -123,20 +119,16 @@ void clear(const Color& color)
 {
     if (!SDL_SetRenderDrawColor(_renderer, color.r, color.g, color.b, color.a))
         throw std::runtime_error("Failed to set render draw color: " + std::string(SDL_GetError()));
+
     if (!SDL_RenderClear(_renderer))
         throw std::runtime_error("Failed to clear renderer: " + std::string(SDL_GetError()));
 }
 
 void setTarget(const Texture* target)
 {
-    if (!_renderer)
-        throw std::runtime_error("Renderer not yet initialized");
-
     if (!target)
     {
-        if (!SDL_SetRenderTarget(
-                _renderer, (_primaryTarget != nullptr) ? _primaryTarget->getSDL() : nullptr
-            ))
+        if (!SDL_SetRenderTarget(_renderer, (_primaryTarget) ? _primaryTarget->getSDL() : nullptr))
             throw std::runtime_error(
                 "Failed to unset render target: " + std::string(SDL_GetError())
             );
@@ -144,23 +136,6 @@ void setTarget(const Texture* target)
     }
 
     SDL_Texture* targetSDL = target->getSDL();
-
-    const auto textureProperties = SDL_GetTextureProperties(targetSDL);
-    if (textureProperties == 0)
-        throw std::runtime_error(
-            "Failed to get texture properties: " + std::string(SDL_GetError())
-        );
-
-    const auto access =
-        SDL_GetNumberProperty(textureProperties, SDL_PROP_TEXTURE_ACCESS_NUMBER, -1);
-    if (access == -1)
-        throw std::runtime_error(
-            "Failed to get texture access property: " + std::string(SDL_GetError())
-        );
-
-    if (access != SDL_TEXTUREACCESS_TARGET)
-        throw std::runtime_error("Texture is not created with TARGET access");
-
     if (!SDL_SetRenderTarget(_renderer, targetSDL))
         throw std::runtime_error("Failed to set render target: " + std::string(SDL_GetError()));
 }
@@ -178,7 +153,7 @@ TextureScaleMode getDefaultScaleMode()
 void present()
 {
     // Regular present if no custom renderer size
-    if (_primaryTarget == nullptr)
+    if (!_primaryTarget)
     {
         if (!SDL_RenderPresent(_renderer))
             throw std::runtime_error("Failed to present renderer: " + std::string(SDL_GetError()));
@@ -186,12 +161,12 @@ void present()
     }
 
     // Hold old cam pos and set pos to origin
-    auto currCamera = camera::_getActiveCamera();
+    kn::Camera* currCamera = camera::_getActiveCamera();
     Vec2 cameraPos;
     if (currCamera)
     {
         cameraPos = currCamera->getPos();
-        currCamera->setPos({});
+        currCamera->setPos({0.0, 0.0});
     }
 
     // Truly reset render target since SetTarget bit my butt
@@ -211,12 +186,12 @@ void present()
         currCamera->setPos(cameraPos);
 }
 
-void setPresentResolution(const int width, const int height)
+void setVirtualResolution(const int width, const int height)
 {
     if (width <= 0 || height <= 0)
         throw std::invalid_argument("Resolution width and height must be positive integers");
 
-    if (_primaryTarget != nullptr)
+    if (_primaryTarget)
     {
         delete _primaryTarget;
         _primaryTarget = nullptr;
@@ -226,28 +201,54 @@ void setPresentResolution(const int width, const int height)
     setTarget(_primaryTarget);
 }
 
+void unsetVirtualResolution()
+{
+    if (_primaryTarget)
+    {
+        delete _primaryTarget;
+        _primaryTarget = nullptr;
+    }
+    setTarget(nullptr);
+}
+
+Vec2 getVirtualScale()
+{
+    if (!_primaryTarget)
+        return {1.0, 1.0};
+    return _size / _primaryTarget->getSize();
+}
+
+Vec2 getVirtualResolution()
+{
+    if (_primaryTarget)
+        return _primaryTarget->getSize();
+    return _size;
+}
+
 Vec2 getCurrentResolution()
 {
     SDL_Texture* currentTarget = SDL_GetRenderTarget(_renderer);
-    if (currentTarget)
-    {
-        if (_primaryTarget && currentTarget == _primaryTarget->getSDL())
-            return _primaryTarget->getSize();
 
-        float w, h;
-        if (!SDL_GetTextureSize(currentTarget, &w, &h))
-        {
-            throw std::runtime_error(
-                "Failed to get render target size: " + std::string(SDL_GetError())
-            );
-        }
+    // No primary target nor user target set
+    if (!currentTarget)
+        return _size;
 
-        return Vec2{w, h};
-    }
-
-    if (_primaryTarget)
+    // Primary target active
+    if (_primaryTarget && currentTarget == _primaryTarget->getSDL())
         return _primaryTarget->getSize();
 
+    // User target active
+    float w, h;
+    if (!SDL_GetTextureSize(currentTarget, &w, &h))
+        throw std::runtime_error(
+            "Failed to get render target size: " + std::string(SDL_GetError())
+        );
+
+    return {w, h};
+}
+
+Vec2 getOutputResolution()
+{
     return _size;
 }
 
@@ -613,6 +614,14 @@ SDL_GPUDevice* _getGPUDevice()
     return _gpuDevice;
 }
 
+bool _primaryActive()
+{
+    if (!_primaryTarget)
+        return false;
+
+    return SDL_GetRenderTarget(_renderer) == _primaryTarget->getSDL();
+}
+
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -664,8 +673,8 @@ This finalizes the current frame and displays it.
 Should be called after all drawing operations for the frame are complete.
     )doc");
 
-    subRenderer.def("set_present_resolution", &setPresentResolution, "width"_a, "height"_a, R"doc(
-Set a custom resolution for rendering. This creates an internal render target of the specified size,
+    subRenderer.def("set_virtual_resolution", &setVirtualResolution, "width"_a, "height"_a, R"doc(
+Set a virtual resolution for rendering. This creates an internal render target of the specified size,
 and all rendering will be done to that target, which is then scaled up to the actual screen resolution when presented.
 
 Args:
@@ -674,6 +683,25 @@ Args:
 
 Raises:
     ValueError: If width or height are not positive integers.
+    )doc");
+
+    subRenderer.def("unset_virtual_resolution", &unsetVirtualResolution, R"doc(
+Unset any previously configured virtual resolution and restore rendering directly to the output.
+    )doc");
+
+    subRenderer.def("get_virtual_resolution", &getVirtualResolution, R"doc(
+Get the currently configured virtual resolution (the internal render target size).
+If no virtual resolution is set, this returns the current output resolution.
+
+Returns:
+    Vec2: The width and height of the virtual resolution in pixels.
+    )doc");
+
+    subRenderer.def("get_output_resolution", &getOutputResolution, R"doc(
+Get the renderer's output/presenting resolution (the actual window or output size).
+
+Returns:
+    Vec2: The output width and height in pixels.
     )doc");
 
     subRenderer.def("get_current_resolution", &getCurrentResolution, R"doc(

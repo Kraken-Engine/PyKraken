@@ -21,9 +21,7 @@ Texture::Texture(const int width, const int height, const TextureScaleMode scale
         renderer::_get(), SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, width, height
     );
     if (!m_texPtr)
-    {
         throw std::runtime_error("Failed to create texture: " + std::string(SDL_GetError()));
-    }
 
     const TextureScaleMode finalScaleMode = (scaleMode == TextureScaleMode::DEFAULT)
                                                 ? renderer::getDefaultScaleMode()
@@ -319,8 +317,9 @@ When True, the texture is mirrored vertically (top-bottom flip).
 
     texture
         .def(
-            nb::init<const std::filesystem::path&, TextureScaleMode, TextureAccess>(), "file_path"_a,
-            "scale_mode"_a = TextureScaleMode::DEFAULT, "access"_a = TextureAccess::STATIC, R"doc(
+            nb::init<const std::filesystem::path&, TextureScaleMode, TextureAccess>(),
+            "file_path"_a, "scale_mode"_a = TextureScaleMode::DEFAULT,
+            "access"_a = TextureAccess::STATIC, R"doc(
 Create a Texture by loading an image from a file.
 If no scale mode is provided, the default renderer scale mode is used.
 

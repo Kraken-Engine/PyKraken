@@ -24,10 +24,20 @@ class Line
 
     [[nodiscard]] Vec2 getA() const;
     void setA(const Vec2& pos);
+
     [[nodiscard]] Vec2 getB() const;
     void setB(const Vec2& pos);
 
     void move(const Vec2& offset);
+    [[nodiscard]] Line moved(const Vec2& offset) const;
+
+    Vec2 getMidpoint() const;
+
+    Line getPerpendicular() const;
+
+    double getAngle() const;
+
+    Vec2 getClosestPoint(const Vec2& point) const;
 
     [[nodiscard]] Line copy() const;
 
@@ -38,7 +48,5 @@ class Line
 namespace line
 {
 void _bind(nb::module_& module);
-
-Line move(const Line& line, const Vec2& offset);
 }  // namespace line
 }  // namespace kn

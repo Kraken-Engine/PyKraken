@@ -364,18 +364,6 @@ Args:
             "capsule_shape", &CharacterBody::getCapsuleShape, &CharacterBody::setCapsuleShape,
             R"doc(The capsule shape used for ground detection and collision casting.)doc"
         )
-        .def_prop_ro(
-            "on_floor", &CharacterBody::isOnFloor,
-            R"doc(Whether the character is currently on a floor surface.)doc"
-        )
-        .def_prop_ro(
-            "on_ceiling", &CharacterBody::isOnCeiling,
-            R"doc(Whether the character is currently touching a ceiling.)doc"
-        )
-        .def_prop_ro(
-            "on_wall", &CharacterBody::isOnWall,
-            R"doc(Whether the character is currently touching a wall.)doc"
-        )
 
         .def(
             "move_and_slide", &CharacterBody::moveAndSlide, "delta"_a = -1.0,
@@ -390,7 +378,25 @@ Args:
     delta (float, optional): The time step to use for movement.
                              Defaults to -1.0, which uses the frame delta.
         )doc"
-        );
+        )
+        .def("is_on_floor", &CharacterBody::isOnFloor, R"doc(
+Check if the character is currently in contact with the floor.
+
+Returns:
+    bool: True if the character is on the floor, False otherwise.
+        )doc")
+        .def("is_on_ceiling", &CharacterBody::isOnCeiling, R"doc(
+Check if the character is currently in contact with the ceiling.
+
+Returns:
+    bool: True if the character is on the ceiling, False otherwise.
+        )doc")
+        .def("is_on_wall", &CharacterBody::isOnWall, R"doc(
+Check if the character is currently in contact with a wall.
+
+Returns:
+    bool: True if the character is on a wall, False otherwise.
+        )doc");
 
     nb::class_<Joint>(subPhysics, "Joint", R"doc(
 Base class for all physics joints.

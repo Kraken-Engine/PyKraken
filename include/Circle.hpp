@@ -28,7 +28,20 @@ class Circle
 
     [[nodiscard]] double getCircumference() const;
 
+    [[nodiscard]] double getDiameter() const;
+    void setDiameter(double diameter);
+
     [[nodiscard]] Rect asRect() const;
+
+    [[nodiscard]] double getLeft() const;
+    [[nodiscard]] double getRight() const;
+    [[nodiscard]] double getTop() const;
+    [[nodiscard]] double getBottom() const;
+
+    void setLeft(double left);
+    void setRight(double right);
+    void setTop(double top);
+    void setBottom(double bottom);
 
     [[nodiscard]] Circle copy() const;
 

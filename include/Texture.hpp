@@ -44,7 +44,8 @@ class Texture
         TextureAccess access = TextureAccess::STATIC
     );
     Texture(
-        const std::filesystem::path& filePath, TextureScaleMode scaleMode = TextureScaleMode::DEFAULT,
+        const std::filesystem::path& filePath,
+        TextureScaleMode scaleMode = TextureScaleMode::DEFAULT,
         TextureAccess access = TextureAccess::STATIC
     );
     ~Texture();

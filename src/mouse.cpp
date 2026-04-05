@@ -15,110 +15,50 @@ constexpr size_t MOUSE_BUTTON_COUNT = 5;
 static bool _mousePressed[MOUSE_BUTTON_COUNT];
 static bool _mouseReleased[MOUSE_BUTTON_COUNT];
 
-void _bind(nb::module_& module)
-{
-    using namespace nb::literals;
-
-    auto subMouse = module.def_submodule("mouse", "Mouse related functions");
-
-    subMouse.def("get_pos", &getPos, R"doc(
-Get the current position of the mouse cursor.
-
-Returns:
-    Vec2: The current mouse position as (x, y) coordinates.
-    )doc");
-    subMouse.def("get_rel", &getRel, R"doc(
-Get the relative mouse movement since the last frame.
-
-Returns:
-    Vec2: The relative movement of the mouse as (dx, dy).
-    )doc");
-    subMouse.def("is_pressed", &isPressed, "button"_a, R"doc(
-Check if a mouse button is currently pressed.
-
-Args:
-    button (MouseButton): The mouse button to check (e.g., kn.MOUSE_LEFT).
-
-Returns:
-    bool: True if the button is currently pressed.
-    )doc");
-    subMouse.def("is_just_pressed", &isJustPressed, "button"_a, R"doc(
-Check if a mouse button was pressed this frame.
-
-Args:
-    button (MouseButton): The mouse button to check.
-
-Returns:
-    bool: True if the button was just pressed.
-    )doc");
-    subMouse.def("is_just_released", &isJustReleased, "button"_a, R"doc(
-Check if a mouse button was released this frame.
-
-Args:
-    button (MouseButton): The mouse button to check.
-
-Returns:
-    bool: True if the button was just released.
-    )doc");
-    subMouse.def("lock", &lock, R"doc(
-Lock the mouse to the center of the window.
-
-Useful for first-person controls where you want to capture mouse movement
-without letting the cursor leave the window area.
-    )doc");
-    subMouse.def("unlock", &unlock, R"doc(
-Unlock the mouse from the window, allowing it to move freely.
-    )doc");
-    subMouse.def("is_locked", &isLocked, R"doc(
-Check if the mouse is currently locked to the window.
-
-Returns:
-    bool: True if the mouse is locked.
-    )doc");
-    subMouse.def("hide", &hide, R"doc(
-Hide the mouse cursor from view.
-
-The cursor will be invisible but mouse input will still be tracked.
-    )doc");
-    subMouse.def("show", &show, R"doc(
-Show the mouse cursor if it was hidden.
-    )doc");
-    subMouse.def("is_hidden", &isHidden, R"doc(
-Check if the mouse cursor is currently hidden.
-
-Returns:
-    bool: True if the cursor is hidden.
-    )doc");
-}
-
 Vec2 getPos()
 {
     float windowX;
     float windowY;
     SDL_GetMouseState(&windowX, &windowY);
 
+    // Needed for black bars
     float logicalX;
     float logicalY;
     SDL_RenderCoordinatesFromWindow(renderer::_get(), windowX, windowY, &logicalX, &logicalY);
 
-    return Vec2{logicalX, logicalY} + camera::getActivePos();
+    // Apply scaling only when primary render target is active.
+    if (renderer::_primaryActive())
+    {
+        const Vec2 virtualScale = renderer::getVirtualScale();
+        logicalX /= static_cast<float>(virtualScale.x);
+        logicalY /= static_cast<float>(virtualScale.y);
+    }
+
+    return camera::screenToWorld({logicalX, logicalY});
 }
 
 Vec2 getRel()
 {
     float dx, dy;
+    float x0, y0, x1, y1;
+
+    SDL_Renderer* r = renderer::_get();
+
     SDL_GetRelativeMouseState(&dx, &dy);
-
-    float x0;
-    float y0;
-    float x1;
-    float y1;
-
-    auto* r = renderer::_get();
     SDL_RenderCoordinatesFromWindow(r, 0.0f, 0.0f, &x0, &y0);
     SDL_RenderCoordinatesFromWindow(r, dx, dy, &x1, &y1);
 
-    return {x1 - x0, y1 - y0};
+    float relX = x1 - x0;
+    float relY = y1 - y0;
+
+    if (renderer::_primaryActive())
+    {
+        const Vec2 virtualScale = renderer::getVirtualScale();
+        relX /= static_cast<float>(virtualScale.x);
+        relY /= static_cast<float>(virtualScale.y);
+    }
+
+    return {relX, relY};
 }
 
 bool isPressed(MouseButton button)
@@ -218,5 +158,81 @@ void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
     default:
         break;
     }
+}
+
+void _bind(nb::module_& module)
+{
+    using namespace nb::literals;
+
+    auto subMouse = module.def_submodule("mouse", "Mouse related functions");
+
+    subMouse.def("get_pos", &getPos, R"doc(
+Get the current position of the mouse cursor.
+
+Returns:
+    Vec2: The current mouse position as (x, y) coordinates.
+    )doc");
+    subMouse.def("get_rel", &getRel, R"doc(
+Get the relative mouse movement since the last frame.
+
+Returns:
+    Vec2: The relative movement of the mouse as (dx, dy).
+    )doc");
+    subMouse.def("is_pressed", &isPressed, "button"_a, R"doc(
+Check if a mouse button is currently pressed.
+
+Args:
+    button (MouseButton): The mouse button to check (e.g., kn.MOUSE_LEFT).
+
+Returns:
+    bool: True if the button is currently pressed.
+    )doc");
+    subMouse.def("is_just_pressed", &isJustPressed, "button"_a, R"doc(
+Check if a mouse button was pressed this frame.
+
+Args:
+    button (MouseButton): The mouse button to check.
+
+Returns:
+    bool: True if the button was just pressed.
+    )doc");
+    subMouse.def("is_just_released", &isJustReleased, "button"_a, R"doc(
+Check if a mouse button was released this frame.
+
+Args:
+    button (MouseButton): The mouse button to check.
+
+Returns:
+    bool: True if the button was just released.
+    )doc");
+    subMouse.def("lock", &lock, R"doc(
+Lock the mouse to the center of the window.
+
+Useful for first-person controls where you want to capture mouse movement
+without letting the cursor leave the window area.
+    )doc");
+    subMouse.def("unlock", &unlock, R"doc(
+Unlock the mouse from the window, allowing it to move freely.
+    )doc");
+    subMouse.def("is_locked", &isLocked, R"doc(
+Check if the mouse is currently locked to the window.
+
+Returns:
+    bool: True if the mouse is locked.
+    )doc");
+    subMouse.def("hide", &hide, R"doc(
+Hide the mouse cursor from view.
+
+The cursor will be invisible but mouse input will still be tracked.
+    )doc");
+    subMouse.def("show", &show, R"doc(
+Show the mouse cursor if it was hidden.
+    )doc");
+    subMouse.def("is_hidden", &isHidden, R"doc(
+Check if the mouse cursor is currently hidden.
+
+Returns:
+    bool: True if the cursor is hidden.
+    )doc");
 }
 }  // namespace kn::mouse
