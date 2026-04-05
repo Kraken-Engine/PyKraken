@@ -98,6 +98,7 @@ FetchContent_MakeAvailable(SDL_mixer)
 # ------------------------------------------------------------
 
 find_package(box2d CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 
 # Used by tmxlite and SDL image
 find_package(zstd CONFIG QUIET)
@@ -203,6 +204,7 @@ target_link_libraries(_pykraken PRIVATE
   $<IF:$<TARGET_EXISTS:zstd::libzstd_static>,zstd::libzstd_static,
     $<IF:$<TARGET_EXISTS:zstd::zstd>,zstd::zstd,zstd::libzstd_shared>>
   box2d::box2d
+  spdlog::spdlog
 )
 
 # Copy runtime DLLs next to the module (only needed with dynamic vcpkg triplets like x64-windows)

@@ -15,6 +15,12 @@
         "harfbuzz"
       ]
     },
+    {
+      "name": "spdlog",
+      "features": [
+        "fmt"
+      ]
+    },
     "zstd"
   ],
   "overrides": [
