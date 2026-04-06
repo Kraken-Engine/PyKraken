@@ -21,3 +21,8 @@ cmake --build /tmp/SDL3_ttf/build --target install --parallel "${JOBS}"
 git clone --depth 1 --branch v3.1.1 https://github.com/erincatto/box2d.git /tmp/box2d
 cmake -S /tmp/box2d -B /tmp/box2d/build ${CMAKE_COMMON} -DBOX2D_SAMPLES=OFF -DBOX2D_UNIT_TESTS=OFF
 cmake --build /tmp/box2d/build --target install --parallel "${JOBS}"
+
+# spdlog
+git clone --depth 1 --branch v1.17.0 https://github.com/gabime/spdlog.git /tmp/spdlog
+cmake -S /tmp/spdlog -B /tmp/spdlog/build ${CMAKE_COMMON}
+cmake --build /tmp/spdlog/build --target install --parallel "${JOBS}"
