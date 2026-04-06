@@ -3,12 +3,16 @@
 #include <SDL3/SDL.h>
 #include <nanobind/nanobind.h>
 
+#include <array>
+
 #include "Math.hpp"
 
 namespace nb = nanobind;
 
 namespace kn
 {
+class Line;
+
 class Rect
 {
   public:
@@ -49,20 +53,28 @@ class Rect
     [[nodiscard]] Rect copy() const;
 
     void move(const Vec2& offset);
+    [[nodiscard]] Rect moved(const Vec2& offset) const;
 
     void inflate(const Vec2& offset);
 
     void fit(const Rect& other);
 
     void clamp(const Vec2& min, const Vec2& max);
-
     void clamp(const Rect& other);
+    [[nodiscard]] Rect clamped(const Vec2& min, const Vec2& max) const;
+    [[nodiscard]] Rect clamped(const Rect& other) const;
 
     void scaleBy(double factor);
-
     void scaleBy(const Vec2& factor);
+    [[nodiscard]] Rect scaledBy(double factor) const;
+    [[nodiscard]] Rect scaledBy(const Vec2& factor) const;
 
     void scaleTo(const Vec2& size);
+    [[nodiscard]] Rect scaledTo(const Vec2& size) const;
+
+    std::array<Vec2, 4> getCorners() const;
+
+    std::array<Line, 4> getEdges() const;
 
     bool operator==(const Rect& other) const;
     bool operator!=(const Rect& other) const;
@@ -70,6 +82,7 @@ class Rect
     explicit operator SDL_Rect() const;
     explicit operator SDL_FRect() const;
 
+    void setPos(const Vec2& pos);
     void setSize(const Vec2& size);
     void setLeft(double left);
     void setRight(double right);
@@ -85,6 +98,7 @@ class Rect
     void setBottomMid(const Vec2& bottomMid);
     void setBottomRight(const Vec2& bottomRight);
 
+    [[nodiscard]] Vec2 getPos() const;
     [[nodiscard]] Vec2 getSize() const;
     [[nodiscard]] double getLeft() const;
     [[nodiscard]] double getRight() const;
@@ -104,12 +118,5 @@ class Rect
 namespace rect
 {
 void _bind(nb::module_& module);
-
-Rect move(const Rect& rect, const Vec2& offset);
-Rect clamp(const Rect& rect, const Vec2& min, const Vec2& max);
-Rect clamp(const Rect& rect, const Rect& other);
-Rect scaleBy(const Rect& rect, double factor);
-Rect scaleBy(const Rect& rect, const Vec2& factor);
-Rect scaleTo(const Rect& rect, const Vec2& size);
 }  // namespace rect
 }  // namespace kn

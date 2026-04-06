@@ -624,7 +624,7 @@ void polygon(const Polygon& polygon, const Color& color, const bool filled)
     }
 
     Polygon cameraPolygon = polygon;
-    cameraPolygon.translate(-cameraPos);
+    cameraPolygon.move(-cameraPos);
 
     // Just draw lines if not filled
     if (!filled)
@@ -686,7 +686,7 @@ void polygons(const std::vector<Polygon>& polygons, const Color& color, const bo
         }
 
         Polygon cameraPolygon = polygon;
-        cameraPolygon.translate(-cameraPos);
+        cameraPolygon.move(-cameraPos);
 
         if (!filled)
         {

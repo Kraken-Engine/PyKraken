@@ -39,12 +39,62 @@ double Circle::getCircumference() const
     return 2 * M_PI * radius;
 }
 
+double Circle::getDiameter() const
+{
+    return radius * 2;
+}
+
+void Circle::setDiameter(const double diameter)
+{
+    radius = diameter / 2.0;
+}
+
 Rect Circle::asRect() const
 {
     Rect rect;
     rect.setSize(Vec2{radius * 2});
     rect.setCenter(pos);
     return rect;
+}
+
+double Circle::getLeft() const
+{
+    return pos.x - radius;
+}
+
+double Circle::getRight() const
+{
+    return pos.x + radius;
+}
+
+double Circle::getTop() const
+{
+    return pos.y - radius;
+}
+
+double Circle::getBottom() const
+{
+    return pos.y + radius;
+}
+
+void Circle::setLeft(const double left)
+{
+    pos.x = left + radius;
+}
+
+void Circle::setRight(const double right)
+{
+    pos.x = right - radius;
+}
+
+void Circle::setTop(const double top)
+{
+    pos.y = top + radius;
+}
+
+void Circle::setBottom(const double bottom)
+{
+    pos.y = bottom - radius;
 }
 
 Circle Circle::copy() const
@@ -105,23 +155,35 @@ Args:
         .def_rw("pos", &Circle::pos, R"doc(
 The center position of the circle as a Vec2.
         )doc")
-
         .def_rw("radius", &Circle::radius, R"doc(
 The radius of the circle.
         )doc")
-
-        .def_prop_ro("area", &Circle::getArea, R"doc(
-Return the area of the circle.
+        .def_prop_rw("diameter", &Circle::getDiameter, &Circle::setDiameter, R"doc(
+Get or set the diameter of the circle.
+        )doc")
+        .def_prop_rw("left", &Circle::getLeft, &Circle::setLeft, R"doc(
+Get or set the x coordinate of the leftmost point of the circle.
+        )doc")
+        .def_prop_rw("right", &Circle::getRight, &Circle::setRight, R"doc(
+Get or set the x coordinate of the rightmost point of the circle.
+        )doc")
+        .def_prop_rw("top", &Circle::getTop, &Circle::setTop, R"doc(
+Get or set the y coordinate of the topmost point of the circle.
+        )doc")
+        .def_prop_rw("bottom", &Circle::getBottom, &Circle::setBottom, R"doc(
+Get or set the y coordinate of the bottommost point of the circle.
         )doc")
 
+        .def_prop_ro("area", &Circle::getArea, R"doc(
+Get the area of the circle.
+        )doc")
         .def_prop_ro("circumference", &Circle::getCircumference, R"doc(
-Return the circumference of the circle.
+Get the circumference of the circle.
         )doc")
 
         .def("as_rect", &Circle::asRect, R"doc(
 Return the smallest rectangle that fully contains the circle.
         )doc")
-
         .def("copy", &Circle::copy, R"doc(
 Return a copy of the circle.
         )doc")

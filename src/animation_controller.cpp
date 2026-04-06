@@ -30,11 +30,6 @@ void AnimationController::addSheet(
     const int frameWidth, const int frameHeight, const std::vector<SheetStrip>& strips
 )
 {
-    if (renderer::_get() == nullptr)
-        throw std::runtime_error(
-            "Renderer not initialized; create a window before configuring animations"
-        );
-
     if (frameWidth <= 0 || frameHeight <= 0)
         throw std::invalid_argument("Frame size must be positive non-zero values");
     if (strips.empty())

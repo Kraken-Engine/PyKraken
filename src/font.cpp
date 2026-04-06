@@ -1,7 +1,7 @@
 #include "Font.hpp"
 
-#include <nanobind/stl/string.h>
 #include <nanobind/stl/filesystem.h>
+#include <nanobind/stl/string.h>
 
 #include <algorithm>
 #include <cmath>
@@ -58,13 +58,11 @@ Font::~Font()
         std::lock_guard g(font::_fontsMutex);
         auto it = std::find(font::_fontInstances.begin(), font::_fontInstances.end(), this);
         if (it != font::_fontInstances.end())
-        {
             font::_fontInstances.erase(it);
-        }
     }
 
     // Only clean up if font hasn't been freed by _quit
-    if (m_font != nullptr)
+    if (!m_font)
     {
         TTF_CloseFont(m_font);
         m_font = nullptr;
@@ -279,7 +277,7 @@ void _quit()
         std::lock_guard g(_fontsMutex);
         for (Font* font : _fontInstances)
         {
-            if (font->m_font != nullptr)
+            if (font->m_font)
             {
                 TTF_CloseFont(font->m_font);
                 font->m_font = nullptr;

@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) when possible.
 
+## [1.7.0] - TBA
+
+### Added
+- New `diameter` and edge position properties for the `Circle` class; `left`, `right`, `top`, and `bottom`.
+- More `Line` methods:
+  - `moved` for non-mutating version of `move`.
+  - `get_midpoint` for the line's midpoint.
+  - `get_perpendicular` for a line's perpendicular bisector.
+  - `get_angle` for the line's angle in radians.
+  - `get_closest_point` for finding the closest point on the line to a given point.
+- More `Polygon` methods:
+  - `rotated` for non-mutating version of `rotate`.
+  - `scaled_by` for non-mutating version of `scale_by`.
+- More `Rect` methods and properties:
+  - `pos` property as a clearer alias for `top_left`.
+  - `moved` for non-mutating version of `move`.
+  - `clamped` for a non-mutating version of `clamp`.
+  - `scaled_by` for non-mutating version of `scale_by`.
+  - `scaled_to` for non-mutating version of `scale_to`.
+  - `get_corners` for getting the positions of all four corners as a list of `Vec2` objects.
+  - `get_edges` for getting the edges of the rectangle as a list of `Line` objects.
+- New `renderer` functions for more advanced configuration:
+  - `unset_virtual_resolution()` for unsetting a previously set virtual resolution and returning to using the actual render target resolution.
+  - `get_virtual_resolution()` for getting the currently set virtual resolution.
+  - `get_output_resolution()` for getting the actual output resolution of the renderer.
+
+### Changed
+- `Polygon`'s `transform` method renamed to `move` and `scale` methods renamed to `scale_by` for consistency with other shapes.
+- `renderer` submodule's `set_present_resolution` function renamed to `set_virtual_resolution` for clarity.
+- `on_floor`, `on_ceiling`, and `on_wall` properties of `CharacterBody` changed from read-only properties to regular methods: `is_on_floor()`, `is_on_ceiling()`, and `is_on_wall()`.
+
+### Removed
+- `line` and `rect` submodules removed in favor of non-mutating methods in the `Line` and `Rect` classes.
+
 ## [1.6.5] - 2026-03-31
 
 ### Added

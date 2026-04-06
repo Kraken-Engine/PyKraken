@@ -1,8 +1,8 @@
 #include "Mixer.hpp"
 
+#include <nanobind/stl/filesystem.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/unique_ptr.h>
-#include <nanobind/stl/filesystem.h>
 
 #include <algorithm>
 #include <limits>
@@ -46,11 +46,8 @@ static Sint64 _fadeOutFramesForTrack(MIX_Track* track, double fadeOutSeconds);
 
 std::unique_ptr<Sample> loadSample(const std::filesystem::path& path, const bool predecode)
 {
-    if (_mixer == nullptr)
-        throw std::runtime_error("Mixer not initialized");
-
     MIX_Audio* audio = MIX_LoadAudio(_mixer, path.string().c_str(), predecode);
-    if (audio == nullptr)
+    if (!audio)
     {
         throw std::runtime_error(
             std::string("Failed to load sample '") + path.string() + "': " + SDL_GetError()
@@ -62,11 +59,8 @@ std::unique_ptr<Sample> loadSample(const std::filesystem::path& path, const bool
 
 std::unique_ptr<Stream> loadStream(const std::filesystem::path& path, const bool predecode)
 {
-    if (_mixer == nullptr)
-        throw std::runtime_error("Mixer not initialized");
-
     MIX_Audio* audio = MIX_LoadAudio(_mixer, path.string().c_str(), predecode);
-    if (audio == nullptr)
+    if (!audio)
     {
         throw std::runtime_error(
             std::string("Failed to load stream '") + path.string() + "': " + SDL_GetError()
@@ -78,16 +72,16 @@ std::unique_ptr<Stream> loadStream(const std::filesystem::path& path, const bool
 
 void setMasterVolume(float volume)
 {
-    volume = std::clamp(volume, 0.0f, 1.0f);
-    if (_mixer == nullptr)
+    if (!_mixer)
         throw std::runtime_error("Mixer not initialized");
 
+    volume = std::clamp(volume, 0.0f, 1.0f);
     MIX_SetMixerGain(_mixer, volume);
 }
 
 float getMasterVolume()
 {
-    if (_mixer == nullptr)
+    if (!_mixer)
         throw std::runtime_error("Mixer not initialized");
 
     return MIX_GetMixerGain(_mixer);
@@ -100,7 +94,7 @@ Audio::Audio(MIX_Audio* sdlAudio)
 
 Audio::~Audio()
 {
-    if (m_audio != nullptr)
+    if (m_audio)
     {
         MIX_DestroyAudio(m_audio);
         m_audio = nullptr;
@@ -132,9 +126,6 @@ void Sample::setVolume(float volume)
 {
     m_volume = std::clamp(volume, 0.0f, 1.0f);
 
-    if (_mixer == nullptr || m_audio == nullptr)
-        return;
-
     for (auto& trackInfo : _tracks)
     {
         if (!trackInfo.track)
@@ -146,15 +137,13 @@ void Sample::setVolume(float volume)
         if (!MIX_TrackPlaying(trackInfo.track))
             continue;
 
-        MIX_SetTrackGain(trackInfo.track, m_volume);
+        if (!MIX_SetTrackGain(trackInfo.track, m_volume))
+            throw std::runtime_error(std::string("Failed to set track gain: ") + SDL_GetError());
     }
 }
 
 bool Sample::isPlaying() const
 {
-    if (_mixer == nullptr || m_audio == nullptr)
-        return false;
-
     for (const auto& trackInfo : _tracks)
     {
         if (!trackInfo.track || trackInfo.audio != m_audio)
@@ -171,16 +160,11 @@ bool Sample::isPlaying() const
 
 void Sample::play(const double fadeInSeconds)
 {
-    if (_mixer == nullptr)
-        throw std::runtime_error("Mixer not initialized");
-    if (m_audio == nullptr)
-        throw std::runtime_error("Audio not loaded");
-
     if (_countPlayingInstances(m_audio) >= m_maxPolyphony)
         return;
 
     TrackInfo* trackInfo = _acquireTrack(priority, TrackUsage::Sample, canSteal);
-    if (trackInfo == nullptr)
+    if (!trackInfo)
         return;
 
     if (MIX_TrackPlaying(trackInfo->track))
@@ -209,16 +193,14 @@ void Sample::play(const double fadeInSeconds)
 
     // Apply per-audio volume to this new instance.
     if (trackInfo->track)
-        MIX_SetTrackGain(trackInfo->track, m_volume);
+    {
+        if (!MIX_SetTrackGain(trackInfo->track, m_volume))
+            throw std::runtime_error(std::string("Failed to set track gain: ") + SDL_GetError());
+    }
 }
 
 void Sample::stop(const double fadeOutSeconds)
 {
-    if (_mixer == nullptr)
-        throw std::runtime_error("Mixer not initialized");
-    if (m_audio == nullptr)
-        throw std::runtime_error("Audio not loaded");
-
     for (auto& trackInfo : _tracks)
     {
         if (!trackInfo.track || trackInfo.audio != m_audio)
@@ -239,12 +221,13 @@ Stream::Stream(MIX_Audio* sdlAudio)
 
 Stream::~Stream()
 {
-    if (_mixer != nullptr && m_trackIndex >= 0 && m_trackIndex < MAX_TRACKS)
+    if (_mixer && m_trackIndex >= 0 && m_trackIndex < MAX_TRACKS)
     {
         TrackInfo& trackInfo = _tracks[m_trackIndex];
         if (trackInfo.track)
         {
-            (void)MIX_StopTrack(trackInfo.track, 0);
+            if (!MIX_StopTrack(trackInfo.track, 0))
+                kn::log::error("Failed to stop track in Stream destructor: {}", SDL_GetError());
             _clearTrackAssignment(trackInfo);
         }
     }
@@ -257,9 +240,7 @@ void Stream::setLooping(const bool looping)
 {
     m_looping = looping;
 
-    // Best-effort: update currently playing instance too.
-    if (_mixer == nullptr || m_audio == nullptr)
-        return;
+    // Try updating currently playing instance too
     if (m_trackIndex < 0 || m_trackIndex >= MAX_TRACKS)
         return;
 
@@ -270,7 +251,8 @@ void Stream::setLooping(const bool looping)
         return;
 
     const int loops = m_looping ? -1 : 0;
-    MIX_SetTrackLoops(trackInfo.track, loops);
+    if (!MIX_SetTrackLoops(trackInfo.track, loops))
+        throw std::runtime_error(std::string("Failed to set track loops: ") + SDL_GetError());
 }
 
 bool Stream::getLooping() const
@@ -282,8 +264,6 @@ void Stream::setVolume(float volume)
 {
     m_volume = std::clamp(volume, 0.0f, 1.0f);
 
-    if (_mixer == nullptr || m_audio == nullptr)
-        return;
     if (m_trackIndex < 0 || m_trackIndex >= MAX_TRACKS)
         return;
 
@@ -295,13 +275,12 @@ void Stream::setVolume(float volume)
     if (!MIX_TrackPlaying(trackInfo.track))
         return;
 
-    MIX_SetTrackGain(trackInfo.track, m_volume);
+    if (!MIX_SetTrackGain(trackInfo.track, m_volume))
+        throw std::runtime_error(std::string("Failed to set track gain: ") + SDL_GetError());
 }
 
 bool Stream::isPlaying() const
 {
-    if (_mixer == nullptr || m_audio == nullptr)
-        return false;
     if (m_trackIndex < 0 || m_trackIndex >= MAX_TRACKS)
         return false;
 
@@ -314,44 +293,45 @@ bool Stream::isPlaying() const
 
 double Stream::getPlaybackPos() const
 {
-    if (_mixer == nullptr || m_audio == nullptr)
-        return 0.0;
-
     if (m_trackIndex >= 0 && m_trackIndex < MAX_TRACKS)
     {
         const TrackInfo& trackInfo = _tracks[m_trackIndex];
-        if (trackInfo.track && trackInfo.usage == TrackUsage::Stream &&
-            MIX_TrackPlaying(trackInfo.track))
+        const bool isPlaying = MIX_TrackPlaying(trackInfo.track);
+
+        if (trackInfo.track && trackInfo.usage == TrackUsage::Stream && isPlaying)
         {
             const Sint64 frames = MIX_GetTrackPlaybackPosition(trackInfo.track);
-            if (frames >= 0)
-            {
-                const Sint64 ms = MIX_TrackFramesToMS(trackInfo.track, frames);
-                if (ms >= 0)
-                    return static_cast<double>(ms) / 1000.0;
-            }
+            if (frames == -1)
+                throw std::runtime_error(
+                    std::string("Failed to get track playback position: ") + SDL_GetError()
+                );
+
+            const Sint64 ms = MIX_TrackFramesToMS(trackInfo.track, frames);
+            if (ms == -1)
+                throw std::runtime_error(
+                    std::string("Failed to convert track frames to ms: ") + SDL_GetError()
+                );
+
+            return static_cast<double>(ms) / 1000.0;
         }
     }
 
     const Sint64 ms = MIX_AudioFramesToMS(m_audio, m_savedFrames);
-    if (ms < 0)
-        return 0.0;
+    if (ms == -1)
+        throw std::runtime_error(
+            std::string("Failed to convert audio frames to ms: ") + SDL_GetError()
+        );
 
     return static_cast<double>(ms) / 1000.0;
 }
 
 void Stream::play(const double fadeInSeconds)
 {
-    if (_mixer == nullptr)
-        throw std::runtime_error("Mixer not initialized");
-    if (m_audio == nullptr)
-        throw std::runtime_error("Audio not loaded");
-
     stop(0.0);
     m_savedFrames = 0;
 
     TrackInfo* trackInfo = _acquireTrack(priority, TrackUsage::Stream, canSteal);
-    if (trackInfo == nullptr)
+    if (!trackInfo)
         return;
 
     const int idx = _trackIndex(trackInfo);
@@ -383,16 +363,12 @@ void Stream::play(const double fadeInSeconds)
     trackInfo->started_seq = _playSeq++;
     trackInfo->usage = TrackUsage::Stream;
 
-    MIX_SetTrackGain(trackInfo->track, m_volume);
+    if (!MIX_SetTrackGain(trackInfo->track, m_volume))
+        throw std::runtime_error(std::string("Failed to set track gain: ") + SDL_GetError());
 }
 
 void Stream::pause()
 {
-    if (_mixer == nullptr)
-        throw std::runtime_error("Mixer not initialized");
-    if (m_audio == nullptr)
-        throw std::runtime_error("Audio not loaded");
-
     if (m_trackIndex < 0 || m_trackIndex >= MAX_TRACKS)
         return;
 
@@ -404,8 +380,12 @@ void Stream::pause()
         return;
 
     const Sint64 frames = MIX_GetTrackPlaybackPosition(trackInfo.track);
-    if (frames >= 0)
-        m_savedFrames = frames;
+    if (frames == -1)
+        throw std::runtime_error(
+            std::string("Failed to get track playback position: ") + SDL_GetError()
+        );
+
+    m_savedFrames = frames;
 
     // Requirement: paused streams should be removed from the track.
     if (!MIX_StopTrack(trackInfo.track, 0))
@@ -417,16 +397,11 @@ void Stream::pause()
 
 void Stream::resume(const double fadeInSeconds)
 {
-    if (_mixer == nullptr)
-        throw std::runtime_error("Mixer not initialized");
-    if (m_audio == nullptr)
-        throw std::runtime_error("Audio not loaded");
-
     if (isPlaying())
         return;
 
     TrackInfo* trackInfo = _acquireTrack(priority, TrackUsage::Stream, canSteal);
-    if (trackInfo == nullptr)
+    if (!trackInfo)
         return;
 
     const int idx = _trackIndex(trackInfo);
@@ -464,16 +439,12 @@ void Stream::resume(const double fadeInSeconds)
     trackInfo->started_seq = _playSeq++;
     trackInfo->usage = TrackUsage::Stream;
 
-    MIX_SetTrackGain(trackInfo->track, m_volume);
+    if (!MIX_SetTrackGain(trackInfo->track, m_volume))
+        throw std::runtime_error(std::string("Failed to set track gain: ") + SDL_GetError());
 }
 
 void Stream::stop(const double fadeOutSeconds)
 {
-    if (_mixer == nullptr)
-        throw std::runtime_error("Mixer not initialized");
-    if (m_audio == nullptr)
-        throw std::runtime_error("Audio not loaded");
-
     if (m_trackIndex < 0 || m_trackIndex >= MAX_TRACKS)
     {
         m_savedFrames = 0;
@@ -499,11 +470,6 @@ void Stream::stop(const double fadeOutSeconds)
 
 void Stream::seek(const double seconds)
 {
-    if (_mixer == nullptr)
-        throw std::runtime_error("Mixer not initialized");
-    if (m_audio == nullptr)
-        throw std::runtime_error("Audio not loaded");
-
     const Sint64 ms = _secondsToMs(seconds);
 
     if (m_trackIndex >= 0 && m_trackIndex < MAX_TRACKS)
@@ -665,7 +631,7 @@ void _init()
     );
 
     _mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, nullptr);
-    if (_mixer == nullptr)
+    if (!_mixer)
     {
         kn::log::warn("Failed to create mixer device: {}. Audio disabled.", SDL_GetError());
         return;
@@ -678,7 +644,7 @@ void _init()
     for (uint8_t i = 0; i < MAX_TRACKS; ++i)
     {
         _tracks[i].track = MIX_CreateTrack(_mixer);
-        if (_tracks[i].track == nullptr)
+        if (!_tracks[i].track)
         {
             kn::log::warn(
                 "Failed to create mixer track {}: {}. Continuing with fewer tracks.",
@@ -699,7 +665,7 @@ void _init()
 
 void _quit()
 {
-    if (_mixer != nullptr)
+    if (_mixer)
     {
         MIX_DestroyMixer(_mixer);
         _mixer = nullptr;

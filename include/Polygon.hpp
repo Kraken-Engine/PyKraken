@@ -22,16 +22,27 @@ class Polygon
     [[nodiscard]] Polygon copy() const;
 
     [[nodiscard]] double getPerimeter() const;
+
     [[nodiscard]] double getArea() const;
+
     [[nodiscard]] Vec2 getCentroid() const;
+
     [[nodiscard]] class Rect getRect() const;
+
     [[nodiscard]] bool isConvex() const;
+
     [[nodiscard]] bool isConcave() const;
 
     void rotate(double angle, const Vec2& pivot = {0.5, 0.5});
-    void translate(const Vec2& offset);
-    void scale(double factor, const Vec2& pivot = {0.5, 0.5});
-    void scale(const Vec2& factor, const Vec2& pivot = {0.5, 0.5});
+    Polygon rotated(double angle, const Vec2& pivot = {0.5, 0.5}) const;
+
+    void move(const Vec2& offset);
+    Polygon moved(const Vec2& offset) const;
+
+    void scaleBy(double factor, const Vec2& pivot = {0.5, 0.5});
+    void scaleBy(const Vec2& factor, const Vec2& pivot = {0.5, 0.5});
+    Polygon scaledBy(double factor, const Vec2& pivot = {0.5, 0.5}) const;
+    Polygon scaledBy(const Vec2& factor, const Vec2& pivot = {0.5, 0.5}) const;
 };
 
 namespace polygon

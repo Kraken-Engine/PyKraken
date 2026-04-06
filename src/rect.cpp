@@ -2,8 +2,10 @@
 
 #include <nanobind/make_iterator.h>
 #include <nanobind/operators.h>
+#include <nanobind/stl/array.h>
 #include <nanobind/stl/string.h>
 
+#include <Line.hpp>
 #include <string>
 
 namespace kn
@@ -140,175 +142,225 @@ Rect::operator SDL_FRect() const
     };
 }
 
+void Rect::setPos(const Vec2& pos)
+{
+    x = pos.x;
+    y = pos.y;
+}
+
 void Rect::setSize(const Vec2& size)
 {
     w = size.x;
     h = size.y;
 }
+
 void Rect::setLeft(const double left)
 {
     this->x = left;
 }
+
 void Rect::setRight(const double right)
 {
     this->x = right - w;
 }
+
 void Rect::setTop(const double top)
 {
     this->y = top;
 }
+
 void Rect::setBottom(const double bottom)
 {
     this->y = bottom - h;
 }
+
 void Rect::setTopLeft(const Vec2& topLeft)
 {
     x = topLeft.x;
     y = topLeft.y;
 }
+
 void Rect::setTopMid(const Vec2& topMid)
 {
     x = topMid.x - w / 2.0;
     y = topMid.y;
 }
+
 void Rect::setTopRight(const Vec2& topRight)
 {
     x = topRight.x - w;
     y = topRight.y;
 }
+
 void Rect::setMidLeft(const Vec2& midLeft)
 {
     x = midLeft.x;
     y = midLeft.y - h / 2.0;
 }
+
 void Rect::setCenter(const Vec2& center)
 {
     x = center.x - w / 2.0;
     y = center.y - h / 2.0;
 }
+
 void Rect::setMidRight(const Vec2& midRight)
 {
     x = midRight.x - w;
     y = midRight.y - h / 2.0;
 }
+
 void Rect::setBottomLeft(const Vec2& bottomLeft)
 {
     x = bottomLeft.x;
     y = bottomLeft.y - h;
 }
+
 void Rect::setBottomMid(const Vec2& bottomMid)
 {
     x = bottomMid.x - w / 2.0;
     y = bottomMid.y - h;
 }
+
 void Rect::setBottomRight(const Vec2& bottomRight)
 {
     x = bottomRight.x - w;
     y = bottomRight.y - h;
 }
 
+Vec2 Rect::getPos() const
+{
+    return {x, y};
+}
+
 Vec2 Rect::getSize() const
 {
     return {w, h};
 }
+
 double Rect::getLeft() const
 {
     return x;
 }
+
 double Rect::getRight() const
 {
     return x + w;
 }
+
 double Rect::getTop() const
 {
     return y;
 }
+
 double Rect::getBottom() const
 {
     return y + h;
 }
+
 Vec2 Rect::getTopLeft() const
 {
     return {x, y};
 }
+
 Vec2 Rect::getTopMid() const
 {
     return {x + w / 2.0, y};
 }
+
 Vec2 Rect::getTopRight() const
 {
     return {x + w, y};
 }
+
 Vec2 Rect::getMidLeft() const
 {
     return {x, y + h / 2.0};
 }
+
 Vec2 Rect::getCenter() const
 {
     return {x + w / 2.0, y + h / 2.0};
 }
+
 Vec2 Rect::getMidRight() const
 {
     return {x + w, y + h / 2.0};
 }
+
 Vec2 Rect::getBottomLeft() const
 {
     return {x, y + h};
 }
+
 Vec2 Rect::getBottomMid() const
 {
     return {x + w / 2.0, y + h};
 }
+
 Vec2 Rect::getBottomRight() const
 {
     return {x + w, y + h};
 }
 
+Rect Rect::moved(const Vec2& offset) const
+{
+    Rect r = *this;
+    r.move(offset);
+    return r;
+}
+
+Rect Rect::clamped(const Vec2& min, const Vec2& max) const
+{
+    Rect r = *this;
+    r.clamp(min, max);
+    return r;
+}
+
+Rect Rect::clamped(const Rect& other) const
+{
+    Rect r = *this;
+    r.clamp(other);
+    return r;
+}
+
+Rect Rect::scaledBy(const double factor) const
+{
+    Rect r = *this;
+    r.scaleBy(factor);
+    return r;
+}
+
+Rect Rect::scaledBy(const Vec2& factor) const
+{
+    Rect r = *this;
+    r.scaleBy(factor);
+    return r;
+}
+
+Rect Rect::scaledTo(const Vec2& size) const
+{
+    Rect r = *this;
+    r.scaleTo(size);
+    return r;
+}
+
+std::array<Vec2, 4> Rect::getCorners() const
+{
+    return {getTopLeft(), getTopRight(), getBottomRight(), getBottomLeft()};
+}
+
+std::array<Line, 4> Rect::getEdges() const
+{
+    auto corners = getCorners();
+    return {
+        Line(corners[0], corners[1]), Line(corners[1], corners[2]), Line(corners[2], corners[3]),
+        Line(corners[3], corners[0])
+    };
+}
+
 namespace rect
 {
-Rect move(const Rect& rect, const Vec2& offset)
-{
-    Rect newRect = rect;
-    newRect.x += offset.x;
-    newRect.y += offset.y;
-    return newRect;
-}
-
-Rect clamp(const Rect& rect, const Vec2& min, const Vec2& max)
-{
-    Rect result = rect;
-    result.clamp(min, max);
-    return result;
-}
-
-Rect clamp(const Rect& rect, const Rect& other)
-{
-    Rect result = rect;
-    result.clamp(other);
-    return result;
-}
-
-Rect scaleBy(const Rect& rect, const double factor)
-{
-    Rect result = rect;
-    result.scaleBy(factor);
-    return result;
-}
-
-Rect scaleBy(const Rect& rect, const Vec2& factor)
-{
-    Rect result = rect;
-    result.scaleBy(factor);
-    return result;
-}
-
-Rect scaleTo(const Rect& rect, const Vec2& size)
-{
-    Rect result = rect;
-    result.scaleTo(size);
-    return result;
-}
-
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -384,6 +436,9 @@ The y coordinate of the top edge.
         .def_prop_rw("bottom", &Rect::getBottom, &Rect::setBottom, R"doc(
 The y coordinate of the bottom edge.
         )doc")
+        .def_prop_rw("pos", &Rect::getPos, &Rect::setPos, R"doc(
+The position of the top-left corner as (x, y).
+        )doc")
         .def_prop_rw("size", &Rect::getSize, &Rect::setSize, R"doc(
 The size of the rectangle as (width, height).
         )doc")
@@ -427,6 +482,15 @@ Move the rectangle by the given offset.
 Args:
     offset (Vec2): The offset to move by as (dx, dy).
         )doc")
+        .def("moved", &Rect::moved, "offset"_a, R"doc(
+Return a new Rect moved by the given offset.
+
+Args:
+    offset (Vec2): The offset to move by.
+
+Returns:
+    Rect: A new rectangle moved by the offset.
+        )doc")
         .def("inflate", &Rect::inflate, "offset"_a, R"doc(
 Inflate the rectangle by the given offset.
 
@@ -455,6 +519,18 @@ Raises:
     ValueError: If this rectangle is larger than the clamp area.
         )doc")
         .def(
+            "clamped", nb::overload_cast<const Rect&>(&Rect::clamped, nb::const_), "other"_a,
+            R"doc(
+Return a new Rect clamped within another rectangle.
+
+Args:
+    other (Rect): The rectangle to clamp within.
+
+Returns:
+    Rect: A new clamped rectangle.
+        )doc"
+        )
+        .def(
             "clamp", nb::overload_cast<const Vec2&, const Vec2&>(&Rect::clamp), "min"_a, "max"_a,
             R"doc(
 Clamp this rectangle to be within the specified bounds.
@@ -467,6 +543,19 @@ Raises:
     ValueError: If min >= max or rectangle is larger than the clamp area.
         )doc"
         )
+        .def(
+            "clamped", nb::overload_cast<const Vec2&, const Vec2&>(&Rect::clamped, nb::const_),
+            "min"_a, "max"_a, R"doc(
+Return a new Rect clamped within the specified bounds.
+
+Args:
+    min (Vec2): The minimum bounds as (min_x, min_y).
+    max (Vec2): The maximum bounds as (max_x, max_y).
+
+Returns:
+    Rect: A new clamped rectangle.
+        )doc"
+        )
         .def("scale_by", nb::overload_cast<double>(&Rect::scaleBy), "factor"_a, R"doc(
 Scale the rectangle by a uniform factor.
 
@@ -476,6 +565,17 @@ Args:
 Raises:
     ValueError: If factor is <= 0.
         )doc")
+        .def(
+            "scaled_by", nb::overload_cast<double>(&Rect::scaledBy, nb::const_), "factor"_a, R"doc(
+Return a new Rect scaled by a uniform factor.
+
+Args:
+    factor (float): The scaling factor (must be > 0).
+
+Returns:
+    Rect: A new scaled rectangle.
+        )doc"
+        )
         .def("scale_by", nb::overload_cast<const Vec2&>(&Rect::scaleBy), "factor"_a, R"doc(
 Scale the rectangle by different factors for width and height.
 
@@ -485,6 +585,18 @@ Args:
 Raises:
     ValueError: If any factor is <= 0.
         )doc")
+        .def(
+            "scaled_by", nb::overload_cast<const Vec2&>(&Rect::scaledBy, nb::const_), "factor"_a,
+            R"doc(
+Return a new Rect scaled by different factors for width and height.
+
+Args:
+    factor (Vec2): The scaling factors as (scale_x, scale_y).
+
+Returns:
+    Rect: A new scaled rectangle.
+        )doc"
+        )
         .def("scale_to", &Rect::scaleTo, "size"_a, R"doc(
 Scale the rectangle to the specified size.
 
@@ -493,6 +605,27 @@ Args:
 
 Raises:
     ValueError: If width or height is <= 0.
+        )doc")
+        .def("scaled_to", &Rect::scaledTo, "size"_a, R"doc(
+Return a new Rect scaled to the specified size.
+
+Args:
+    size (Vec2): The new size as (width, height).
+
+Returns:
+    Rect: A new scaled rectangle.
+        )doc")
+        .def("get_corners", &Rect::getCorners, R"doc(
+Get the corners of the rectangle.
+
+Returns:
+    List[Vec2]: A list of the four corners in the order: top-left, top-right, bottom-right, bottom-left.
+        )doc")
+        .def("get_edges", &Rect::getEdges, R"doc(
+Get the edges of the rectangle as Line segments.
+
+Returns:
+    List[Line]: A list of the four edges as Line objects in the order: top, right, bottom, left.
         )doc")
 
         .def(nb::self == nb::self)
@@ -540,95 +673,6 @@ Raises:
             },
             "index"_a
         );
-
-    auto subRect = module.def_submodule("rect", "Rectangle related functions");
-
-    subRect.def("move", &move, "rect"_a, "offset"_a, R"doc(
-Move a rectangle by the given offset.
-
-Args:
-    rect (Rect): The rectangle to move.
-    offset (Vec2): The offset to move by as (dx, dy).
-
-Returns:
-    Rect: A new rectangle moved by the offset.
-    )doc");
-    subRect.def(
-        "clamp", nb::overload_cast<const Rect&, const Vec2&, const Vec2&>(&clamp), "rect"_a,
-        "min"_a, "max"_a, R"doc(
-Clamp a rectangle to be within the specified bounds.
-
-Args:
-    rect (Rect): The rectangle to clamp.
-    min (Vec2): The minimum bounds as (min_x, min_y).
-    max (Vec2): The maximum bounds as (max_x, max_y).
-
-Returns:
-    Rect: A new rectangle clamped within the bounds.
-
-Raises:
-    ValueError: If min >= max or rectangle is larger than the clamp area.
-    )doc"
-    );
-    subRect.def(
-        "clamp", nb::overload_cast<const Rect&, const Rect&>(&clamp), "rect"_a, "other"_a, R"doc(
-Clamp a rectangle to be within another rectangle.
-
-Args:
-    rect (Rect): The rectangle to clamp.
-    other (Rect): The rectangle to clamp within.
-
-Returns:
-    Rect: A new rectangle clamped within the other rectangle.
-
-Raises:
-    ValueError: If rect is larger than the clamp area.
-    )doc"
-    );
-    subRect.def(
-        "scale_by", nb::overload_cast<const Rect&, double>(&scaleBy), "rect"_a, "factor"_a, R"doc(
-Scale a rectangle by a uniform factor.
-
-Args:
-    rect (Rect): The rectangle to scale.
-    factor (float): The scaling factor (must be > 0).
-
-Returns:
-    Rect: A new rectangle scaled by the factor.
-
-Raises:
-    ValueError: If factor is <= 0.
-    )doc"
-    );
-    subRect.def(
-        "scale_by", nb::overload_cast<const Rect&, const Vec2&>(&scaleBy), "rect"_a, "factor"_a,
-        R"doc(
-Scale a rectangle by different factors for width and height.
-
-Args:
-    rect (Rect): The rectangle to scale.
-    factor (Vec2): The scaling factors as (scale_x, scale_y).
-
-Returns:
-    Rect: A new rectangle scaled by the factors.
-
-Raises:
-    ValueError: If any factor is <= 0.
-    )doc"
-    );
-    subRect.def("scale_to", &scaleTo, "rect"_a, "size"_a, R"doc(
-Scale a rectangle to the specified size.
-
-Args:
-    rect (Rect): The rectangle to scale.
-    size (Vec2): The new size as (width, height).
-
-Returns:
-    Rect: A new rectangle scaled to the specified size.
-
-Raises:
-    ValueError: If width or height is <= 0.
-    )doc");
 }
 }  // namespace rect
 }  // namespace kn

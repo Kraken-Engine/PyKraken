@@ -175,16 +175,27 @@ void Polygon::rotate(double angle, const Vec2& pivot)
     }
 }
 
-void Polygon::translate(const Vec2& offset)
+Polygon Polygon::rotated(double angle, const Vec2& pivot) const
 {
-    for (auto& point : points)
-    {
-        point.x += offset.x;
-        point.y += offset.y;
-    }
+    Polygon p = *this;
+    p.rotate(angle, pivot);
+    return p;
 }
 
-void Polygon::scale(double factor, const Vec2& pivot)
+void Polygon::move(const Vec2& offset)
+{
+    for (auto& point : points)
+        point += offset;
+}
+
+Polygon Polygon::moved(const Vec2& offset) const
+{
+    Polygon p = *this;
+    p.move(offset);
+    return p;
+}
+
+void Polygon::scaleBy(double factor, const Vec2& pivot)
 {
     const Rect bounds = getRect();
     const Vec2 absPivot = bounds.getTopLeft() + bounds.getSize() * pivot;
@@ -196,7 +207,7 @@ void Polygon::scale(double factor, const Vec2& pivot)
     }
 }
 
-void Polygon::scale(const Vec2& factor, const Vec2& pivot)
+void Polygon::scaleBy(const Vec2& factor, const Vec2& pivot)
 {
     const Rect bounds = getRect();
     const Vec2 absPivot = bounds.getTopLeft() + bounds.getSize() * pivot;
@@ -206,6 +217,20 @@ void Polygon::scale(const Vec2& factor, const Vec2& pivot)
         point.x = absPivot.x + (point.x - absPivot.x) * factor.x;
         point.y = absPivot.y + (point.y - absPivot.y) * factor.y;
     }
+}
+
+Polygon Polygon::scaledBy(double factor, const Vec2& pivot) const
+{
+    Polygon p = *this;
+    p.scaleBy(factor, pivot);
+    return p;
+}
+
+Polygon Polygon::scaledBy(const Vec2& factor, const Vec2& pivot) const
+{
+    Polygon p = *this;
+    p.scaleBy(factor, pivot);
+    return p;
 }
 
 namespace polygon
@@ -286,14 +311,24 @@ Args:
     pivot (Vec2, optional): The normalized point relative to the polygon's bounding box to rotate around. Defaults to center (0.5, 0.5).
         )doc"
         )
-        .def("translate", &Polygon::translate, "offset"_a, R"doc(
+        .def("rotated", &Polygon::rotated, "angle"_a, "pivot"_a = Anchor::CENTER, R"doc(
+Return a rotated copy of the polygon.
+
+Args:
+    angle (float): The rotation angle in radians.
+    pivot (Vec2, optional): The normalized point relative to the polygon's bounding box to rotate around. Defaults to center (0.5, 0.5).
+
+Returns:
+    Polygon: A new polygon that is a rotated version of this polygon.
+        )doc")
+        .def("move", &Polygon::move, "offset"_a, R"doc(
 Move the polygon by an offset.
 
 Args:
     offset (Vec2): The offset to move by.
         )doc")
         .def(
-            "scale", nb::overload_cast<double, const Vec2&>(&Polygon::scale), "factor"_a,
+            "scale_by", nb::overload_cast<double, const Vec2&>(&Polygon::scaleBy), "factor"_a,
             "pivot"_a = Anchor::CENTER,
             R"doc(
 Scale the polygon uniformly from a pivot point.
@@ -304,7 +339,7 @@ Args:
         )doc"
         )
         .def(
-            "scale", nb::overload_cast<const Vec2&, const Vec2&>(&Polygon::scale), "factor"_a,
+            "scale_by", nb::overload_cast<const Vec2&, const Vec2&>(&Polygon::scaleBy), "factor"_a,
             "pivot"_a = Anchor::CENTER,
             R"doc(
 Scale the polygon non-uniformly from a pivot point.
@@ -312,6 +347,33 @@ Scale the polygon non-uniformly from a pivot point.
 Args:
     factor (Vec2): The scaling factors for x and y.
     pivot (Vec2, optional): The normalized point relative to the polygon's bounding box to scale from. Defaults to center (0.5, 0.5).
+        )doc"
+        )
+        .def(
+            "scaled_by", nb::overload_cast<double, const Vec2&>(&Polygon::scaledBy, nb::const_),
+            "factor"_a, "pivot"_a = Anchor::CENTER, R"doc(
+Return a uniformly scaled copy of the polygon.
+
+Args:
+    factor (float): The scaling factor.
+    pivot (Vec2, optional): The normalized point relative to the polygon's bounding box to scale from. Defaults to center (0.5, 0.5).
+
+Returns:
+    Polygon: A new polygon that is a scaled version of this polygon.
+        )doc"
+        )
+        .def(
+            "scaled_by",
+            nb::overload_cast<const Vec2&, const Vec2&>(&Polygon::scaledBy, nb::const_), "factor"_a,
+            "pivot"_a = Anchor::CENTER, R"doc(
+Return a non-uniformly scaled copy of the polygon.
+
+Args:
+    factor (Vec2): The scaling factors for x and y.
+    pivot (Vec2, optional): The normalized point relative to the polygon's bounding box to scale from. Defaults to center (0.5, 0.5).
+
+Returns:
+    Polygon: A new polygon that is a scaled version of this polygon.
         )doc"
         )
 

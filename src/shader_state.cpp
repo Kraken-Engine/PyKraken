@@ -18,18 +18,14 @@ ShaderState::ShaderState(
 )
 {
     const char* ext = SDL_strrchr(fragmentFilePath.string().c_str(), '.');
-    if (ext == nullptr)
-    {
+    if (!ext)
         throw std::runtime_error("Shader file has no extension: " + fragmentFilePath.string());
-    }
 
     SDL_GPUShaderFormat formats = SDL_GetGPUShaderFormats(renderer::_getGPUDevice());
     if (formats == SDL_GPU_SHADERFORMAT_INVALID)
-    {
         throw std::runtime_error(
             "Couldn't get supported shader formats: " + std::string(SDL_GetError())
         );
-    }
 
     SDL_GPUShaderFormat shaderFormat = SDL_GPU_SHADERFORMAT_INVALID;
     const char* entrypoint;
@@ -57,10 +53,8 @@ ShaderState::ShaderState(
 
     size_t codeSize;
     void* code = SDL_LoadFile(fragmentFilePath.string().c_str(), &codeSize);
-    if (code == nullptr)
-    {
+    if (!code)
         throw std::runtime_error("Failed to load shader from disk: " + fragmentFilePath.string());
-    }
 
     SDL_GPUShaderCreateInfo shaderInfo{};
     shaderInfo.code_size = codeSize;
@@ -74,7 +68,7 @@ ShaderState::ShaderState(
     shaderInfo.num_uniform_buffers = uniformBufferCount;
 
     m_fragShader = SDL_CreateGPUShader(renderer::_getGPUDevice(), &shaderInfo);
-    if (m_fragShader == nullptr)
+    if (!m_fragShader)
     {
         SDL_free(code);
         throw std::runtime_error("Failed to create shader: " + std::string(SDL_GetError()));
@@ -85,7 +79,7 @@ ShaderState::ShaderState(
     SDL_GPURenderStateCreateInfo renderStateInfo{};
     renderStateInfo.fragment_shader = m_fragShader;
     m_renderState = SDL_CreateGPURenderState(renderer::_get(), &renderStateInfo);
-    if (m_renderState == nullptr)
+    if (!m_renderState)
     {
         SDL_ReleaseGPUShader(renderer::_getGPUDevice(), m_fragShader);
         throw std::runtime_error("Failed to create render state: " + std::string(SDL_GetError()));
@@ -101,18 +95,17 @@ ShaderState::~ShaderState()
     auto& shaders = _shaderStates;
     auto it = std::find(shaders.begin(), shaders.end(), this);
     if (it != shaders.end())
-    {
         shaders.erase(it);
-    }
 
     // Only clean up GPU resources if the device still exists
     // If _quit() was called, resources were already freed
-    if (m_renderState != nullptr)
+    if (m_renderState)
     {
         SDL_DestroyGPURenderState(m_renderState);
         m_renderState = nullptr;
     }
-    if (m_fragShader != nullptr)
+
+    if (m_fragShader)
     {
         SDL_ReleaseGPUShader(renderer::_getGPUDevice(), m_fragShader);
         m_fragShader = nullptr;
@@ -122,17 +115,13 @@ ShaderState::~ShaderState()
 void ShaderState::bind() const
 {
     if (!SDL_SetGPURenderState(renderer::_get(), m_renderState))
-    {
         throw std::runtime_error("Failed to bind shader state: " + std::string(SDL_GetError()));
-    }
 }
 
 void ShaderState::unbind() const
 {
     if (!SDL_SetGPURenderState(renderer::_get(), nullptr))
-    {
         throw std::runtime_error("Failed to unbind shader state: " + std::string(SDL_GetError()));
-    }
 }
 
 void ShaderState::setUniform(const Uint32 binding, const void* data, const size_t size) const
@@ -147,17 +136,19 @@ void _quit()
     // Clean up all shader states before GPU device is destroyed
     for (ShaderState* shader : _shaderStates)
     {
-        if (shader->m_renderState != nullptr)
+        if (shader->m_renderState)
         {
             SDL_DestroyGPURenderState(shader->m_renderState);
             shader->m_renderState = nullptr;
         }
-        if (shader->m_fragShader != nullptr)
+
+        if (shader->m_fragShader)
         {
             SDL_ReleaseGPUShader(renderer::_getGPUDevice(), shader->m_fragShader);
             shader->m_fragShader = nullptr;
         }
     }
+
     _shaderStates.clear();
 }
 

@@ -53,7 +53,7 @@ jobs:
 
           # --- macOS: install deps via Homebrew ---
           CIBW_BEFORE_ALL_MACOS: >
-            brew install sdl3 sdl3_ttf box2d
+            brew install sdl3 sdl3_ttf box2d spdlog
           CIBW_ENVIRONMENT_MACOS: >
             MACOSX_DEPLOYMENT_TARGET=15.0
             CMAKE_PREFIX_PATH=/opt/homebrew

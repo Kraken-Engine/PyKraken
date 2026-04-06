@@ -13,9 +13,12 @@ def main():
         content = content.replace('os.PathLike)', 'os.PathLike[str])')
         content = content.replace('os.PathLike |', 'os.PathLike[str] |')
 
-        # 2. Remove the internal prefix ONLY from the root __init__.pyi
         if p.name == '__init__.pyi':
+            # 2. Remove the _pykraken prefix from __init__.pyi
             content = content.replace('_pykraken.', '')
+        else:
+            # 3. Remove the underscore from _pykraken in other files
+            content = content.replace('_pykraken', 'pykraken')
 
         p.write_text(content, 'utf-8')
 

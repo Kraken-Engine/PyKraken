@@ -52,8 +52,7 @@ Text::~Text()
         }
     }
 
-    // Only clean up if text hasn't been freed by _cleanupTexts
-    if (m_text != nullptr)
+    if (m_text)
     {
         TTF_DestroyText(m_text);
         m_text = nullptr;
@@ -246,7 +245,7 @@ void _cleanupTexts()
     std::lock_guard g(_textsMutex);
     for (Text* text : _textInstances)
     {
-        if (text->m_text != nullptr)
+        if (text->m_text)
         {
             TTF_DestroyText(text->m_text);
             text->m_text = nullptr;

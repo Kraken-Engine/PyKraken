@@ -30,12 +30,18 @@ void _init(SDL_Window* window, int width, int height);
 void _quit();
 SDL_Renderer* _get();
 SDL_GPUDevice* _getGPUDevice();
+bool _primaryActive();
 
 void clear(const Color& color = {});
 void present();
 
-void setPresentResolution(int width, int height);
+void setVirtualResolution(int width, int height);
+void unsetVirtualResolution();
+
+Vec2 getVirtualScale();
+Vec2 getVirtualResolution();
 Vec2 getCurrentResolution();
+Vec2 getOutputResolution();
 
 std::unique_ptr<PixelArray> readPixels(const Rect& src = {});
 
