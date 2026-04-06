@@ -208,12 +208,12 @@ class TestPolygonMethods:
     def test_translate(self):
         pts = [Vec2(0, 0), Vec2(10, 0), Vec2(10, 10)]
         p = Polygon(pts)
-        p.translate(Vec2(5, 5))
+        p.move(Vec2(5, 5))
         assert p.points[0] == Vec2(5, 5)
 
     def test_copy(self):
         pts = [Vec2(0, 0), Vec2(10, 0), Vec2(10, 10)]
         p = Polygon(pts)
         c = p.copy()
-        c.translate(Vec2(100, 100))
+        c.move(Vec2(100, 100))
         assert p.points[0] == Vec2(0, 0)
