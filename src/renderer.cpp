@@ -269,9 +269,6 @@ std::unique_ptr<PixelArray> readPixels(const Rect& src)
 
 void draw(const Texture& texture, const Transform& transform, const Vec2& anchor, const Vec2& pivot)
 {
-    if (!texture.getSDL())
-        throw std::runtime_error("Invalid texture provided for drawing");
-
     Rect clipArea = texture.getClipArea();
     if (clipArea.w <= 0.0 || clipArea.h <= 0.0)
         return;
@@ -313,10 +310,8 @@ void draw(const Texture& texture, const Transform& transform, const Vec2& anchor
     }
 }
 
-void draw(const Texture& texture, const Rect& dst)
+void draw(const Texture& texture, Rect dst)
 {
-    if (!texture.getSDL())
-        throw std::runtime_error("Invalid texture provided for drawing");
     if (texture.getAlpha() == 0.0f)
         return;
 
@@ -324,16 +319,15 @@ void draw(const Texture& texture, const Rect& dst)
     if (clipArea.w <= 0.0 || clipArea.h <= 0.0)
         return;
 
-    Rect dstRect = dst;
-    dstRect.x -= camera::getActivePos().x;
-    dstRect.y -= camera::getActivePos().y;
+    const Vec2 cameraPos = camera::getActivePos();
+    dst.x -= cameraPos.x;
+    dst.y -= cameraPos.y;
 
     const Vec2 rendRes = getCurrentResolution();
-    if (dstRect.getRight() < 0.0 || dstRect.x >= rendRes.x || dstRect.getBottom() < 0.0 ||
-        dstRect.y >= rendRes.y)
+    if (dst.getRight() < 0.0 || dst.x >= rendRes.x || dst.getBottom() < 0.0 || dst.y >= rendRes.y)
         return;
 
-    const auto dstSDLRect = static_cast<SDL_FRect>(dstRect);
+    const auto dstSDLRect = static_cast<SDL_FRect>(dst);
     const auto srcSDLRect = static_cast<SDL_FRect>(clipArea);
 
     SDL_FlipMode flipAxis = SDL_FLIP_NONE;
@@ -350,20 +344,49 @@ void draw(const Texture& texture, const Rect& dst)
     }
 }
 
-void drawBatch(
-    const Texture& texture, const std::vector<Transform>& transforms, const Vec2& anchor,
-    const Vec2& pivot, const std::optional<std::vector<Rect>>& clipRects
+void draw9Slice(
+    const Texture& texture, Rect dst, const Rect& slice, const Vec2& anchor, const Vec2& pivot
 )
 {
-    if (!texture.getSDL())
-        throw std::runtime_error("Invalid texture provided for drawing");
-    if (transforms.empty())
+    if (texture.getAlpha() == 0.0f)
         return;
 
     const Rect textureClipArea = texture.getClipArea();
     if (textureClipArea.w <= 0.0 || textureClipArea.h <= 0.0)
         return;
+
+    const auto [leftWidth, topHeight, rightWidth, bottomHeight] = static_cast<SDL_FRect>(slice);
+
+    const Vec2 cameraPos = camera::getActivePos();
+    dst.x -= cameraPos.x;
+    dst.y -= cameraPos.y;
+
+    const auto dstSDLRect = static_cast<SDL_FRect>(dst);
+    const auto srcSDLRect = static_cast<SDL_FRect>(textureClipArea);
+
+    if (!SDL_RenderTexture9Grid(
+            _renderer, texture.getSDL(), &srcSDLRect, leftWidth, rightWidth, topHeight,
+            bottomHeight, 1.0f, &dstSDLRect
+        ))
+    {
+        throw std::runtime_error(
+            "Failed to render 9-slice texture: " + std::string(SDL_GetError())
+        );
+    }
+}
+
+void drawBatch(
+    const Texture& texture, const std::vector<Transform>& transforms, const Vec2& anchor,
+    const Vec2& pivot, const std::optional<std::vector<Rect>>& clipRects
+)
+{
+    if (transforms.empty())
+        return;
     if (texture.getAlpha() == 0.0f)
+        return;
+
+    const Rect textureClipArea = texture.getClipArea();
+    if (textureClipArea.w <= 0.0 || textureClipArea.h <= 0.0)
         return;
 
     const Vec2 cameraPos = camera::getActivePos();
@@ -737,8 +760,8 @@ Args:
         )doc"
     );
 
-    subRenderer.def(
-        "draw", nb::overload_cast<const Texture&, const Rect&>(&draw), "texture"_a, "dst"_a, R"doc(
+    subRenderer
+        .def("draw", nb::overload_cast<const Texture&, Rect>(&draw), "texture"_a, "dst"_a, R"doc(
 Render a texture stretched into a destination rectangle.
 
 This is a simpler alternative to the transform-based draw when you only
@@ -748,8 +771,7 @@ The source region is determined by the texture's clip area.
 Args:
     texture (Texture): The texture to render.
     dst (Rect): Destination rectangle on screen.
-        )doc"
-    );
+        )doc");
 
     subRenderer.def("read_pixels", &readPixels, "src"_a = Rect{}, R"doc(
 Read pixel data from the renderer within the specified rectangle.
@@ -764,6 +786,24 @@ Returns:
 Raises:
     RuntimeError: If reading pixels fails.
         )doc");
+
+    subRenderer.def(
+        "draw_9slice", &draw9Slice, "texture"_a, "dst"_a, "slice"_a, "anchor"_a = Anchor::TOP_LEFT,
+        "pivot"_a = Anchor::CENTER, R"doc(
+Render a texture using 9-slice scaling (9-grid).
+
+This divides the texture into 9 regions: 4 corners (unscaled), 4 edges (scaled in one axis),
+and 1 center (scaled in both axes).
+
+Args:
+    texture (Texture): The source texture.
+    dst (Rect): The destination rectangle on screen.
+    slice (Rect): A rectangle defining the slice widths/heights.
+                 x = left_width, y = top_height, w = right_width, h = bottom_height.
+    anchor (Vec2, optional): The anchor point. Defaults to top left.
+    pivot (Vec2, optional): The rotation pivot. Defaults to center.
+        )doc"
+    );
 
     subRenderer.def(
         "draw_batch", &drawBatch, "texture"_a, "transforms"_a, "anchor"_a = Anchor::TOP_LEFT,

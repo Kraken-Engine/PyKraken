@@ -51,13 +51,13 @@ Anchor positions returning Vec2 values for alignment.
             "BOTTOM_RIGHT", [](const nb::object&) { return Anchor::BOTTOM_RIGHT; }, "(1.0, 1.0)"
         );
 
-    // Define Align enum
-    nb::enum_<Align>(module, "Align", R"doc(
-Horizontal alignment options for layout and text.
+    // Define TextAlign enum
+    nb::enum_<TextAlign>(module, "TextAlign", R"doc(
+Horizontal alignment options for text.
     )doc")
-        .value("LEFT", Align::Left, "Left alignment")
-        .value("CENTER", Align::Center, "Center alignment")
-        .value("RIGHT", Align::Right, "Right alignment");
+        .value("LEFT", TextAlign::Left, "Left alignment")
+        .value("CENTER", TextAlign::Center, "Center alignment")
+        .value("RIGHT", TextAlign::Right, "Right alignment");
 
     // Define event types
     nb::enum_<SDL_EventType>(module, "EventType", R"doc(

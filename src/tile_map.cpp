@@ -145,7 +145,7 @@ void Map::load(const std::filesystem::path& tmxPath)
                     tmxText.underline,
                     tmxText.strikethough,
                     tmxText.kerning,
-                    static_cast<Align>(tmxText.hAlign),
+                    static_cast<TextAlign>(tmxText.hAlign),
                     tmxText.content
                 };
 
@@ -1261,7 +1261,7 @@ Attributes:
     underline (bool): Underline flag.
     strikethrough (bool): Strikethrough flag.
     kerning (bool): Kerning enabled flag.
-    align (Align): Horizontal alignment.
+    align (TextAlign): Horizontal alignment.
     text (str): The text content.
     )doc")
         .def_rw("font_family", &TextProperties::fontFamily, R"doc(

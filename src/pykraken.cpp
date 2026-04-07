@@ -33,6 +33,7 @@
 #include "TileMap.hpp"
 #include "Time.hpp"
 #include "Transform.hpp"
+#include "ui/UI.hpp"
 #include "Viewport.hpp"
 #include "Window.hpp"
 #include "physics/World.hpp"
@@ -129,6 +130,7 @@ Tear down the Kraken engine subsystems.
     kn::draw::_bind(m);
     kn::animation_controller::_bind(m);
     kn::orchestrator::_bind(m);
+    kn::ui::_bind(m);
     kn::tilemap::_bind(m);
     kn::physics::_bind(m);
     kn::shader_state::_bind(m);

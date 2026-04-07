@@ -5,7 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) when possible.
 
-## [1.7.0] - TBA
+## [1.7.1] - TBA
+
+### Added
+- New `renderer.draw_9slice` function for drawing 9-slice textures.
+- New `ui` submodule for designing and rendering user interfaces:
+  - `Direction` enum for specifying layout direction.
+  - `Align` enum for specifying alignment within containers.
+  - `Style` class for defining reusable style properties.
+  - `root`, `row`, and `column` container functions for structuring UI elements.
+  - `button`, `label`, and `image` functions for common UI elements.
+
+### Changed
+- Renamed `Align` enum to `TextAlign` for specificity.
+
+## [1.7.0] - 2026-04-07
 
 ### Added
 - New `diameter` and edge position properties for the `Circle` class; `left`, `right`, `top`, and `bottom`.

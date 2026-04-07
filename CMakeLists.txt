@@ -164,6 +164,7 @@ nanobind_add_module(
   src/tile_map.cpp
   src/time.cpp
   src/transform.cpp
+  src/ui/ui.cpp
   src/viewport.cpp
   src/window.cpp
   src/physics/_bind_physics.cpp

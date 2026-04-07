@@ -201,7 +201,7 @@ struct TextProperties
     bool underline = false;
     bool strikethrough = false;
     bool kerning = true;
-    Align align = Align::Left;
+    TextAlign align = TextAlign::Left;
     std::string text = "";
 };
 

@@ -27,7 +27,7 @@ struct Anchor
     const static Vec2 BOTTOM_RIGHT;
 };
 
-enum class Align
+enum class TextAlign
 {
     Left,
     Center,

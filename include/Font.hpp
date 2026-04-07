@@ -3,8 +3,8 @@
 #include <SDL3_ttf/SDL_ttf.h>
 #include <nanobind/nanobind.h>
 
-#include <string>
 #include <filesystem>
+#include <string>
 
 #include "Color.hpp"
 #include "Math.hpp"
@@ -38,8 +38,8 @@ class Font
     Font(const std::filesystem::path& fileDir, int ptSize);
     ~Font();
 
-    void setAlignment(Align alignment) const;
-    Align getAlignment() const;
+    void setAlignment(TextAlign alignment) const;
+    TextAlign getAlignment() const;
 
     void setHinting(font::Hinting hinting) const;
     font::Hinting getHinting() const;
