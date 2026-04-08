@@ -114,10 +114,9 @@ void Text::setWrapWidth(int wrapWidth) const
 
     if (wrapWidth < 0)
         wrapWidth = 0;
+
     if (!TTF_SetTextWrapWidth(m_text, wrapWidth))
-    {
         throw std::runtime_error(std::string("Failed to set text wrap width: ") + SDL_GetError());
-    }
 }
 
 int Text::getWrapWidth() const
@@ -127,9 +126,8 @@ int Text::getWrapWidth() const
 
     int wrapWidth;
     if (!TTF_GetTextWrapWidth(m_text, &wrapWidth))
-    {
         throw std::runtime_error(std::string("Failed to get text wrap width: ") + SDL_GetError());
-    }
+
     return wrapWidth;
 }
 
@@ -139,9 +137,7 @@ void Text::setText(const std::string& text) const
         throw std::runtime_error("Text is destroyed or uninitialized");
 
     if (!TTF_SetTextString(m_text, text.c_str(), 0))
-    {
         throw std::runtime_error(std::string("Failed to set text string: ") + SDL_GetError());
-    }
 }
 
 std::string Text::getText() const
@@ -158,9 +154,7 @@ void Text::setColor(const Color& color) const
         throw std::runtime_error("Text is destroyed or uninitialized");
 
     if (!TTF_SetTextColor(m_text, color.r, color.g, color.b, color.a))
-    {
         throw std::runtime_error(std::string("Failed to set text color: ") + SDL_GetError());
-    }
 }
 
 Color Text::getColor() const
