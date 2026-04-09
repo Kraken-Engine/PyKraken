@@ -12,7 +12,6 @@
 #include "Draw.hpp"
 #include "Input.hpp"
 #include "Log.hpp"
-#include "Math.hpp"
 #include "Mouse.hpp"
 #include "Renderer.hpp"
 #include "Text.hpp"
@@ -58,6 +57,7 @@ class Node
     Align align = Align::Start;
     Align justify = Align::Start;
 
+    virtual void measure() {}
     virtual void render() = 0;
 };
 
@@ -76,21 +76,59 @@ class Box : public Node
     }
 };
 
-class Image : public Node
+class Label : public Node
 {
   public:
-    Image(const Texture* tex, const Rect& slice)
+    std::string text;
+
+    Label(const std::string& t)
+        : text(t)
     {
-        style.texture = tex;
-        style.slice = slice;
+    }
+
+    void measure() override
+    {
+        if (style.font)
+        {
+            if (!style.width || !style.height)
+            {
+                Text txt(*style.font, text);
+                if (style.width)
+                    txt.setWrapWidth(static_cast<int>(*style.width));
+                Vec2 size = txt.getSize();
+                if (!style.width)
+                    bounds.w = size.x + style.padding * 2.0;
+                if (!style.height)
+                    bounds.h = size.y + style.padding * 2.0;
+            }
+        }
     }
 
     void render() override
     {
+        // 1. Draw Background
         if (style.texture)
             renderer::draw9Slice(*style.texture, bounds, style.slice);
         else if (style.backgroundColor)
-            draw::rect(bounds, *style.backgroundColor);
+            draw::rect(bounds, *style.backgroundColor, 0, style.borderRadius);
+
+        if (style.borderColor && style.borderWidth > 0)
+        {
+            draw::rect(
+                bounds, *style.borderColor, style.borderWidth,
+                style.texture ? 0.0 : style.borderRadius
+            );
+        }
+
+        // 2. Draw Text
+        if (style.font)
+        {
+            Text txt(*style.font, text);
+            txt.setWrapWidth(static_cast<int>(bounds.w));
+            if (style.textColor)
+                txt.setColor(*style.textColor);
+            txt.draw(bounds.getCenter(), Anchor::CENTER);
+        }
     }
 };
 
@@ -102,6 +140,24 @@ class Button : public Node
     Button(const std::string& t)
         : text(t)
     {
+    }
+
+    void measure() override
+    {
+        if (style.font)
+        {
+            if (!style.width || !style.height)
+            {
+                Text txt(*style.font, text);
+                if (style.width)
+                    txt.setWrapWidth(static_cast<int>(*style.width));
+                Vec2 size = txt.getSize();
+                if (!style.width)
+                    bounds.w = size.x + style.padding * 2.0;
+                if (!style.height)
+                    bounds.h = size.y + style.padding * 2.0;
+            }
+        }
     }
 
     void render() override
@@ -124,7 +180,7 @@ class Button : public Node
         if (_stateMap[id].isHovered)
         {
             static Color hoverColor{255, 255, 255, 40};
-            draw::rect(bounds, hoverColor, 0, style.texture ? 0.0 : style.borderRadius);
+            draw::rect(bounds, hoverColor, 0, style.borderRadius);
         }
 
         // 3. Draw Text
@@ -132,6 +188,9 @@ class Button : public Node
         {
             Text txt(*style.font, text);
             txt.setWrapWidth(static_cast<int>(bounds.w));
+            if (style.textColor)
+                txt.setColor(*style.textColor);
+
             txt.draw(bounds.getCenter(), Anchor::CENTER);
         }
     }
@@ -218,18 +277,24 @@ bool button(const std::string& text, const Style& style)
 void label(const std::string& text, const Style& style)
 {
     _ensureActive();
-    // Similar to button, but without the input checking logic
-    // Create a LabelNode, push to children, etc.
+
+    // 1. Generate ID
+    const size_t id = _generateId("lbl_" + text);
+
+    // 2. Create Node
+    auto lbl = std::make_unique<Label>(text);
+    lbl->id = id;
+    lbl->style = style;
+    _stack.back()->children.push_back(std::move(lbl));
 }
 
-void image(const Texture* tex, const Rect& slice, const Style& style)
+void panel(const Style& style)
 {
     _ensureActive();
-
-    auto img = std::make_unique<Image>(tex, slice);
-    img->id = ++_containerIdCounter;  // Throwaway ID
-    img->style = style;
-    _stack.back()->children.push_back(std::move(img));
+    auto node = std::make_unique<Box>();
+    node->id = ++_containerIdCounter;
+    node->style = style;
+    _stack.back()->children.push_back(std::move(node));
 }
 
 void _ensureActive()
@@ -296,10 +361,13 @@ void _calculateSizes(Node* node)
     if (!node)
         return;
 
+    node->measure();
+
     double maxChildW = 0.0;
     double maxChildH = 0.0;
     double sumChildW = 0.0;
     double sumChildH = 0.0;
+    size_t visibleChildren = node->children.size();
 
     for (auto& child : node->children)
     {
@@ -314,23 +382,33 @@ void _calculateSizes(Node* node)
         sumChildH += childH;
     }
 
-    const double gapSpace = node->children.empty() ? 0.0
-                                                   : node->style.gap * (node->children.size() - 1);
+    const double gapSpace = visibleChildren == 0 ? 0.0 : node->style.gap * (visibleChildren - 1);
     const double padSpace = 2.0 * node->style.padding;
 
     const bool isHorizontal = (node->direction == Direction::Horizontal);
+    const bool isStack = (node->direction == Direction::Stack);
 
     // Intrinsic Width
     if (node->style.width)
         node->bounds.w = *node->style.width;
-    else
-        node->bounds.w = (isHorizontal ? sumChildW + gapSpace : maxChildW) + padSpace;
+    else if (!node->children.empty() || node->bounds.w == 0)
+    {
+        if (isStack)
+            node->bounds.w = maxChildW + padSpace;
+        else
+            node->bounds.w = (isHorizontal ? sumChildW + gapSpace : maxChildW) + padSpace;
+    }
 
     // Intrinsic Height
     if (node->style.height)
         node->bounds.h = *node->style.height;
-    else
-        node->bounds.h = (isHorizontal ? maxChildH : sumChildH + gapSpace) + padSpace;
+    else if (!node->children.empty() || node->bounds.h == 0)
+    {
+        if (isStack)
+            node->bounds.h = maxChildH + padSpace;
+        else
+            node->bounds.h = (isHorizontal ? maxChildH : sumChildH + gapSpace) + padSpace;
+    }
 }
 
 void _performLayout(Node* node)
@@ -339,20 +417,55 @@ void _performLayout(Node* node)
         return;
 
     const bool isHorizontal = (node->direction == Direction::Horizontal);
+    const bool isStack = (node->direction == Direction::Stack);
     const double padding = node->style.padding;
-    const double gap = node->style.gap;
+    double gap = node->style.gap;
 
     const Rect contentArea =
         {node->bounds.x + padding, node->bounds.y + padding,
          std::max(0.0, node->bounds.w - 2.0 * padding),
          std::max(0.0, node->bounds.h - 2.0 * padding)};
 
+    if (isStack)
+    {
+        for (auto& child : node->children)
+        {
+            const double margin = child->style.margin;
+
+            child->bounds.x = contentArea.x + margin;
+            child->bounds.y = contentArea.y + margin;
+
+            if (node->justify == Align::Center)
+                child->bounds.x += (contentArea.w - (child->bounds.w + margin * 2.0)) / 2.0;
+            else if (node->justify == Align::End)
+                child->bounds.x += contentArea.w - (child->bounds.w + margin * 2.0);
+            else if (node->justify == Align::Stretch)
+                child->bounds.w = std::max(0.0, contentArea.w - margin * 2.0);
+
+            if (node->align == Align::Center)
+                child->bounds.y += (contentArea.h - (child->bounds.h + margin * 2.0)) / 2.0;
+            else if (node->align == Align::End)
+                child->bounds.y += contentArea.h - (child->bounds.h + margin * 2.0);
+            else if (node->align == Align::Stretch)
+                child->bounds.h = std::max(0.0, contentArea.h - margin * 2.0);
+
+            child->bounds.x += child->style.offset.x;
+            child->bounds.y += child->style.offset.y;
+
+            _performLayout(child.get());
+        }
+        return;
+    }
+
     double totalMainLength = 0.0;
+    size_t visibleChildren = node->children.size();
     for (const auto& child : node->children)
+    {
         totalMainLength += (isHorizontal ? child->bounds.w : child->bounds.h) +
                            child->style.margin * 2.0;
-    if (!node->children.empty())
-        totalMainLength += gap * (node->children.size() - 1);
+    }
+    if (visibleChildren > 0)
+        totalMainLength += gap * (visibleChildren - 1);
 
     double currentPos = isHorizontal ? contentArea.x : contentArea.y;
 
@@ -360,10 +473,21 @@ void _performLayout(Node* node)
         currentPos += ((isHorizontal ? contentArea.w : contentArea.h) - totalMainLength) / 2.0;
     else if (node->justify == Align::End)
         currentPos += (isHorizontal ? contentArea.w : contentArea.h) - totalMainLength;
+    else if (node->justify == Align::Stretch && visibleChildren > 0)
+    {
+        // Calculate stretch gap to divide extra space completely evenly
+        // Not perfectly implemented for flex-grow on items themslves, but rather spaces between
+        // them.
+        double extraSpace =
+            std::max(0.0, (isHorizontal ? contentArea.w : contentArea.h) - totalMainLength);
+        if (visibleChildren > 1)
+            gap = gap + (extraSpace / (visibleChildren - 1));
+    }
 
     for (auto& child : node->children)
     {
         const double margin = child->style.margin;
+
         if (isHorizontal)
         {
             child->bounds.x = currentPos + margin;
@@ -400,6 +524,9 @@ void _performLayout(Node* node)
 
             currentPos += child->bounds.h + margin * 2.0 + gap;
         }
+
+        child->bounds.x += child->style.offset.x;
+        child->bounds.y += child->style.offset.y;
 
         _performLayout(child.get());
     }
@@ -446,17 +573,19 @@ void _bind(nb::module_& m)
     nb::class_<Style>(subUI, "Style")
         .def(
             nb::init<
-                std::optional<Color>, const Texture*, Rect, const Font*, std::optional<Color>,
+                std::optional<Color>, const Texture*, Rect, Vec2, const Font*, std::optional<Color>,
                 double, double, double, int, double, std::optional<Color>, std::optional<double>,
                 std::optional<double>>(),
             "background_color"_a = nb::none(), "texture"_a = nb::none(), "slice"_a = Rect{},
-            "font"_a = nb::none(), "text_color"_a = nb::none(), "padding"_a = 0.0, "margin"_a = 0.0,
-            "gap"_a = 0.0, "border_width"_a = 0, "border_radius"_a = 0.0,
-            "border_color"_a = nb::none(), "width"_a = nb::none(), "height"_a = nb::none()
+            "offset"_a = Vec2{0.0, 0.0}, "font"_a = nb::none(), "text_color"_a = nb::none(),
+            "padding"_a = 0.0, "margin"_a = 0.0, "gap"_a = 0.0, "border_width"_a = 0,
+            "border_radius"_a = 0.0, "border_color"_a = nb::none(), "width"_a = nb::none(),
+            "height"_a = nb::none()
         )
         .def_rw("background_color", &Style::backgroundColor)
         .def_rw("texture", &Style::texture)
         .def_rw("slice", &Style::slice)
+        .def_rw("offset", &Style::offset)
         .def_rw("font", &Style::font)
         .def_rw("text_color", &Style::textColor)
         .def_rw("padding", &Style::padding)
@@ -498,36 +627,64 @@ void _bind(nb::module_& m)
 
     subUI.def(
         "row",
-        [](const double gap, const double padding, const Align align, const Align justify)
+        [](const std::optional<Style>& style, double gap, double padding, const Align align,
+           const Align justify)
         {
-            Style s;
-            s.gap = gap;
-            s.padding = padding;
+            Style s = style.value_or(Style{});
+            if (gap != 0.0)
+                s.gap = gap;
+            if (padding != 0.0)
+                s.padding = padding;
+
             _pushContainer(s, Direction::Horizontal);
             _stack.back()->align = align;
             _stack.back()->justify = justify;
             return ContextProxy();
         },
-        "gap"_a = 0.0, "padding"_a = 0.0, "align"_a = Align::Start, "justify"_a = Align::Start
+        "style"_a = nb::none(), "gap"_a = 0.0, "padding"_a = 0.0, "align"_a = Align::Start,
+        "justify"_a = Align::Start
     );
 
     subUI.def(
         "column",
-        [](const double gap, const double padding, const Align align, const Align justify)
+        [](const std::optional<Style>& style, double gap, double padding, const Align align,
+           const Align justify)
         {
-            Style s;
-            s.gap = gap;
-            s.padding = padding;
+            Style s = style.value_or(Style{});
+            if (gap != 0.0)
+                s.gap = gap;
+            if (padding != 0.0)
+                s.padding = padding;
+
             _pushContainer(s, Direction::Vertical);
             _stack.back()->align = align;
             _stack.back()->justify = justify;
             return ContextProxy();
         },
-        "gap"_a = 0.0, "padding"_a = 0.0, "align"_a = Align::Start, "justify"_a = Align::Start
+        "style"_a = nb::none(), "gap"_a = 0.0, "padding"_a = 0.0, "align"_a = Align::Start,
+        "justify"_a = Align::Start
     );
 
+    subUI.def(
+        "stack",
+        [](const std::optional<Style>& style, double padding, const Align align,
+           const Align justify)
+        {
+            Style s = style.value_or(Style{});
+            if (padding != 0.0)
+                s.padding = padding;
+
+            _pushContainer(s, Direction::Stack);
+            _stack.back()->align = align;
+            _stack.back()->justify = justify;
+            return ContextProxy();
+        },
+        "style"_a = nb::none(), "padding"_a = 0.0, "align"_a = Align::Start,
+        "justify"_a = Align::Start
+    );
+
+    subUI.def("panel", &panel, "style"_a = Style{});
     subUI.def("button", &button, "text"_a, "style"_a = Style{});
     subUI.def("label", &label, "text"_a, "style"_a = Style{});
-    subUI.def("image", &image, "texture"_a = nb::none(), "slice"_a = Rect{}, "style"_a = Style{});
 }
 }  // namespace kn::ui

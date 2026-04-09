@@ -10,6 +10,7 @@
 
 #include "Color.hpp"
 #include "Font.hpp"
+#include "Math.hpp"
 #include "Rect.hpp"
 #include "Texture.hpp"
 
@@ -20,7 +21,8 @@ namespace kn::ui
 enum class Direction
 {
     Horizontal,
-    Vertical
+    Vertical,
+    Stack
 };
 
 enum class Align
@@ -37,6 +39,9 @@ struct Style
     std::optional<Color> backgroundColor;
     const Texture* texture = nullptr;
     Rect slice;  // 9-slice: x=left, y=top, w=right, h=bottom
+
+    // Layout
+    Vec2 offset{0.0, 0.0};
 
     // Text props
     const Font* font = nullptr;
@@ -60,7 +65,7 @@ void end();
 
 bool button(const std::string& text, const Style& style);
 void label(const std::string& text, const Style& style);
-void image(const Texture* tex, const Rect& slice, const Style& style);
+void panel(const Style& style);
 
 void _bind(nb::module_& m);
 }  // namespace kn::ui
