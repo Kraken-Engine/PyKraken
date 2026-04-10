@@ -112,7 +112,7 @@ void _clearStates()
     std::ranges::fill(_mouseReleased, false);
 }
 
-void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
+void _handleEvents(const SDL_Event& sdlEvent, Event& e)
 {
     switch (sdlEvent.type)
     {

@@ -19,7 +19,7 @@ constexpr int MAX_GAMEPADS = 4;
 static std::array<std::optional<SDL_JoystickID>, MAX_GAMEPADS> _gamepadSlots;
 static std::unordered_map<SDL_JoystickID, GamepadState> _connectedPads;
 
-bool isPressed(const SDL_GamepadButton button, const int slot)
+bool isPressed(const GamepadButton button, const int slot)
 {
     if (!verifySlot(slot))
         return false;
@@ -27,10 +27,10 @@ bool isPressed(const SDL_GamepadButton button, const int slot)
     const SDL_JoystickID id = _gamepadSlots.at(slot).value();
     const GamepadState& state = _connectedPads.at(id);
 
-    return SDL_GetGamepadButton(state.pad, button);
+    return SDL_GetGamepadButton(state.pad, static_cast<SDL_GamepadButton>(button));
 }
 
-bool isJustPressed(const SDL_GamepadButton button, const int slot)
+bool isJustPressed(const GamepadButton button, const int slot)
 {
     if (!verifySlot(slot))
         return false;
@@ -41,7 +41,7 @@ bool isJustPressed(const SDL_GamepadButton button, const int slot)
     return state.justPressed.contains(button);
 }
 
-bool isJustReleased(const SDL_GamepadButton button, const int slot)
+bool isJustReleased(const GamepadButton button, const int slot)
 {
     if (!verifySlot(slot))
         return false;
@@ -147,6 +147,17 @@ const std::vector<int> getConnectedSlots()
     return slots;
 }
 
+GamepadType getType(const int slot)
+{
+    if (!verifySlot(slot))
+        return GamepadType::Unknown;
+
+    const SDL_JoystickID id = _gamepadSlots.at(slot).value();
+    const GamepadState& state = _connectedPads.at(id);
+
+    return static_cast<GamepadType>(SDL_GetGamepadType(state.pad));
+}
+
 void _clearStates()
 {
     for (auto& state : _connectedPads | std::views::values)
@@ -156,7 +167,7 @@ void _clearStates()
     }
 }
 
-void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
+void _handleEvents(const SDL_Event& sdlEvent, Event& e)
 {
     switch (sdlEvent.type)
     {
@@ -167,7 +178,7 @@ void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
             return;
 
         e.data["which"] = id;
-        e.data["axis"] = sdlEvent.gaxis.axis;
+        e.data["axis"] = static_cast<GamepadAxis>(sdlEvent.gaxis.axis);
         e.data["value"] = sdlEvent.gaxis.value;
         break;
     }
@@ -179,7 +190,7 @@ void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
             return;
 
         GamepadState& state = _connectedPads.at(id);
-        const auto button = static_cast<SDL_GamepadButton>(sdlEvent.gbutton.button);
+        const auto button = static_cast<GamepadButton>(sdlEvent.gbutton.button);
 
         if (sdlEvent.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
             state.justPressed[button] = true;
@@ -370,6 +381,16 @@ Get a list of connected gamepad slot indices.
 
 Returns:
     list[int]: A list of slot IDs with active gamepads.
+    )doc");
+
+    subGamepad.def("get_type", &getType, "slot"_a = 0, R"doc(
+Get the type of gamepad connected in a given slot.
+
+Args:
+    slot (int, optional): Gamepad slot ID (default is 0).
+
+Returns:
+    GamepadType: An enum value representing the gamepad type, or Unknown if no gamepad is connected.
     )doc");
 }
 #endif  // KRAKEN_ENABLE_PYTHON

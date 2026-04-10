@@ -42,7 +42,7 @@ bool isHidden();
 
 void _clearStates();
 
-void _handleEvents(const SDL_Event& sdlEvent, const Event& e);
+void _handleEvents(const SDL_Event& sdlEvent, Event& e);
 
 #ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module);

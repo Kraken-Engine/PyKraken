@@ -5,6 +5,7 @@
 #include <nanobind/nanobind.h>
 #endif // KRAKEN_ENABLE_PYTHON
 
+#include <string>
 #include <variant>
 #include <vector>
 
@@ -21,15 +22,15 @@ class Vec2;
 struct InputAction
 {
     using InputData = std::variant<
-        SDL_Scancode, Keycode, MouseButton, SDL_GamepadButton, std::pair<SDL_GamepadAxis, bool>>;
+        Scancode, Keycode, MouseButton, GamepadButton, std::pair<GamepadAxis, bool>>;
     InputData data;
     int padSlot = 0;
 
-    explicit InputAction(SDL_Scancode scan);
+    explicit InputAction(Scancode scan);
     explicit InputAction(Keycode key);
     explicit InputAction(MouseButton mButton);
-    explicit InputAction(SDL_GamepadButton cButton, int slot = 0);
-    InputAction(SDL_GamepadAxis axis, bool isPositive, int slot = 0);
+    explicit InputAction(GamepadButton cButton, int slot = 0);
+    InputAction(GamepadAxis axis, bool isPositive, int slot = 0);
 };
 
 namespace input

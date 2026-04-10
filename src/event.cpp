@@ -1,6 +1,7 @@
 #include "Event.hpp"
 
 #include <SDL3/SDL.h>
+
 #ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
@@ -21,13 +22,24 @@ Event::Event(const uint32_t type)
 {
 }
 
+bool Event::is(const EventType t) const
+{
+    return type == static_cast<uint32_t>(t);
+}
+
+#ifdef KRAKEN_ENABLE_PYTHON
 nb::object Event::getAttr(const std::string& name) const
 {
-    if (data.contains(name))
-        return data[name.c_str()];
+    auto it = data.find(name);
+    if (it != data.end())
+    {
+        const Event::AttributeValue& val = it->second;
+        return std::visit([](auto&& arg) -> nb::object { return nb::cast(arg); }, val);
+    }
 
     throw nb::attribute_error(("Attribute '" + name + "' not found").c_str());
 }
+#endif  // KRAKEN_ENABLE_PYTHON
 
 namespace event
 {
@@ -128,9 +140,10 @@ const std::vector<Event> poll()
         case SDL_EVENT_CLIPBOARD_UPDATE:
             e.data["num_mime_types"] = event.clipboard.num_mime_types;
             {
-                nb::list mime_types;
+                std::vector<std::string> mime_types;
+                mime_types.reserve(event.clipboard.num_mime_types);
                 for (int i = 0; i < event.clipboard.num_mime_types; ++i)
-                    mime_types.append(nb::str(event.clipboard.mime_types[i]));
+                    mime_types.emplace_back(event.clipboard.mime_types[i]);
                 e.data["mime_types"] = mime_types;
             }
             break;
@@ -152,9 +165,11 @@ const std::vector<Event> poll()
         case SDL_EVENT_SENSOR_UPDATE:
             e.data["which"] = event.sensor.which;
             {
-                nb::list sensor_data;
-                for (int i = 0; i < 6; ++i)
-                    sensor_data.append(nb::float_(event.sensor.data[i]));
+                constexpr uint8_t SENSOR_DATA_SIZE = 6;
+                std::vector<float> sensor_data;
+                sensor_data.reserve(SENSOR_DATA_SIZE);
+                for (int i = 0; i < SENSOR_DATA_SIZE; ++i)
+                    sensor_data.push_back(event.sensor.data[i]);
                 e.data["data"] = sensor_data;
             }
             break;
@@ -185,7 +200,7 @@ const std::vector<Event> poll()
             e.data["which"] = event.paxis.which;
             e.data["x"] = event.paxis.x;
             e.data["y"] = event.paxis.y;
-            e.data["axis"] = event.paxis.axis;
+            e.data["axis"] = static_cast<PenAxis>(event.paxis.axis);
             e.data["value"] = event.paxis.value;
             break;
         case SDL_EVENT_CAMERA_DEVICE_ADDED:
@@ -333,7 +348,7 @@ Attributes:
             [](const Event& e) -> nb::object
             {
                 if (e.type < SDL_EVENT_USER)
-                    return nb::cast(static_cast<SDL_EventType>(e.type));
+                    return nb::cast(static_cast<EventType>(e.type));
                 return nb::int_(e.type);
             },
             nb::sig("def type(self) -> EventType | int"), R"doc(
