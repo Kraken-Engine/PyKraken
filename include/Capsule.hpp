@@ -1,10 +1,14 @@
 #pragma once
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include "Math.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif  // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
@@ -31,8 +35,11 @@ class Capsule
     bool operator!=(const Capsule& other) const;
 };
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace capsule
 {
 void _bind(const nb::module_& module);
 }  // namespace capsule
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn

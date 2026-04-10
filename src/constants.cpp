@@ -15,6 +15,7 @@ const kn::Vec2 kn::Anchor::BOTTOM_LEFT = {0.0, 1.0};
 const kn::Vec2 kn::Anchor::BOTTOM_MID = {0.5, 1.0};
 const kn::Vec2 kn::Anchor::BOTTOM_RIGHT = {1.0, 1.0};
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace kn::constants
 {
 void _bind(const nb::module_& module)
@@ -688,3 +689,4 @@ Gamepad device type identifiers.
         .export_values();
 }
 }  // namespace kn::constants
+#endif  // KRAKEN_ENABLE_PYTHON

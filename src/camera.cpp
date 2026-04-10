@@ -67,6 +67,7 @@ Camera* _getActiveCamera()
     return Camera::active;
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nanobind::literals;
@@ -161,5 +162,7 @@ Returns:
     Vec2: The resulting world position.
         )doc");
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace camera
 }  // namespace kn

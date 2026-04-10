@@ -1,7 +1,10 @@
 #include <SDL3_image/SDL_image.h>
+
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/filesystem.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/unique_ptr.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <cstring>
 #include <vector>
@@ -639,6 +642,7 @@ SDL_Surface* _rotateSurface(SDL_Surface* src, double angle)
     return dst;
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -977,5 +981,7 @@ Raises:
     )doc"
     );
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace pixel_array
 }  // namespace kn

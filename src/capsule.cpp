@@ -1,7 +1,9 @@
 #include "Capsule.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/operators.h>
 #include <nanobind/stl/string.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <algorithm>
 #include <string>
@@ -51,6 +53,7 @@ bool Capsule::operator!=(const Capsule& other) const
     return !(*this == other);
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace capsule
 {
 void _bind(const nb::module_& module)
@@ -114,4 +117,6 @@ Returns:
         );
 }
 }  // namespace capsule
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn

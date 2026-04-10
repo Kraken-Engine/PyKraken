@@ -1,7 +1,10 @@
 #include "Texture.hpp"
 
 #include <SDL3_image/SDL_image.h>
+
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/filesystem.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <string>
 
@@ -270,6 +273,7 @@ SDL_Texture* Texture::getSDL() const
     return m_texPtr;
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace texture
 {
 void _bind(const nb::module_& module)
@@ -415,4 +419,6 @@ This is the default blending mode for standard transparency effects.
         )doc");
 }
 }  // namespace texture
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn

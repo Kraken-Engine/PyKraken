@@ -1,13 +1,17 @@
 #pragma once
 
 #include <SDL3_mixer/SDL_mixer.h>
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
-#include <memory>
 #include <filesystem>
+#include <memory>
 #include <string>
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif  // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
@@ -17,7 +21,10 @@ class Audio;
 class Sample;
 class Stream;
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module);
+#endif  // KRAKEN_ENABLE_PYTHON
+
 void _init();
 void _quit();
 

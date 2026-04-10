@@ -1,7 +1,9 @@
 #include "Input.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <algorithm>
 #include <unordered_map>
@@ -224,6 +226,7 @@ bool isJustReleased(const std::string& name)
     );
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -349,5 +352,7 @@ Returns:
     bool: True if released this frame only.
         )doc");
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace input
 }  // namespace kn

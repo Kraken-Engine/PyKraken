@@ -1,12 +1,16 @@
 #pragma once
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
+#endif // KRAKEN_ENABLE_PYTHON
 
 #include <functional>
 
 #include "Math.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
@@ -14,7 +18,9 @@ namespace ease
 {
 using EasingFunction = std::function<double(double)>;
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module);
+#endif // KRAKEN_ENABLE_PYTHON
 
 double linear(double t);
 

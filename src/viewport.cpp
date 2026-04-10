@@ -1,6 +1,8 @@
 #include "Viewport.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/vector.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include "Rect.hpp"
 #include "Renderer.hpp"
@@ -79,6 +81,7 @@ void unset()
         throw std::runtime_error(std::string("viewport::unset failed: ") + SDL_GetError());
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -118,5 +121,7 @@ Args:
 Unset the current viewport, reverting to the full rendering area.
                     )doc");
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace viewport
 }  // namespace kn

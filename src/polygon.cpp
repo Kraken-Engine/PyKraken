@@ -1,7 +1,9 @@
 #include "Polygon.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/make_iterator.h>
 #include <nanobind/stl/vector.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <cmath>
 #include <limits>
@@ -233,6 +235,7 @@ Polygon Polygon::scaledBy(const Vec2& factor, const Vec2& pivot) const
     return p;
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace polygon
 {
 void _bind(const nb::module_& module)
@@ -400,4 +403,6 @@ Returns:
         .def("__len__", [](const Polygon& polygon) -> size_t { return polygon.points.size(); });
 }
 }  // namespace polygon
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn

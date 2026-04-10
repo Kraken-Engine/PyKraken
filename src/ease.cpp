@@ -1,6 +1,8 @@
 #include "Ease.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/function.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <cmath>
 #include <utility>
@@ -281,6 +283,7 @@ double inOutBounce(const double t)
     return 0.5 * outBounce(t * 2 - 1) + 0.5;
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -610,5 +613,7 @@ Restart the animation from the beginning.
 Reverse the direction of the animation.
     )doc");
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace ease
 }  // namespace kn

@@ -1,8 +1,10 @@
 #include "ui/UI.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/string.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <stack>
 #include <unordered_map>
@@ -532,6 +534,7 @@ void _performLayout(Node* node)
     }
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 struct ContextProxy
 {
     ContextProxy() = default;
@@ -687,4 +690,6 @@ void _bind(nb::module_& m)
     subUI.def("button", &button, "text"_a, "style"_a = Style{});
     subUI.def("label", &label, "text"_a, "style"_a = Style{});
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn::ui

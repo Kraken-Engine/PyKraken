@@ -223,6 +223,7 @@ void _tick()
     _delta *= _scale;
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -366,5 +367,7 @@ Stops the timer and resets it back to its initial, unstarted state.
 The timer can be started again with `start()` after being reset.
     )doc");
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace time
 }  // namespace kn

@@ -110,6 +110,7 @@ void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
     }
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -194,4 +195,6 @@ Returns:
         )doc"
     );
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn::key

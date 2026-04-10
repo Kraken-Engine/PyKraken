@@ -1,7 +1,9 @@
 #include "Mask.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/unique_ptr.h>
 #include <nanobind/stl/vector.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <algorithm>
 
@@ -319,6 +321,7 @@ Mask Mask::copy() const
     return copy;
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace mask
 {
 void _bind(const nb::module_& module)
@@ -534,4 +537,6 @@ Get the bounding rectangle of the mask starting at (0, 0).
     )doc");
 }
 }  // namespace mask
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn

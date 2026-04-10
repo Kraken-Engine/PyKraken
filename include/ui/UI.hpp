@@ -1,6 +1,8 @@
 #pragma once
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <functional>
 #include <memory>
@@ -14,7 +16,9 @@
 #include "Rect.hpp"
 #include "Texture.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif  // KRAKEN_ENABLE_PYTHON
 
 namespace kn::ui
 {
@@ -67,5 +71,8 @@ bool button(const std::string& text, const Style& style);
 void label(const std::string& text, const Style& style);
 void panel(const Style& style);
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& m);
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn::ui

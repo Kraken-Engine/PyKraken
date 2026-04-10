@@ -1,5 +1,7 @@
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <algorithm>
 #include <filesystem>
@@ -209,6 +211,7 @@ void _tick()
         controller->update(delta);
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(const nb::module_& module)
 {
     using namespace nb::literals;
@@ -404,5 +407,7 @@ Resumes animation frame advancement if the playback speed is greater than 0.
 Does nothing if the animation is already playing or playback speed is 0.
             )doc");
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace animation_controller
 }  // namespace kn

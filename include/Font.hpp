@@ -1,7 +1,9 @@
 #pragma once
 
 #include <SDL3_ttf/SDL_ttf.h>
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
+#endif // KRAKEN_ENABLE_PYTHON
 
 #include <filesystem>
 #include <string>
@@ -10,7 +12,9 @@
 #include "Math.hpp"
 #include "_globals.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
@@ -27,7 +31,10 @@ enum class Hinting
     None,
 };
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(const nb::module_& module);
+#endif // KRAKEN_ENABLE_PYTHON
+
 void _init();  // Initialize TTF library
 void _quit();  // Clean up all fonts and shut down TTF
 }  // namespace font

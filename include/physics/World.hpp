@@ -1,7 +1,9 @@
 #pragma once
 
 #include <box2d/box2d.h>
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <functional>
 #include <vector>
@@ -12,7 +14,9 @@
 #include "physics/bodies/RigidBody.hpp"
 #include "physics/bodies/StaticBody.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif  // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
@@ -29,7 +33,10 @@ class Layer;
 
 namespace physics
 {
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module);
+#endif  // KRAKEN_ENABLE_PYTHON
+
 void _tick();
 
 void setFixedDelta(float fixedDelta);

@@ -1,8 +1,10 @@
 #include "Mixer.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/filesystem.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/unique_ptr.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <algorithm>
 #include <limits>
@@ -672,6 +674,7 @@ void _quit()
     }
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -830,4 +833,6 @@ void _bind(nb::module_& module)
             float: Master volume (0.0 to 1.0).
     )doc");
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn::mixer

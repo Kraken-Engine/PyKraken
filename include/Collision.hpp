@@ -1,8 +1,12 @@
 #pragma once
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif  // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
@@ -14,6 +18,7 @@ class Polygon;
 
 namespace collision
 {
+
 bool overlap(const Rect& a, const Rect& b);
 bool overlap(const Rect& rect, const Circle& circle);
 bool overlap(const Rect& rect, const Line& line);
@@ -39,6 +44,9 @@ bool contains(const Circle& outer, const Circle& inner);
 bool contains(const Circle& circle, const Rect& rect);
 bool contains(const Circle& circle, const Line& line);
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module);
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace collision
 }  // namespace kn

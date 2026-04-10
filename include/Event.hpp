@@ -1,11 +1,15 @@
 #pragma once
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
+#endif // KRAKEN_ENABLE_PYTHON
 
 #include <string>
 #include <vector>
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
@@ -21,7 +25,9 @@ struct Event
 
 namespace event
 {
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module);
+#endif // KRAKEN_ENABLE_PYTHON
 
 const std::vector<Event> poll();
 

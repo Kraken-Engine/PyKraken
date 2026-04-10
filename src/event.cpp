@@ -1,8 +1,10 @@
 #include "Event.hpp"
 
 #include <SDL3/SDL.h>
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <unordered_map>
 
@@ -313,6 +315,7 @@ void unschedule(const Event& event)
     }
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -413,5 +416,7 @@ Raises:
     RuntimeError: If text input could not be stopped.
         )doc");
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace event
 }  // namespace kn

@@ -1,9 +1,12 @@
 #include "Math.hpp"
 
 #include <SDL3/SDL.h>
+
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/make_iterator.h>
 #include <nanobind/operators.h>
 #include <nanobind/stl/string.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <algorithm>
 #include <cmath>
@@ -408,6 +411,7 @@ double moveToward(const double current, const double target, const double maxSte
     return current + std::copysign(maxStep, diff);
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nanobind::literals;
@@ -994,5 +998,7 @@ Returns:
     float: The new value after moving toward the target.
         )doc");
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace math
 }  // namespace kn

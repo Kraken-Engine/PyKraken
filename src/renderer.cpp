@@ -1,8 +1,10 @@
 #include "Renderer.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/unique_ptr.h>
 #include <nanobind/stl/vector.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include "Camera.hpp"
 #include "Log.hpp"
@@ -434,6 +436,7 @@ void drawBatch(
     }
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void drawBatchNDArray(
     const Texture& texture,
     nb::ndarray<const double, nb::ndim<2>, nb::c_contig, nb::device::cpu> arr, const Vec2& anchor,
@@ -626,6 +629,7 @@ void Batcher::free()
     indices.clear();
     indices.shrink_to_fit();
 }
+#endif  // KRAKEN_ENABLE_PYTHON
 
 SDL_Renderer* _get()
 {
@@ -645,6 +649,7 @@ bool _primaryActive()
     return SDL_GetRenderTarget(_renderer) == _primaryTarget->getSDL();
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -852,4 +857,6 @@ Raises:
         )doc"
     );
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn::renderer

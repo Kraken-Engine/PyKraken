@@ -1,7 +1,9 @@
 #pragma once
 
 #include <SDL3_ttf/SDL_ttf.h>
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <string>
 
@@ -9,7 +11,9 @@
 #include "Math.hpp"
 #include "_globals.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif  // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
@@ -18,7 +22,10 @@ class Font;
 
 namespace text
 {
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(const nb::module_& module);
+#endif  // KRAKEN_ENABLE_PYTHON
+
 void _init();
 void _quit();
 void _cleanupTexts();  // Clean up all text objects before text engine is destroyed

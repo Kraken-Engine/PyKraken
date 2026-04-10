@@ -1,7 +1,9 @@
 #pragma once
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <memory>
 #include <vector>
@@ -9,7 +11,9 @@
 #include "Color.hpp"
 #include "Math.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif  // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
@@ -29,7 +33,10 @@ struct Vertex
 
 namespace draw
 {
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module);
+#endif  // KRAKEN_ENABLE_PYTHON
+
 void _init(SDL_Renderer* renderer);
 
 void circle(const Circle& circle, const Color& color, double thickness = 0.0, int numSegments = 24);
@@ -54,9 +61,12 @@ void ellipses(
 
 void point(Vec2 point, const Color& color);
 void points(const std::vector<Vec2>& points, const Color& color);
+
+#ifdef KRAKEN_ENABLE_PYTHON
 void pointsFromNDArray(
     nb::ndarray<const double, nb::ndim<2>, nb::c_contig, nb::device::cpu> arr, const Color& color
 );
+#endif  // KRAKEN_ENABLE_PYTHON
 
 void line(Line line, const Color& color, double thickness = 1.0);
 void lines(const std::vector<Line>& lines, const Color& color, double thickness = 1.0);

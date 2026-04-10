@@ -1,12 +1,16 @@
 #pragma once
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <vector>
 
 #include "Math.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif  // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
@@ -45,8 +49,11 @@ class Polygon
     Polygon scaledBy(const Vec2& factor, const Vec2& pivot = {0.5, 0.5}) const;
 };
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace polygon
 {
 void _bind(const nb::module_& module);
 }  // namespace polygon
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn

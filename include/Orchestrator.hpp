@@ -1,6 +1,8 @@
 #pragma once
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <functional>
 #include <memory>
@@ -9,19 +11,21 @@
 #include "Math.hpp"
 #include "Transform.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif  // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
 namespace orchestrator
 {
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module);
+#endif  // KRAKEN_ENABLE_PYTHON
+
 void _tick();
 }  // namespace orchestrator
 
-/**
- * @brief Base class for timeline effects.
- */
 class Effect
 {
   public:
@@ -34,9 +38,6 @@ class Effect
     virtual void update(Transform& transform, double t) = 0;
 };
 
-/**
- * @brief Move to a target position over time.
- */
 class MoveToEffect : public Effect
 {
   public:
@@ -49,9 +50,6 @@ class MoveToEffect : public Effect
     Vec2 m_startPos;
 };
 
-/**
- * @brief Scale to a target scale over time.
- */
 class ScaleToEffect : public Effect
 {
   public:
@@ -64,9 +62,6 @@ class ScaleToEffect : public Effect
     Vec2 m_startScale;
 };
 
-/**
- * @brief Rotate to a target angle over time.
- */
 class RotateToEffect : public Effect
 {
   public:
@@ -80,9 +75,6 @@ class RotateToEffect : public Effect
     double m_startAngle = 0.0;
 };
 
-/**
- * @brief Rotate by a delta angle over time.
- */
 class RotateByEffect : public Effect
 {
   public:
@@ -96,9 +88,6 @@ class RotateByEffect : public Effect
     double m_startAngle = 0.0;
 };
 
-/**
- * @brief Shake effect with amplitude and frequency.
- */
 class ShakeEffect : public Effect
 {
   public:
@@ -112,9 +101,6 @@ class ShakeEffect : public Effect
     Vec2 m_originalPos;
 };
 
-/**
- * @brief Call a callback function.
- */
 class CallEffect : public Effect
 {
   public:
@@ -127,18 +113,12 @@ class CallEffect : public Effect
     bool m_called = false;
 };
 
-/**
- * @brief A step in the timeline (can contain parallel effects).
- */
 struct Step
 {
     std::vector<std::shared_ptr<Effect>> effects;
     double duration = 0.0;
 };
 
-/**
- * @brief Timeline animator for Transform objects.
- */
 class Orchestrator
 {
   public:
@@ -178,4 +158,5 @@ class Orchestrator
 
     friend void orchestrator::_tick();
 };
+
 }  // namespace kn

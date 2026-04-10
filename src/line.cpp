@@ -1,7 +1,9 @@
 #include "Line.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/make_iterator.h>
 #include <nanobind/operators.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include "Math.hpp"
 
@@ -138,6 +140,7 @@ bool Line::operator!=(const Line& other) const
     return !(*this == other);
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace line
 {
 void _bind(nb::module_& module)
@@ -279,4 +282,6 @@ Returns:
         .def(nb::self != nb::self);
 }
 }  // namespace line
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn

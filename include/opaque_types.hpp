@@ -1,4 +1,6 @@
 #pragma once
+
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
 
 #include <array>
@@ -20,3 +22,5 @@ NB_MAKE_OPAQUE(std::vector<kn::tilemap::TileSet>);
 NB_MAKE_OPAQUE(std::vector<kn::tilemap::MapObject>);
 NB_MAKE_OPAQUE(std::vector<std::shared_ptr<kn::tilemap::Layer>>);
 NB_MAKE_OPAQUE(std::array<int32_t, 4>);
+
+#endif  // KRAKEN_ENABLE_PYTHON

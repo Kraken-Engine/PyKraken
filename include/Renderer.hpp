@@ -1,8 +1,10 @@
 #pragma once
 
 #include <SDL3/SDL.h>
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <memory>
 #include <optional>
@@ -13,7 +15,9 @@
 #include "Transform.hpp"
 #include "_globals.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif  // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
@@ -25,7 +29,10 @@ namespace renderer
 {
 class Batcher;
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module);
+#endif  // KRAKEN_ENABLE_PYTHON
+
 void _init(SDL_Window* window, int width, int height);
 void _quit();
 SDL_Renderer* _get();
@@ -68,6 +75,7 @@ void drawBatch(
     const std::optional<std::vector<Rect>>& clipRects = std::nullopt
 );
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void drawBatchNDArray(
     const Texture& texture,
     nb::ndarray<const double, nb::ndim<2>, nb::c_contig, nb::device::cpu> arr,
@@ -94,6 +102,7 @@ class Batcher
     std::vector<SDL_Vertex> vertices;
     std::vector<int> indices;
 };
+#endif  // KRAKEN_ENABLE_PYTHON
 
 }  // namespace renderer
 }  // namespace kn

@@ -1,8 +1,10 @@
 #include "Color.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/make_iterator.h>
 #include <nanobind/operators.h>
 #include <nanobind/stl/string.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <algorithm>
 #include <iomanip>
@@ -308,6 +310,7 @@ Color grayscale(const Color& color)
     return {gray, gray, gray, color.a};
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -637,5 +640,7 @@ Example:
     grayscale(Color(255, 0, 0))  # Returns Color(76, 76, 76, 255)
         )doc");
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace color
 }  // namespace kn

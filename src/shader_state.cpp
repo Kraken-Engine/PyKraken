@@ -1,6 +1,8 @@
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/ndarray.h>
 #include <nanobind/stl/filesystem.h>
 #include <nanobind/stl/string.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <algorithm>
 #include <vector>
@@ -152,6 +154,7 @@ void _quit()
     _shaderStates.clear();
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -198,5 +201,7 @@ Args:
             )doc"
         );
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace shader_state
 }  // namespace kn

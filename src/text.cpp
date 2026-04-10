@@ -1,6 +1,8 @@
 #include "Text.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/string.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <algorithm>
 #include <cmath>
@@ -258,6 +260,7 @@ void _quit()
     _textEngine = nullptr;
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(const nb::module_& module)
 {
     using namespace nb::literals;
@@ -348,5 +351,7 @@ Returns:
     Rect: A rectangle with x=0, y=0, and width/height of the text.
     )doc");
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace text
 }  // namespace kn

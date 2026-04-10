@@ -1,10 +1,14 @@
 #pragma once
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
+#endif // KRAKEN_ENABLE_PYTHON
 
 #include "Math.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
@@ -32,7 +36,10 @@ class Camera
 
 namespace camera
 {
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module);
+#endif // KRAKEN_ENABLE_PYTHON
+
 Camera* _getActiveCamera();
 
 Vec2 getActivePos();

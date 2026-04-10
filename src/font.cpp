@@ -1,7 +1,9 @@
 #include "Font.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/filesystem.h>
 #include <nanobind/stl/string.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <algorithm>
 #include <cmath>
@@ -291,6 +293,7 @@ void _quit()
         TTF_Quit();
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(const nb::module_& module)
 {
     using namespace nb::literals;
@@ -394,5 +397,7 @@ Get or set the additional spacing between characters in pixels.
         )doc");
     */
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace font
 }  // namespace kn

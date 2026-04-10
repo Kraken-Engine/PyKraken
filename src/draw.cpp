@@ -1,8 +1,10 @@
 #include "Draw.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/optional.h>
-#include <nanobind/stl/vector.h>
 #include <nanobind/stl/string.h>
+#include <nanobind/stl/vector.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <algorithm>
 #include <array>
@@ -232,6 +234,7 @@ void points(const std::vector<Vec2>& points, const Color& color)
         throw std::runtime_error("Failed to render points: " + std::string(SDL_GetError()));
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 // Accept a NumPy ndarray with shape (N,2) and dtype float64 for the fastest path.
 void pointsFromNDArray(
     nb::ndarray<const double, nb::ndim<2>, nb::c_contig, nb::device::cpu> arr, const Color& color
@@ -270,6 +273,7 @@ void pointsFromNDArray(
     if (!SDL_RenderPoints(rend, sdlPoints.data(), static_cast<int>(sdlPoints.size())))
         throw std::runtime_error("Failed to render points: " + std::string(SDL_GetError()));
 }
+#endif  // KRAKEN_ENABLE_PYTHON
 
 void ellipse(Rect bounds, const Color& color, const double thickness, const int numSegments)
 {
@@ -1378,6 +1382,7 @@ void _init(SDL_Renderer* renderer)
     rend = renderer;
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -1678,4 +1683,6 @@ Args:
     )doc"
     );
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn::draw

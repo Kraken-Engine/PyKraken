@@ -1,6 +1,8 @@
 #include "Gamepad.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/vector.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <array>
 #include <optional>
@@ -259,6 +261,7 @@ bool verifySlot(const int slot)
     return true;
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -369,4 +372,6 @@ Returns:
     list[int]: A list of slot IDs with active gamepads.
     )doc");
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn::gamepad

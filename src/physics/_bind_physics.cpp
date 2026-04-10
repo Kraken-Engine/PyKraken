@@ -1,3 +1,5 @@
+#ifdef KRAKEN_ENABLE_PYTHON
+
 #include <nanobind/operators.h>
 #include <nanobind/stl/function.h>
 #include <nanobind/stl/vector.h>
@@ -1076,3 +1078,5 @@ Returns:
         );
 }
 }  // namespace kn::physics
+
+#endif  // KRAKEN_ENABLE_PYTHON

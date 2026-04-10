@@ -1,16 +1,20 @@
 #pragma once
 
 #include <SDL3/SDL.h>
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
-#include <memory>
 #include <filesystem>
+#include <memory>
 #include <string>
 
 #include "Rect.hpp"
 #include "_globals.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif  // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
@@ -74,7 +78,9 @@ class PixelArray
 
 namespace pixel_array
 {
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module);
+#endif  // KRAKEN_ENABLE_PYTHON
 
 std::unique_ptr<PixelArray> flip(const PixelArray& pixelArray, bool flipX, bool flipY);
 

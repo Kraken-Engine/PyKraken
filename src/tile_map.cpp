@@ -1,5 +1,7 @@
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/make_iterator.h>
 #include <nanobind/stl/bind_vector.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include "TileMap.hpp"
 
@@ -7,10 +9,12 @@
 #include "opaque_types.hpp"
 // clang-format on
 
+#ifdef KRAKEN_ENABLE_PYTHON
+#include <nanobind/stl/filesystem.h>
 #include <nanobind/stl/shared_ptr.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
-#include <nanobind/stl/filesystem.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <tmxlite/ImageLayer.hpp>
 #include <tmxlite/TileLayer.hpp>
@@ -908,6 +912,7 @@ double ImageLayer::getOpacity() const
     return m_opacity;
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -1499,5 +1504,7 @@ Args:
     name (str): Name of the layer to retrieve.
         )doc");
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace tilemap
 }  // namespace kn
