@@ -78,7 +78,7 @@ if(KRAKEN_BUILD_PYTHON)
   find_package(Python 3.12
     REQUIRED COMPONENTS Interpreter Development.Module
     OPTIONAL_COMPONENTS Development.SABIModule)
-  find_package(nanobind CONFIG REQUIRED)
+  find_package(nanobind CONFIG REQUIRED COMPONENTS ndarray)
 endif()
 
 # SDL3 and friends --------------------------------------------

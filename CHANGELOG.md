@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Renamed `Align` enum to `TextAlign` for specificity.
 
+### Fixed
+- `Orchestrator` objects were copied upon calling `parallel` and `then` methods, causing effects to not be added to the original orchestrator timeline. Now returns reference to the original orchestrator.
+
 ## [1.7.0] - 2026-04-07
 
 ### Added

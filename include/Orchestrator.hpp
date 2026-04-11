@@ -8,6 +8,7 @@
 #include <memory>
 #include <vector>
 
+#include "Ease.hpp"
 #include "Math.hpp"
 #include "Transform.hpp"
 
@@ -26,92 +27,7 @@ void _bind(nb::module_& module);
 void _tick();
 }  // namespace orchestrator
 
-class Effect
-{
-  public:
-    double duration = 0.0;
-    std::function<double(double)> easing = [](double t) { return t; };  // Linear by default
-
-    virtual ~Effect() = default;
-
-    virtual void start(Transform& transform) = 0;
-    virtual void update(Transform& transform, double t) = 0;
-};
-
-class MoveToEffect : public Effect
-{
-  public:
-    Vec2 targetPos;
-
-    void start(Transform& transform) override;
-    void update(Transform& transform, double t) override;
-
-  private:
-    Vec2 m_startPos;
-};
-
-class ScaleToEffect : public Effect
-{
-  public:
-    Vec2 targetScale;
-
-    void start(Transform& transform) override;
-    void update(Transform& transform, double t) override;
-
-  private:
-    Vec2 m_startScale;
-};
-
-class RotateToEffect : public Effect
-{
-  public:
-    double targetAngle = 0.0;
-    bool clockwise = true;
-
-    void start(Transform& transform) override;
-    void update(Transform& transform, double t) override;
-
-  private:
-    double m_startAngle = 0.0;
-};
-
-class RotateByEffect : public Effect
-{
-  public:
-    double deltaAngle = 0.0;
-    bool clockwise = true;
-
-    void start(Transform& transform) override;
-    void update(Transform& transform, double t) override;
-
-  private:
-    double m_startAngle = 0.0;
-};
-
-class ShakeEffect : public Effect
-{
-  public:
-    double amplitude = 0.0;
-    double frequency = 0.0;
-
-    void start(Transform& transform) override;
-    void update(Transform& transform, double t) override;
-
-  private:
-    Vec2 m_originalPos;
-};
-
-class CallEffect : public Effect
-{
-  public:
-    std::function<void()> callback;
-
-    void start(Transform& transform) override;
-    void update(Transform& transform, double t) override;
-
-  private:
-    bool m_called = false;
-};
+class Effect;
 
 struct Step
 {
@@ -122,10 +38,10 @@ struct Step
 class Orchestrator
 {
   public:
-    Orchestrator() = default;
+    explicit Orchestrator(Transform& target);
     ~Orchestrator();
 
-    void setTarget(Transform* target);
+    void setTarget(Transform& target);
 
     Orchestrator& parallel(const std::vector<std::shared_ptr<Effect>>& effects);
     Orchestrator& then(std::shared_ptr<Effect> effect);
@@ -158,5 +74,36 @@ class Orchestrator
 
     friend void orchestrator::_tick();
 };
+
+namespace fx
+{
+[[nodiscard]] std::shared_ptr<Effect> moveTo(
+    const Vec2& pos, double dur = 0.0, const ease::EasingFunction& easeFunc = nullptr
+);
+
+[[nodiscard]] std::shared_ptr<Effect> scaleTo(
+    const Vec2& scale, double dur = 0.0, const ease::EasingFunction& easeFunc = nullptr
+);
+
+[[nodiscard]] std::shared_ptr<Effect> scaleBy(
+    double scale, double dur = 0.0, const ease::EasingFunction& easeFunc = nullptr
+);
+
+[[nodiscard]] std::shared_ptr<Effect> rotateTo(
+    double angle, bool clockwise = true, double dur = 0.0,
+    const ease::EasingFunction& easeFunc = nullptr
+);
+
+[[nodiscard]] std::shared_ptr<Effect> rotateBy(
+    double deltaAngle, bool clockwise = true, double dur = 0.0,
+    const ease::EasingFunction& easeFunc = nullptr
+);
+
+[[nodiscard]] std::shared_ptr<Effect> shake(double amp, double freq, double dur);
+
+[[nodiscard]] std::shared_ptr<Effect> call(const std::function<void()>& callback);
+
+[[nodiscard]] std::shared_ptr<Effect> wait(double dur);
+}  // namespace fx
 
 }  // namespace kn
