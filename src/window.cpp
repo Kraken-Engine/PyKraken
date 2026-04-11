@@ -90,7 +90,6 @@ void create(const std::string& title, const int width, const int height, const b
 bool isOpen()
 {
     time::_tick();
-
     animation_controller::_tick();
     orchestrator::_tick();
     physics::_tick();

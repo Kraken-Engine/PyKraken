@@ -1,9 +1,9 @@
 #pragma once
 
 #include <SDL3/SDL.h>
+
 #ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
-#include <nanobind/ndarray.h>
 #endif  // KRAKEN_ENABLE_PYTHON
 
 #include <memory>
@@ -27,7 +27,6 @@ enum class TextureScaleMode;
 
 namespace renderer
 {
-class Batcher;
 
 #ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module);
@@ -74,35 +73,6 @@ void drawBatch(
     const Vec2& anchor = Anchor::TOP_LEFT, const Vec2& pivot = Anchor::CENTER,
     const std::optional<std::vector<Rect>>& clipRects = std::nullopt
 );
-
-#ifdef KRAKEN_ENABLE_PYTHON
-void drawBatchNDArray(
-    const Texture& texture,
-    nb::ndarray<const double, nb::ndim<2>, nb::c_contig, nb::device::cpu> arr,
-    const Vec2& anchor = Anchor::TOP_LEFT, const Vec2& pivot = Anchor::CENTER,
-    Batcher* batcher = nullptr
-);
-
-class Batcher
-{
-  public:
-    Batcher() = default;
-    ~Batcher() = default;
-
-    void preallocate(size_t nSprites);
-    void free();
-
-  private:
-    friend void drawBatchNDArray(
-        const Texture& texture,
-        nb::ndarray<const double, nb::ndim<2>, nb::c_contig, nb::device::cpu> arr,
-        const Vec2& anchor, const Vec2& pivot, Batcher* batcher
-    );
-
-    std::vector<SDL_Vertex> vertices;
-    std::vector<int> indices;
-};
-#endif  // KRAKEN_ENABLE_PYTHON
 
 }  // namespace renderer
 }  // namespace kn

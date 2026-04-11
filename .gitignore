@@ -151,3 +151,5 @@ vcpkg_installed/
 # Generated stubs (nanobind_add_stub copies these into source tree for IDE support)
 src/pykraken/_pykraken/
 src/pykraken/py.typed
+
+external/

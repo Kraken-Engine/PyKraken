@@ -1,6 +1,7 @@
 #include "Renderer.hpp"
 
 #ifdef KRAKEN_ENABLE_PYTHON
+#include <nanobind/ndarray.h>
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/unique_ptr.h>
 #include <nanobind/stl/vector.h>
@@ -436,7 +437,64 @@ void drawBatch(
     }
 }
 
+SDL_Renderer* _get()
+{
+    return _renderer;
+}
+
+SDL_GPUDevice* _getGPUDevice()
+{
+    return _gpuDevice;
+}
+
+bool _primaryActive()
+{
+    if (!_primaryTarget)
+        return false;
+
+    return SDL_GetRenderTarget(_renderer) == _primaryTarget->getSDL();
+}
+
 #ifdef KRAKEN_ENABLE_PYTHON
+class Batcher;
+
+static void drawBatchNDArray(
+    const Texture& texture,
+    nb::ndarray<const double, nb::ndim<2>, nb::c_contig, nb::device::cpu> arr, const Vec2& anchor,
+    const Vec2& pivot, Batcher* batcher
+);
+
+class Batcher
+{
+  public:
+    Batcher() = default;
+    ~Batcher() = default;
+
+    void preallocate(const size_t nSprites)
+    {
+        vertices.reserve(nSprites * 4);
+        indices.reserve(nSprites * 6);
+    }
+
+    void free()
+    {
+        vertices.clear();
+        vertices.shrink_to_fit();
+        indices.clear();
+        indices.shrink_to_fit();
+    }
+
+  private:
+    friend void drawBatchNDArray(
+        const Texture& texture,
+        nb::ndarray<const double, nb::ndim<2>, nb::c_contig, nb::device::cpu> arr,
+        const Vec2& anchor, const Vec2& pivot, Batcher* batcher
+    );
+
+    std::vector<SDL_Vertex> vertices;
+    std::vector<int> indices;
+};
+
 void drawBatchNDArray(
     const Texture& texture,
     nb::ndarray<const double, nb::ndim<2>, nb::c_contig, nb::device::cpu> arr, const Vec2& anchor,
@@ -616,40 +674,6 @@ void drawBatchNDArray(
     }
 }
 
-void Batcher::preallocate(size_t nSprites)
-{
-    vertices.reserve(nSprites * 4);
-    indices.reserve(nSprites * 6);
-}
-
-void Batcher::free()
-{
-    vertices.clear();
-    vertices.shrink_to_fit();
-    indices.clear();
-    indices.shrink_to_fit();
-}
-#endif  // KRAKEN_ENABLE_PYTHON
-
-SDL_Renderer* _get()
-{
-    return _renderer;
-}
-
-SDL_GPUDevice* _getGPUDevice()
-{
-    return _gpuDevice;
-}
-
-bool _primaryActive()
-{
-    if (!_primaryTarget)
-        return false;
-
-    return SDL_GetRenderTarget(_renderer) == _primaryTarget->getSDL();
-}
-
-#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
