@@ -52,7 +52,7 @@ else()
 endif()
 
 include(FetchContent)
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "KrakenEngine only supports static builds" FORCE)
 
 option(KRAKEN_VENDORED "Set default value for all *_VENDORED dependency options" OFF)
 
@@ -322,6 +322,7 @@ endif()
 
 target_include_directories(${KRAKEN_TARGET} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
 )
 
 set_target_properties(${KRAKEN_TARGET} PROPERTIES
@@ -346,11 +347,11 @@ target_link_libraries(${KRAKEN_TARGET} PRIVATE
   spdlog::spdlog
 )
 
-# =====================================================================
-# PYTHON-SPECIFIC INSTALLATION & STUBS
-# =====================================================================
-
 if(KRAKEN_BUILD_PYTHON)
+  # =====================================================================
+  # PYTHON-SPECIFIC INSTALLATION & STUBS
+  # =====================================================================
+
   # Copy runtime DLLs next to the module (only needed with dynamic vcpkg triplets like x64-windows)
   if(WIN32)
     set(_VCPKG_BIN_DIR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin")
@@ -395,5 +396,64 @@ if(KRAKEN_BUILD_PYTHON)
   install(
     FILES ${CMAKE_CURRENT_BINARY_DIR}/py.typed
     DESTINATION pykraken
+  )
+else()
+  # =====================================================================
+  # C++ LIBRARY INSTALLATION & CMAKE EXPORT
+  # =====================================================================
+
+  include(GNUInstallDirs)
+
+  # Install library and export target
+  install(TARGETS KrakenEngine
+    EXPORT KrakenEngineTargets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  )
+
+  # Install public headers
+  install(DIRECTORY include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  )
+
+  # Install custom Find modules
+  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/FindTMXLITE.cmake"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/kraken-engine/modules
+  )
+
+  # Export targets file so find_package works
+  install(EXPORT KrakenEngineTargets
+    FILE KrakenEngineTargets.cmake
+    NAMESPACE Kraken::
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/kraken-engine
+  )
+
+  # Generate a Config file that finds dependencies automatically
+  include(CMakePackageConfigHelpers)
+  set(CONFIG_FILE "${CMAKE_CURRENT_BINARY_DIR}/KrakenEngineConfig.cmake")
+
+  # Because KrakenEngine is a static library, downstream consumers MUST
+  # load these dependencies as well.
+  file(WRITE ${CONFIG_FILE}
+    # Temporarily add installed modules directory to the user's module path
+    "list(APPEND CMAKE_MODULE_PATH \"\${CMAKE_CURRENT_LIST_DIR}/modules\")\n\n"
+
+    "include(CMakeFindDependencyMacro)\n"
+
+    "find_dependency(SDL3 CONFIG)\n"
+    "find_dependency(SDL3_image CONFIG)\n"
+    "find_dependency(SDL3_ttf CONFIG)\n"
+    "find_dependency(SDL3_mixer CONFIG)\n"
+    "find_dependency(box2d CONFIG)\n"
+    "find_dependency(spdlog CONFIG)\n"
+    "find_dependency(zstd CONFIG)\n"
+    "find_dependency(TMXLITE MODULE)\n" # Assuming vcpkg provides a FindTMXLITE.cmake module
+
+    "include(\"\${CMAKE_CURRENT_LIST_DIR}/KrakenEngineTargets.cmake\")\n"
+  )
+
+  install(FILES ${CONFIG_FILE}
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/kraken-engine
   )
 endif()

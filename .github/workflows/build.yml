@@ -51,14 +51,15 @@ jobs:
             VCPKG_ROOT=C:/vcpkg
             VCPKG_DEFAULT_TRIPLET=x64-windows-release
 
-          # --- macOS: install deps via Homebrew ---
+          # --- macOS: install deps via Homebrew, vendor SDL3_mixer ---
           CIBW_BEFORE_ALL_MACOS: >
-            brew install sdl3 sdl3_ttf box2d spdlog
+            brew install sdl3@3.4.0 sdl3_image@3.4.0 sdl3_ttf@3.2.2 box2d@3.1.1 spdlog@1.17.0 zstd@1.5.7
           CIBW_ENVIRONMENT_MACOS: >
             MACOSX_DEPLOYMENT_TARGET=15.0
             CMAKE_PREFIX_PATH=/opt/homebrew
+            SKBUILD_CMAKE_ARGS="-DSDL3_MIXER_VENDORED=ON"
 
-          # --- Linux: install system headers, build SDL deps from source ---
+          # --- Linux: install system headers, vendor everything except zstd ---
           CIBW_BEFORE_ALL_LINUX: >
             dnf -y install
             alsa-lib-devel pipewire-devel pulseaudio-libs-devel
@@ -66,10 +67,9 @@ jobs:
             mesa-libEGL-devel mesa-libgbm-devel
             wayland-devel wayland-protocols-devel libxkbcommon-devel
             libpng-devel libjpeg-turbo-devel freetype-devel flac-devel
-            libzstd-devel &&
-            bash {project}/scripts/build-linux-deps.sh
+            libzstd-devel
           CIBW_ENVIRONMENT_LINUX: >
-            CMAKE_PREFIX_PATH=/opt/deps
+            SKBUILD_CMAKE_ARGS="-DKRAKEN_VENDORED=ON -DZSTD_VENDORED=OFF"
 
       - name: Upload wheels
         uses: actions/upload-artifact@v7
