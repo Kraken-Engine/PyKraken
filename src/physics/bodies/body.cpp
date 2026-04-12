@@ -1,7 +1,6 @@
 #include "physics/bodies/Body.hpp"
 
-#include <mapbox/earcut.hpp>
-
+#include "../../mapbox/earcut.hpp"
 #include "Capsule.hpp"
 #include "Circle.hpp"
 #include "Polygon.hpp"

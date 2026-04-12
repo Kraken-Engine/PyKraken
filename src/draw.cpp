@@ -8,7 +8,6 @@
 
 #include <algorithm>
 #include <array>
-#include <mapbox/earcut.hpp>
 #include <sstream>
 
 #include "Camera.hpp"
@@ -19,6 +18,7 @@
 #include "Rect.hpp"
 #include "Renderer.hpp"
 #include "Texture.hpp"
+#include "mapbox/earcut.hpp"
 
 #ifndef M_PI
 #define M_PI 3.1415926535897932384626433832795
