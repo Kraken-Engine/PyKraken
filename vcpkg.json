@@ -1,12 +1,28 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
-  "builtin-baseline": "1e199d32ad53aab1defda61ce41c380302e3f95c",
+  "builtin-baseline": "0b88aacde46a853151730fbe7d0b7ee45f4b6864",
   "dependencies": [
     "box2d",
     {
       "name": "sdl3",
       "features": [
         "vulkan"
+      ]
+    },
+    {
+      "name": "sdl3-image",
+      "features": [
+        "jpeg",
+        "png"
+      ]
+    },
+    {
+      "name": "sdl3-mixer",
+      "features": [
+        "libflac",
+        "libvorbis",
+        "mpg123",
+        "opusfile"
       ]
     },
     {
@@ -21,6 +37,7 @@
         "fmt"
       ]
     },
+    "tmxlite",
     "zstd"
   ],
   "overrides": [
@@ -33,8 +50,28 @@
       "version": "3.4.0"
     },
     {
+      "name": "sdl3-image",
+      "version": "3.4.0"
+    },
+    {
+      "name": "sdl3-mixer",
+      "version": "3.2.0"
+    },
+    {
       "name": "sdl3-ttf",
       "version": "3.2.2"
+    },
+    {
+      "name": "spdlog",
+      "version": "1.17.0"
+    },
+    {
+      "name": "zstd",
+      "version": "1.5.7"
+    },
+    {
+      "name": "tmxlite",
+      "version": "1.4.5"
     }
   ]
 }
