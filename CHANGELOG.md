@@ -15,9 +15,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `Style` class for defining reusable style properties.
   - `root`, `row`, and `column` container functions for structuring UI elements.
   - `button`, `label`, and `image` functions for common UI elements.
+- Physics `World` class now has a `debug_draw` method with extra configurable options for visualizing physics bodies and joints.
+- New `Polygon` constructor for creating regular polygons by specifying the number of sides and radius.
+- Added `restart` method to the `Timer` class for resetting and starting the timer in one call.
 
 ### Changed
 - Renamed `Align` enum to `TextAlign` for specificity.
+- Physics `World` constructor's gravity parameter is now optional and defaults to zero gravity.
+
+### Removed
+- Physics `Body` types no longer have a `debug_draw` method.
 
 ### Fixed
 - `Orchestrator` objects were copied upon calling `parallel` and `then` methods, causing effects to not be added to the original orchestrator timeline. Now returns reference to the original orchestrator.

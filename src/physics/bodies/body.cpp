@@ -4,9 +4,6 @@
 
 #include "Capsule.hpp"
 #include "Circle.hpp"
-#include "Color.hpp"
-#include "Draw.hpp"
-#include "Line.hpp"
 #include "Polygon.hpp"
 #include "Rect.hpp"
 #include "Transform.hpp"
@@ -232,64 +229,6 @@ b2BodyId Body::_getBodyId() const
 {
     _checkValid();
     return m_bodyId;
-}
-
-void Body::debugDraw() const
-{
-    _checkValid();
-    const Vec2 bodyPos = getPos();
-    const float bodyRot = getRotation();
-
-    const Color color = {255, 0, 0, 255};
-
-    for (const b2ShapeId shapeId : _getShapeIds())
-    {
-        if (!b2Shape_IsValid(shapeId))
-            continue;
-
-        const b2ShapeType shapeType = b2Shape_GetType(shapeId);
-
-        if (shapeType == b2_circleShape)
-        {
-            const b2Circle circle = b2Shape_GetCircle(shapeId);
-            Circle drawCircle{{circle.center.x, circle.center.y}, circle.radius};
-            drawCircle.pos = bodyPos + drawCircle.pos.rotated(bodyRot);
-            kn::draw::circle(drawCircle, color, 1.0, 16);
-
-            const Vec2 corner = drawCircle.pos + Vec2(drawCircle.radius, 0.0).rotated(bodyRot);
-            kn::draw::line(Line(drawCircle.pos, corner), color);
-        }
-        else if (shapeType == b2_polygonShape)
-        {
-            const b2Polygon polygon = b2Shape_GetPolygon(shapeId);
-            std::vector<Vec2> points;
-            for (int i = 0; i < polygon.count; ++i)
-            {
-                const b2Vec2& v = polygon.vertices[i];
-                points.emplace_back(v.x, v.y);
-            }
-            for (auto& p : points)
-                p = bodyPos + p.rotated(bodyRot);
-            kn::draw::polygon(Polygon(points), color, false);
-
-            // Draw center line
-            const b2Vec2& center = polygon.centroid;
-            const Vec2 worldCenter = bodyPos + Vec2{center.x, center.y}.rotated(bodyRot);
-            kn::draw::line(Line(worldCenter, points[0]), color);
-        }
-        else if (shapeType == b2_capsuleShape)
-        {
-            const b2Capsule capsule = b2Shape_GetCapsule(shapeId);
-            Capsule drawCapsule{
-                {capsule.center1.x, capsule.center1.y},
-                {capsule.center2.x, capsule.center2.y},
-                capsule.radius
-            };
-            drawCapsule.p1 = bodyPos + drawCapsule.p1.rotated(bodyRot);
-            drawCapsule.p2 = bodyPos + drawCapsule.p2.rotated(bodyRot);
-            kn::draw::capsule(drawCapsule, color, 1.0, 16);
-        }
-    }
 }
 void Body::setCollisionLayer(uint64_t layer)
 {

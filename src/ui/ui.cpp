@@ -42,6 +42,8 @@ static void _pushContainer(const Style& style, Direction dir);
 static void _popContainer();
 static size_t _generateId(const std::string& text);
 static void _calculateSizes(Node* node);
+static void _begin(const Rect& rootBounds);
+static void _end();
 
 class Node
 {
@@ -198,7 +200,7 @@ class Button : public Node
     }
 };
 
-void begin(const Rect& rootBounds)
+void _begin(const Rect& rootBounds)
 {
     if (!_stack.empty())
         throw std::runtime_error("UI Error: A UI context is already active.");
@@ -215,7 +217,7 @@ void begin(const Rect& rootBounds)
     _containerIdCounter = 0;
 }
 
-void end()
+void _end()
 {
     _ensureActive();
     if (_stack.size() > 1)
@@ -297,6 +299,106 @@ void panel(const Style& style)
     node->id = ++_containerIdCounter;
     node->style = style;
     _stack.back()->children.push_back(std::move(node));
+}
+
+void Context::exit()
+{
+    if (m_active)
+    {
+        _popContainer();
+        m_active = false;
+    }
+}
+
+Context::~Context()
+{
+    exit();
+}
+
+RootContext::RootContext(const Rect& bounds, Direction dir, Align align, Align justify)
+{
+    _begin(bounds);
+    if (_root)
+    {
+        _root->direction = dir;
+        _root->align = align;
+        _root->justify = justify;
+    }
+}
+
+void RootContext::exit()
+{
+    if (m_active)
+    {
+        _end();
+        m_active = false;
+    }
+}
+
+RootContext::~RootContext()
+{
+    exit();
+}
+
+RootContext root(const Rect& bounds, Direction dir, Align align, Align justify)
+{
+    return RootContext(bounds, dir, align, justify);
+}
+
+Context row(
+    const std::optional<Style>& style, double gap, double padding, Align align, Align justify
+)
+{
+    Style s = style.value_or(Style{});
+    if (gap != 0.0)
+        s.gap = gap;
+    if (padding != 0.0)
+        s.padding = padding;
+
+    _pushContainer(s, Direction::Horizontal);
+    if (!_stack.empty())
+    {
+        auto* node = _stack.back();
+        node->align = align;
+        node->justify = justify;
+    }
+    return Context();
+}
+
+Context column(
+    const std::optional<Style>& style, double gap, double padding, Align align, Align justify
+)
+{
+    Style s = style.value_or(Style{});
+    if (gap != 0.0)
+        s.gap = gap;
+    if (padding != 0.0)
+        s.padding = padding;
+
+    _pushContainer(s, Direction::Vertical);
+    if (!_stack.empty())
+    {
+        auto* node = _stack.back();
+        node->align = align;
+        node->justify = justify;
+    }
+    return Context();
+}
+
+Context stack(const std::optional<Style>& style, double padding, Align align, Align justify)
+{
+    Style s = style.value_or(Style{});
+    if (padding != 0.0)
+        s.padding = padding;
+
+    _pushContainer(s, Direction::Stack);
+    if (!_stack.empty())
+    {
+        auto* node = _stack.back();
+        node->align = align;
+        node->justify = justify;
+    }
+    return Context();
 }
 
 void _ensureActive()
@@ -535,28 +637,6 @@ void _performLayout(Node* node)
 }
 
 #ifdef KRAKEN_ENABLE_PYTHON
-struct ContextProxy
-{
-    ContextProxy() = default;
-    void __enter__() {}
-    void __exit__(nb::handle, nb::handle, nb::handle)
-    {
-        _popContainer();
-    }
-};
-
-struct RootProxy : public ContextProxy
-{
-    RootProxy(const Rect& bounds)
-    {
-        begin(bounds);
-    }
-    void __exit__(nb::handle type, nb::handle value, nb::handle traceback)
-    {
-        end();
-    }
-};
-
 void _bind(nb::module_& m)
 {
     using namespace nb::literals;
@@ -600,89 +680,37 @@ void _bind(nb::module_& m)
         .def_rw("width", &Style::width)
         .def_rw("height", &Style::height);
 
-    nb::class_<ContextProxy>(subUI, "_ContextProxy")
-        .def("__enter__", &ContextProxy::__enter__)
+    nb::class_<Context>(subUI, "_Context")
+        .def("__enter__", [](Context& self) { return &self; })
         .def(
-            "__exit__", &ContextProxy::__exit__, nb::arg("type").none(), nb::arg("value").none(),
-            nb::arg("traceback").none()
+            "__exit__", [](Context& self, nb::handle, nb::handle, nb::handle) { self.exit(); },
+            nb::arg("type").none(), nb::arg("value").none(), nb::arg("traceback").none()
         );
 
-    nb::class_<RootProxy, ContextProxy>(subUI, "_RootProxy")
-        .def("__enter__", &RootProxy::__enter__)
+    nb::class_<RootContext>(subUI, "_RootContext")
+        .def("__enter__", [](RootContext& self) { return &self; })
         .def(
-            "__exit__", &RootProxy::__exit__, nb::arg("type").none(), nb::arg("value").none(),
-            nb::arg("traceback").none()
+            "__exit__", [](RootContext& self, nb::handle, nb::handle, nb::handle) { self.exit(); },
+            nb::arg("type").none(), nb::arg("value").none(), nb::arg("traceback").none()
         );
 
     subUI.def(
-        "root",
-        [](const Rect& bounds, const Direction dir, const Align align, const Align justify)
-        {
-            auto p = RootProxy(bounds);
-            _root->direction = dir;
-            _root->align = align;
-            _root->justify = justify;
-            return p;
-        },
-        "bounds"_a, "direction"_a = Direction::Vertical, "align"_a = Align::Start,
+        "root", &root, "bounds"_a, "direction"_a = Direction::Vertical, "align"_a = Align::Start,
         "justify"_a = Align::Start
     );
 
     subUI.def(
-        "row",
-        [](const std::optional<Style>& style, double gap, double padding, const Align align,
-           const Align justify)
-        {
-            Style s = style.value_or(Style{});
-            if (gap != 0.0)
-                s.gap = gap;
-            if (padding != 0.0)
-                s.padding = padding;
-
-            _pushContainer(s, Direction::Horizontal);
-            _stack.back()->align = align;
-            _stack.back()->justify = justify;
-            return ContextProxy();
-        },
-        "style"_a = nb::none(), "gap"_a = 0.0, "padding"_a = 0.0, "align"_a = Align::Start,
-        "justify"_a = Align::Start
+        "row", &row, "style"_a = nb::none(), "gap"_a = 0.0, "padding"_a = 0.0,
+        "align"_a = Align::Start, "justify"_a = Align::Start
     );
 
     subUI.def(
-        "column",
-        [](const std::optional<Style>& style, double gap, double padding, const Align align,
-           const Align justify)
-        {
-            Style s = style.value_or(Style{});
-            if (gap != 0.0)
-                s.gap = gap;
-            if (padding != 0.0)
-                s.padding = padding;
-
-            _pushContainer(s, Direction::Vertical);
-            _stack.back()->align = align;
-            _stack.back()->justify = justify;
-            return ContextProxy();
-        },
-        "style"_a = nb::none(), "gap"_a = 0.0, "padding"_a = 0.0, "align"_a = Align::Start,
-        "justify"_a = Align::Start
+        "column", &column, "style"_a = nb::none(), "gap"_a = 0.0, "padding"_a = 0.0,
+        "align"_a = Align::Start, "justify"_a = Align::Start
     );
 
     subUI.def(
-        "stack",
-        [](const std::optional<Style>& style, double padding, const Align align,
-           const Align justify)
-        {
-            Style s = style.value_or(Style{});
-            if (padding != 0.0)
-                s.padding = padding;
-
-            _pushContainer(s, Direction::Stack);
-            _stack.back()->align = align;
-            _stack.back()->justify = justify;
-            return ContextProxy();
-        },
-        "style"_a = nb::none(), "padding"_a = 0.0, "align"_a = Align::Start,
+        "stack", &stack, "style"_a = nb::none(), "padding"_a = 0.0, "align"_a = Align::Start,
         "justify"_a = Align::Start
     );
 

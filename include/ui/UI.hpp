@@ -64,8 +64,78 @@ struct Style
     std::optional<double> height;
 };
 
-void begin(const Rect& rootBounds);
-void end();
+class Context
+{
+  public:
+    Context() = default;
+    ~Context();
+    Context(const Context&) = delete;
+    Context& operator=(const Context&) = delete;
+    Context(Context&& other) noexcept
+        : m_active(other.m_active)
+    {
+        other.m_active = false;
+    }
+    Context& operator=(Context&& other) noexcept
+    {
+        m_active = other.m_active;
+        other.m_active = false;
+        return *this;
+    }
+
+    void exit();
+
+  private:
+    bool m_active = true;
+};
+
+class RootContext
+{
+  public:
+    RootContext(
+        const Rect& bounds, Direction dir = Direction::Vertical, Align align = Align::Start,
+        Align justify = Align::Start
+    );
+    ~RootContext();
+    RootContext(const RootContext&) = delete;
+    RootContext& operator=(const RootContext&) = delete;
+    RootContext(RootContext&& other) noexcept
+        : m_active(other.m_active)
+    {
+        other.m_active = false;
+    }
+    RootContext& operator=(RootContext&& other) noexcept
+    {
+        m_active = other.m_active;
+        other.m_active = false;
+        return *this;
+    }
+
+    void exit();
+
+  private:
+    bool m_active = true;
+};
+
+RootContext root(
+    const Rect& bounds, Direction dir = Direction::Vertical, Align align = Align::Start,
+    Align justify = Align::Start
+);
+
+Context row(
+    const std::optional<Style>& style = std::nullopt, double gap = 0.0, double padding = 0.0,
+    Align align = Align::Start, Align justify = Align::Start
+);
+
+Context column(
+    const std::optional<Style>& style = std::nullopt, double gap = 0.0, double padding = 0.0,
+    Align align = Align::Start, Align justify = Align::Start
+);
+
+Context stack(
+    const std::optional<Style>& style = std::nullopt, double padding = 0.0,
+    Align align = Align::Start, Align justify = Align::Start
+);
 
 bool button(const std::string& text, const Style& style);
 void label(const std::string& text, const Style& style);

@@ -26,6 +26,8 @@ class Timer
 
     void reset();
 
+    void restart();
+
     [[nodiscard]] bool isDone() const;
 
     [[nodiscard]] double timeRemaining() const;

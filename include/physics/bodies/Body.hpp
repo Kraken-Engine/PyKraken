@@ -11,7 +11,6 @@ class Polygon;
 class Rect;
 class Circle;
 class Capsule;
-struct Color;
 struct Transform;
 
 namespace physics
@@ -55,8 +54,6 @@ class Body
 
     bool operator==(const Body& other) const;
     bool operator!=(const Body& other) const;
-
-    void debugDraw() const;
     b2BodyType _getType() const;
     b2BodyId _getBodyId() const;
 

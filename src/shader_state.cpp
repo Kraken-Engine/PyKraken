@@ -16,7 +16,7 @@ namespace kn
 static std::vector<ShaderState*> _shaderStates;
 
 ShaderState::ShaderState(
-    const std::filesystem::path& fragmentFilePath, const Uint32 uniformBufferCount
+    const std::filesystem::path& fragmentFilePath, const uint32_t uniformBufferCount
 )
 {
     const char* ext = SDL_strrchr(fragmentFilePath.string().c_str(), '.');
@@ -126,11 +126,6 @@ void ShaderState::unbind() const
         throw std::runtime_error("Failed to unbind shader state: " + std::string(SDL_GetError()));
 }
 
-void ShaderState::setUniform(const Uint32 binding, const void* data, const size_t size) const
-{
-    SDL_SetGPURenderStateFragmentUniforms(m_renderState, binding, data, size);
-}
-
 namespace shader_state
 {
 void _quit()
@@ -181,16 +176,16 @@ Unbinds the current shader state, reverting to the default render state.
             )doc")
         .def(
             "set_uniform",
-            [](const ShaderState& self, Uint32 binding,
+            [](const ShaderState& self, const Uint32 binding,
                nb::ndarray<nb::c_contig, nb::device::cpu> dataBuf)
             {
                 if (dataBuf.ndim() != 1)
-                {
                     throw std::runtime_error("Data must be a 1D buffer or bytes object");
-                }
+
                 const void* ptr = dataBuf.data();
-                const size_t nbytes = dataBuf.nbytes();
-                self.setUniform(binding, ptr, nbytes);
+                const Uint32 nbytes = static_cast<Uint32>(dataBuf.nbytes());
+
+                SDL_SetGPURenderStateFragmentUniforms(self.m_renderState, binding, ptr, nbytes);
             },
             "binding"_a, "data"_a, R"doc(
 Set uniform data for the fragment shader at the specified binding point.

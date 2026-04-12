@@ -170,9 +170,6 @@ Args:
             Returns:
                 Transform: The current transform of the body.
             )doc")
-        .def("debug_draw", &Body::debugDraw, R"doc(
-Draw all colliders attached to the body (debug/development only).
-            )doc")
         .def("destroy", &Body::destroy, R"doc(Destroy the body manually.)doc")
         .def(nb::self == nb::self)
         .def(nb::self != nb::self);
@@ -775,16 +772,49 @@ and the fraction along the cast path where the hit occurred.
         );
 
     pyWorld
-        .def(nb::init<const Vec2&>(), "gravity"_a, R"doc(
+        .def(nb::init<const Vec2&>(), "gravity"_a = Vec2::ZERO, R"doc(
 Create a new physics world with the specified gravity.
 
 Args:
-    gravity (Vec2): The gravity vector for the world.
+    gravity (Vec2, optional): The gravity vector for the world. Defaults to (0, 0).
         )doc")
 
         .def_prop_rw(
             "gravity", &World::getGravity, &World::setGravity,
             R"doc(The gravity vector of the world.)doc"
+        )
+        .def(
+            "debug_draw",
+            [](const World& self, const Color& color, bool filledShapes, bool shapes, bool joints,
+               bool jointExtras, bool bounds, bool mass, bool bodyNames, bool contacts,
+               bool graphColors, bool contactNormals, bool contactImpulses, bool contactFeatures,
+               bool frictionImpulses, bool islands)
+            {
+                DebugDrawOptions options{};
+                options.filledShapes = filledShapes;
+                options.shapes = shapes;
+                options.joints = joints;
+                options.jointExtras = jointExtras;
+                options.bounds = bounds;
+                options.mass = mass;
+                options.bodyNames = bodyNames;
+                options.contacts = contacts;
+                options.graphColors = graphColors;
+                options.contactNormals = contactNormals;
+                options.contactImpulses = contactImpulses;
+                options.contactFeatures = contactFeatures;
+                options.frictionImpulses = frictionImpulses;
+                options.islands = islands;
+
+                self.debugDraw(color, options);
+            },
+            "color"_a = Color::RED, "filled_shapes"_a = false, "shapes"_a = true, "joints"_a = true,
+            "joint_extras"_a = true, "bounds"_a = false, "mass"_a = false, "body_names"_a = false,
+            "contacts"_a = false, "graph_colors"_a = false, "contact_normals"_a = false,
+            "contact_impulses"_a = false, "contact_features"_a = false,
+            "friction_impulses"_a = false, "islands"_a = false, R"doc(
+Draw physics debug geometry.
+            )doc"
         )
 
         .def("from_map_layer", &World::fromMapLayer, "layer"_a, R"doc(

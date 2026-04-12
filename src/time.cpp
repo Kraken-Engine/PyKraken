@@ -56,6 +56,12 @@ void Timer::reset()
     m_elapsedPausedTime = 0.0;
 }
 
+void Timer::restart()
+{
+    reset();
+    start();
+}
+
 bool Timer::isDone() const
 {
     if (!m_started)
@@ -365,6 +371,11 @@ Reset the timer to its initial state.
 
 Stops the timer and resets it back to its initial, unstarted state.
 The timer can be started again with `start()` after being reset.
+    )doc")
+        .def("restart", &Timer::restart, R"doc(
+Restart the timer countdown.
+
+This is a convenience method that combines reset() and start() into one call.
     )doc");
 }
 #endif  // KRAKEN_ENABLE_PYTHON

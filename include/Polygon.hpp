@@ -21,6 +21,7 @@ class Polygon
 
     Polygon() = default;
     explicit Polygon(const std::vector<Vec2>& points);
+    Polygon(uint32_t n, double radius);
     ~Polygon() = default;
 
     [[nodiscard]] Polygon copy() const;
