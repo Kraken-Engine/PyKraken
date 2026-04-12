@@ -1,5 +1,23 @@
 cmake_minimum_required(VERSION 3.15...3.27)
 
+# If you are a user trying to install this package, use the
+# command below, which will install all necessary build dependencies,
+# compile the package in an isolated environment, and then install it.
+# =====================================================================
+#   $ pip install .
+# =====================================================================
+# If you are a software developer, then
+# it is usually much more efficient to install the build dependencies
+# in your environment once and use the following command that avoids
+# a costly creation of a new virtual environment at every compilation:
+# =====================================================================
+#   $ pip install nanobind scikit-build-core[pyproject]
+#   $ pip install --no-build-isolation -ve .
+# =====================================================================
+# You may optionally add -Ceditable.rebuild=true to auto-rebuild when
+# the package is imported. Otherwise, you need to rerun the above
+# after editing C++ files.
+
 # --- vcpkg integration (Windows CI and local dev) ---
 if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
   set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
@@ -18,6 +36,9 @@ endif()
 
 project(KrakenEngine LANGUAGES CXX)
 
+# Local find modules (for module-mode package discovery).
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
+
 if(SKBUILD)
   set(KRAKEN_BUILD_PYTHON ON CACHE BOOL "Build Python bindings via nanobind" FORCE)
 else()
@@ -33,84 +54,180 @@ endif()
 include(FetchContent)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
+option(KRAKEN_VENDORED "Set default value for all *_VENDORED dependency options" OFF)
+
+# Individual vendoring controls. KRAKEN_VENDORED only sets their default.
+option(SDL3_VENDORED "Build SDL3 from source via FetchContent" ${KRAKEN_VENDORED})
+option(SDL3_IMAGE_VENDORED "Build SDL3_image from source via FetchContent" ${KRAKEN_VENDORED})
+option(SDL3_TTF_VENDORED "Build SDL3_ttf from source via FetchContent" ${KRAKEN_VENDORED})
+option(SDL3_MIXER_VENDORED "Build SDL3_mixer from source via FetchContent" ${KRAKEN_VENDORED})
+option(BOX2D_VENDORED "Build box2d from source via FetchContent" ${KRAKEN_VENDORED})
+option(SPDLOG_VENDORED "Build spdlog from source via FetchContent" ${KRAKEN_VENDORED})
+option(ZSTD_VENDORED "Build zstd from source via FetchContent" ${KRAKEN_VENDORED})
+option(TMXLITE_VENDORED "Build tmxlite from source via FetchContent" ${KRAKEN_VENDORED})
+
+message(STATUS "KrakenEngine: KRAKEN_VENDORED=${KRAKEN_VENDORED} (default for dependency *_VENDORED options)")
+message(STATUS "KrakenEngine: SDL3_VENDORED=${SDL3_VENDORED}")
+message(STATUS "KrakenEngine: SDL3_IMAGE_VENDORED=${SDL3_IMAGE_VENDORED}")
+message(STATUS "KrakenEngine: SDL3_TTF_VENDORED=${SDL3_TTF_VENDORED}")
+message(STATUS "KrakenEngine: SDL3_MIXER_VENDORED=${SDL3_MIXER_VENDORED}")
+message(STATUS "KrakenEngine: BOX2D_VENDORED=${BOX2D_VENDORED}")
+message(STATUS "KrakenEngine: SPDLOG_VENDORED=${SPDLOG_VENDORED}")
+message(STATUS "KrakenEngine: ZSTD_VENDORED=${ZSTD_VENDORED}")
+message(STATUS "KrakenEngine: TMXLITE_VENDORED=${TMXLITE_VENDORED}")
+
 # =====================================================================
 # COMMON DEPENDENCIES
 # =====================================================================
 
-# SDL3 and friends --------------------------------------------
-find_package(SDL3 CONFIG REQUIRED)
+# SDL3 --------------------------------------------
+if(SDL3_VENDORED)
+  set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+  set(SDL_STATIC ON CACHE BOOL "" FORCE)
+  set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
+  set(SDL_TESTS OFF CACHE BOOL "" FORCE)
 
-# find_package(SDL3_image CONFIG REQUIRED)
-set(SDLIMAGE_ANI  OFF CACHE BOOL "" FORCE)
-set(SDLIMAGE_AVIF OFF CACHE BOOL "" FORCE)
-set(SDLIMAGE_BMP  OFF CACHE BOOL "" FORCE)
-set(SDLIMAGE_GIF  OFF CACHE BOOL "" FORCE)
-set(SDLIMAGE_LBM  OFF CACHE BOOL "" FORCE)
-set(SDLIMAGE_PCX  OFF CACHE BOOL "" FORCE)
-set(SDLIMAGE_PNM  OFF CACHE BOOL "" FORCE)
-set(SDLIMAGE_QOI  OFF CACHE BOOL "" FORCE)
-set(SDLIMAGE_TIF  OFF CACHE BOOL "" FORCE)
-set(SDLIMAGE_WEBP OFF CACHE BOOL "" FORCE)
-set(SDLIMAGE_XCF  OFF CACHE BOOL "" FORCE)
-set(SDLIMAGE_XPM  OFF CACHE BOOL "" FORCE)
-set(SDLIMAGE_XV   OFF CACHE BOOL "" FORCE)
-set(SDLIMAGE_VENDORED ON CACHE BOOL "" FORCE)
-set(SDLIMAGE_PNG_SHARED OFF CACHE BOOL "" FORCE)
-FetchContent_Declare(SDL_image
-  GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
-  GIT_TAG        release-3.4.0
-  GIT_SHALLOW    TRUE
-)
-FetchContent_MakeAvailable(SDL_image)
-
-# NOTE:
-# SDL3_ttf must be found *after* SDL_image is fetched/built on Windows CI.
-# Otherwise a transitive dependency can define PNG::PNG first, and SDL_image's
-# vendored libpng path will fail trying to create the same alias target.
-find_package(SDL3_ttf CONFIG REQUIRED)
-
-set(SDLMIXER_GME               OFF CACHE BOOL "" FORCE)
-set(SDLMIXER_WAVPACK           OFF CACHE BOOL "" FORCE)
-set(SDLMIXER_MOD               OFF CACHE BOOL "" FORCE)
-set(SDLMIXER_MIDI              OFF CACHE BOOL "" FORCE)
-set(SDLMIXER_AIFF              OFF CACHE BOOL "" FORCE)
-set(SDLMIXER_VOC               OFF CACHE BOOL "" FORCE)
-set(SDLMIXER_AU                OFF CACHE BOOL "" FORCE)
-set(SDLMIXER_VENDORED          ON CACHE BOOL "" FORCE)
-FetchContent_Declare(SDL_mixer
-  GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer.git
-  GIT_TAG        release-3.2.0
-  GIT_SHALLOW    TRUE
-)
-FetchContent_MakeAvailable(SDL_mixer)
-# ------------------------------------------------------------
-
-find_package(box2d CONFIG REQUIRED)
-find_package(spdlog CONFIG REQUIRED)
-
-# Used by tmxlite and SDL image
-find_package(zstd CONFIG QUIET)
-if(NOT zstd_FOUND)
-  find_package(PkgConfig REQUIRED)
-  pkg_check_modules(ZSTD REQUIRED libzstd)
-
-  add_library(zstd::zstd INTERFACE IMPORTED)
-  target_include_directories(zstd::zstd INTERFACE ${ZSTD_INCLUDE_DIRS})
-  target_link_libraries(zstd::zstd INTERFACE ${ZSTD_LIBRARIES})
+  FetchContent_Declare(SDL3
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+    GIT_TAG        release-3.4.0
+    GIT_SHALLOW    TRUE
+  )
+  FetchContent_MakeAvailable(SDL3)
+else()
+  find_package(SDL3 CONFIG REQUIRED)
 endif()
 
-FetchContent_Declare(tmxlite
-  GIT_REPOSITORY https://github.com/fallahn/tmxlite.git
-  # Use the upstream branch (master) which includes fixes not present in the
-  # v1.4.4 release (project version and CMake minimum updates).
-  GIT_TAG        master
-  GIT_SHALLOW    TRUE
-  SOURCE_SUBDIR  tmxlite
-)
-set(TMXLITE_STATIC_LIB ON CACHE BOOL "" FORCE)
-set(USE_ZSTD ON CACHE BOOL "" FORCE)  # Big boy compression
-FetchContent_MakeAvailable(tmxlite)
-set_target_properties(tmxlite PROPERTIES POSITION_INDEPENDENT_CODE ON)
+# SDL3_image --------------------------------------
+if(SDL3_IMAGE_VENDORED)
+  set(SDLIMAGE_ANI  OFF CACHE BOOL "" FORCE)
+  set(SDLIMAGE_AVIF OFF CACHE BOOL "" FORCE)
+  set(SDLIMAGE_BMP  OFF CACHE BOOL "" FORCE)
+  set(SDLIMAGE_GIF  OFF CACHE BOOL "" FORCE)
+  set(SDLIMAGE_LBM  OFF CACHE BOOL "" FORCE)
+  set(SDLIMAGE_PCX  OFF CACHE BOOL "" FORCE)
+  set(SDLIMAGE_PNM  OFF CACHE BOOL "" FORCE)
+  set(SDLIMAGE_QOI  OFF CACHE BOOL "" FORCE)
+  set(SDLIMAGE_TIF  OFF CACHE BOOL "" FORCE)
+  set(SDLIMAGE_WEBP OFF CACHE BOOL "" FORCE)
+  set(SDLIMAGE_XCF  OFF CACHE BOOL "" FORCE)
+  set(SDLIMAGE_XPM  OFF CACHE BOOL "" FORCE)
+  set(SDLIMAGE_XV   OFF CACHE BOOL "" FORCE)
+
+  set(SDLIMAGE_VENDORED ON CACHE BOOL "" FORCE)
+  set(SDLIMAGE_PNG_SHARED OFF CACHE BOOL "" FORCE)
+
+  FetchContent_Declare(SDL_image
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
+    GIT_TAG        release-3.4.0
+    GIT_SHALLOW    TRUE
+  )
+  FetchContent_MakeAvailable(SDL_image)
+else()
+  find_package(SDL3_image CONFIG REQUIRED)
+endif()
+
+# SDL3_ttf ----------------------------------------
+# Must be found *after* SDL_image is fetched/built on Windows CI.
+# Otherwise a transitive dependency can define PNG::PNG first, and SDL_image's
+# vendored libpng path will fail trying to create the same alias target.
+if(SDL3_TTF_VENDORED)
+  set(SDLTTF_VENDORED ON CACHE BOOL "" FORCE)
+
+  FetchContent_Declare(SDL_ttf
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL_ttf.git
+    GIT_TAG        release-3.2.2
+    GIT_SHALLOW    TRUE
+  )
+  FetchContent_MakeAvailable(SDL_ttf)
+else()
+  find_package(SDL3_ttf CONFIG REQUIRED)
+endif()
+
+# SDL3_mixer --------------------------------------
+if(SDL3_MIXER_VENDORED)
+  set(SDLMIXER_GME               OFF CACHE BOOL "" FORCE)
+  set(SDLMIXER_WAVPACK           OFF CACHE BOOL "" FORCE)
+  set(SDLMIXER_MOD               OFF CACHE BOOL "" FORCE)
+  set(SDLMIXER_MIDI              OFF CACHE BOOL "" FORCE)
+  set(SDLMIXER_AIFF              OFF CACHE BOOL "" FORCE)
+  set(SDLMIXER_VOC               OFF CACHE BOOL "" FORCE)
+  set(SDLMIXER_AU                OFF CACHE BOOL "" FORCE)
+  set(SDLMIXER_VENDORED          ON CACHE BOOL "" FORCE)
+  FetchContent_Declare(SDL_mixer
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer.git
+    GIT_TAG        release-3.2.0
+    GIT_SHALLOW    TRUE
+  )
+  FetchContent_MakeAvailable(SDL_mixer)
+else()
+  find_package(SDL3_mixer CONFIG REQUIRED)
+endif()
+
+# Box2D -------------------------------------------
+if(BOX2D_VENDORED)
+  FetchContent_Declare(box2d
+    GIT_REPOSITORY https://github.com/erincatto/box2d.git
+    GIT_TAG        v3.1.1
+    GIT_SHALLOW    TRUE
+  )
+  FetchContent_MakeAvailable(box2d)
+else()
+  find_package(box2d CONFIG REQUIRED)
+endif()
+
+# spdlog ------------------------------------------
+if(SPDLOG_VENDORED)
+  FetchContent_Declare(spdlog
+    GIT_REPOSITORY https://github.com/gabime/spdlog.git
+    GIT_TAG        v1.17.0
+    GIT_SHALLOW    TRUE
+  )
+  FetchContent_MakeAvailable(spdlog)
+else()
+  find_package(spdlog CONFIG REQUIRED)
+endif()
+
+# zstd --------------------------------------------
+# Used by tmxlite and SDL image
+if(ZSTD_VENDORED)
+  set(ZSTD_BUILD_PROGRAMS OFF CACHE BOOL "" FORCE)
+  set(ZSTD_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+  set(ZSTD_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+  set(ZSTD_BUILD_STATIC ON CACHE BOOL "" FORCE)
+
+  FetchContent_Declare(zstd
+    GIT_REPOSITORY https://github.com/facebook/zstd.git
+    GIT_TAG        v1.5.7
+    GIT_SHALLOW    TRUE
+    SOURCE_SUBDIR  build/cmake
+  )
+  FetchContent_MakeAvailable(zstd)
+else()
+  find_package(zstd CONFIG QUIET)
+  if(NOT zstd_FOUND)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(ZSTD REQUIRED libzstd)
+
+    add_library(zstd::zstd INTERFACE IMPORTED)
+    target_include_directories(zstd::zstd INTERFACE ${ZSTD_INCLUDE_DIRS})
+    target_link_libraries(zstd::zstd INTERFACE ${ZSTD_LIBRARIES})
+  endif()
+endif()
+
+if(TMXLITE_VENDORED)
+  FetchContent_Declare(tmxlite
+    GIT_REPOSITORY https://github.com/fallahn/tmxlite.git
+    GIT_TAG        v1.4.5
+    GIT_SHALLOW    TRUE
+    SOURCE_SUBDIR  tmxlite
+  )
+  set(TMXLITE_STATIC_LIB ON CACHE BOOL "" FORCE)
+  set(USE_ZSTD ON CACHE BOOL "" FORCE)  # Big boy compression
+  FetchContent_MakeAvailable(tmxlite)
+  set_target_properties(tmxlite PROPERTIES POSITION_INDEPENDENT_CODE ON)
+else()
+  find_package(TMXLITE MODULE REQUIRED)
+endif()
 
 # =====================================================================
 # SOURCES
@@ -222,7 +339,7 @@ target_link_libraries(${KRAKEN_TARGET} PRIVATE
   SDL3_image::SDL3_image
   SDL3_ttf::SDL3_ttf
   SDL3_mixer::SDL3_mixer
-  tmxlite
+  tmxlite::tmxlite
   $<IF:$<TARGET_EXISTS:zstd::libzstd_static>,zstd::libzstd_static,
     $<IF:$<TARGET_EXISTS:zstd::zstd>,zstd::zstd,zstd::libzstd_shared>>
   box2d::box2d
