@@ -1,10 +1,10 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
-  "builtin-baseline": "0b88aacde46a853151730fbe7d0b7ee45f4b6864",
   "name": "kraken-engine",
   "version-semver": "1.7.1",
   "description": "A 2D videogame development framework.",
   "homepage": "https://krakenengine.org/",
+  "builtin-baseline": "0b88aacde46a853151730fbe7d0b7ee45f4b6864",
   "dependencies": [
     "box2d",
     {
@@ -42,7 +42,8 @@
       ]
     },
     "tmxlite",
-    "zstd"
+    "zstd",
+    "sdl3-shadercross"
   ],
   "overrides": [
     {
@@ -70,12 +71,16 @@
       "version": "1.17.0"
     },
     {
+      "name": "tmxlite",
+      "version": "1.4.5"
+    },
+    {
       "name": "zstd",
       "version": "1.5.7"
     },
     {
-      "name": "tmxlite",
-      "version": "1.4.5"
+      "name": "shadercross",
+      "version": "3.0.0"
     }
   ]
 }

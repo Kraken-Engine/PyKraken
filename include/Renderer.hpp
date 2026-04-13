@@ -25,6 +25,15 @@ class Texture;
 class PixelArray;
 enum class TextureScaleMode;
 
+enum class RenderBackend
+{
+    Auto,
+    Legacy,
+    Vulkan,
+    Metal,
+    Direct3d12,
+};
+
 namespace renderer
 {
 
@@ -37,6 +46,8 @@ void _quit();
 SDL_Renderer* _get();
 SDL_GPUDevice* _getGPUDevice();
 bool _primaryActive();
+
+void setRenderBackend(RenderBackend backend);
 
 void clear(const Color& color = {});
 void present();

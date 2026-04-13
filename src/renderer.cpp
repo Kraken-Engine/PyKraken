@@ -25,6 +25,7 @@ static SDL_Renderer* _renderer = nullptr;
 static SDL_GPUDevice* _gpuDevice = nullptr;
 static TextureScaleMode _defaultScaleMode = TextureScaleMode::LINEAR;
 static Texture* _primaryTarget = nullptr;
+static RenderBackend _forcedBackend = RenderBackend::Auto;
 
 static Vec2 _size{};
 
@@ -32,75 +33,95 @@ void _init(SDL_Window* window, const int width, const int height)
 {
     _size = {width, height};
 
-    // Attempt to force Vulkan
-    _gpuDevice = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV, true, "vulkan");
-    if (_gpuDevice)
-        _renderer = SDL_CreateGPURenderer(_gpuDevice, window);
-
-    // Fallback to default GPU renderer if Vulkan failed or wasn't available
-    if (!_renderer)
+    if (_forcedBackend != RenderBackend::Legacy)
     {
-        log::warn(
-            "Failed to initialize Vulkan backend, trying default GPU renderer. Reason: {}",
-            SDL_GetError()
-        );
+        SDL_GPUShaderFormat format = SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_MSL |
+                                     SDL_GPU_SHADERFORMAT_DXIL;
+        const char* driverName = nullptr;
 
-        if (_gpuDevice)
+        switch (_forcedBackend)
         {
-            SDL_DestroyGPUDevice(_gpuDevice);
-            _gpuDevice = nullptr;
+        case RenderBackend::Vulkan:
+            format = SDL_GPU_SHADERFORMAT_SPIRV;
+            driverName = "vulkan";
+            break;
+        case RenderBackend::Metal:
+            format = SDL_GPU_SHADERFORMAT_MSL;
+            driverName = "metal";
+            break;
+        case RenderBackend::Direct3d12:
+            format = SDL_GPU_SHADERFORMAT_DXIL;
+            driverName = "direct3d12";
+            break;
+        default:
+            break;
         }
 
-        _renderer = SDL_CreateGPURenderer(nullptr, window);
+        log::info("Attempting to initialize {} GPU backend...", driverName ? driverName : "AUTO");
+        _gpuDevice = SDL_CreateGPUDevice(format, true, driverName);
+
+        if (_gpuDevice)
+            _renderer = SDL_CreateGPURenderer(_gpuDevice, window);
+
+        if (!_renderer && _forcedBackend != RenderBackend::Auto)
+        {
+            log::warn("Preferred GPU backend failed: {}. Falling back to AUTO.", SDL_GetError());
+
+            if (_gpuDevice)
+            {
+                SDL_DestroyGPUDevice(_gpuDevice);
+                _gpuDevice = nullptr;
+            }
+
+            _renderer = SDL_CreateGPURenderer(nullptr, window);
+        }
     }
 
     // Fallback to legacy renderer
     if (!_renderer)
     {
-        log::warn(
-            "GPU backend failed to initialize, falling back to legacy renderer. Reason: {}",
-            SDL_GetError()
-        );
+        if (_forcedBackend != RenderBackend::Legacy)
+            log::warn("GPU backend failed: {}. Falling back to LEGACY renderer.", SDL_GetError());
+        else
+            log::info("Using LEGACY renderer backend.");
+
         _renderer = SDL_CreateRenderer(window, nullptr);
+
+        if (!_renderer)
+            throw std::runtime_error("Renderer failed to create: " + std::string(SDL_GetError()));
     }
-
-    if (!_renderer)
-        throw std::runtime_error("Renderer failed to create: " + std::string(SDL_GetError()));
-
-    if (!_gpuDevice)
-        _gpuDevice = SDL_GetGPURendererDevice(_renderer);
 
     SDL_SetRenderLogicalPresentation(_renderer, width, height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
     SDL_SetRenderDrawBlendMode(_renderer, SDL_BLENDMODE_BLEND);
 
     if (!_gpuDevice)
+        _gpuDevice = SDL_GetGPURendererDevice(_renderer);
+
+    if (_gpuDevice)
     {
-        const char* rendererName = SDL_GetRendererName(_renderer);
-        log::info("Initialized renderer: {}", rendererName);
-        return;
-    }
+        const SDL_PropertiesID gpuProperties = SDL_GetGPUDeviceProperties(_gpuDevice);
+        const char* driverName = SDL_GetGPUDeviceDriver(_gpuDevice);
 
-    const SDL_PropertiesID gpuProperties = SDL_GetGPUDeviceProperties(_gpuDevice);
-    const char* gpuName =
-        SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_NAME_STRING, "Unknown");
-    const char* driverName = SDL_GetGPUDeviceDriver(_gpuDevice);
-    const char* driverVersion =
-        SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_VERSION_STRING, "Unknown");
-    const char* driverInfo =
-        SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_INFO_STRING, "None");
-
-    log::info("GPU Device: {}", gpuName);
-    log::info("GPU Driver: {}", (driverName ? driverName : "Unknown"));
-    log::info("GPU Driver Version: {}", driverVersion);
-    log::info("GPU Driver Info: {}", driverInfo);
-
-    if (driverName && std::string(driverName) == "direct3d12")
-        log::warn(
-            "Direct3D 12 backend detected. Please be aware that excessive texture swapping in a "
-            "single frame can cause descriptor heap exhaustion and visual artifacts on this "
-            "backend. Consider using Vulkan, texture atlases, or manual texture sorting if you "
-            "encounter issues."
+        log::info(
+            "GPU Device: {}",
+            SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_NAME_STRING, "Unknown")
         );
+        log::info("GPU Driver: {}", (driverName ? driverName : "Unknown"));
+        log::info(
+            "GPU Driver Version: {}",
+            SDL_GetStringProperty(
+                gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_VERSION_STRING, "Unknown"
+            )
+        );
+        log::info(
+            "GPU Driver Info: {}",
+            SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_INFO_STRING, "None")
+        );
+    }
+    else
+    {
+        log::info("Initialized renderer: {}", SDL_GetRendererName(_renderer));
+    }
 }
 
 void _quit()
@@ -116,6 +137,17 @@ void _quit()
         SDL_DestroyRenderer(_renderer);
         _renderer = nullptr;
     }
+}
+
+void setRenderBackend(const RenderBackend backend)
+{
+    if (_renderer)
+    {
+        log::warn("Renderer backend cannot be changed after window creation.");
+        return;
+    }
+
+    _forcedBackend = backend;
 }
 
 void clear(const Color& color)
@@ -678,6 +710,13 @@ void _bind(nb::module_& module)
 {
     using namespace nb::literals;
 
+    nb::enum_<RenderBackend>(module, "RenderBackend")
+        .value("AUTO", RenderBackend::Auto)
+        .value("LEGACY", RenderBackend::Legacy)
+        .value("VULKAN", RenderBackend::Vulkan)
+        .value("METAL", RenderBackend::Metal)
+        .value("DIRECT3D12", RenderBackend::Direct3d12);
+
     auto subRenderer = module.def_submodule("renderer", "Functions for rendering graphics");
 
     nb::class_<Batcher>(subRenderer, "Batcher", R"doc(
@@ -739,6 +778,16 @@ Raises:
 
     subRenderer.def("unset_virtual_resolution", &unsetVirtualResolution, R"doc(
 Unset any previously configured virtual resolution and restore rendering directly to the output.
+    )doc");
+
+    subRenderer.def("set_render_backend", &setRenderBackend, "backend"_a, R"doc(
+Set the renderer backend to use for future initialization. This must be called before creating the window/renderer.
+
+Args:
+    backend (RenderBackend): One of the RenderBackend enum values.
+
+Notes:
+    Calling this after the renderer has been created has no effect.
     )doc");
 
     subRenderer.def("get_virtual_resolution", &getVirtualResolution, R"doc(

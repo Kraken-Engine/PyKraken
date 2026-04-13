@@ -18,7 +18,6 @@
 #include "Mixer.hpp"
 #include "Orchestrator.hpp"
 #include "Renderer.hpp"
-#include "ShaderState.hpp"
 #include "Text.hpp"
 #include "Time.hpp"
 #include "misc/kraken_icon.h"

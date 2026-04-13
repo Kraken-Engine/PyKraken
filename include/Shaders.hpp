@@ -7,7 +7,6 @@
 #endif  // KRAKEN_ENABLE_PYTHON
 
 #include <filesystem>
-#include <string>
 #include <type_traits>
 
 #ifdef KRAKEN_ENABLE_PYTHON
@@ -16,20 +15,29 @@ namespace nb = nanobind;
 
 namespace kn
 {
-namespace shader_state
+namespace shaders
 {
+class Shader;
+
 #ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module);
 #endif  // KRAKEN_ENABLE_PYTHON
 
 void _quit();
-}  // namespace shader_state
 
-class ShaderState
+Shader load(const std::filesystem::path& fragmentBasePath, uint32_t uniformBufferCount = 0);
+
+class Shader
 {
   public:
-    ShaderState(const std::filesystem::path& fragmentFilePath, uint32_t uniformBufferCount = 0);
-    ~ShaderState();
+    Shader() = delete;
+    ~Shader();
+
+    // Move-Only
+    Shader(const Shader&) = delete;
+    Shader& operator=(const Shader&) = delete;
+    Shader(Shader&& other) noexcept;
+    Shader& operator=(Shader&& other) noexcept;
 
     void bind() const;
     void unbind() const;
@@ -44,13 +52,15 @@ class ShaderState
     }
 
   private:
+    Shader(SDL_GPUShader* m_fragShader, SDL_GPURenderState* m_renderState);
+
     SDL_GPUShader* m_fragShader;
     SDL_GPURenderState* m_renderState;
 
-    // Allow shader_state namespace to access private members for cleanup
-    friend void shader_state::_quit();
+    friend void _quit();
+    friend void _bind(nb::module_& module);
 
-    // binding thing
-    friend void shader_state::_bind(nb::module_& module);
+    friend Shader load(const std::filesystem::path& fragmentBasePath, uint32_t uniformBufferCount);
 };
+}  // namespace shaders
 }  // namespace kn

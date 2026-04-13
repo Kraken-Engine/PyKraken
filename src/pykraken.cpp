@@ -56,6 +56,6 @@ Tear down the Kraken engine subsystems.
     kn::ui::_bind(m);
     kn::tilemap::_bind(m);
     kn::physics::_bind(m);
-    kn::shader_state::_bind(m);
+    kn::shaders::_bind(m);
     kn::viewport::_bind(m);
 }

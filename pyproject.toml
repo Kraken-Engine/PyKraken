@@ -28,6 +28,9 @@ license-files = ["LICENSE"]
 "Release Notes" = "https://github.com/Kraken-Engine/PyKraken/releases"
 "Source" = "https://github.com/Kraken-Engine/PyKraken"
 
+[project.scripts]
+pykraken = "pykraken.cli:main"
+
 [build-system]
 requires = ["scikit-build-core >=0.11.6", "nanobind >=2.12.0"]
 build-backend = "scikit_build_core.build"

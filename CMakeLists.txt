@@ -57,14 +57,15 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "KrakenEngine only supports static builds" 
 option(KRAKEN_VENDORED "Set default value for all *_VENDORED dependency options" OFF)
 
 # Individual vendoring controls. KRAKEN_VENDORED only sets their default.
-option(SDL3_VENDORED "Build SDL3 from source via FetchContent" ${KRAKEN_VENDORED})
-option(SDL3_IMAGE_VENDORED "Build SDL3_image from source via FetchContent" ${KRAKEN_VENDORED})
-option(SDL3_TTF_VENDORED "Build SDL3_ttf from source via FetchContent" ${KRAKEN_VENDORED})
-option(SDL3_MIXER_VENDORED "Build SDL3_mixer from source via FetchContent" ${KRAKEN_VENDORED})
-option(BOX2D_VENDORED "Build box2d from source via FetchContent" ${KRAKEN_VENDORED})
-option(SPDLOG_VENDORED "Build spdlog from source via FetchContent" ${KRAKEN_VENDORED})
-option(ZSTD_VENDORED "Build zstd from source via FetchContent" ${KRAKEN_VENDORED})
-option(TMXLITE_VENDORED "Build tmxlite from source via FetchContent" ${KRAKEN_VENDORED})
+option(SDL3_VENDORED             "Build SDL3 from source"       ${KRAKEN_VENDORED})
+option(SDL3_IMAGE_VENDORED       "Build SDL3_image from source" ${KRAKEN_VENDORED})
+option(SDL3_TTF_VENDORED         "Build SDL3_ttf from source"   ${KRAKEN_VENDORED})
+option(SDL3_MIXER_VENDORED       "Build SDL3_mixer from source" ${KRAKEN_VENDORED})
+option(SDL3_SHADERCROSS_VENDORED "Build SDL3_shadercross"       ${KRAKEN_VENDORED})
+option(BOX2D_VENDORED            "Build box2d from source"      ${KRAKEN_VENDORED})
+option(SPDLOG_VENDORED           "Build spdlog from source"     ${KRAKEN_VENDORED})
+option(ZSTD_VENDORED             "Build zstd from source"       ${KRAKEN_VENDORED})
+option(TMXLITE_VENDORED          "Build tmxlite from source"    ${KRAKEN_VENDORED})
 
 message(STATUS "KrakenEngine: KRAKEN_VENDORED=${KRAKEN_VENDORED} (default for dependency *_VENDORED options)")
 message(STATUS "KrakenEngine: SDL3_VENDORED=${SDL3_VENDORED}")
@@ -163,6 +164,18 @@ else()
   find_package(SDL3_mixer CONFIG REQUIRED)
 endif()
 
+# SDL3_shadercross --------------------------------
+if (SDL3_SHADERCROSS_VENDORED)
+  FetchContent_Declare(SDL_shadercross
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL_shadercross.git
+    GIT_TAG        main  # No releases yet
+    GIT_SHALLOW    TRUE
+  )
+  FetchContent_MakeAvailable(SDL_shadercross)
+else()
+  find_package(SDL3_shadercross CONFIG REQUIRED)
+endif()
+
 # Box2D -------------------------------------------
 if(BOX2D_VENDORED)
   FetchContent_Declare(box2d
@@ -259,7 +272,7 @@ set(KRAKEN_CORE_SOURCES
   src/polygon.cpp
   src/rect.cpp
   src/renderer.cpp
-  src/shader_state.cpp
+  src/shaders.cpp
   src/text.cpp
   src/texture.cpp
   src/tile_map.cpp
@@ -289,6 +302,8 @@ set(KRAKEN_PYTHON_SOURCES
   src/physics/_bind_physics.cpp
 )
 
+set(KRAKEN_BAKER_SOURCES src/tools/shader_baker.cpp)
+
 # =====================================================================
 # TARGET CONFIGURATION
 # =====================================================================
@@ -302,6 +317,7 @@ if(KRAKEN_BUILD_PYTHON)
   nanobind_add_module(_pykraken STABLE_ABI
     ${KRAKEN_CORE_SOURCES}
     ${KRAKEN_PYTHON_SOURCES}
+    ${KRAKEN_BAKER_SOURCES}
   )
 
   # For ifndef guards
@@ -314,6 +330,12 @@ else()
   add_library(Kraken::Kraken ALIAS KrakenEngine)
 
   set(KRAKEN_TARGET KrakenEngine)
+
+  # Build shader baker tool exe
+  add_executable(KrakenShaderBaker
+    src/tools/baker_main.cpp
+    ${KRAKEN_BAKER_SOURCES}
+  )
 endif()
 
 # =====================================================================
@@ -346,6 +368,18 @@ target_link_libraries(${KRAKEN_TARGET} PRIVATE
   box2d::box2d
   spdlog::spdlog
 )
+
+# =====================================================================
+# SHADERCROSS ROUTING
+# =====================================================================
+if(KRAKEN_BUILD_PYTHON)
+  target_link_libraries(_pykraken PRIVATE SDL3_shadercross::SDL3_shadercross)
+else()
+  target_link_libraries(KrakenShaderBaker PRIVATE
+    SDL3::SDL3
+    SDL3_shadercross::SDL3_shadercross
+  )
+endif()
 
 if(KRAKEN_BUILD_PYTHON)
   # =====================================================================

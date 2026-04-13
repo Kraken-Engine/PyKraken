@@ -28,7 +28,7 @@
 #include "Polygon.hpp"
 #include "Rect.hpp"
 #include "Renderer.hpp"
-#include "ShaderState.hpp"
+#include "Shaders.hpp"
 #include "Text.hpp"
 #include "Texture.hpp"
 #include "TileMap.hpp"
@@ -120,7 +120,7 @@ inline void quit()
     kn::font::_quit();
 
     // Shader states must be destroyed before renderer/GPU device.
-    kn::shader_state::_quit();
+    kn::shaders::_quit();
 
     // Mixer is independent.
     kn::mixer::_quit();
