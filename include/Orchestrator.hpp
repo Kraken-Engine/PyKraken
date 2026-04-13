@@ -29,10 +29,179 @@ void _tick();
 
 class Effect;
 
+namespace fx
+{
+
+[[nodiscard]] std::unique_ptr<Effect> moveTo(
+    const Vec2& pos, double dur = 0.0, const ease::EasingFunction& easeFunc = nullptr
+);
+
+[[nodiscard]] std::unique_ptr<Effect> scaleTo(
+    const Vec2& scale, double dur = 0.0, const ease::EasingFunction& easeFunc = nullptr
+);
+
+[[nodiscard]] std::unique_ptr<Effect> scaleBy(
+    double scale, double dur = 0.0, const ease::EasingFunction& easeFunc = nullptr
+);
+
+[[nodiscard]] std::unique_ptr<Effect> rotateTo(
+    double angle, bool clockwise = true, double dur = 0.0,
+    const ease::EasingFunction& easeFunc = nullptr
+);
+
+[[nodiscard]] std::unique_ptr<Effect> rotateBy(
+    double deltaAngle, bool clockwise = true, double dur = 0.0,
+    const ease::EasingFunction& easeFunc = nullptr
+);
+
+[[nodiscard]] std::unique_ptr<Effect> shake(double amp, double freq, double dur);
+
+[[nodiscard]] std::unique_ptr<Effect> call(const std::function<void()>& callback);
+
+[[nodiscard]] std::unique_ptr<Effect> wait(double dur);
+
+}  // namespace fx
+
+class Effect
+{
+  public:
+    double duration = 0.0;
+    std::function<double(double)> easing = [](double t) { return t; };  // Linear by default
+
+    virtual ~Effect() = default;
+
+    virtual std::unique_ptr<Effect> clone() const = 0;
+
+    virtual void start(Transform& transform) = 0;
+    virtual void update(Transform& transform, double t) = 0;
+};
+
+class MoveToEffect : public Effect
+{
+  public:
+    std::unique_ptr<Effect> clone() const override;
+
+  private:
+    Vec2 targetPos;
+
+    void start(Transform& transform) override;
+    void update(Transform& transform, double t) override;
+
+    Vec2 m_startPos;
+
+    friend std::unique_ptr<Effect> fx::moveTo(const Vec2&, double, const ease::EasingFunction&);
+};
+
+class ScaleToEffect : public Effect
+{
+  public:
+    std::unique_ptr<Effect> clone() const override;
+
+  private:
+    Vec2 targetScale;
+
+    void start(Transform& transform) override;
+    void update(Transform& transform, double t) override;
+
+    Vec2 m_startScale;
+
+    friend std::unique_ptr<Effect> fx::scaleTo(const Vec2&, double, const ease::EasingFunction&);
+};
+
+class ScaleByEffect : public Effect
+{
+  public:
+    std::unique_ptr<Effect> clone() const override;
+
+  private:
+    Vec2 deltaScale;
+
+    void start(Transform& transform) override;
+    void update(Transform& transform, double t) override;
+
+    Vec2 m_startScale;
+
+    friend std::unique_ptr<Effect> fx::scaleBy(double, double, const ease::EasingFunction&);
+};
+
+class RotateToEffect : public Effect
+{
+  public:
+    std::unique_ptr<Effect> clone() const override;
+
+  private:
+    double targetAngle = 0.0;
+    bool clockwise = true;
+
+    void start(Transform& transform) override;
+    void update(Transform& transform, double t) override;
+
+    double m_startAngle = 0.0;
+
+    friend std::unique_ptr<Effect> fx::rotateTo(double, bool, double, const ease::EasingFunction&);
+};
+
+class RotateByEffect : public Effect
+{
+  public:
+    std::unique_ptr<Effect> clone() const override;
+
+  private:
+    double deltaAngle = 0.0;
+    bool clockwise = true;
+
+    void start(Transform& transform) override;
+    void update(Transform& transform, double t) override;
+
+    double m_startAngle = 0.0;
+
+    friend std::unique_ptr<Effect> fx::rotateBy(double, bool, double, const ease::EasingFunction&);
+};
+
+class ShakeEffect : public Effect
+{
+  public:
+    std::unique_ptr<Effect> clone() const override;
+
+  private:
+    double amplitude = 0.0;
+    double frequency = 0.0;
+
+    void start(Transform& transform) override;
+    void update(Transform& transform, double t) override;
+
+    Vec2 m_originalPos;
+
+    friend std::unique_ptr<Effect> fx::shake(double, double, double);
+};
+
+class CallEffect : public Effect
+{
+  public:
+    std::unique_ptr<Effect> clone() const override;
+
+  private:
+    std::function<void()> callback;
+
+    void start(Transform& transform) override;
+    void update(Transform& transform, double t) override;
+
+    bool m_called = false;
+
+    friend std::unique_ptr<Effect> fx::call(const std::function<void()>&);
+    friend std::unique_ptr<Effect> fx::wait(double);
+};
+
 struct Step
 {
-    std::vector<std::shared_ptr<Effect>> effects;
+    std::vector<std::unique_ptr<Effect>> effects;
     double duration = 0.0;
+
+    Step() = default;
+    Step(const Step&) = delete;
+    Step& operator=(const Step&) = delete;
+    Step(Step&&) noexcept = default;
+    Step& operator=(Step&&) noexcept = default;
 };
 
 class Orchestrator
@@ -41,10 +210,15 @@ class Orchestrator
     explicit Orchestrator(Transform& target);
     ~Orchestrator();
 
+    Orchestrator(const Orchestrator&) = delete;
+    Orchestrator& operator=(const Orchestrator&) = delete;
+    Orchestrator(Orchestrator&&) = delete;
+    Orchestrator& operator=(Orchestrator&&) = delete;
+
     void setTarget(Transform& target);
 
-    Orchestrator& parallel(const std::vector<std::shared_ptr<Effect>>& effects);
-    Orchestrator& then(std::shared_ptr<Effect> effect);
+    Orchestrator& parallel(std::vector<std::unique_ptr<Effect>> effects);
+    Orchestrator& then(std::unique_ptr<Effect> effect);
 
     void finalize();
     void play();
@@ -74,36 +248,5 @@ class Orchestrator
 
     friend void orchestrator::_tick();
 };
-
-namespace fx
-{
-[[nodiscard]] std::shared_ptr<Effect> moveTo(
-    const Vec2& pos, double dur = 0.0, const ease::EasingFunction& easeFunc = nullptr
-);
-
-[[nodiscard]] std::shared_ptr<Effect> scaleTo(
-    const Vec2& scale, double dur = 0.0, const ease::EasingFunction& easeFunc = nullptr
-);
-
-[[nodiscard]] std::shared_ptr<Effect> scaleBy(
-    double scale, double dur = 0.0, const ease::EasingFunction& easeFunc = nullptr
-);
-
-[[nodiscard]] std::shared_ptr<Effect> rotateTo(
-    double angle, bool clockwise = true, double dur = 0.0,
-    const ease::EasingFunction& easeFunc = nullptr
-);
-
-[[nodiscard]] std::shared_ptr<Effect> rotateBy(
-    double deltaAngle, bool clockwise = true, double dur = 0.0,
-    const ease::EasingFunction& easeFunc = nullptr
-);
-
-[[nodiscard]] std::shared_ptr<Effect> shake(double amp, double freq, double dur);
-
-[[nodiscard]] std::shared_ptr<Effect> call(const std::function<void()>& callback);
-
-[[nodiscard]] std::shared_ptr<Effect> wait(double dur);
-}  // namespace fx
 
 }  // namespace kn

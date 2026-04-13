@@ -2,7 +2,7 @@
 
 #ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/function.h>
-#include <nanobind/stl/shared_ptr.h>
+#include <nanobind/stl/unique_ptr.h>
 #endif  // KRAKEN_ENABLE_PYTHON
 
 #include <algorithm>
@@ -20,105 +20,6 @@ namespace kn
 {
 static std::vector<Orchestrator*> _orchestrators;
 
-class Effect
-{
-  public:
-    double duration = 0.0;
-    std::function<double(double)> easing = [](double t) { return t; };  // Linear by default
-
-    virtual ~Effect() = default;
-
-    virtual void start(Transform& transform) = 0;
-    virtual void update(Transform& transform, double t) = 0;
-};
-
-class MoveToEffect : public Effect
-{
-  public:
-    Vec2 targetPos;
-
-    void start(Transform& transform) override;
-    void update(Transform& transform, double t) override;
-
-  private:
-    Vec2 m_startPos;
-};
-
-class ScaleToEffect : public Effect
-{
-  public:
-    Vec2 targetScale;
-
-    void start(Transform& transform) override;
-    void update(Transform& transform, double t) override;
-
-  private:
-    Vec2 m_startScale;
-};
-
-class ScaleByEffect : public Effect
-{
-  public:
-    Vec2 deltaScale;
-
-    void start(Transform& transform) override;
-    void update(Transform& transform, double t) override;
-
-  private:
-    Vec2 m_startScale;
-};
-
-class RotateToEffect : public Effect
-{
-  public:
-    double targetAngle = 0.0;
-    bool clockwise = true;
-
-    void start(Transform& transform) override;
-    void update(Transform& transform, double t) override;
-
-  private:
-    double m_startAngle = 0.0;
-};
-
-class RotateByEffect : public Effect
-{
-  public:
-    double deltaAngle = 0.0;
-    bool clockwise = true;
-
-    void start(Transform& transform) override;
-    void update(Transform& transform, double t) override;
-
-  private:
-    double m_startAngle = 0.0;
-};
-
-class ShakeEffect : public Effect
-{
-  public:
-    double amplitude = 0.0;
-    double frequency = 0.0;
-
-    void start(Transform& transform) override;
-    void update(Transform& transform, double t) override;
-
-  private:
-    Vec2 m_originalPos;
-};
-
-class CallEffect : public Effect
-{
-  public:
-    std::function<void()> callback;
-
-    void start(Transform& transform) override;
-    void update(Transform& transform, double t) override;
-
-  private:
-    bool m_called = false;
-};
-
 // ----- MoveToEffect -----
 void MoveToEffect::start(Transform& transform)
 {
@@ -132,6 +33,15 @@ void MoveToEffect::update(Transform& transform, double t)
     transform.pos.y = m_startPos.y + (targetPos.y - m_startPos.y) * easedT;
 }
 
+std::unique_ptr<Effect> MoveToEffect::clone() const
+{
+    auto effect = std::make_unique<MoveToEffect>();
+    effect->targetPos = targetPos;
+    effect->duration = duration;
+    effect->easing = easing;
+    return effect;
+}
+
 // ----- ScaleToEffect -----
 void ScaleToEffect::start(Transform& transform)
 {
@@ -143,6 +53,15 @@ void ScaleToEffect::update(Transform& transform, double t)
     transform.scale = m_startScale + (targetScale - m_startScale) * easing(t);
 }
 
+std::unique_ptr<Effect> ScaleToEffect::clone() const
+{
+    auto effect = std::make_unique<ScaleToEffect>();
+    effect->targetScale = targetScale;
+    effect->duration = duration;
+    effect->easing = easing;
+    return effect;
+}
+
 // ----- ScaleByEffect -----
 void ScaleByEffect::start(Transform& transform)
 {
@@ -152,6 +71,15 @@ void ScaleByEffect::start(Transform& transform)
 void ScaleByEffect::update(Transform& transform, double t)
 {
     transform.scale = m_startScale + deltaScale * easing(t);
+}
+
+std::unique_ptr<Effect> ScaleByEffect::clone() const
+{
+    auto effect = std::make_unique<ScaleByEffect>();
+    effect->deltaScale = deltaScale;
+    effect->duration = duration;
+    effect->easing = easing;
+    return effect;
 }
 
 // ----- RotateToEffect -----
@@ -180,6 +108,16 @@ void RotateToEffect::update(Transform& transform, double t)
     transform.angle = m_startAngle + delta * easedT;
 }
 
+std::unique_ptr<Effect> RotateToEffect::clone() const
+{
+    auto effect = std::make_unique<RotateToEffect>();
+    effect->targetAngle = targetAngle;
+    effect->clockwise = clockwise;
+    effect->duration = duration;
+    effect->easing = easing;
+    return effect;
+}
+
 // ----- RotateByEffect -----
 void RotateByEffect::start(Transform& transform)
 {
@@ -193,7 +131,27 @@ void RotateByEffect::update(Transform& transform, double t)
     transform.angle = m_startAngle + delta * easedT;
 }
 
+std::unique_ptr<Effect> RotateByEffect::clone() const
+{
+    auto effect = std::make_unique<RotateByEffect>();
+    effect->deltaAngle = deltaAngle;
+    effect->clockwise = clockwise;
+    effect->duration = duration;
+    effect->easing = easing;
+    return effect;
+}
+
 // ----- ShakeEffect -----
+std::unique_ptr<Effect> ShakeEffect::clone() const
+{
+    auto effect = std::make_unique<ShakeEffect>();
+    effect->amplitude = amplitude;
+    effect->frequency = frequency;
+    effect->duration = duration;
+    effect->easing = easing;
+    return effect;
+}
+
 void ShakeEffect::start(Transform& transform)
 {
     m_originalPos = transform.pos;
@@ -228,6 +186,15 @@ void CallEffect::start([[maybe_unused]] Transform& transform)
     m_called = false;
 }
 
+std::unique_ptr<Effect> CallEffect::clone() const
+{
+    auto effect = std::make_unique<CallEffect>();
+    effect->callback = callback;
+    effect->duration = duration;
+    effect->easing = easing;
+    return effect;
+}
+
 void CallEffect::update([[maybe_unused]] Transform& transform, [[maybe_unused]] double t)
 {
     if (!m_called && callback)
@@ -253,7 +220,7 @@ void Orchestrator::setTarget(Transform& target)
     m_target = &target;
 }
 
-Orchestrator& Orchestrator::parallel(const std::vector<std::shared_ptr<Effect>>& effects)
+Orchestrator& Orchestrator::parallel(std::vector<std::unique_ptr<Effect>> effects)
 {
     if (m_finalized)
     {
@@ -262,7 +229,6 @@ Orchestrator& Orchestrator::parallel(const std::vector<std::shared_ptr<Effect>>&
     }
 
     Step step;
-    step.effects = effects;
 
     // Duration is the max of all parallel effects
     for (const auto& effect : effects)
@@ -271,13 +237,18 @@ Orchestrator& Orchestrator::parallel(const std::vector<std::shared_ptr<Effect>>&
             step.duration = effect->duration;
     }
 
+    step.effects = std::move(effects);
+
     m_steps.push_back(std::move(step));
     return *this;
 }
 
-Orchestrator& Orchestrator::then(std::shared_ptr<Effect> effect)
+Orchestrator& Orchestrator::then(std::unique_ptr<Effect> effect)
 {
-    return parallel(std::vector<std::shared_ptr<Effect>>{std::move(effect)});
+    std::vector<std::unique_ptr<Effect>> vec;
+    vec.push_back(std::move(effect));
+
+    return parallel(std::move(vec));
 }
 
 void Orchestrator::finalize()
@@ -419,38 +390,38 @@ void Orchestrator::update(double dt)
 
 namespace fx
 {
-std::shared_ptr<Effect> moveTo(const Vec2& pos, double dur, const ease::EasingFunction& easeFunc)
+std::unique_ptr<Effect> moveTo(const Vec2& pos, double dur, const ease::EasingFunction& easeFunc)
 {
-    auto effect = std::make_shared<MoveToEffect>();
+    auto effect = std::make_unique<MoveToEffect>();
     effect->targetPos = pos;
     effect->duration = dur;
     effect->easing = easeFunc ? easeFunc : [](double t) { return t; };
     return effect;
 }
 
-std::shared_ptr<Effect> scaleTo(const Vec2& scale, double dur, const ease::EasingFunction& easeFunc)
+std::unique_ptr<Effect> scaleTo(const Vec2& scale, double dur, const ease::EasingFunction& easeFunc)
 {
-    auto effect = std::make_shared<ScaleToEffect>();
+    auto effect = std::make_unique<ScaleToEffect>();
     effect->targetScale = scale;
     effect->duration = dur;
     effect->easing = easeFunc ? easeFunc : [](double t) { return t; };
     return effect;
 }
 
-std::shared_ptr<Effect> scaleBy(double scale, double dur, const ease::EasingFunction& easeFunc)
+std::unique_ptr<Effect> scaleBy(double scale, double dur, const ease::EasingFunction& easeFunc)
 {
-    auto effect = std::make_shared<ScaleByEffect>();
+    auto effect = std::make_unique<ScaleByEffect>();
     effect->deltaScale = Vec2{scale, scale};
     effect->duration = dur;
     effect->easing = easeFunc ? easeFunc : [](double t) { return t; };
     return effect;
 }
 
-std::shared_ptr<Effect> rotateTo(
+std::unique_ptr<Effect> rotateTo(
     double angle, bool clockwise, double dur, const ease::EasingFunction& easeFunc
 )
 {
-    auto effect = std::make_shared<RotateToEffect>();
+    auto effect = std::make_unique<RotateToEffect>();
     effect->targetAngle = angle;
     effect->clockwise = clockwise;
     effect->duration = dur;
@@ -458,11 +429,11 @@ std::shared_ptr<Effect> rotateTo(
     return effect;
 }
 
-std::shared_ptr<Effect> rotateBy(
+std::unique_ptr<Effect> rotateBy(
     double deltaAngle, bool clockwise, double dur, const ease::EasingFunction& easeFunc
 )
 {
-    auto effect = std::make_shared<RotateByEffect>();
+    auto effect = std::make_unique<RotateByEffect>();
     effect->deltaAngle = deltaAngle;
     effect->clockwise = clockwise;
     effect->duration = dur;
@@ -470,26 +441,26 @@ std::shared_ptr<Effect> rotateBy(
     return effect;
 }
 
-std::shared_ptr<Effect> shake(double amp, double freq, double dur)
+std::unique_ptr<Effect> shake(double amp, double freq, double dur)
 {
-    auto effect = std::make_shared<ShakeEffect>();
+    auto effect = std::make_unique<ShakeEffect>();
     effect->amplitude = amp;
     effect->frequency = freq;
     effect->duration = dur;
     return effect;
 }
 
-std::shared_ptr<Effect> call(const std::function<void()>& callback)
+std::unique_ptr<Effect> call(const std::function<void()>& callback)
 {
-    auto effect = std::make_shared<CallEffect>();
+    auto effect = std::make_unique<CallEffect>();
     effect->callback = callback;
     effect->duration = 0.0;  // Instant
     return effect;
 }
 
-std::shared_ptr<Effect> wait(double dur)
+std::unique_ptr<Effect> wait(double dur)
 {
-    auto effect = std::make_shared<CallEffect>();
+    auto effect = std::make_unique<CallEffect>();
     effect->callback = nullptr;
     effect->duration = dur;
     return effect;
@@ -517,6 +488,9 @@ Predefined effects for use with the Orchestrator.
     // ----- Effect base class (not directly instantiable) -----
     nb::class_<Effect>(subFx, "Effect", R"doc(
 Base class for timeline effects. Not directly instantiable.
+    )doc")
+        .def("clone", &Effect::clone, R"doc(
+Create a copy of this effect. Used internally by the Orchestrator when adding effects to the timeline.
     )doc");
 
     // ----- Orchestrator -----
@@ -552,17 +526,17 @@ Args:
             "parallel",
             [](Orchestrator& self, const nb::args& effects) -> Orchestrator&
             {
-                std::vector<std::shared_ptr<Effect>> effectVec;
+                std::vector<std::unique_ptr<Effect>> effectVec;
                 effectVec.reserve(effects.size());
                 for (const auto& arg : effects)
                 {
                     if (nb::isinstance<Effect>(arg))
-                        effectVec.push_back(nb::cast<std::shared_ptr<Effect>>(arg));
+                        effectVec.push_back(nb::cast<std::unique_ptr<Effect>>(arg));
                     else
                         throw nb::type_error("parallel() arguments must all be Effect objects");
                 }
 
-                return self.parallel(effectVec);
+                return self.parallel(std::move(effectVec));
             },
             nb::rv_policy::reference,
             nb::sig("def parallel(self, *effects: fx.Effect) -> Orchestrator"), R"doc(

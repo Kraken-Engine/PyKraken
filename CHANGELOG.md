@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - `Orchestrator` objects were copied upon calling `parallel` and `then` methods, causing effects to not be added to the original orchestrator timeline. Now returns reference to the original orchestrator.
+- Some images wouldn't render when drawn while a shader was binded. This was due to unpredictable pixel formats when
+loading images that shaders didn't like. Solved by forcing an RGBA32 format on all loaded images.
 
 ## [1.7.0] - 2026-04-07
 

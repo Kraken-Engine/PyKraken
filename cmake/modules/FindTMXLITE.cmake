@@ -11,8 +11,8 @@
 
 find_path(TMXLITE_INCLUDE_DIR NAMES tmxlite/Config.hpp PATH_SUFFIXES include)
 
-find_library(TMXLITE_LIBRARY_DEBUG NAMES tmxlite-d)
-find_library(TMXLITE_LIBRARY_RELEASE NAMES tmxlite)
+find_library(TMXLITE_LIBRARY_DEBUG NAMES tmxlite-d libtmxlite-d tmxlite-s-d libtmxlite-s-d)
+find_library(TMXLITE_LIBRARY_RELEASE NAMES tmxlite libtmxlite tmxlite-s libtmxlite-s)
 
 include(SelectLibraryConfigurations)
 select_library_configurations(TMXLITE)

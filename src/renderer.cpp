@@ -3,7 +3,6 @@
 #ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/ndarray.h>
 #include <nanobind/stl/optional.h>
-#include <nanobind/stl/unique_ptr.h>
 #include <nanobind/stl/vector.h>
 #endif  // KRAKEN_ENABLE_PYTHON
 
@@ -287,7 +286,7 @@ Vec2 getOutputResolution()
     return _size;
 }
 
-std::unique_ptr<PixelArray> readPixels(const Rect& src)
+PixelArray readPixels(const Rect& src)
 {
     if (src.w < 0.0 || src.h < 0.0)
         throw std::invalid_argument("Source rectangle must have positive width and height");
@@ -299,7 +298,7 @@ std::unique_ptr<PixelArray> readPixels(const Rect& src)
     if (!surface)
         throw std::runtime_error("Failed to read pixels: " + std::string(SDL_GetError()));
 
-    return std::make_unique<PixelArray>(surface);
+    return PixelArray(surface);
 }
 
 void draw(const Texture& texture, const Transform& transform, const Vec2& anchor, const Vec2& pivot)

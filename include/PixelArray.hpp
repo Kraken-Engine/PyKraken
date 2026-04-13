@@ -6,7 +6,6 @@
 #endif  // KRAKEN_ENABLE_PYTHON
 
 #include <filesystem>
-#include <memory>
 #include <string>
 
 #include "Rect.hpp"
@@ -36,6 +35,12 @@ class PixelArray
     explicit PixelArray(const Vec2& size);
     explicit PixelArray(const std::filesystem::path& filePath);
     ~PixelArray();
+
+    // Move semantics
+    PixelArray(const PixelArray&) = delete;
+    PixelArray& operator=(const PixelArray&) = delete;
+    PixelArray(PixelArray&& other) noexcept;
+    PixelArray& operator=(PixelArray&& other) noexcept;
 
     void fill(const Color& color) const;
 
@@ -68,7 +73,7 @@ class PixelArray
 
     [[nodiscard]] SDL_Surface* getSDL() const;
 
-    [[nodiscard]] std::unique_ptr<PixelArray> copy() const;
+    [[nodiscard]] PixelArray copy() const;
 
     void scroll(int dx, int dy, ScrollMode scrollMode) const;
 
@@ -82,26 +87,15 @@ namespace pixel_array
 void _bind(nb::module_& module);
 #endif  // KRAKEN_ENABLE_PYTHON
 
-std::unique_ptr<PixelArray> flip(const PixelArray& pixelArray, bool flipX, bool flipY);
+PixelArray flip(const PixelArray& pixelArray, bool flipX, bool flipY);
+PixelArray scaleTo(const PixelArray& pixelArray, const Vec2& size);
+PixelArray scaleBy(const PixelArray& pixelArray, double factor);
+PixelArray scaleBy(const PixelArray& pixelArray, const Vec2& factor);
+PixelArray rotate(const PixelArray& pixelArray, double angle);
+PixelArray boxBlur(const PixelArray& pixelArray, int radius, bool repeatEdgePixels = true);
+PixelArray gaussianBlur(const PixelArray& pixelArray, int radius, bool repeatEdgePixels = true);
+PixelArray invert(const PixelArray& pixelArray);
+PixelArray grayscale(const PixelArray& pixelArray);
 
-std::unique_ptr<PixelArray> scaleTo(const PixelArray& pixelArray, const Vec2& size);
-
-std::unique_ptr<PixelArray> scaleBy(const PixelArray& pixelArray, double factor);
-
-std::unique_ptr<PixelArray> scaleBy(const PixelArray& pixelArray, const Vec2& factor);
-
-std::unique_ptr<PixelArray> rotate(const PixelArray& pixelArray, double angle);
-
-std::unique_ptr<PixelArray> boxBlur(
-    const PixelArray& pixelArray, int radius, bool repeatEdgePixels = true
-);
-
-std::unique_ptr<PixelArray> gaussianBlur(
-    const PixelArray& pixelArray, int radius, bool repeatEdgePixels = true
-);
-
-std::unique_ptr<PixelArray> invert(const PixelArray& pixelArray);
-
-std::unique_ptr<PixelArray> grayscale(const PixelArray& pixelArray);
 }  // namespace pixel_array
 }  // namespace kn

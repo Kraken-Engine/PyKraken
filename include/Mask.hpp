@@ -4,7 +4,6 @@
 #include <nanobind/nanobind.h>
 #endif  // KRAKEN_ENABLE_PYTHON
 
-#include <memory>
 #include <vector>
 
 #include "Color.hpp"
@@ -71,9 +70,7 @@ class Mask
 
     [[nodiscard]] int getHeight() const;
 
-    [[nodiscard]] std::unique_ptr<PixelArray> getPixelArray(
-        const Color& color = {255, 255, 255, 255}
-    ) const;
+    [[nodiscard]] PixelArray getPixelArray(const Color& color = {255, 255, 255, 255}) const;
 
   private:
     int m_width = 0, m_height = 0;

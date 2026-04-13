@@ -1,7 +1,6 @@
 #include "Mask.hpp"
 
 #ifdef KRAKEN_ENABLE_PYTHON
-#include <nanobind/stl/unique_ptr.h>
 #include <nanobind/stl/vector.h>
 #endif  // KRAKEN_ENABLE_PYTHON
 
@@ -293,10 +292,11 @@ int Mask::getHeight() const
     return m_height;
 }
 
-std::unique_ptr<PixelArray> Mask::getPixelArray(const Color& color) const
+PixelArray Mask::getPixelArray(const Color& color) const
 {
-    auto pixelArray = std::make_unique<PixelArray>(Vec2{m_width, m_height});
-    SDL_Surface* surface = pixelArray->getSDL();
+    PixelArray pixelArray(Vec2{m_width, m_height});
+
+    SDL_Surface* surface = pixelArray.getSDL();
     if (!surface)
         throw std::runtime_error("Failed to create PixelArray surface");
 

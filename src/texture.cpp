@@ -1,7 +1,5 @@
 #include "Texture.hpp"
 
-#include <SDL3_image/SDL_image.h>
-
 #ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/filesystem.h>
 #endif  // KRAKEN_ENABLE_PYTHON
@@ -44,30 +42,25 @@ Texture::Texture(
 {
     SDL_Surface* surface = pixelArray.getSDL();
 
-    if (access == TextureAccess::STATIC)
-    {
-        m_texPtr = SDL_CreateTextureFromSurface(renderer::_get(), surface);
-    }
-    else if (access == TextureAccess::TARGET)
-    {
-        m_texPtr = SDL_CreateTexture(
-            renderer::_get(), surface->format, SDL_TEXTUREACCESS_TARGET, surface->w, surface->h
-        );
-
-        if (!SDL_UpdateTexture(m_texPtr, nullptr, surface->pixels, surface->pitch))
-        {
-            SDL_DestroyTexture(m_texPtr);
-            m_texPtr = nullptr;
-            throw std::runtime_error(
-                "Failed to copy PixelArray to texture: " + std::string(SDL_GetError())
-            );
-        }
-    }
-
+    const SDL_TextureAccess textureAccess = (access == TextureAccess::STATIC)
+                                                ? SDL_TEXTUREACCESS_STATIC
+                                                : SDL_TEXTUREACCESS_TARGET;
+    m_texPtr = SDL_CreateTexture(
+        renderer::_get(), SDL_PIXELFORMAT_RGBA32, textureAccess, surface->w, surface->h
+    );
     if (!m_texPtr)
     {
         throw std::runtime_error(
             "Failed to create texture from PixelArray: " + std::string(SDL_GetError())
+        );
+    }
+
+    if (!SDL_UpdateTexture(m_texPtr, nullptr, surface->pixels, surface->pitch))
+    {
+        SDL_DestroyTexture(m_texPtr);
+        m_texPtr = nullptr;
+        throw std::runtime_error(
+            "Failed to copy PixelArray to texture: " + std::string(SDL_GetError())
         );
     }
 
@@ -89,72 +82,8 @@ Texture::Texture(
     const std::filesystem::path& filePath, const TextureScaleMode scaleMode,
     const TextureAccess access
 )
+    : Texture(PixelArray(filePath), scaleMode, access)
 {
-    if (filePath.empty())
-        throw std::invalid_argument("File path cannot be empty");
-
-    if (access == TextureAccess::STATIC)
-    {
-        m_texPtr = IMG_LoadTexture(renderer::_get(), filePath.string().c_str());
-        if (!m_texPtr)
-            throw std::runtime_error("Failed to load texture: " + std::string(SDL_GetError()));
-    }
-    else if (access == TextureAccess::TARGET)
-    {
-        SDL_Surface* surface = IMG_Load(filePath.string().c_str());
-        if (!surface)
-            throw std::runtime_error(
-                "Failed to load image from file: " + std::string(SDL_GetError())
-            );
-
-        m_texPtr = SDL_CreateTexture(
-            renderer::_get(), surface->format, SDL_TEXTUREACCESS_TARGET, surface->w, surface->h
-        );
-        if (!m_texPtr)
-        {
-            SDL_DestroySurface(surface);
-            throw std::runtime_error(
-                "Failed to create target texture: " + std::string(SDL_GetError())
-            );
-        }
-
-        if (!SDL_UpdateTexture(m_texPtr, nullptr, surface->pixels, surface->pitch))
-        {
-            SDL_DestroyTexture(m_texPtr);
-            SDL_DestroySurface(surface);
-            m_texPtr = nullptr;
-            throw std::runtime_error(
-                "Failed to copy image to texture: " + std::string(SDL_GetError())
-            );
-        }
-
-        SDL_DestroySurface(surface);
-    }
-
-    const TextureScaleMode finalScaleMode = (scaleMode == TextureScaleMode::DEFAULT)
-                                                ? renderer::getDefaultScaleMode()
-                                                : scaleMode;
-    if (!SDL_SetTextureScaleMode(m_texPtr, static_cast<SDL_ScaleMode>(finalScaleMode)))
-    {
-        SDL_DestroyTexture(m_texPtr);
-        m_texPtr = nullptr;
-        throw std::runtime_error(
-            "Failed to set texture scale mode: " + std::string(SDL_GetError())
-        );
-    }
-
-    float w, h;
-    if (!SDL_GetTextureSize(m_texPtr, &w, &h))
-    {
-        SDL_DestroyTexture(m_texPtr);
-        m_texPtr = nullptr;
-        throw std::runtime_error("Failed to get texture size: " + std::string(SDL_GetError()));
-    }
-    m_width = static_cast<int>(w);
-    m_height = static_cast<int>(h);
-    m_clipArea = {0, 0, m_width, m_height};
-
-    SDL_SetTextureBlendMode(m_texPtr, SDL_BLENDMODE_BLEND);
 }
 
 Texture::~Texture()

@@ -2,10 +2,10 @@
 #include <nanobind/ndarray.h>
 #include <nanobind/stl/filesystem.h>
 #include <nanobind/stl/string.h>
-#include <nanobind/stl/unique_ptr.h>
 #endif  // KRAKEN_ENABLE_PYTHON
 
 #include <algorithm>
+#include <iostream>
 #include <string>
 #include <vector>
 

@@ -6,7 +6,6 @@
 #include <nanobind/nanobind.h>
 #endif  // KRAKEN_ENABLE_PYTHON
 
-#include <memory>
 #include <optional>
 #include <vector>
 
@@ -60,7 +59,7 @@ Vec2 getVirtualResolution();
 Vec2 getCurrentResolution();
 Vec2 getOutputResolution();
 
-std::unique_ptr<PixelArray> readPixels(const Rect& src = {});
+PixelArray readPixels(const Rect& src = {});
 
 void setDefaultScaleMode(TextureScaleMode scaleMode);
 TextureScaleMode getDefaultScaleMode();
