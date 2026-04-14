@@ -29,6 +29,7 @@
         "opusfile"
       ]
     },
+    "sdl3-shadercross",
     {
       "name": "sdl3-ttf",
       "features": [
@@ -43,7 +44,7 @@
     },
     "tmxlite",
     "zstd",
-    "sdl3-shadercross"
+    "pugixml"
   ],
   "overrides": [
     {

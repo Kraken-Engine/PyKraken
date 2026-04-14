@@ -242,6 +242,7 @@ if(TMXLITE_VENDORED)
   set_target_properties(tmxlite PROPERTIES POSITION_INDEPENDENT_CODE ON)
 else()
   find_package(TMXLITE MODULE REQUIRED)
+  find_package(pugixml CONFIG REQUIRED)
 endif()
 
 # =====================================================================
@@ -375,6 +376,7 @@ target_link_libraries(${KRAKEN_TARGET} PRIVATE
   SDL3_ttf::SDL3_ttf
   SDL3_mixer::SDL3_mixer
   tmxlite::tmxlite
+  $<IF:$<TARGET_EXISTS:pugixml>,pugixml,>
   $<IF:$<TARGET_EXISTS:zstd::libzstd_static>,zstd::libzstd_static,
     $<IF:$<TARGET_EXISTS:zstd::zstd>,zstd::zstd,zstd::libzstd_shared>>
   box2d::box2d

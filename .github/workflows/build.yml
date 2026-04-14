@@ -57,7 +57,7 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: >
             MACOSX_DEPLOYMENT_TARGET=15.0
             CMAKE_PREFIX_PATH=/opt/homebrew
-            SKBUILD_CMAKE_ARGS="-DSDL3_MIXER_VENDORED=ON;-DSDL3_SHADERCROSS_VENDORED=ON"
+            SKBUILD_CMAKE_ARGS="-DSDL3_MIXER_VENDORED=ON;-DSDL3_SHADERCROSS_VENDORED=ON;-DTMXLITE_VENDORED=ON"
 
           # --- Linux: install system headers, vendor everything except zstd ---
           CIBW_BEFORE_ALL_LINUX: >
