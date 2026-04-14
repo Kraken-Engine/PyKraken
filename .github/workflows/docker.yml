@@ -5,6 +5,7 @@ on:
     paths:
       - 'Dockerfile.manylinux'
       - 'vcpkg.json'
+      - 'triplets/**'
   workflow_dispatch:
 
 jobs:
@@ -31,4 +32,3 @@ jobs:
           file: ./Dockerfile.manylinux
           push: true
           tags: ghcr.io/kraken-engine/kraken-manylinux:latest
-          

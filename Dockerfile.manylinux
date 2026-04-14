@@ -1,7 +1,7 @@
-# Start from the official cibuildwheel image
+# Start from official cibuildwheel image
 FROM quay.io/pypa/manylinux_2_28_x86_64
 
-# 1. Install EPEL and System Tools
+# Install EPEL and System Tools
 RUN dnf -y install epel-release && \
     dnf -y install ninja-build ccache git curl zip unzip tar \
     alsa-lib-devel pipewire-devel pulseaudio-libs-devel \
@@ -10,13 +10,18 @@ RUN dnf -y install epel-release && \
     wayland-devel wayland-protocols-devel libxkbcommon-devel \
     libpng-devel libjpeg-turbo-devel freetype-devel flac-devel libzstd-devel
  
-# 2. Install vcpkg globally
+# Install vcpkg globally and setup binary cache
 ENV VCPKG_ROOT=/opt/vcpkg
 ENV VCPKG_FORCE_SYSTEM_BINARIES=1
+ENV VCPKG_DEFAULT_BINARY_CACHE=/opt/vcpkg_cache
 RUN git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT && \
-    $VCPKG_ROOT/bootstrap-vcpkg.sh -disableMetrics
+    $VCPKG_ROOT/bootstrap-vcpkg.sh -disableMetrics && \
+    mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
 
-# 3. Copy your manifest and pre-compile everything
-# (This step will take 20+ minutes during the Docker build, but 0 minutes during your actual CI)
+# Copy manifest and triplets
 COPY vcpkg.json /tmp/vcpkg.json
-RUN $VCPKG_ROOT/vcpkg install --manifest-root=/tmp --triplet=x64-linux-release
+COPY triplets /tmp/triplets
+
+# Pre-populate vcpkg binary cache
+WORKDIR /tmp
+RUN $VCPKG_ROOT/vcpkg install --triplet=x64-linux-release --overlay-triplets=/tmp/triplets

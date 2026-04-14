@@ -88,6 +88,7 @@ jobs:
             CMAKE_CXX_COMPILER_LAUNCHER=ccache
             VCPKG_ROOT=/opt/vcpkg
             VCPKG_DEFAULT_TRIPLET=x64-linux-release
+            VCPKG_DEFAULT_BINARY_CACHE=/opt/vcpkg_cache
 
       - name: Upload wheels
         uses: actions/upload-artifact@v7
