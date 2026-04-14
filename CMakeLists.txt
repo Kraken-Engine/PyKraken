@@ -173,9 +173,7 @@ if (SDL3_SHADERCROSS_VENDORED)
   set(SDLSHADERCROSS_STATIC ON CACHE BOOL "" FORCE)
 
   if(MSVC)
-    # add_compile_options(/FS)
-    string(REPLACE "/Zi" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    string(REPLACE "/Zi" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+    add_compile_options(/FS)
   endif()
 
   FetchContent_Declare(SDL_shadercross
