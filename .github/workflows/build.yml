@@ -54,6 +54,12 @@ jobs:
           restore-keys: |
             Linux-vcpkg-cache-
 
+      - name: Create Cache Directories (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p .ccache
+          mkdir -p .vcpkg_cache
+
       - name: Set up vcpkg
         if: runner.os == 'Windows' || runner.os == 'macOS'
         uses: lukka/run-vcpkg@v11
