@@ -29,7 +29,6 @@
         "opusfile"
       ]
     },
-    "sdl3-shadercross",
     {
       "name": "sdl3-ttf",
       "features": [
@@ -62,10 +61,6 @@
     {
       "name": "sdl3-mixer",
       "version": "3.2.0"
-    },
-    {
-      "name": "sdl3-shadercross",
-      "version": "3.0.0-preview1"
     },
     {
       "name": "sdl3-ttf",

@@ -62,7 +62,7 @@ option(SDL3_VENDORED             "Build SDL3 from source"       ${KRAKEN_VENDORE
 option(SDL3_IMAGE_VENDORED       "Build SDL3_image from source" ${KRAKEN_VENDORED})
 option(SDL3_TTF_VENDORED         "Build SDL3_ttf from source"   ${KRAKEN_VENDORED})
 option(SDL3_MIXER_VENDORED       "Build SDL3_mixer from source" ${KRAKEN_VENDORED})
-option(SDL3_SHADERCROSS_VENDORED "Build SDL3_shadercross"       ${KRAKEN_VENDORED})
+option(SDL3_SHADERCROSS_VENDORED "Build SDL3_shadercross"       ON)
 option(BOX2D_VENDORED            "Build box2d from source"      ${KRAKEN_VENDORED})
 option(SPDLOG_VENDORED           "Build spdlog from source"     ${KRAKEN_VENDORED})
 option(ZSTD_VENDORED             "Build zstd from source"       ${KRAKEN_VENDORED})

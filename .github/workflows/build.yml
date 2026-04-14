@@ -89,7 +89,6 @@ jobs:
             VCPKG_ROOT=/opt/vcpkg
             VCPKG_DEFAULT_TRIPLET=x64-linux-release
             VCPKG_DEFAULT_BINARY_CACHE=/opt/vcpkg_cache
-            SKBUILD_CMAKE_ARGS="-DSDL3_SHADERCROSS_VENDORED=ON"
 
       - name: Upload wheels
         uses: actions/upload-artifact@v7
