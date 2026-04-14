@@ -12,6 +12,7 @@
 
 #include "AnimationController.hpp"
 #include "Draw.hpp"
+#include "Ease.hpp"
 #include "Font.hpp"
 #include "Log.hpp"
 #include "Math.hpp"
@@ -90,6 +91,7 @@ bool isOpen()
 {
     time::_tick();
     animation_controller::_tick();
+    ease::_tick();
     orchestrator::_tick();
     physics::_tick();
 
