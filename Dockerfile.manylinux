@@ -9,7 +9,7 @@ RUN dnf -y install epel-release && \
     mesa-libEGL-devel mesa-libgbm-devel \
     wayland-devel wayland-protocols-devel libxkbcommon-devel \
     libpng-devel libjpeg-turbo-devel freetype-devel flac-devel libzstd-devel
-
+ 
 # 2. Install vcpkg globally
 ENV VCPKG_ROOT=/opt/vcpkg
 ENV VCPKG_FORCE_SYSTEM_BINARIES=1
