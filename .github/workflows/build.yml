@@ -77,9 +77,11 @@ jobs:
             CMAKE_CXX_COMPILER_LAUNCHER=ccache
             SKBUILD_CMAKE_ARGS="-DSDL3_MIXER_VENDORED=ON;-DSDL3_SHADERCROSS_VENDORED=ON;-DTMXLITE_VENDORED=ON"
 
-          # --- Linux: install system headers, vendor everything except zstd ---
+          # --- Linux: install system headers ---
           CIBW_BEFORE_ALL_LINUX: >
+            dnf -y install epel-release &&
             dnf -y install
+            ninja-build ccache
             alsa-lib-devel pipewire-devel pulseaudio-libs-devel
             libXrandr-devel libXcursor-devel libXi-devel libXinerama-devel libXfixes-devel libXScrnSaver-devel libXtst-devel
             mesa-libEGL-devel mesa-libgbm-devel
