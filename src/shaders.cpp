@@ -5,7 +5,6 @@
 #endif  // KRAKEN_ENABLE_PYTHON
 
 #include <algorithm>
-#include <iostream>
 #include <string>
 #include <vector>
 
