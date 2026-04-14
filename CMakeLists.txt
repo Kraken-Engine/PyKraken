@@ -240,6 +240,8 @@ if(TMXLITE_VENDORED)
   set(USE_ZSTD ON CACHE BOOL "" FORCE)  # Big boy compression
   FetchContent_MakeAvailable(tmxlite)
   set_target_properties(tmxlite PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+  add_library(tmxlite::tmxlite ALIAS tmxlite)
 else()
   find_package(TMXLITE MODULE REQUIRED)
   find_package(pugixml CONFIG REQUIRED)
