@@ -19,7 +19,9 @@ ENV VCPKG_ROOT=/opt/vcpkg
 ENV VCPKG_FORCE_SYSTEM_BINARIES=1
 ENV VCPKG_DEFAULT_BINARY_CACHE=/opt/vcpkg_cache
 RUN git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT && \
-    $VCPKG_ROOT/bootstrap-vcpkg.sh -disableMetrics && \
+    cd $VCPKG_ROOT && \
+    git checkout 0b88aacde46a853151730fbe7d0b7ee45f4b6864 && \
+    ./bootstrap-vcpkg.sh -disableMetrics && \
     mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
 
 # Copy manifest and triplets
