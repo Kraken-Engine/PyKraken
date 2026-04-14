@@ -168,6 +168,9 @@ endif()
 # SDL3_shadercross --------------------------------
 if (SDL3_SHADERCROSS_VENDORED)
   set(SDLSHADERCROSS_VENDORED ON CACHE BOOL "" FORCE)
+  set(SDLSHADERCROSS_SHARED OFF CACHE BOOL "" FORCE)
+  set(SDLSHADERCROSS_STATIC ON CACHE BOOL "" FORCE)
+
   FetchContent_Declare(SDL_shadercross
     GIT_REPOSITORY https://github.com/libsdl-org/SDL_shadercross.git
     GIT_TAG        main  # No releases yet
