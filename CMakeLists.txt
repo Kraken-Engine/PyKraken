@@ -35,6 +35,7 @@ if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
 endif()
 
 project(KrakenEngine LANGUAGES CXX)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Local find modules (for module-mode package discovery).
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
@@ -242,8 +243,6 @@ if(TMXLITE_VENDORED)
   set(TMXLITE_STATIC_LIB ON CACHE BOOL "" FORCE)
   set(USE_ZSTD ON CACHE BOOL "" FORCE)  # Big boy compression
   FetchContent_MakeAvailable(tmxlite)
-  set_target_properties(tmxlite PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
   add_library(tmxlite::tmxlite ALIAS tmxlite)
 else()
   find_package(TMXLITE MODULE REQUIRED)
@@ -326,6 +325,10 @@ if(KRAKEN_BUILD_PYTHON)
     ${KRAKEN_CORE_SOURCES}
     ${KRAKEN_PYTHON_SOURCES}
     ${KRAKEN_BAKER_SOURCES}
+  )
+
+  set_target_properties(_pykraken PROPERTIES
+    INSTALL_RPATH_USE_LINK_PATH TRUE
   )
 
   # For ifndef guards
