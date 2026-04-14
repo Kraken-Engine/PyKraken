@@ -80,7 +80,8 @@ jobs:
 
           # --- Windows ---
           CIBW_BEFORE_ALL_WINDOWS: >
-            pip install ninja
+            pip install ninja &&
+            git config --global --add safe.directory C:/vcpkg
           CIBW_ENVIRONMENT_WINDOWS: >
             CC=cl
             CXX=cl
