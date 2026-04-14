@@ -1,0 +1,22 @@
+# Start from the official cibuildwheel image
+FROM quay.io/pypa/manylinux_2_28_x86_64
+
+# 1. Install EPEL and System Tools
+RUN dnf -y install epel-release && \
+    dnf -y install ninja-build ccache git curl zip unzip tar \
+    alsa-lib-devel pipewire-devel pulseaudio-libs-devel \
+    libXrandr-devel libXcursor-devel libXi-devel libXinerama-devel libXfixes-devel libXScrnSaver-devel libXtst-devel \
+    mesa-libEGL-devel mesa-libgbm-devel \
+    wayland-devel wayland-protocols-devel libxkbcommon-devel \
+    libpng-devel libjpeg-turbo-devel freetype-devel flac-devel libzstd-devel
+
+# 2. Install vcpkg globally
+ENV VCPKG_ROOT=/opt/vcpkg
+ENV VCPKG_FORCE_SYSTEM_BINARIES=1
+RUN git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT && \
+    $VCPKG_ROOT/bootstrap-vcpkg.sh -disableMetrics
+
+# 3. Copy your manifest and pre-compile everything
+# (This step will take 20+ minutes during the Docker build, but 0 minutes during your actual CI)
+COPY vcpkg.json /tmp/vcpkg.json
+RUN $VCPKG_ROOT/vcpkg install --manifest-root=/tmp --triplet=x64-linux-release

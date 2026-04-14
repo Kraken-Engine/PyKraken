@@ -64,6 +64,10 @@
       "version": "3.2.0"
     },
     {
+      "name": "sdl3-shadercross",
+      "version": "3.0.0"
+    },
+    {
       "name": "sdl3-ttf",
       "version": "3.2.2"
     },
@@ -78,10 +82,6 @@
     {
       "name": "zstd",
       "version": "1.5.7"
-    },
-    {
-      "name": "shadercross",
-      "version": "3.0.0"
     }
   ]
 }
