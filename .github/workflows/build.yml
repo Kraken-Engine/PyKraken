@@ -90,6 +90,7 @@ jobs:
             CMAKE_GENERATOR=Ninja
             CMAKE_C_COMPILER_LAUNCHER=sccache
             CMAKE_CXX_COMPILER_LAUNCHER=sccache
+            VCPKG_KEEP_PDB=0
 
           # --- macOS ---
           CIBW_BEFORE_ALL_MACOS: brew install ninja
