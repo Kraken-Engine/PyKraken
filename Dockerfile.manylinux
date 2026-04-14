@@ -9,7 +9,7 @@ RUN dnf -y install epel-release && \
     mesa-libEGL-devel mesa-libgbm-devel \
     wayland-devel wayland-protocols-devel libxkbcommon-devel \
     libpng-devel libjpeg-turbo-devel freetype-devel flac-devel libzstd-devel \
-    autoconf autoconf-archive automake libtool
+    autoconf autoconf-archive automake libtool pkgconfig perl-core
  
 # Install vcpkg globally and setup binary cache
 ENV VCPKG_ROOT=/opt/vcpkg
