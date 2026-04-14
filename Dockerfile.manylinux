@@ -8,7 +8,7 @@ RUN dnf -y install epel-release && \
     libX11-devel libXext-devel libXft-devel \
     libXrandr-devel libXcursor-devel libXi-devel libXinerama-devel libXfixes-devel libXScrnSaver-devel libXtst-devel \
     mesa-libEGL-devel mesa-libgbm-devel \
-    wayland-devel wayland-protocols-devel libxkbcommon-devel libdecor-devel \
+    wayland-devel wayland-protocols-devel libxkbcommon-devel \
     vulkan-headers vulkan-loader-devel \
     ibus-devel \
     libpng-devel libjpeg-turbo-devel freetype-devel flac-devel libzstd-devel \
