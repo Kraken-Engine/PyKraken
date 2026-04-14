@@ -72,6 +72,7 @@ message(STATUS "KrakenEngine: SDL3_VENDORED=${SDL3_VENDORED}")
 message(STATUS "KrakenEngine: SDL3_IMAGE_VENDORED=${SDL3_IMAGE_VENDORED}")
 message(STATUS "KrakenEngine: SDL3_TTF_VENDORED=${SDL3_TTF_VENDORED}")
 message(STATUS "KrakenEngine: SDL3_MIXER_VENDORED=${SDL3_MIXER_VENDORED}")
+message(STATUS "KrakenEngine: SDL3_SHADERCROSS_VENDORED=${SDL3_SHADERCROSS_VENDORED}")
 message(STATUS "KrakenEngine: BOX2D_VENDORED=${BOX2D_VENDORED}")
 message(STATUS "KrakenEngine: SPDLOG_VENDORED=${SPDLOG_VENDORED}")
 message(STATUS "KrakenEngine: ZSTD_VENDORED=${ZSTD_VENDORED}")
@@ -166,6 +167,7 @@ endif()
 
 # SDL3_shadercross --------------------------------
 if (SDL3_SHADERCROSS_VENDORED)
+  set(SDLSHADERCROSS_VENDORED ON CACHE BOOL "" FORCE)
   FetchContent_Declare(SDL_shadercross
     GIT_REPOSITORY https://github.com/libsdl-org/SDL_shadercross.git
     GIT_TAG        main  # No releases yet
