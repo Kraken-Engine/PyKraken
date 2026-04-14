@@ -63,6 +63,8 @@ jobs:
           CIBW_BEFORE_ALL_WINDOWS: >
             pip install ninja
           CIBW_ENVIRONMENT_WINDOWS: >
+            CC=cl
+            CXX=cl
             VCPKG_ROOT=C:/vcpkg
             VCPKG_DEFAULT_TRIPLET=x64-windows-release
             CMAKE_GENERATOR=Ninja

@@ -327,9 +327,16 @@ if(KRAKEN_BUILD_PYTHON)
     ${KRAKEN_BAKER_SOURCES}
   )
 
-  set_target_properties(_pykraken PROPERTIES
-    INSTALL_RPATH_USE_LINK_PATH TRUE
-  )
+  if(SDL3_SHADERCROSS_VENDORED)
+    set_target_properties(_pykraken PROPERTIES
+      INSTALL_RPATH "${CMAKE_BINARY_DIR}/_deps/sdl_shadercross-build/external/SPIRV-Cross;${CMAKE_BINARY_DIR}/_deps/sdl_shadercross-build/external/DirectXShaderCompiler/lib"
+      INSTALL_RPATH_USE_LINK_PATH TRUE
+    )
+  else()
+    set_target_properties(_pykraken PROPERTIES
+      INSTALL_RPATH_USE_LINK_PATH TRUE
+    )
+  endif()
 
   # For ifndef guards
   target_compile_definitions(_pykraken PUBLIC KRAKEN_ENABLE_PYTHON)
