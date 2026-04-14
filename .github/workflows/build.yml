@@ -80,7 +80,7 @@ jobs:
             VCPKG_DEFAULT_TRIPLET=arm64-osx-release
 
           # --- Linux ---
-          CIBW_MANYLINUX_X86_64_IMAGE: "ghcr.io/${{ github.repository_owner }}/kraken-manylinux:latest"
+          CIBW_MANYLINUX_X86_64_IMAGE: "ghcr.io/kraken-engine/kraken-manylinux:latest"
           CIBW_ENVIRONMENT_LINUX: >
             CCACHE_DIR=/project/.ccache
             CMAKE_GENERATOR=Ninja

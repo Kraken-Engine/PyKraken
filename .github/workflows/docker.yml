@@ -30,4 +30,5 @@ jobs:
           context: .
           file: ./Dockerfile.manylinux
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/kraken-manylinux:latest
+          tags: ghcr.io/kraken-engine/kraken-manylinux:latest
+          
