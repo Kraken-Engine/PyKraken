@@ -45,12 +45,25 @@ jobs:
           restore-keys: |
             Linux-cibw-cache-
 
+      - name: Setup vcpkg Cache (Linux Container)
+        if: runner.os == 'Linux'
+        uses: actions/cache@v4
+        with:
+          path: .vcpkg_cache
+          key: Linux-vcpkg-cache-${{ github.sha }}
+          restore-keys: |
+            Linux-vcpkg-cache-
+
       - name: Set up vcpkg
         if: runner.os == 'Windows' || runner.os == 'macOS'
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgDirectory: ${{ runner.os == 'Windows' && 'C:/vcpkg' || '/Users/runner/work/vcpkg' }}
           vcpkgJsonGlob: "vcpkg.json"
+
+      - name: Setup MSVC Developer Command Prompt (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.4.0
@@ -90,7 +103,7 @@ jobs:
             CMAKE_CXX_COMPILER_LAUNCHER=ccache
             VCPKG_ROOT=/opt/vcpkg
             VCPKG_DEFAULT_TRIPLET=x64-linux-release
-            VCPKG_DEFAULT_BINARY_CACHE=/opt/vcpkg_cache
+            VCPKG_DEFAULT_BINARY_CACHE=/project/.vcpkg_cache
 
       - name: Upload wheels
         uses: actions/upload-artifact@v7

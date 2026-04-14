@@ -17,17 +17,7 @@ RUN dnf -y install epel-release && \
 # Install vcpkg globally and setup binary cache
 ENV VCPKG_ROOT=/opt/vcpkg
 ENV VCPKG_FORCE_SYSTEM_BINARIES=1
-ENV VCPKG_DEFAULT_BINARY_CACHE=/opt/vcpkg_cache
 RUN git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT && \
     cd $VCPKG_ROOT && \
     git checkout 0b88aacde46a853151730fbe7d0b7ee45f4b6864 && \
-    ./bootstrap-vcpkg.sh -disableMetrics && \
-    mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
-
-# Copy manifest and triplets
-COPY vcpkg.json /tmp/vcpkg.json
-COPY triplets /tmp/triplets
-
-# Pre-populate vcpkg binary cache
-WORKDIR /tmp
-RUN $VCPKG_ROOT/vcpkg install --triplet=x64-linux-release --overlay-triplets=/tmp/triplets
+    ./bootstrap-vcpkg.sh -disableMetrics
