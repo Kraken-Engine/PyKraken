@@ -172,6 +172,12 @@ if (SDL3_SHADERCROSS_VENDORED)
   set(SDLSHADERCROSS_SHARED OFF CACHE BOOL "" FORCE)
   set(SDLSHADERCROSS_STATIC ON CACHE BOOL "" FORCE)
 
+  if(MSVC)
+    # add_compile_options(/FS)
+    string(REPLACE "/Zi" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    string(REPLACE "/Zi" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+  endif()
+
   FetchContent_Declare(SDL_shadercross
     GIT_REPOSITORY https://github.com/libsdl-org/SDL_shadercross.git
     GIT_TAG        main  # No releases yet
