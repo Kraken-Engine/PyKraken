@@ -336,6 +336,16 @@ else()
     src/tools/baker_main.cpp
     ${KRAKEN_BAKER_SOURCES}
   )
+
+  set_target_properties(KrakenShaderBaker PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+  )
+
+  if (MSVC)
+    target_compile_options(KrakenShaderBaker PRIVATE /utf-8)
+  endif()
 endif()
 
 # =====================================================================
@@ -369,6 +379,10 @@ target_link_libraries(${KRAKEN_TARGET} PRIVATE
   spdlog::spdlog
 )
 
+target_link_libraries(${KRAKEN_TARGET} PUBLIC
+  spdlog::spdlog
+)
+
 # =====================================================================
 # SHADERCROSS ROUTING
 # =====================================================================
@@ -376,6 +390,7 @@ if(KRAKEN_BUILD_PYTHON)
   target_link_libraries(_pykraken PRIVATE SDL3_shadercross::SDL3_shadercross)
 else()
   target_link_libraries(KrakenShaderBaker PRIVATE
+    Kraken::Kraken
     SDL3::SDL3
     SDL3_shadercross::SDL3_shadercross
   )

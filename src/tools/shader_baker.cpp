@@ -56,13 +56,13 @@ void bake(const std::filesystem::path& fragmentPath, const std::filesystem::path
         .shader_stage = SDL_SHADERCROSS_SHADERSTAGE_FRAGMENT,
     };
 
-    size_t metalSize;
     void* metalBuffer = SDL_ShaderCross_TranspileMSLFromSPIRV(&spirvInfo);
     if (!metalBuffer)
     {
         SDL_ShaderCross_Quit();
         throw std::runtime_error("Failed to compile to SPIR-V");
     }
+    const size_t metalSize = SDL_strlen(static_cast<const char*>(metalBuffer));
     std::filesystem::path mslPath = outputBasePath.string() + ".msl";
     std::ofstream mslFile(mslPath, std::ios::binary);
     mslFile.write(reinterpret_cast<const char*>(metalBuffer), metalSize);

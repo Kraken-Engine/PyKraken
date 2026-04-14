@@ -58,9 +58,11 @@ class Shader
     SDL_GPURenderState* m_renderState;
 
     friend void _quit();
-    friend void _bind(nb::module_& module);
-
     friend Shader load(const std::filesystem::path& fragmentBasePath, uint32_t uniformBufferCount);
+
+#ifdef KRAKEN_ENABLE_PYTHON
+    friend void _bind(nb::module_& module);
+#endif  // KRAKEN_ENABLE_PYTHON
 };
 }  // namespace shaders
 }  // namespace kn

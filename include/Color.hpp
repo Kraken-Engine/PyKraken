@@ -5,6 +5,7 @@
 #include <nanobind/nanobind.h>
 #endif  // KRAKEN_ENABLE_PYTHON
 
+#include <string>
 #include <string_view>
 
 #ifdef KRAKEN_ENABLE_PYTHON
@@ -14,8 +15,10 @@ namespace nb = nanobind;
 namespace kn
 {
 struct Color;
+
 namespace color
 {
+
 struct HSV
 {
     double h = 0.0;
