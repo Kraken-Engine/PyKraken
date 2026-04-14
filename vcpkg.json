@@ -65,7 +65,7 @@
     },
     {
       "name": "sdl3-shadercross",
-      "version": "3.0.0"
+      "version": "3.0.0-preview2"
     },
     {
       "name": "sdl3-ttf",
