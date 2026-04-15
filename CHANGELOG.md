@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) when possible.
 
-## [1.7.1] - TBA
+## [1.7.1] - 2026-04-15
 
 ### Added
 - New `renderer.draw_9slice` function for drawing 9-slice textures.
@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Tween` has a new `current_pos` read-only property for getting the current interpolated position.
 - `fx.Effect` class now has a `clone` method for creating a copy of an effect with the same properties.
 - The `pykraken` package now comes with a cli tool for:
-  - Building exe files from Python scripts (with PyInstaller as a dependency)
+  - Building exe files from Python scripts (with PyInstaller as a dependency).
   - Baking HLSL scripts into SPV, MSL, and DXIL shaders.
 - `renderer` submodule now has a `set_render_backend` function for manually setting the rendering backend instead of relying on automatic selection.
 - New `RenderBackend` enum for specifying rendering backends.
@@ -41,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Orchestrator` objects were copied upon calling `parallel` and `then` methods, causing effects to not be added to the original orchestrator timeline. Now returns reference to the original orchestrator.
 - Some images wouldn't render when drawn while a shader was binded. This was due to unpredictable pixel formats when
 loading images that shaders didn't like. Solved by forcing an RGBA32 format on all loaded images.
-- *Pyinstaller* builds were broken since moving to Nanobind due to different naming conventions. They've been fixed and tested to work again.
+- PyInstaller builds were broken since moving to Nanobind due to different naming conventions. They've been fixed and tested to work again.
 - Fixed bug with tilemaps regarding tile id's not being mapped correctly to their tileset, causing wrong tiles to be drawn.
 - Isometric, hexagonal, and staggered maps render correctly now.
 - Tile rotation and flipping bug fixed.
