@@ -447,12 +447,34 @@ if(KRAKEN_BUILD_PYTHON)
         COMMAND_EXPAND_LISTS
       )
     endif()
+
+    set(_VENDORED_TARGETS "")
+    if(TARGET dxcompiler)
+      list(APPEND _VENDORED_TARGETS dxcompiler)
+    endif()
+    if(TARGET dxil)
+      list(APPEND _VENDORED_TARGETS dxil)
+    endif()
+    if(TARGET spirv-cross-c-shared)
+      list(APPEND _VENDORED_TARGETS spirv-cross-c-shared)
+    endif()
+
+    foreach(_vtgt IN LISTS _VENDORED_TARGETS)
+      add_custom_command(TARGET _pykraken POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${_vtgt}> $<TARGET_FILE_DIR:_pykraken>
+      )
+    endforeach()
   endif()
 
   # Ensure the module is placed in the correct package directory for scikit-build-core
   install(TARGETS _pykraken LIBRARY DESTINATION pykraken)
-  if(WIN32 AND _VCPKG_DLLS)
-    install(FILES ${_VCPKG_DLLS} DESTINATION pykraken)
+  if(WIN32)
+    if(_VCPKG_DLLS)
+      install(FILES ${_VCPKG_DLLS} DESTINATION pykraken)
+    endif()
+    if(_VENDORED_TARGETS)
+      install(TARGETS ${_VENDORED_TARGETS} RUNTIME DESTINATION pykraken)
+    endif()
   endif()
 
   nanobind_add_stub(
