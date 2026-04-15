@@ -45,6 +45,15 @@ void Camera::set()
     _cameraPos = pos;
 }
 
+void Camera::unset()
+{
+    if (active == this)
+    {
+        active = nullptr;
+        _cameraPos = Vec2{0, 0};
+    }
+}
+
 namespace camera
 {
 Vec2 getActivePos()
@@ -140,6 +149,10 @@ You can also assign a Vec2 or a (x, y) sequence to set the position.
 Set this camera as the active one for rendering.
 
 Only one camera can be active at a time.
+        )doc")
+
+        .def("unset", &Camera::unset, R"doc(
+Unset this camera as the active one for rendering.
         )doc")
 
         .def("world_to_screen", &Camera::worldToScreen, "world_pos"_a, R"doc(

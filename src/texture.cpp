@@ -41,28 +41,63 @@ Texture::Texture(
 )
 {
     SDL_Surface* surface = pixelArray.getSDL();
+    SDL_Surface* uploadSurface = surface;
+    SDL_Surface* keyedUploadSurface = nullptr;
+
+    uint32_t colorKey = 0;
+    if (SDL_GetSurfaceColorKey(surface, &colorKey))
+    {
+        keyedUploadSurface = SDL_CreateSurface(surface->w, surface->h, SDL_PIXELFORMAT_RGBA32);
+        if (!keyedUploadSurface)
+        {
+            throw std::runtime_error(
+                "Failed to create color-key upload surface: " + std::string(SDL_GetError())
+            );
+        }
+
+        const uint32_t transparent = SDL_MapSurfaceRGBA(keyedUploadSurface, 0, 0, 0, 0);
+        SDL_FillSurfaceRect(keyedUploadSurface, nullptr, transparent);
+
+        if (!SDL_BlitSurface(surface, nullptr, keyedUploadSurface, nullptr))
+        {
+            SDL_DestroySurface(keyedUploadSurface);
+            throw std::runtime_error(
+                "Failed to apply PixelArray color key before texture upload: " +
+                std::string(SDL_GetError())
+            );
+        }
+
+        uploadSurface = keyedUploadSurface;
+    }
 
     const SDL_TextureAccess textureAccess = (access == TextureAccess::STATIC)
                                                 ? SDL_TEXTUREACCESS_STATIC
                                                 : SDL_TEXTUREACCESS_TARGET;
     m_texPtr = SDL_CreateTexture(
-        renderer::_get(), SDL_PIXELFORMAT_RGBA32, textureAccess, surface->w, surface->h
+        renderer::_get(), SDL_PIXELFORMAT_RGBA32, textureAccess, uploadSurface->w, uploadSurface->h
     );
     if (!m_texPtr)
     {
+        if (keyedUploadSurface)
+            SDL_DestroySurface(keyedUploadSurface);
         throw std::runtime_error(
             "Failed to create texture from PixelArray: " + std::string(SDL_GetError())
         );
     }
 
-    if (!SDL_UpdateTexture(m_texPtr, nullptr, surface->pixels, surface->pitch))
+    if (!SDL_UpdateTexture(m_texPtr, nullptr, uploadSurface->pixels, uploadSurface->pitch))
     {
+        if (keyedUploadSurface)
+            SDL_DestroySurface(keyedUploadSurface);
         SDL_DestroyTexture(m_texPtr);
         m_texPtr = nullptr;
         throw std::runtime_error(
             "Failed to copy PixelArray to texture: " + std::string(SDL_GetError())
         );
     }
+
+    if (keyedUploadSurface)
+        SDL_DestroySurface(keyedUploadSurface);
 
     const TextureScaleMode finalScaleMode = (scaleMode == TextureScaleMode::DEFAULT)
                                                 ? renderer::getDefaultScaleMode()

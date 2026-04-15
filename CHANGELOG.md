@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Baking HLSL scripts into SPV, MSL, and DXIL shaders.
 - `renderer` submodule now has a `set_render_backend` function for manually setting the rendering backend instead of relying on automatic selection.
 - New `RenderBackend` enum for specifying rendering backends.
+- `camera.unset()` function for unsetting the active camera.
 
 ### Changed
 - Renamed `Align` enum to `TextAlign` for specificity.
@@ -41,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Some images wouldn't render when drawn while a shader was binded. This was due to unpredictable pixel formats when
 loading images that shaders didn't like. Solved by forcing an RGBA32 format on all loaded images.
 - *Pyinstaller* builds were broken since moving to Nanobind due to different naming conventions. They've been fixed and tested to work again.
+- Fixed bug with tilemaps regarding tile id's not being mapped correctly to their tileset, causing wrong tiles to be drawn.
+- Isometric, hexagonal, and staggered maps render correctly now.
+- Tile rotation and flipping bug fixed.
+- Fixed colorkeyed PixelArray → Texture sometimes not retaining the colorkey transparency.
 
 ## [1.7.0] - 2026-04-07
 

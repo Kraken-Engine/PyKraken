@@ -22,6 +22,8 @@
 #include "Camera.hpp"
 #include "Draw.hpp"
 #include "Line.hpp"
+#include "Log.hpp"
+#include "PixelArray.hpp"
 #include "Polygon.hpp"
 #include "Renderer.hpp"
 
@@ -51,6 +53,12 @@ void Map::load(const std::filesystem::path& tmxPath)
     m_staggerAxis = tmxMap.getStaggerAxis();
     m_staggerIndex = tmxMap.getStaggerIndex();
 
+    if (m_renderOrder == tmx::RenderOrder::None)
+        kn::log::warn(
+            "TMX map ({}) has no render order specified, defaulting to right-down rendering.",
+            tmxPath.string()
+        );
+
     const auto& mapSize = tmxMap.getTileCount();
     m_mapSize = {mapSize.x, mapSize.y};
 
@@ -75,6 +83,8 @@ void Map::load(const std::filesystem::path& tmxPath)
         {
             const auto& tmxTileLayer = tmxLayer->getLayerAs<tmx::TileLayer>();
             const auto& tileOffset = tmxTileLayer.getOffset();
+            const auto mapWidth = static_cast<int>(m_mapSize.x);
+            const auto mapHeight = static_cast<int>(m_mapSize.y);
 
             auto tileLayer = std::make_shared<TileLayer>();
             tileLayer->m_type = tmx::Layer::Type::Tile;
@@ -83,13 +93,58 @@ void Map::load(const std::filesystem::path& tmxPath)
             tileLayer->visible = tmxTileLayer.getVisible();
 
             const auto& tmxTiles = tmxTileLayer.getTiles();
-            tileLayer->m_tiles.reserve(tmxTiles.size());
-            for (const auto& tmxTile : tmxTiles)
+            const auto totalTileCount = static_cast<size_t>(std::max(0, mapWidth)) *
+                                        static_cast<size_t>(std::max(0, mapHeight));
+            tileLayer->m_tiles.assign(totalTileCount, TileLayer::Tile{});
+
+            if (!tmxTiles.empty())
             {
-                TileLayer::Tile tile{};
-                tile.m_id = tmxTile.ID;
-                tile.m_flipFlags = tmxTile.flipFlags;
-                tileLayer->m_tiles.push_back(std::move(tile));
+                const auto copyCount = std::min(tmxTiles.size(), tileLayer->m_tiles.size());
+                for (size_t i = 0; i < copyCount; ++i)
+                {
+                    tileLayer->m_tiles[i].m_id = tmxTiles[i].ID;
+                    tileLayer->m_tiles[i].m_flipFlags = tmxTiles[i].flipFlags;
+                }
+            }
+            else
+            {
+                const auto& tmxChunks = tmxTileLayer.getChunks();
+                for (const auto& chunk : tmxChunks)
+                {
+                    const int chunkW = chunk.size.x;
+                    const int chunkH = chunk.size.y;
+                    const int chunkX = chunk.position.x;
+                    const int chunkY = chunk.position.y;
+
+                    if (chunkW <= 0 || chunkH <= 0)
+                        continue;
+
+                    for (int cy = 0; cy < chunkH; ++cy)
+                    {
+                        const int mapY = chunkY + cy;
+                        if (mapY < 0 || mapY >= mapHeight)
+                            continue;
+
+                        for (int cx = 0; cx < chunkW; ++cx)
+                        {
+                            const int mapX = chunkX + cx;
+                            if (mapX < 0 || mapX >= mapWidth)
+                                continue;
+
+                            const size_t chunkIndex = static_cast<size_t>(cy * chunkW + cx);
+                            if (chunkIndex >= chunk.tiles.size())
+                                continue;
+
+                            const size_t mapIndex = static_cast<size_t>(mapY * mapWidth + mapX);
+                            if (mapIndex >= tileLayer->m_tiles.size())
+                                continue;
+
+                            tileLayer->m_tiles[mapIndex].m_id = chunk.tiles[chunkIndex].ID;
+                            tileLayer->m_tiles[mapIndex].m_flipFlags =
+                                chunk.tiles[chunkIndex].flipFlags;
+                        }
+                    }
+                }
             }
 
             tileLayer->setOpacity(tmxTileLayer.getOpacity());
@@ -194,7 +249,14 @@ void Map::load(const std::filesystem::path& tmxPath)
             imgLayer->offset = {tileOffset.x, tileOffset.y};
             imgLayer->visible = tmxImgLayer.getVisible();
 
-            imgLayer->m_texture = std::make_shared<Texture>(tmxImgLayer.getImagePath());
+            PixelArray pa(tmxImgLayer.getImagePath());
+            if (tmxImgLayer.hasTransparency())
+            {
+                const tmx::Colour& c = tmxImgLayer.getTransparencyColour();
+                pa.setColorKey({c.r, c.g, c.b, c.a});
+            }
+            imgLayer->m_texture = std::make_shared<Texture>(pa);
+
             imgLayer->transform.pos = {tileOffset.x, tileOffset.y};
             imgLayer->setOpacity(tmxImgLayer.getOpacity());
 
@@ -230,7 +292,71 @@ void Map::load(const std::filesystem::path& tmxPath)
         tileSet.m_tileCount = tmxTileset.getTileCount();
         tileSet.m_columns = tmxTileset.getColumnCount();
         tileSet.m_tileOffset = {tsTileOffset.x, tsTileOffset.y};
-        tileSet.m_texture = std::make_shared<Texture>(tmxTileset.getImagePath());
+
+        PixelArray pa(tmxTileset.getImagePath());
+        if (tmxTileset.hasTransparency())
+        {
+            const tmx::Colour& c = tmxTileset.getTransparencyColour();
+            pa.setColorKey({c.r, c.g, c.b, c.a});
+        }
+        tileSet.m_texture = std::make_shared<Texture>(pa);
+
+        uint32_t maxExplicitLocalID = 0;
+        for (const auto& tmxTile : tsTiles)
+            maxExplicitLocalID = std::max(maxExplicitLocalID, tmxTile.ID);
+
+        uint32_t resolvedColumns = tileSet.m_columns;
+        uint32_t resolvedTileCount = tileSet.m_tileCount;
+
+        const int texW = tileSet.m_texture ? tileSet.m_texture->getWidth() : 0;
+        const int texH = tileSet.m_texture ? tileSet.m_texture->getHeight() : 0;
+
+        const int tileW = static_cast<int>(tileSet.m_tileSize.x);
+        const int tileH = static_cast<int>(tileSet.m_tileSize.y);
+        const int spacing = static_cast<int>(tileSet.m_spacing);
+        const int margin = static_cast<int>(tileSet.m_margin);
+
+        if (resolvedColumns == 0 && tileW > 0)
+        {
+            const int usableW = std::max(0, texW - (2 * margin));
+            const int strideW = tileW + spacing;
+            if (strideW > 0)
+                resolvedColumns = static_cast<uint32_t>((usableW + spacing) / strideW);
+        }
+
+        if (resolvedTileCount == 0 && tileW > 0 && tileH > 0)
+        {
+            const int usableW = std::max(0, texW - (2 * margin));
+            const int usableH = std::max(0, texH - (2 * margin));
+            const int strideW = tileW + spacing;
+            const int strideH = tileH + spacing;
+
+            uint32_t colsFromImage = 0;
+            uint32_t rowsFromImage = 0;
+
+            if (strideW > 0)
+                colsFromImage = static_cast<uint32_t>((usableW + spacing) / strideW);
+            if (strideH > 0)
+                rowsFromImage = static_cast<uint32_t>((usableH + spacing) / strideH);
+
+            if (resolvedColumns == 0)
+                resolvedColumns = colsFromImage;
+
+            if (resolvedColumns > 0)
+                resolvedTileCount = resolvedColumns * rowsFromImage;
+        }
+
+        if (!tsTiles.empty())
+            resolvedTileCount = std::max(resolvedTileCount, maxExplicitLocalID + 1);
+
+        if (resolvedColumns == 0 && resolvedTileCount > 0)
+            resolvedColumns = resolvedTileCount;
+
+        tileSet.m_columns = resolvedColumns;
+        tileSet.m_tileCount = resolvedTileCount;
+        tileSet.m_lastGID = (tileSet.m_tileCount > 0)
+                                ? (tileSet.m_firstGID + tileSet.m_tileCount - 1)
+                                : tileSet.m_firstGID;
 
         tileSet.m_terrains.reserve(tsTerrainTypes.size());
         for (const auto& tmxTerrain : tsTerrainTypes)
@@ -238,29 +364,51 @@ void Map::load(const std::filesystem::path& tmxPath)
             TileSet::Terrain terrain{tmxTerrain.name, tmxTerrain.tileID};
             tileSet.m_terrains.push_back(std::move(terrain));
         }
-        tileSet.m_tiles.reserve(tsTiles.size());
-        for (const auto& tmxTile : tsTiles)
+
+        tileSet.m_tiles.reserve(tileSet.m_tileCount);
+        for (uint32_t localID = 0; localID < tileSet.m_tileCount; ++localID)
         {
-            // clang-format off
+            const uint32_t column = (tileSet.m_columns > 0) ? (localID % tileSet.m_columns) : 0;
+            const uint32_t row = (tileSet.m_columns > 0) ? (localID / tileSet.m_columns) : 0;
+
+            const uint32_t clipX = static_cast<uint32_t>(margin + column * (tileW + spacing));
+            const uint32_t clipY = static_cast<uint32_t>(margin + row * (tileH + spacing));
+
             TileSet::Tile tile{
-                tmxTile.ID,
-                tmxTile.terrainIndices,
-                tmxTile.probability,
-                {
-                    tmxTile.imagePosition.x,
-                    tmxTile.imagePosition.y,
-                    tmxTile.imageSize.x,
-                    tmxTile.imageSize.y
-                }
+                localID,
+                {},
+                100,
+                {static_cast<double>(clipX), static_cast<double>(clipY), tileSet.m_tileSize.x,
+                 tileSet.m_tileSize.y}
             };
             tileSet.m_tiles.push_back(std::move(tile));
-            // clang-format on
+        }
+
+        for (const auto& tmxTile : tsTiles)
+        {
+            if (tmxTile.ID >= tileSet.m_tiles.size())
+                continue;
+
+            auto& tile = tileSet.m_tiles[tmxTile.ID];
+            tile.m_terrainIndices = tmxTile.terrainIndices;
+            tile.m_probability = tmxTile.probability;
+
+            if (tmxTile.imageSize.x > 0 && tmxTile.imageSize.y > 0)
+            {
+                tile.m_clipArea =
+                    {static_cast<double>(tmxTile.imagePosition.x),
+                     static_cast<double>(tmxTile.imagePosition.y),
+                     static_cast<double>(tmxTile.imageSize.x),
+                     static_cast<double>(tmxTile.imageSize.y)};
+            }
         }
 
         tileSet.m_tileIndex.assign(tileSet.m_tileCount, 0);
-        for (const auto& tile : tileSet.m_tiles)
+        for (size_t i = 0; i < tileSet.m_tiles.size(); ++i)
         {
-            tileSet.m_tileIndex[tile.m_id] = tile.m_id + 1;
+            const auto localID = tileSet.m_tiles[i].m_id;
+            if (localID < tileSet.m_tileIndex.size())
+                tileSet.m_tileIndex[localID] = static_cast<uint32_t>(i + 1);
         }
 
         m_tileSets.push_back(std::move(tileSet));
@@ -455,6 +603,8 @@ const std::vector<TileSet::Tile>& TileSet::getTiles() const
 
 bool TileSet::hasTile(const uint32_t id) const
 {
+    if (m_tileCount == 0)
+        return false;
     return id >= m_firstGID && id <= m_lastGID;
 }
 
@@ -468,7 +618,14 @@ const TileSet::Tile* TileSet::getTile(uint32_t id) const
         return nullptr;
 
     const uint32_t idx = m_tileIndex[local];
-    return idx ? &m_tiles[idx - 1] : nullptr;
+    if (idx == 0)
+        return nullptr;
+
+    const size_t tileVectorIndex = static_cast<size_t>(idx - 1);
+    if (tileVectorIndex >= m_tiles.size())
+        return nullptr;
+
+    return &m_tiles[tileVectorIndex];
 }
 
 std::shared_ptr<Texture> TileSet::getTexture() const
@@ -508,6 +665,13 @@ struct FlipInfo
     bool v;
 };
 
+struct HexTransformInfo
+{
+    float rotation;
+    bool h;
+    bool v;
+};
+
 // index by (flags & 0b111)
 static constexpr FlipInfo kFlipLUT[8] = {
     {0.0f, false, false},            // 0: none
@@ -520,6 +684,27 @@ static constexpr FlipInfo kFlipLUT[8] = {
     {-float(M_PI_2), false, true},   // 7: D|H|V
 };
 
+// tmxlite exposes hex flags in the same bitfield, where the low bit (0x1)
+// represents Tiled's extra 120-degree rotation flag.
+
+static HexTransformInfo decodeHexTransform(const uint8_t rawFlipFlags)
+{
+    static constexpr uint8_t kHexRotate120Flag = 0x1;
+
+    const bool h = (rawFlipFlags & tmx::TileLayer::FlipFlag::Horizontal) != 0;
+    const bool v = (rawFlipFlags & tmx::TileLayer::FlipFlag::Vertical) != 0;
+    const bool rotate60 = (rawFlipFlags & tmx::TileLayer::FlipFlag::Diagonal) != 0;
+    const bool rotate120 = (rawFlipFlags & kHexRotate120Flag) != 0;
+
+    float rotation = 0.0f;
+    if (rotate60)
+        rotation += float(M_PI) / 3.0f;
+    if (rotate120)
+        rotation += (2.0f * float(M_PI)) / 3.0f;
+
+    return {rotation, h, v};
+}
+
 void TileLayer::draw()
 {
     if (!visible)
@@ -530,23 +715,40 @@ void TileLayer::draw()
     const auto tileW = static_cast<int>(m_map->getTileSize().x);
     const auto tileH = static_cast<int>(m_map->getTileSize().y);
 
-    // Compute visible tile range from the active camera and clamp to map bounds
-    const Vec2 camPos = camera::getActivePos();
-    const Vec2 rendRes = renderer::getCurrentResolution();
-    const double camLeft = camPos.x;
-    const double camTop = camPos.y;
-    const double camRight = camLeft + rendRes.x;
-    const double camBottom = camTop + rendRes.y;
+    if (mapW <= 0 || mapH <= 0 || tileW <= 0 || tileH <= 0)
+        return;
 
-    auto camMinX = static_cast<int>(std::floor((camLeft - offset.x) / tileW));
-    auto camMinY = static_cast<int>(std::floor((camTop - offset.y) / tileH));
-    auto camMaxX = static_cast<int>(std::floor((camRight - offset.x) / tileW));
-    auto camMaxY = static_cast<int>(std::floor((camBottom - offset.y) / tileH));
+    const auto expectedTileCount = static_cast<size_t>(mapW) * static_cast<size_t>(mapH);
+    if (m_tiles.size() < expectedTileCount)
+        return;
 
-    camMinX = std::max(0, std::min(mapW - 1, camMinX));
-    camMinY = std::max(0, std::min(mapH - 1, camMinY));
-    camMaxX = std::max(0, std::min(mapW - 1, camMaxX));
-    camMaxY = std::max(0, std::min(mapH - 1, camMaxY));
+    const auto orient = m_map->getOrientation();
+
+    int camMinX = 0;
+    int camMinY = 0;
+    int camMaxX = mapW - 1;
+    int camMaxY = mapH - 1;
+
+    if (orient == tmx::Orientation::Orthogonal)
+    {
+        // Compute visible tile range from the active camera and clamp to map bounds.
+        const Vec2 camPos = camera::getActivePos();
+        const Vec2 rendRes = renderer::getCurrentResolution();
+        const double camLeft = camPos.x;
+        const double camTop = camPos.y;
+        const double camRight = camLeft + rendRes.x;
+        const double camBottom = camTop + rendRes.y;
+
+        camMinX = static_cast<int>(std::floor((camLeft - offset.x) / tileW));
+        camMinY = static_cast<int>(std::floor((camTop - offset.y) / tileH));
+        camMaxX = static_cast<int>(std::floor((camRight - offset.x) / tileW));
+        camMaxY = static_cast<int>(std::floor((camBottom - offset.y) / tileH));
+
+        camMinX = std::max(0, std::min(mapW - 1, camMinX));
+        camMinY = std::max(0, std::min(mapH - 1, camMinY));
+        camMaxX = std::max(0, std::min(mapW - 1, camMaxX));
+        camMaxY = std::max(0, std::min(mapH - 1, camMaxY));
+    }
 
     if (camMinX > camMaxX || camMinY > camMaxY)
         return;
@@ -557,6 +759,7 @@ void TileLayer::draw()
     switch (m_map->getRenderOrder())
     {
     case tmx::RenderOrder::RightDown:
+    case tmx::RenderOrder::None:
         startX = camMinX;
         endX = camMaxX;
         stepX = 1;
@@ -588,43 +791,118 @@ void TileLayer::draw()
         endY = camMinY;
         stepY = -1;
         break;
-    default:
-        throw std::runtime_error("Unsupported render order in tile layer rendering");
     }
 
     Transform renderTransform{};
     renderTransform.pos = offset;
 
     const auto layerAlpha = static_cast<float>(m_opacity);
+    const auto halfTileW = static_cast<double>(tileW) * 0.5;
+    const auto halfTileH = static_cast<double>(tileH) * 0.5;
+    const auto isoOriginX = offset.x + static_cast<double>(mapH - 1) * halfTileW;
+    const auto isoOriginY = offset.y;
+
+    const auto staggerAxis = m_map->getStaggerAxis();
+    const auto staggerIndex = m_map->getStaggerIndex();
+    const double hexSideLength = (orient == tmx::Orientation::Hexagonal) ? m_map->getHexSideLength()
+                                                                         : 0.0;
+
+    const double sideLengthX = (staggerAxis == tmx::StaggerAxis::X) ? hexSideLength : 0.0;
+    const double sideLengthY = (staggerAxis == tmx::StaggerAxis::Y) ? hexSideLength : 0.0;
+    const double columnWidth = (static_cast<double>(tileW) + sideLengthX) * 0.5;
+    const double rowHeight = (static_cast<double>(tileH) + sideLengthY) * 0.5;
+    const double stepXStaggerY = static_cast<double>(tileW) + sideLengthX;
+    const double stepYStaggerX = static_cast<double>(tileH) + sideLengthY;
+
+    const auto isStaggeredCoord = [staggerIndex](const int v)
+    {
+        const bool isEven = (v & 1) == 0;
+        return (staggerIndex == tmx::StaggerIndex::Even) ? isEven : !isEven;
+    };
 
     const int endYExclusive = endY + stepY;
     const int endXExclusive = endX + stepX;
-    const auto dx = static_cast<double>(stepX * tileW);
 
     for (int y = startY; y != endYExclusive; y += stepY)
     {
         const auto rowBase = static_cast<size_t>(y * mapW);
-        auto px = offset.x + static_cast<double>(startX * tileW);
-        const auto py = offset.y + static_cast<double>(y * tileH);
 
-        for (int x = startX; x != endXExclusive; x += stepX, px += dx)
+        for (int x = startX; x != endXExclusive; x += stepX)
         {
             const TileLayer::Tile& tile = m_tiles[rowBase + static_cast<size_t>(x)];
             const uint32_t gid = tile.getID();
             if (gid == 0)
                 continue;
 
-            const TileSet& foundSet = m_map->getTileSets()[tile.getTilesetIndex()];
+            const uint8_t tilesetIndex = tile.getTilesetIndex();
+            const auto& tileSets = m_map->getTileSets();
+            if (tilesetIndex >= tileSets.size())
+                continue;
+
+            const TileSet& foundSet = tileSets[tilesetIndex];
             const TileSet::Tile* setTile = foundSet.getTile(gid);
             const auto setTexture = foundSet.getTexture();
+            if (!setTile || !setTexture)
+                continue;
 
             setTexture->setAlpha(layerAlpha);
-            renderTransform.pos = {px, py};
+            if (orient == tmx::Orientation::Isometric)
+            {
+                renderTransform.pos =
+                    {isoOriginX + (static_cast<double>(x) - static_cast<double>(y)) * halfTileW,
+                     isoOriginY + (static_cast<double>(x) + static_cast<double>(y)) * halfTileH};
+            }
+            else if (orient == tmx::Orientation::Staggered || orient == tmx::Orientation::Hexagonal)
+            {
+                if (staggerAxis == tmx::StaggerAxis::Y)
+                {
+                    renderTransform.pos =
+                        {offset.x + static_cast<double>(x) * stepXStaggerY +
+                             (isStaggeredCoord(y) ? columnWidth : 0.0),
+                         offset.y + static_cast<double>(y) * rowHeight};
+                }
+                else if (staggerAxis == tmx::StaggerAxis::X)
+                {
+                    renderTransform.pos =
+                        {offset.x + static_cast<double>(x) * columnWidth,
+                         offset.y + static_cast<double>(y) * stepYStaggerX +
+                             (isStaggeredCoord(x) ? rowHeight : 0.0)};
+                }
+                else
+                {
+                    renderTransform.pos =
+                        {offset.x + static_cast<double>(x * tileW),
+                         offset.y + static_cast<double>(y * tileH)};
+                }
+            }
+            else
+            {
+                renderTransform.pos =
+                    {offset.x + static_cast<double>(x * tileW),
+                     offset.y + static_cast<double>(y * tileH)};
+            }
 
-            const FlipInfo flipInfo = kFlipLUT[tile.getFlipFlags() & 0x7];
-            renderTransform.angle = flipInfo.rotation;
-            setTexture->flip.h = flipInfo.h;
-            setTexture->flip.v = flipInfo.v;
+            const uint8_t rawFlipFlags = tile.getFlipFlags();
+            if (orient == tmx::Orientation::Hexagonal)
+            {
+                const HexTransformInfo hexInfo = decodeHexTransform(rawFlipFlags);
+                renderTransform.angle = hexInfo.rotation;
+                setTexture->flip.h = hexInfo.h;
+                setTexture->flip.v = hexInfo.v;
+            }
+            else
+            {
+                // Normalize to LUT bits H=0x1, V=0x2, D=0x4.
+                const uint8_t lutFlipFlags =
+                    ((rawFlipFlags & tmx::TileLayer::FlipFlag::Horizontal) ? 0x1 : 0x0) |
+                    ((rawFlipFlags & tmx::TileLayer::FlipFlag::Vertical) ? 0x2 : 0x0) |
+                    ((rawFlipFlags & tmx::TileLayer::FlipFlag::Diagonal) ? 0x4 : 0x0);
+
+                const FlipInfo flipInfo = kFlipLUT[lutFlipFlags];
+                renderTransform.angle = flipInfo.rotation;
+                setTexture->flip.h = flipInfo.h;
+                setTexture->flip.v = flipInfo.v;
+            }
 
             setTexture->setClipArea(setTile->getClipArea());
             renderer::draw(*setTexture, renderTransform);

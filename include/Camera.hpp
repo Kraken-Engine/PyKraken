@@ -27,6 +27,7 @@ class Camera
     [[nodiscard]] Vec2 screenToWorld(const Vec2& screenPos) const;
 
     void set();
+    void unset();
 
     static Camera* active;
 
