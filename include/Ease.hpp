@@ -1,12 +1,16 @@
 #pragma once
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <functional>
 
 #include "Math.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif  // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
@@ -14,7 +18,11 @@ namespace ease
 {
 using EasingFunction = std::function<double(double)>;
 
+void _tick();
+
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module);
+#endif  // KRAKEN_ENABLE_PYTHON
 
 double linear(double t);
 
@@ -86,9 +94,9 @@ class Tween
     Vec2 endPos{};
 
     Tween(ease::EasingFunction easeFunc, double duration);
-    ~Tween() = default;
+    ~Tween();
 
-    Vec2 step();
+    [[nodiscard]] Vec2 getCurrentPosition() const;
 
     void pause();
 
@@ -115,6 +123,8 @@ class Tween
     State state = State::PLAYING;
     bool forward = true;
 
-    [[nodiscard]] Vec2 getCurrentPosition() const;
+    void update(double delta);
+
+    friend void ease::_tick();
 };
 }  // namespace kn

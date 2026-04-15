@@ -1,7 +1,9 @@
 #include "Circle.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/make_iterator.h>
 #include <nanobind/operators.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include "Line.hpp"
 #include "Rect.hpp"
@@ -112,6 +114,7 @@ bool Circle::operator!=(const Circle& other) const
     return !(*this == other);
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace circle
 {
 void _bind(const nb::module_& module)
@@ -226,4 +229,6 @@ Return a copy of the circle.
         .def(nb::self != nb::self);
 }
 }  // namespace circle
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn

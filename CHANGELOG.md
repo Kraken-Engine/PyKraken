@@ -5,7 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) when possible.
 
-## [1.7.0] - TBA
+## [1.7.1] - 2026-04-15
+
+### Added
+- New `renderer.draw_9slice` function for drawing 9-slice textures.
+- New `ui` submodule for designing and rendering user interfaces:
+  - `Direction` enum for specifying layout direction.
+  - `Align` enum for specifying alignment within containers.
+  - `Style` class for defining reusable style properties.
+  - `root`, `stack`, `row`, and `column` container functions for structuring UI elements.
+  - `button`, `label`, and `image` functions for common UI elements.
+- Physics `World` class now has a `debug_draw` method with extra configurable options for visualizing physics bodies and joints.
+- New `Polygon` constructor for creating regular polygons by specifying the number of sides and radius.
+- Added `restart` method to the `Timer` class for resetting and starting the timer in one call.
+- `Tween` has a new `current_pos` read-only property for getting the current interpolated position.
+- `fx.Effect` class now has a `clone` method for creating a copy of an effect with the same properties.
+- The `pykraken` package now comes with a cli tool for:
+  - Building exe files from Python scripts (with PyInstaller as a dependency).
+  - Baking HLSL scripts into SPV, MSL, and DXIL shaders.
+- `renderer` submodule now has a `set_render_backend` function for manually setting the rendering backend instead of relying on automatic selection.
+- New `RenderBackend` enum for specifying rendering backends.
+- `camera.unset()` function for unsetting the active camera.
+
+### Changed
+- Renamed `Align` enum to `TextAlign` for specificity.
+- Physics `World` constructor's gravity parameter is now optional and defaults to zero gravity.
+- `fx.Effect` objects are now stateful, single-use objects to be consumed by an `Orchestrator` timeline, rather than reusable templates.
+- Rename `ShaderState` class to `Shader` for simplicity.
+
+### Removed
+- Physics `Body` types no longer have a `debug_draw` method.
+- `Tween` class no longer has a `step` method as timing is handled by the engine.
+
+### Fixed
+- `Orchestrator` objects were copied upon calling `parallel` and `then` methods, causing effects to not be added to the original orchestrator timeline. Now returns reference to the original orchestrator.
+- Some images wouldn't render when drawn while a shader was binded. This was due to unpredictable pixel formats when
+loading images that shaders didn't like. Solved by forcing an RGBA32 format on all loaded images.
+- PyInstaller builds were broken since moving to Nanobind due to different naming conventions. They've been fixed and tested to work again.
+- Fixed bug with tilemaps regarding tile id's not being mapped correctly to their tileset, causing wrong tiles to be drawn.
+- Isometric, hexagonal, and staggered maps render correctly now.
+- Tile rotation and flipping bug fixed.
+- Fixed colorkeyed PixelArray → Texture sometimes not retaining the colorkey transparency.
+
+## [1.7.0] - 2026-04-07
 
 ### Added
 - New `diameter` and edge position properties for the `Circle` class; `left`, `right`, `top`, and `bottom`.

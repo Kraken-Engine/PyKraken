@@ -1,14 +1,18 @@
 #pragma once
 
 #include <SDL3/SDL.h>
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <filesystem>
 
 #include "Math.hpp"
 #include "Rect.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif  // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
@@ -89,8 +93,11 @@ class Texture
     Rect m_clipArea{};
 };
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace texture
 {
 void _bind(const nb::module_& module);
 }  // namespace texture
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn

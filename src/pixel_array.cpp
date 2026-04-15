@@ -1,7 +1,9 @@
 #include <SDL3_image/SDL_image.h>
+
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/filesystem.h>
 #include <nanobind/stl/string.h>
-#include <nanobind/stl/unique_ptr.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <cstring>
 #include <vector>
@@ -34,12 +36,40 @@ PixelArray::PixelArray(const Vec2& size)
 
 PixelArray::PixelArray(const std::filesystem::path& filePath)
 {
-    m_surface = IMG_Load(filePath.string().c_str());
-    if (!m_surface)
+    if (filePath.empty())
+        throw std::invalid_argument("File path cannot be empty");
+
+    // Load image as stupid format
+    SDL_Surface* input = IMG_Load(filePath.string().c_str());
+    if (!input)
         throw std::runtime_error(
             "Failed to load pixel array from file '" + filePath.string() +
             "': " + std::string(SDL_GetError())
         );
+
+    // Create not stupid surface to draw to
+    m_surface = SDL_CreateSurface(input->w, input->h, SDL_PIXELFORMAT_RGBA32);
+    if (!m_surface)
+    {
+        SDL_DestroySurface(input);
+        throw std::runtime_error(
+            "Failed to create RGBA32 pixel array surface: " + std::string(SDL_GetError())
+        );
+    }
+
+    // Draw stupid on not stupid
+    if (!SDL_BlitSurface(input, nullptr, m_surface, nullptr))
+    {
+        SDL_DestroySurface(input);
+        SDL_DestroySurface(m_surface);
+        m_surface = nullptr;
+        throw std::runtime_error(
+            "Failed to convert pixel array surface to RGBA32: " + std::string(SDL_GetError())
+        );
+    }
+
+    // Send stupid to hell
+    SDL_DestroySurface(input);
 }
 
 PixelArray::~PixelArray()
@@ -49,6 +79,31 @@ PixelArray::~PixelArray()
         SDL_DestroySurface(m_surface);
         m_surface = nullptr;
     }
+}
+
+PixelArray::PixelArray(PixelArray&& other) noexcept
+    : m_surface(other.m_surface)
+{
+    // Steal surface and nullify original
+    other.m_surface = nullptr;
+}
+
+PixelArray& PixelArray::operator=(PixelArray&& other) noexcept
+{
+    if (this != &other)
+    {
+        // Clean up existing surface first
+        if (m_surface)
+            SDL_DestroySurface(m_surface);
+
+        // Steal new surface
+        m_surface = other.m_surface;
+
+        // Nullify original
+        other.m_surface = nullptr;
+    }
+
+    return *this;
 }
 
 void PixelArray::fill(const Color& color) const
@@ -171,7 +226,7 @@ Rect PixelArray::getRect() const
     return {0, 0, m_surface->w, m_surface->h};
 }
 
-std::unique_ptr<PixelArray> PixelArray::copy() const
+PixelArray PixelArray::copy() const
 {
     SDL_Surface* surfaceCopy = SDL_CreateSurface(m_surface->w, m_surface->h, m_surface->format);
     if (!surfaceCopy)
@@ -182,7 +237,7 @@ std::unique_ptr<PixelArray> PixelArray::copy() const
     if (!SDL_BlitSurface(m_surface, nullptr, surfaceCopy, nullptr))
         throw std::runtime_error("Failed to blit pixel array copy: " + std::string(SDL_GetError()));
 
-    return std::make_unique<PixelArray>(surfaceCopy);
+    return PixelArray(surfaceCopy);
 }
 
 void PixelArray::scroll(const int dx, const int dy, const ScrollMode scrollMode) const
@@ -282,7 +337,7 @@ namespace pixel_array
 {
 static SDL_Surface* _rotateSurface(SDL_Surface* src, double angle);
 
-std::unique_ptr<PixelArray> flip(const PixelArray& pixelArray, const bool flipX, const bool flipY)
+PixelArray flip(const PixelArray& pixelArray, const bool flipX, const bool flipY)
 {
     const SDL_Surface* sdlSurface = pixelArray.getSDL();
     SDL_Surface* flipped = SDL_CreateSurface(sdlSurface->w, sdlSurface->h, SDL_PIXELFORMAT_RGBA32);
@@ -306,10 +361,10 @@ std::unique_ptr<PixelArray> flip(const PixelArray& pixelArray, const bool flipX,
             memcpy(dstPixel, srcPixel, bpp);
         }
 
-    return std::make_unique<PixelArray>(flipped);
+    return PixelArray(flipped);
 }
 
-std::unique_ptr<PixelArray> scaleTo(const PixelArray& pixelArray, const Vec2& size)
+PixelArray scaleTo(const PixelArray& pixelArray, const Vec2& size)
 {
     SDL_Surface* sdlSurface = pixelArray.getSDL();
 
@@ -327,10 +382,10 @@ std::unique_ptr<PixelArray> scaleTo(const PixelArray& pixelArray, const Vec2& si
         throw std::runtime_error("SDL_BlitScaled failed: " + std::string(SDL_GetError()));
     }
 
-    return std::make_unique<PixelArray>(scaled);
+    return PixelArray(scaled);
 }
 
-std::unique_ptr<PixelArray> scaleBy(const PixelArray& pixelArray, const double factor)
+PixelArray scaleBy(const PixelArray& pixelArray, const double factor)
 {
     if (factor <= 0.0)
         throw std::invalid_argument("Scale factor must be a positive value.");
@@ -338,7 +393,7 @@ std::unique_ptr<PixelArray> scaleBy(const PixelArray& pixelArray, const double f
     return scaleTo(pixelArray, pixelArray.getSize() * factor);
 }
 
-std::unique_ptr<PixelArray> scaleBy(const PixelArray& pixelArray, const Vec2& factor)
+PixelArray scaleBy(const PixelArray& pixelArray, const Vec2& factor)
 {
     if (factor.x <= 0.0 || factor.y <= 0.0)
         throw std::invalid_argument("Scale factors must be positive values.");
@@ -347,19 +402,17 @@ std::unique_ptr<PixelArray> scaleBy(const PixelArray& pixelArray, const Vec2& fa
     return scaleTo(pixelArray, {originalSize.x * factor.x, originalSize.y * factor.y});
 }
 
-std::unique_ptr<PixelArray> rotate(const PixelArray& pixelArray, const double angle)
+PixelArray rotate(const PixelArray& pixelArray, const double angle)
 {
     SDL_Surface* sdlSurface = pixelArray.getSDL();
     SDL_Surface* rotated = _rotateSurface(sdlSurface, angle);
     if (!rotated)
         throw std::runtime_error("Failed to rotate pixel array.");
 
-    return std::make_unique<PixelArray>(rotated);
+    return PixelArray(rotated);
 }
 
-std::unique_ptr<PixelArray> boxBlur(
-    const PixelArray& pixelArray, const int radius, const bool repeatEdgePixels
-)
+PixelArray boxBlur(const PixelArray& pixelArray, const int radius, const bool repeatEdgePixels)
 {
     const SDL_Surface* src = pixelArray.getSDL();
     const int width = src->w;
@@ -433,12 +486,10 @@ std::unique_ptr<PixelArray> boxBlur(
 
     SDL_DestroySurface(temp);
 
-    return std::make_unique<PixelArray>(result);
+    return PixelArray(result);
 }
 
-std::unique_ptr<PixelArray> gaussianBlur(
-    const PixelArray& pixelArray, const int radius, const bool repeatEdgePixels
-)
+PixelArray gaussianBlur(const PixelArray& pixelArray, const int radius, const bool repeatEdgePixels)
 {
     const SDL_Surface* src = pixelArray.getSDL();
 
@@ -534,10 +585,10 @@ std::unique_ptr<PixelArray> gaussianBlur(
 
     SDL_DestroySurface(temp);
 
-    return std::make_unique<PixelArray>(result);
+    return PixelArray(result);
 }
 
-std::unique_ptr<PixelArray> invert(const PixelArray& pixelArray)
+PixelArray invert(const PixelArray& pixelArray)
 {
     const SDL_Surface* src = pixelArray.getSDL();
 
@@ -562,10 +613,10 @@ std::unique_ptr<PixelArray> invert(const PixelArray& pixelArray)
         dstPx[i] = SDL_MapRGBA(resDetails, nullptr, 255 - r, 255 - g, 255 - b, a);
     }
 
-    return std::make_unique<PixelArray>(result);
+    return PixelArray(result);
 }
 
-std::unique_ptr<PixelArray> grayscale(const PixelArray& pixelArray)
+PixelArray grayscale(const PixelArray& pixelArray)
 {
     const SDL_Surface* src = pixelArray.getSDL();
 
@@ -591,7 +642,7 @@ std::unique_ptr<PixelArray> grayscale(const PixelArray& pixelArray)
         dstPx[i] = SDL_MapRGBA(resDetails, nullptr, gray, gray, gray, a);
     }
 
-    return std::make_unique<PixelArray>(result);
+    return PixelArray(result);
 }
 
 SDL_Surface* _rotateSurface(SDL_Surface* src, double angle)
@@ -639,6 +690,7 @@ SDL_Surface* _rotateSurface(SDL_Surface* src, double angle)
     return dst;
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -977,5 +1029,7 @@ Raises:
     )doc"
     );
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace pixel_array
 }  // namespace kn

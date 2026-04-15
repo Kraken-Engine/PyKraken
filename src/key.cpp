@@ -13,19 +13,19 @@ static bool _scancodeReleased[SDL_SCANCODE_COUNT] = {};
 static std::unordered_map<SDL_Keycode, bool> _keycodePressed;
 static std::unordered_map<SDL_Keycode, bool> _keycodeReleased;
 
-bool isPressed(const SDL_Scancode scancode)
+bool isPressed(const Scancode scancode)
 {
-    return SDL_GetKeyboardState(nullptr)[scancode];
+    return SDL_GetKeyboardState(nullptr)[static_cast<SDL_Scancode>(scancode)];
 }
 
-bool isJustPressed(const SDL_Scancode scancode)
+bool isJustPressed(const Scancode scancode)
 {
-    return _scancodePressed[scancode];
+    return _scancodePressed[static_cast<SDL_Scancode>(scancode)];
 }
 
-bool isJustReleased(const SDL_Scancode scancode)
+bool isJustReleased(const Scancode scancode)
 {
-    return _scancodeReleased[scancode];
+    return _scancodeReleased[static_cast<SDL_Scancode>(scancode)];
 }
 
 bool isPressed(Keycode keycode)
@@ -55,7 +55,7 @@ void _clearStates()
     _keycodeReleased.clear();
 }
 
-void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
+void _handleEvents(const SDL_Event& sdlEvent, Event& e)
 {
     switch (sdlEvent.type)
     {
@@ -73,7 +73,7 @@ void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
         }
         e.data["which"] = sdlEvent.key.which;
         e.data["key"] = static_cast<Keycode>(sdlEvent.key.key);
-        e.data["scan"] = sdlEvent.key.scancode;
+        e.data["scan"] = static_cast<Scancode>(sdlEvent.key.scancode);
         e.data["repeat"] = sdlEvent.key.repeat;
         e.data["mod"] = sdlEvent.key.mod;
         e.data["window_id"] = sdlEvent.key.windowID;
@@ -110,6 +110,7 @@ void _handleEvents(const SDL_Event& sdlEvent, const Event& e)
     }
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -117,7 +118,7 @@ void _bind(nb::module_& module)
     auto subKey = module.def_submodule("key", "Keyboard key state checks");
 
     subKey.def(
-        "is_pressed", nb::overload_cast<SDL_Scancode>(&isPressed), "scancode"_a,
+        "is_pressed", nb::overload_cast<Scancode>(&isPressed), "scancode"_a,
         R"doc(
 Check if a key is currently held down (by scancode).
 
@@ -130,7 +131,7 @@ Returns:
     );
 
     subKey.def(
-        "is_just_pressed", nb::overload_cast<SDL_Scancode>(&isJustPressed), "scancode"_a,
+        "is_just_pressed", nb::overload_cast<Scancode>(&isJustPressed), "scancode"_a,
         R"doc(
 Check if a key was pressed this frame (by scancode).
 
@@ -143,7 +144,7 @@ Returns:
     );
 
     subKey.def(
-        "is_just_released", nb::overload_cast<SDL_Scancode>(&isJustReleased), "scancode"_a,
+        "is_just_released", nb::overload_cast<Scancode>(&isJustReleased), "scancode"_a,
         R"doc(
 Check if a key was released this frame (by scancode).
 
@@ -194,4 +195,6 @@ Returns:
         )doc"
     );
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn::key

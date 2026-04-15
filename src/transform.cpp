@@ -1,8 +1,11 @@
 #include "Transform.hpp"
 
 #include <box2d/box2d.h>
+
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/vector.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
@@ -30,6 +33,7 @@ Transform composePair(const Transform& parent, Transform child)
     return child;
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -144,4 +148,6 @@ Returns:
         )doc"
     );
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn::transform

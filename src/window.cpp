@@ -2,20 +2,23 @@
 
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
+
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/filesystem.h>
 #include <nanobind/stl/string.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <stdexcept>
 
 #include "AnimationController.hpp"
 #include "Draw.hpp"
+#include "Ease.hpp"
 #include "Font.hpp"
 #include "Log.hpp"
 #include "Math.hpp"
 #include "Mixer.hpp"
 #include "Orchestrator.hpp"
 #include "Renderer.hpp"
-#include "ShaderState.hpp"
 #include "Text.hpp"
 #include "Time.hpp"
 #include "misc/kraken_icon.h"
@@ -87,8 +90,8 @@ void create(const std::string& title, const int width, const int height, const b
 bool isOpen()
 {
     time::_tick();
-
     animation_controller::_tick();
+    ease::_tick();
     orchestrator::_tick();
     physics::_tick();
 
@@ -201,6 +204,7 @@ void _quit()
     }
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -320,5 +324,7 @@ Raises:
     RuntimeError: If the window is not initialized or the screenshot cannot be saved.
 )doc");
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace window
 }  // namespace kn

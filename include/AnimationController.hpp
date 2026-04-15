@@ -1,6 +1,8 @@
 #pragma once
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <memory>
 #include <unordered_map>
@@ -14,7 +16,9 @@ class Texture;
 
 namespace animation_controller
 {
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(const nb::module_& module);
+#endif  // KRAKEN_ENABLE_PYTHON
 
 void _tick();
 }  // namespace animation_controller

@@ -1,6 +1,9 @@
 #include "Log.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/string.h>
+#endif  // KRAKEN_ENABLE_PYTHON
+
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
@@ -25,6 +28,7 @@ void _init()
     _loggerEnabled = true;
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -50,4 +54,6 @@ Args:
     message (str): The message to log.
         )doc");
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn::log

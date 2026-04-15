@@ -1,8 +1,9 @@
 #include "Mixer.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/filesystem.h>
 #include <nanobind/stl/string.h>
-#include <nanobind/stl/unique_ptr.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <algorithm>
 #include <limits>
@@ -44,7 +45,7 @@ static Sint64 _secondsToMs(double seconds);
 static SDL_PropertiesID _buildPlayOptions(bool looping, double fadeInSeconds);
 static Sint64 _fadeOutFramesForTrack(MIX_Track* track, double fadeOutSeconds);
 
-std::unique_ptr<Sample> loadSample(const std::filesystem::path& path, const bool predecode)
+Sample loadSample(const std::filesystem::path& path, const bool predecode)
 {
     MIX_Audio* audio = MIX_LoadAudio(_mixer, path.string().c_str(), predecode);
     if (!audio)
@@ -54,10 +55,10 @@ std::unique_ptr<Sample> loadSample(const std::filesystem::path& path, const bool
         );
     }
 
-    return std::unique_ptr<Sample>(new Sample(audio));
+    return Sample(audio);
 }
 
-std::unique_ptr<Stream> loadStream(const std::filesystem::path& path, const bool predecode)
+Stream loadStream(const std::filesystem::path& path, const bool predecode)
 {
     MIX_Audio* audio = MIX_LoadAudio(_mixer, path.string().c_str(), predecode);
     if (!audio)
@@ -67,7 +68,7 @@ std::unique_ptr<Stream> loadStream(const std::filesystem::path& path, const bool
         );
     }
 
-    return std::unique_ptr<Stream>(new Stream(audio));
+    return Stream(audio);
 }
 
 void setMasterVolume(float volume)
@@ -92,6 +93,38 @@ Audio::Audio(MIX_Audio* sdlAudio)
 {
 }
 
+Audio::Audio(Audio&& other) noexcept
+    : priority(other.priority),
+      canSteal(other.canSteal),
+      m_audio(other.m_audio),
+      m_looping(other.m_looping),
+      m_volume(other.m_volume)
+{
+    // Steal pointer, nullify original
+    other.m_audio = nullptr;
+}
+
+Audio& Audio::operator=(Audio&& other) noexcept
+{
+    if (this != &other)
+    {
+        // Clean up resource first
+        if (m_audio)
+            MIX_DestroyAudio(m_audio);
+
+        priority = other.priority;
+        canSteal = other.canSteal;
+        m_audio = other.m_audio;
+        m_looping = other.m_looping;
+        m_volume = other.m_volume;
+
+        // Nullify original
+        other.m_audio = nullptr;
+    }
+
+    return *this;
+}
+
 Audio::~Audio()
 {
     if (m_audio)
@@ -109,6 +142,23 @@ float Audio::getVolume() const
 Sample::Sample(MIX_Audio* sdlAudio)
     : Audio(sdlAudio)
 {
+}
+
+Sample::Sample(Sample&& other) noexcept
+    : Audio(std::move(other)),  // Explicitly move the base class portion
+      m_maxPolyphony(other.m_maxPolyphony)
+{
+}
+
+Sample& Sample::operator=(Sample&& other) noexcept
+{
+    if (this != &other)
+    {
+        Audio::operator=(std::move(other));  // Move base class portion
+        m_maxPolyphony = other.m_maxPolyphony;
+    }
+
+    return *this;
 }
 
 void Sample::setMaxPolyphony(uint8_t maxPolyphony)
@@ -219,6 +269,46 @@ Stream::Stream(MIX_Audio* sdlAudio)
 {
 }
 
+Stream::Stream(Stream&& other) noexcept
+    : Audio(std::move(other)),  // Explicitly move the base class portion
+      m_trackIndex(other.m_trackIndex),
+      m_savedFrames(other.m_savedFrames)
+{
+    // Disconnect temporary from the hardware track
+    // so its destructor doesn't stop the music
+    other.m_trackIndex = -1;
+    other.m_savedFrames = 0;
+}
+
+Stream& Stream::operator=(Stream&& other) noexcept
+{
+    if (this != &other)
+    {
+        // Clean up existing track assignment
+        if (_mixer && m_trackIndex >= 0 && m_trackIndex < MAX_TRACKS)
+        {
+            TrackInfo& trackInfo = _tracks[m_trackIndex];
+            if (trackInfo.track)
+            {
+                if (!MIX_StopTrack(trackInfo.track, 0))
+                    kn::log::error("Failed to stop track: {}", SDL_GetError());
+                _clearTrackAssignment(trackInfo);
+            }
+        }
+
+        Audio::operator=(std::move(other));  // Move base class portion
+
+        m_trackIndex = other.m_trackIndex;
+        m_savedFrames = other.m_savedFrames;
+
+        // Disconnect temporary
+        other.m_trackIndex = -1;
+        other.m_savedFrames = 0;
+    }
+
+    return *this;
+}
+
 Stream::~Stream()
 {
     if (_mixer && m_trackIndex >= 0 && m_trackIndex < MAX_TRACKS)
@@ -227,7 +317,7 @@ Stream::~Stream()
         if (trackInfo.track)
         {
             if (!MIX_StopTrack(trackInfo.track, 0))
-                kn::log::error("Failed to stop track in Stream destructor: {}", SDL_GetError());
+                kn::log::error("Failed to stop track: {}", SDL_GetError());
             _clearTrackAssignment(trackInfo);
         }
     }
@@ -672,6 +762,7 @@ void _quit()
     }
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -830,4 +921,6 @@ void _bind(nb::module_& module)
             float: Master volume (0.0 to 1.0).
     )doc");
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn::mixer

@@ -1,13 +1,17 @@
 #pragma once
 
 #include <SDL3/SDL.h>
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <array>
 
 #include "Math.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif  // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
@@ -115,8 +119,11 @@ class Rect
     [[nodiscard]] Vec2 getBottomRight() const;
 };
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace rect
 {
 void _bind(nb::module_& module);
 }  // namespace rect
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn

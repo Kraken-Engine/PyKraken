@@ -2,11 +2,15 @@
 
 #include <SDL3/SDL.h>
 #include <box2d/box2d.h>
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <ostream>
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif  // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
@@ -185,7 +189,9 @@ Vec2 operator*(double lhs, const Vec2& rhs);
 
 namespace math
 {
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module);
+#endif  // KRAKEN_ENABLE_PYTHON
 
 Vec2 fromPolar(double rad, double radius);
 

@@ -1,16 +1,20 @@
 #pragma once
 
 #include <SDL3_ttf/SDL_ttf.h>
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
+#endif // KRAKEN_ENABLE_PYTHON
 
-#include <string>
 #include <filesystem>
+#include <string>
 
 #include "Color.hpp"
 #include "Math.hpp"
 #include "_globals.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
@@ -27,7 +31,10 @@ enum class Hinting
     None,
 };
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(const nb::module_& module);
+#endif // KRAKEN_ENABLE_PYTHON
+
 void _init();  // Initialize TTF library
 void _quit();  // Clean up all fonts and shut down TTF
 }  // namespace font
@@ -38,8 +45,8 @@ class Font
     Font(const std::filesystem::path& fileDir, int ptSize);
     ~Font();
 
-    void setAlignment(Align alignment) const;
-    Align getAlignment() const;
+    void setAlignment(TextAlign alignment) const;
+    TextAlign getAlignment() const;
 
     void setHinting(font::Hinting hinting) const;
     font::Hinting getHinting() const;

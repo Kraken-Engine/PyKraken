@@ -1,7 +1,9 @@
 #include "Font.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/filesystem.h>
 #include <nanobind/stl/string.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <algorithm>
 #include <cmath>
@@ -69,35 +71,35 @@ Font::~Font()
     }
 }
 
-void Font::setAlignment(const Align alignment) const
+void Font::setAlignment(const TextAlign alignment) const
 {
     switch (alignment)
     {
-    case Align::Left:
+    case TextAlign::Left:
         TTF_SetFontWrapAlignment(m_font, TTF_HORIZONTAL_ALIGN_LEFT);
         break;
-    case Align::Center:
+    case TextAlign::Center:
         TTF_SetFontWrapAlignment(m_font, TTF_HORIZONTAL_ALIGN_CENTER);
         break;
-    case Align::Right:
+    case TextAlign::Right:
         TTF_SetFontWrapAlignment(m_font, TTF_HORIZONTAL_ALIGN_RIGHT);
         break;
     }
 }
 
-Align Font::getAlignment() const
+TextAlign Font::getAlignment() const
 {
     const TTF_HorizontalAlignment align = TTF_GetFontWrapAlignment(m_font);
     switch (align)
     {
     case TTF_HORIZONTAL_ALIGN_LEFT:
-        return Align::Left;
+        return TextAlign::Left;
     case TTF_HORIZONTAL_ALIGN_CENTER:
-        return Align::Center;
+        return TextAlign::Center;
     case TTF_HORIZONTAL_ALIGN_RIGHT:
-        return Align::Right;
+        return TextAlign::Right;
     default:
-        return Align::Left;
+        return TextAlign::Left;
     }
 }
 
@@ -291,6 +293,7 @@ void _quit()
         TTF_Quit();
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(const nb::module_& module)
 {
     using namespace nb::literals;
@@ -341,14 +344,9 @@ Raises:
 
         .def_prop_rw("alignment", &Font::getAlignment, &Font::setAlignment, R"doc(
 Get or set the text alignment for wrapped text.
-
-Valid values: Align.LEFT, Align.CENTER, Align.RIGHT
         )doc")
         .def_prop_rw("hinting", &Font::getHinting, &Font::setHinting, R"doc(
 Get or set the font hinting mode.
-
-Valid values: FontHinting.NORMAL, FontHinting.MONO, FontHinting.LIGHT,
-              FontHinting.LIGHT_SUBPIXEL, FontHinting.NONE
         )doc")
         .def_prop_rw("pt_size", &Font::getPtSize, &Font::setPtSize, R"doc(
 Get or set the point size of the font. Values below 8 are clamped to 8.
@@ -399,5 +397,7 @@ Get or set the additional spacing between characters in pixels.
         )doc");
     */
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace font
 }  // namespace kn

@@ -1,14 +1,17 @@
 #pragma once
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
-#include <memory>
 #include <vector>
 
 #include "Color.hpp"
 #include "Math.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif  // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
@@ -67,17 +70,17 @@ class Mask
 
     [[nodiscard]] int getHeight() const;
 
-    [[nodiscard]] std::unique_ptr<PixelArray> getPixelArray(
-        const Color& color = {255, 255, 255, 255}
-    ) const;
+    [[nodiscard]] PixelArray getPixelArray(const Color& color = {255, 255, 255, 255}) const;
 
   private:
     int m_width = 0, m_height = 0;
     std::vector<bool> m_maskData;
 };
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace mask
 {
 void _bind(const nb::module_& module);
 }  // namespace mask
+#endif  // KRAKEN_ENABLE_PYTHON
 }  // namespace kn

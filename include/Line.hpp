@@ -1,8 +1,12 @@
 #pragma once
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif  // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
@@ -45,8 +49,11 @@ class Line
     bool operator!=(const Line& other) const;
 };
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace line
 {
 void _bind(nb::module_& module);
 }  // namespace line
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn

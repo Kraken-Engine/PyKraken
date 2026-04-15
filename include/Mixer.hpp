@@ -1,13 +1,16 @@
 #pragma once
 
 #include <SDL3_mixer/SDL_mixer.h>
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
-#include <memory>
 #include <filesystem>
 #include <string>
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif  // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
@@ -17,12 +20,16 @@ class Audio;
 class Sample;
 class Stream;
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module);
+#endif  // KRAKEN_ENABLE_PYTHON
+
 void _init();
 void _quit();
 
-std::unique_ptr<Sample> loadSample(const std::filesystem::path& path, bool predecode = true);
-std::unique_ptr<Stream> loadStream(const std::filesystem::path& path, bool predecode = false);
+Sample loadSample(const std::filesystem::path& path, bool predecode = true);
+Stream loadStream(const std::filesystem::path& path, bool predecode = false);
+
 void setMasterVolume(float volume);
 float getMasterVolume();
 
@@ -40,6 +47,12 @@ class Audio
     bool canSteal = true;
 
     virtual ~Audio();
+
+    // Base move semantics
+    Audio(const Audio&) = delete;
+    Audio& operator=(const Audio&) = delete;
+    Audio(Audio&& other) noexcept;
+    Audio& operator=(Audio&& other) noexcept;
 
     virtual void setVolume(float volume) = 0;
     float getVolume() const;
@@ -62,6 +75,10 @@ class Sample : public Audio
   public:
     ~Sample() override = default;
 
+    // Move semantics
+    Sample(Sample&& other) noexcept;
+    Sample& operator=(Sample&& other) noexcept;
+
     void setMaxPolyphony(uint8_t maxPolyphony);
     uint8_t getMaxPolyphony() const;
 
@@ -77,14 +94,17 @@ class Sample : public Audio
 
     explicit Sample(MIX_Audio* sdlAudio);
 
-    friend std::unique_ptr<Sample> loadSample(const std::filesystem::path& path, bool predecode);
+    friend Sample loadSample(const std::filesystem::path& path, bool predecode);
 };
 
 class Stream : public Audio
 {
   public:
-    Stream(MIX_Audio* sdlAudio);
     ~Stream() override;
+
+    // Move semantics
+    Stream(Stream&& other) noexcept;
+    Stream& operator=(Stream&& other) noexcept;
 
     void setLooping(bool looping);
     bool getLooping() const;
@@ -103,7 +123,9 @@ class Stream : public Audio
     int m_trackIndex = -1;     // -1 means not attached to a track (stopped/paused)
     Sint64 m_savedFrames = 0;  // remembered playback position when paused
 
-    friend std::unique_ptr<Stream> loadStream(const std::filesystem::path& path, bool predecode);
+    Stream(MIX_Audio* sdlAudio);
+
+    friend Stream loadStream(const std::filesystem::path& path, bool predecode);
 };
 }  // namespace mixer
 }  // namespace kn

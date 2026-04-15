@@ -18,11 +18,5 @@ def _init(debug: bool = False) -> None:
         faulthandler.enable()
 
     _original_init(debug=debug)
-    try:
-        from importlib.metadata import version
-        ver = version("kraken-engine")
-        log.info(f"Kraken Engine v{ver}")
-    except Exception:
-        pass
 
 init = _init

@@ -1,7 +1,9 @@
 #include "Polygon.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/make_iterator.h>
 #include <nanobind/stl/vector.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <cmath>
 #include <limits>
@@ -10,11 +12,29 @@
 #include "Rect.hpp"
 #include "_globals.hpp"
 
+#ifndef M_PI
+#define M_PI 3.1415926535897932384626433832795
+#endif
+
 namespace kn
 {
 Polygon::Polygon(const std::vector<Vec2>& points)
     : points(points)
 {
+}
+
+Polygon::Polygon(const uint32_t n, const double radius)
+{
+    if (n == 0)
+        return;
+
+    points.reserve(n);
+    const double angleStep = 2.0 * M_PI / n;
+    for (uint32_t i = 0; i < n; ++i)
+    {
+        const double angle = i * angleStep;
+        points.emplace_back(radius * std::cos(angle), radius * std::sin(angle));
+    }
 }
 
 Polygon Polygon::copy() const
@@ -233,6 +253,7 @@ Polygon Polygon::scaledBy(const Vec2& factor, const Vec2& pivot) const
     return p;
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace polygon
 {
 void _bind(const nb::module_& module)
@@ -253,6 +274,13 @@ Create a polygon from a vector of Vec2 points.
 
 Args:
     points (Sequence[Vec2]): List of Vec2 points defining the polygon vertices.
+        )doc")
+        .def(nb::init<uint32_t, double>(), "n"_a, "radius"_a, R"doc(
+Create a regular polygon with n sides inscribed in a circle of the given radius.
+
+Args:
+    n (int): The number of sides (vertices) of the regular polygon.
+    radius (float): The radius of the circumscribed circle for the regular polygon.
         )doc")
 
         .def_rw("points", &Polygon::points, R"doc(
@@ -400,4 +428,6 @@ Returns:
         .def("__len__", [](const Polygon& polygon) -> size_t { return polygon.points.size(); });
 }
 }  // namespace polygon
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn

@@ -18,13 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: windows-latest
-            artifact_name: wheels-windows
-          - os: macos-latest
-            artifact_name: wheels-macos
-          - os: ubuntu-latest
-            artifact_name: wheels-linux
+        os: [windows-latest, macos-latest, ubuntu-latest]
 
     steps:
       - uses: actions/checkout@v6
@@ -32,12 +26,50 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
 
-      - name: Set up vcpkg using run-vcpkg action
-        if: runner.os == 'Windows'
+      - name: Setup ccache / sccache (Host)
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          # MSVC requires sccache. macOS uses standard ccache.
+          variant: ${{ runner.os == 'Windows' && 'sccache' || 'ccache' }}
+          key: ${{ runner.os }}-cibw-cache-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-cibw-cache-
+          max-size: 5G
+
+      - name: Setup ccache (Linux Container)
+        if: runner.os == 'Linux'
+        uses: actions/cache@v4
+        with:
+          path: .ccache
+          key: Linux-cibw-cache-${{ github.sha }}
+          restore-keys: |
+            Linux-cibw-cache-
+
+      - name: Setup vcpkg Cache (Linux Container)
+        if: runner.os == 'Linux'
+        uses: actions/cache@v4
+        with:
+          path: .vcpkg_cache
+          key: Linux-vcpkg-cache-${{ github.sha }}
+          restore-keys: |
+            Linux-vcpkg-cache-
+
+      - name: Create Cache Directories (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p .ccache
+          mkdir -p .vcpkg_cache
+
+      - name: Set up vcpkg
+        if: runner.os == 'Windows' || runner.os == 'macOS'
         uses: lukka/run-vcpkg@v11
         with:
-          vcpkgDirectory: "C:/vcpkg"
+          vcpkgDirectory: ${{ runner.os == 'Windows' && 'C:/vcpkg' || '/Users/runner/work/vcpkg' }}
           vcpkgJsonGlob: "vcpkg.json"
+
+      - name: Setup MSVC Developer Command Prompt (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.4.0
@@ -46,30 +78,40 @@ jobs:
           CIBW_BUILD: "cp312-*"
           CIBW_SKIP: "*-musllinux_* *-win32"
 
-          # --- Windows: use vcpkg ---
+          # --- Windows ---
+          CIBW_BEFORE_ALL_WINDOWS: >
+            pip install ninja &&
+            git config --global --add safe.directory C:/vcpkg
           CIBW_ENVIRONMENT_WINDOWS: >
+            CC=cl
+            CXX=cl
             VCPKG_ROOT=C:/vcpkg
             VCPKG_DEFAULT_TRIPLET=x64-windows-release
+            CMAKE_GENERATOR=Ninja
+            CMAKE_C_COMPILER_LAUNCHER=sccache
+            CMAKE_CXX_COMPILER_LAUNCHER=sccache
+            VCPKG_KEEP_PDB=0
 
-          # --- macOS: install deps via Homebrew ---
-          CIBW_BEFORE_ALL_MACOS: >
-            brew install sdl3 sdl3_ttf box2d spdlog
+          # --- macOS ---
+          CIBW_BEFORE_ALL_MACOS: brew install ninja
           CIBW_ENVIRONMENT_MACOS: >
             MACOSX_DEPLOYMENT_TARGET=15.0
-            CMAKE_PREFIX_PATH=/opt/homebrew
+            CMAKE_GENERATOR=Ninja
+            CMAKE_C_COMPILER_LAUNCHER=ccache
+            CMAKE_CXX_COMPILER_LAUNCHER=ccache
+            VCPKG_ROOT=/Users/runner/work/vcpkg
+            VCPKG_DEFAULT_TRIPLET=arm64-osx-release
 
-          # --- Linux: install system headers, build SDL deps from source ---
-          CIBW_BEFORE_ALL_LINUX: >
-            dnf -y install
-            alsa-lib-devel pipewire-devel pulseaudio-libs-devel
-            libXrandr-devel libXcursor-devel libXi-devel libXinerama-devel libXfixes-devel libXScrnSaver-devel libXtst-devel
-            mesa-libEGL-devel mesa-libgbm-devel
-            wayland-devel wayland-protocols-devel libxkbcommon-devel
-            libpng-devel libjpeg-turbo-devel freetype-devel flac-devel
-            libzstd-devel &&
-            bash {project}/scripts/build-linux-deps.sh
+          # --- Linux ---
+          CIBW_MANYLINUX_X86_64_IMAGE: "ghcr.io/kraken-engine/kraken-manylinux:latest"
           CIBW_ENVIRONMENT_LINUX: >
-            CMAKE_PREFIX_PATH=/opt/deps
+            CCACHE_DIR=/project/.ccache
+            CMAKE_GENERATOR=Ninja
+            CMAKE_C_COMPILER_LAUNCHER=ccache
+            CMAKE_CXX_COMPILER_LAUNCHER=ccache
+            VCPKG_ROOT=/opt/vcpkg
+            VCPKG_DEFAULT_TRIPLET=x64-linux-release
+            VCPKG_DEFAULT_BINARY_CACHE=/project/.vcpkg_cache
 
       - name: Upload wheels
         uses: actions/upload-artifact@v7

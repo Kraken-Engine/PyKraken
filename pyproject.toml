@@ -1,6 +1,6 @@
 [project]
 name = "kraken-engine"
-version = "1.7.0"
+version = "1.7.1"
 description = "Python bindings for Kraken Engine"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -27,6 +27,9 @@ license-files = ["LICENSE"]
 "Documentation" = "https://krakenengine.org/docs"
 "Release Notes" = "https://github.com/Kraken-Engine/PyKraken/releases"
 "Source" = "https://github.com/Kraken-Engine/PyKraken"
+
+[project.scripts]
+pykraken = "pykraken.cli:main"
 
 [build-system]
 requires = ["scikit-build-core >=0.11.6", "nanobind >=2.12.0"]

@@ -1,12 +1,16 @@
 #pragma once
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <vector>
 
 #include "Math.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif  // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
@@ -17,6 +21,7 @@ class Polygon
 
     Polygon() = default;
     explicit Polygon(const std::vector<Vec2>& points);
+    Polygon(uint32_t n, double radius);
     ~Polygon() = default;
 
     [[nodiscard]] Polygon copy() const;
@@ -45,8 +50,11 @@ class Polygon
     Polygon scaledBy(const Vec2& factor, const Vec2& pivot = {0.5, 0.5}) const;
 };
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace polygon
 {
 void _bind(const nb::module_& module);
 }  // namespace polygon
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn

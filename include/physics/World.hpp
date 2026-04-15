@@ -1,18 +1,20 @@
 #pragma once
 
 #include <box2d/box2d.h>
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <functional>
 #include <vector>
 
+#include "Color.hpp"
 #include "Math.hpp"
 #include "physics/bodies/Body.hpp"
-#include "physics/bodies/CharacterBody.hpp"
-#include "physics/bodies/RigidBody.hpp"
-#include "physics/bodies/StaticBody.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif  // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
@@ -29,13 +31,20 @@ class Layer;
 
 namespace physics
 {
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module);
+#endif  // KRAKEN_ENABLE_PYTHON
+
 void _tick();
 
 void setFixedDelta(float fixedDelta);
 float getFixedDelta();
 void setMaxSubsteps(int maxSubsteps);
 int getMaxSubsteps();
+
+class CharacterBody;
+class RigidBody;
+class StaticBody;
 
 class DistanceJoint;
 class FilterJoint;
@@ -63,10 +72,32 @@ struct CastHit
     float fraction;
 };
 
+struct DebugDrawOptions
+{
+    bool filledShapes = false;
+
+    bool shapes = true;
+    bool joints = true;
+    bool jointExtras = true;
+    bool bounds = false;
+    bool mass = false;
+    bool bodyNames = false;
+    bool contacts = false;
+    bool graphColors = false;
+    bool contactNormals = false;
+    bool contactImpulses = false;
+    bool contactFeatures = false;
+    bool frictionImpulses = false;
+    bool islands = false;
+
+    bool useDrawingBounds = false;
+    b2AABB drawingBounds = {};
+};
+
 class World
 {
   public:
-    explicit World(const Vec2& gravity);
+    explicit World(const Vec2& gravity = Vec2::ZERO);
     ~World();
 
     // Joints
@@ -84,8 +115,6 @@ class World
     WheelJoint createWheelJoint(
         const Body& bodyA, const Body& bodyB, const Vec2& anchor, const Vec2& axis
     );
-
-    void step(float timeStep, int subStepCount);
 
     // Queries
     std::vector<Collision> getCollisions();
@@ -117,7 +146,7 @@ class World
     void addFixedUpdate(std::function<void(float)> callback);
     void clearFixedUpdates();
 
-    b2WorldId _getWorldId() const;
+    void debugDraw(const Color& color = Color::RED, const DebugDrawOptions& options = {}) const;
 
   private:
     b2WorldId m_worldId = b2_nullWorldId;
@@ -138,7 +167,12 @@ class World
     void _checkValid() const;
     void _checkBodiesForJoint(const Body& bodyA, const Body& bodyB) const;
 
+    b2WorldId _getWorldId() const;
+
     friend void _tick();
+    friend class CharacterBody;
+    friend class RigidBody;
+    friend class StaticBody;
 };
 }  // namespace physics
 }  // namespace kn

@@ -1,18 +1,19 @@
 #include "physics/World.hpp"
 
 #include <algorithm>
+#include <memory>
 
 #include "Capsule.hpp"
 #include "Circle.hpp"
-#include "Color.hpp"
-#include "Math.hpp"
+#include "Draw.hpp"
+#include "Font.hpp"
+#include "Line.hpp"
 #include "Polygon.hpp"
 #include "Rect.hpp"
+#include "Text.hpp"
 #include "TileMap.hpp"
 #include "Time.hpp"
 #include "Transform.hpp"
-#include "physics/bodies/CharacterBody.hpp"
-#include "physics/bodies/RigidBody.hpp"
 #include "physics/bodies/StaticBody.hpp"
 #include "physics/joints/DistanceJoint.hpp"
 #include "physics/joints/FilterJoint.hpp"
@@ -30,6 +31,152 @@ static std::vector<World*> _worlds;
 static float _fixedDelta = 1.0f / 60.0f;
 static int _maxSubsteps = 4;
 static float _accumulator = 0.0f;
+
+static Color _toColor(b2HexColor color)
+{
+    const uint32_t value = static_cast<uint32_t>(color);
+    return {
+        static_cast<uint8_t>((value >> 16) & 0xFF), static_cast<uint8_t>((value >> 8) & 0xFF),
+        static_cast<uint8_t>(value & 0xFF), 255
+    };
+}
+
+struct DebugDrawContext
+{
+    const World* world = nullptr;
+    Color color = Color::RED;
+    DebugDrawOptions options = {};
+    std::unique_ptr<Font> debugFont;
+    std::unique_ptr<Text> debugText;
+};
+
+static Color _resolveDebugColor(b2HexColor fallbackColor, const void* context)
+{
+    if (context)
+        return static_cast<const DebugDrawContext*>(context)->color;
+
+    return _toColor(fallbackColor);
+}
+
+static bool _drawFilled(const void* context)
+{
+    if (!context)
+        return false;
+
+    return static_cast<const DebugDrawContext*>(context)->options.filledShapes;
+}
+
+static void _drawPolygon(const b2Vec2* vertices, int vertexCount, b2HexColor color, void* context)
+{
+    if (!context || vertexCount <= 0)
+        return;
+
+    std::vector<Vec2> points;
+    points.reserve(static_cast<size_t>(vertexCount));
+    for (int i = 0; i < vertexCount; ++i)
+        points.emplace_back(vertices[i].x, vertices[i].y);
+
+    draw::polygon(Polygon(points), _resolveDebugColor(color, context), false);
+}
+
+static void _drawSolidPolygon(
+    b2Transform transform, const b2Vec2* vertices, int vertexCount, float, b2HexColor color,
+    void* context
+)
+{
+    if (!context || vertexCount <= 0)
+        return;
+
+    std::vector<Vec2> points;
+    points.reserve(static_cast<size_t>(vertexCount));
+    for (int i = 0; i < vertexCount; ++i)
+    {
+        const b2Vec2 worldVertex = b2TransformPoint(transform, vertices[i]);
+        points.emplace_back(worldVertex.x, worldVertex.y);
+    }
+
+    draw::polygon(Polygon(points), _resolveDebugColor(color, context), _drawFilled(context));
+}
+
+static void _drawCircle(b2Vec2 center, float radius, b2HexColor color, void* context)
+{
+    if (!context)
+        return;
+
+    draw::circle(
+        Circle{{center.x, center.y}, std::max(radius, 1.0f)}, _resolveDebugColor(color, context),
+        1.0, 24
+    );
+}
+
+static void _drawSolidCircle(b2Transform transform, float radius, b2HexColor color, void* context)
+{
+    if (!context)
+        return;
+
+    draw::circle(
+        Circle{{transform.p.x, transform.p.y}, std::max(radius, 1.0f)},
+        _resolveDebugColor(color, context), _drawFilled(context) ? 0.0 : 1.0, 24
+    );
+}
+
+static void _drawSolidCapsule(b2Vec2 p1, b2Vec2 p2, float radius, b2HexColor color, void* context)
+{
+    if (!context)
+        return;
+
+    draw::capsule(
+        Capsule{{p1.x, p1.y}, {p2.x, p2.y}, std::max(radius, 1.0f)},
+        _resolveDebugColor(color, context), _drawFilled(context) ? 0.0 : 1.0, 24
+    );
+}
+
+static void _drawSegment(b2Vec2 p1, b2Vec2 p2, b2HexColor color, void* context)
+{
+    if (!context)
+        return;
+
+    draw::line(Line{{p1.x, p1.y}, {p2.x, p2.y}}, _resolveDebugColor(color, context), 1.0);
+}
+
+static void _drawTransform(b2Transform transform, void* context)
+{
+    if (!context)
+        return;
+
+    const Vec2 origin{transform.p.x, transform.p.y};
+    const float axisLength = 0.5f;
+    const float angle = b2Rot_GetAngle(transform.q);
+    draw::line(Line{origin, origin + Vec2{axisLength, 0.0f}.rotated(angle)}, Color::RED, 1.0);
+    draw::line(Line{origin, origin + Vec2{0.0f, axisLength}.rotated(angle)}, Color::GREEN, 1.0);
+}
+
+static void _drawPoint(b2Vec2 p, float, b2HexColor color, void* context)
+{
+    if (!context)
+        return;
+
+    draw::point({p.x, p.y}, _resolveDebugColor(color, context));
+}
+
+static void _drawString(b2Vec2 p, const char* str, b2HexColor color, void* context)
+{
+    if (!context)
+        return;
+    if (!str || str[0] == '\0')
+        return;
+
+    auto* debugContext = static_cast<DebugDrawContext*>(context);
+
+    if (!debugContext->debugFont)
+        debugContext->debugFont = std::make_unique<Font>("kraken-clean", 16);
+    if (!debugContext->debugText)
+        debugContext->debugText = std::make_unique<Text>(*debugContext->debugFont);
+
+    debugContext->debugText->setColor(_resolveDebugColor(color, context));
+    debugContext->debugText->setText(str);
+    debugContext->debugText->draw({p.x, p.y});
+}
 
 void _tick()
 {
@@ -92,19 +239,6 @@ int getMaxSubsteps()
     return _maxSubsteps;
 }
 
-void World::addFixedUpdate(std::function<void(float)> callback)
-{
-    if (!callback)
-        throw std::invalid_argument("Callback cannot be null.");
-
-    m_fixedUpdateCallbacks.push_back(std::move(callback));
-}
-
-void World::clearFixedUpdates()
-{
-    m_fixedUpdateCallbacks.clear();
-}
-
 World::World(const Vec2& gravity)
 {
     b2WorldDef worldDef = b2DefaultWorldDef();
@@ -120,6 +254,55 @@ World::~World()
 
     if (b2World_IsValid(m_worldId))
         b2DestroyWorld(m_worldId);
+}
+
+void World::addFixedUpdate(std::function<void(float)> callback)
+{
+    if (!callback)
+        throw std::invalid_argument("Callback cannot be null.");
+
+    m_fixedUpdateCallbacks.push_back(std::move(callback));
+}
+
+void World::clearFixedUpdates()
+{
+    m_fixedUpdateCallbacks.clear();
+}
+
+void World::debugDraw(const Color& color, const DebugDrawOptions& options) const
+{
+    _checkValid();
+
+    b2DebugDraw debugDraw = b2DefaultDebugDraw();
+    DebugDrawContext context{this, color, options};
+    debugDraw.context = &context;
+    debugDraw.DrawPolygonFcn = _drawPolygon;
+    debugDraw.DrawSolidPolygonFcn = _drawSolidPolygon;
+    debugDraw.DrawCircleFcn = _drawCircle;
+    debugDraw.DrawSolidCircleFcn = _drawSolidCircle;
+    debugDraw.DrawSolidCapsuleFcn = _drawSolidCapsule;
+    debugDraw.DrawSegmentFcn = _drawSegment;
+    debugDraw.DrawTransformFcn = _drawTransform;
+    debugDraw.DrawPointFcn = _drawPoint;
+    debugDraw.DrawStringFcn = _drawString;
+
+    debugDraw.drawShapes = options.shapes;
+    debugDraw.drawJoints = options.joints;
+    debugDraw.drawJointExtras = options.jointExtras;
+    debugDraw.drawBounds = options.bounds;
+    debugDraw.drawMass = options.mass;
+    debugDraw.drawBodyNames = options.bodyNames;
+    debugDraw.drawContacts = options.contacts;
+    debugDraw.drawGraphColors = options.graphColors;
+    debugDraw.drawContactNormals = options.contactNormals;
+    debugDraw.drawContactImpulses = options.contactImpulses;
+    debugDraw.drawContactFeatures = options.contactFeatures;
+    debugDraw.drawFrictionImpulses = options.frictionImpulses;
+    debugDraw.drawIslands = options.islands;
+    debugDraw.useDrawingBounds = options.useDrawingBounds;
+    debugDraw.drawingBounds = options.drawingBounds;
+
+    b2World_Draw(m_worldId, &debugDraw);
 }
 
 DistanceJoint World::createDistanceJoint(
@@ -259,12 +442,6 @@ WheelJoint World::createWheelJoint(
     jointDef.localAxisA = b2Body_GetLocalVector(bodyA.m_bodyId, b2axis);
 
     return WheelJoint(b2CreateWheelJoint(m_worldId, &jointDef));
-}
-
-void World::step(float timeStep, int subStepCount)
-{
-    _checkValid();
-    b2World_Step(m_worldId, timeStep, subStepCount);
 }
 
 std::vector<Collision> World::getCollisions()

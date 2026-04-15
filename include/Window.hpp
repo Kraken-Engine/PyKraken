@@ -1,11 +1,15 @@
 #pragma once
 
 #include <SDL3/SDL.h>
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <filesystem>
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
+#endif  // KRAKEN_ENABLE_PYTHON
 
 namespace kn
 {
@@ -13,7 +17,10 @@ class Vec2;
 
 namespace window
 {
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module);
+#endif  // KRAKEN_ENABLE_PYTHON
+
 void _quit();
 bool _handlesClose();
 

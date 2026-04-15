@@ -287,6 +287,7 @@ bool overlap(const Rect& rect, const Polygon& polygon)
     return overlap(polygon, rect);
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -595,4 +596,6 @@ Returns:
                      )doc"
     );
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn::collision

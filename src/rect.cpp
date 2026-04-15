@@ -1,9 +1,11 @@
 #include "Rect.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/make_iterator.h>
 #include <nanobind/operators.h>
 #include <nanobind/stl/array.h>
 #include <nanobind/stl/string.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <Line.hpp>
 #include <string>
@@ -359,6 +361,7 @@ std::array<Line, 4> Rect::getEdges() const
     };
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 namespace rect
 {
 void _bind(nb::module_& module)
@@ -675,4 +678,6 @@ Returns:
         );
 }
 }  // namespace rect
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn

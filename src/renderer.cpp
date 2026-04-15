@@ -1,8 +1,10 @@
 #include "Renderer.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
+#include <nanobind/ndarray.h>
 #include <nanobind/stl/optional.h>
-#include <nanobind/stl/unique_ptr.h>
 #include <nanobind/stl/vector.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include "Camera.hpp"
 #include "Log.hpp"
@@ -22,6 +24,7 @@ static SDL_Renderer* _renderer = nullptr;
 static SDL_GPUDevice* _gpuDevice = nullptr;
 static TextureScaleMode _defaultScaleMode = TextureScaleMode::LINEAR;
 static Texture* _primaryTarget = nullptr;
+static RenderBackend _forcedBackend = RenderBackend::Auto;
 
 static Vec2 _size{};
 
@@ -29,75 +32,95 @@ void _init(SDL_Window* window, const int width, const int height)
 {
     _size = {width, height};
 
-    // Attempt to force Vulkan
-    _gpuDevice = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV, true, "vulkan");
-    if (_gpuDevice)
-        _renderer = SDL_CreateGPURenderer(_gpuDevice, window);
-
-    // Fallback to default GPU renderer if Vulkan failed or wasn't available
-    if (!_renderer)
+    if (_forcedBackend != RenderBackend::Legacy)
     {
-        log::warn(
-            "Failed to initialize Vulkan backend, trying default GPU renderer. Reason: {}",
-            SDL_GetError()
-        );
+        SDL_GPUShaderFormat format = SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_MSL |
+                                     SDL_GPU_SHADERFORMAT_DXIL;
+        const char* driverName = nullptr;
 
-        if (_gpuDevice)
+        switch (_forcedBackend)
         {
-            SDL_DestroyGPUDevice(_gpuDevice);
-            _gpuDevice = nullptr;
+        case RenderBackend::Vulkan:
+            format = SDL_GPU_SHADERFORMAT_SPIRV;
+            driverName = "vulkan";
+            break;
+        case RenderBackend::Metal:
+            format = SDL_GPU_SHADERFORMAT_MSL;
+            driverName = "metal";
+            break;
+        case RenderBackend::Direct3d12:
+            format = SDL_GPU_SHADERFORMAT_DXIL;
+            driverName = "direct3d12";
+            break;
+        default:
+            break;
         }
 
-        _renderer = SDL_CreateGPURenderer(nullptr, window);
+        log::info("Attempting to initialize {} GPU backend...", driverName ? driverName : "AUTO");
+        _gpuDevice = SDL_CreateGPUDevice(format, true, driverName);
+
+        if (_gpuDevice)
+            _renderer = SDL_CreateGPURenderer(_gpuDevice, window);
+
+        if (!_renderer && _forcedBackend != RenderBackend::Auto)
+        {
+            log::warn("Preferred GPU backend failed: {}. Falling back to AUTO.", SDL_GetError());
+
+            if (_gpuDevice)
+            {
+                SDL_DestroyGPUDevice(_gpuDevice);
+                _gpuDevice = nullptr;
+            }
+
+            _renderer = SDL_CreateGPURenderer(nullptr, window);
+        }
     }
 
     // Fallback to legacy renderer
     if (!_renderer)
     {
-        log::warn(
-            "GPU backend failed to initialize, falling back to legacy renderer. Reason: {}",
-            SDL_GetError()
-        );
+        if (_forcedBackend != RenderBackend::Legacy)
+            log::warn("GPU backend failed: {}. Falling back to LEGACY renderer.", SDL_GetError());
+        else
+            log::info("Using LEGACY renderer backend.");
+
         _renderer = SDL_CreateRenderer(window, nullptr);
+
+        if (!_renderer)
+            throw std::runtime_error("Renderer failed to create: " + std::string(SDL_GetError()));
     }
-
-    if (!_renderer)
-        throw std::runtime_error("Renderer failed to create: " + std::string(SDL_GetError()));
-
-    if (!_gpuDevice)
-        _gpuDevice = SDL_GetGPURendererDevice(_renderer);
 
     SDL_SetRenderLogicalPresentation(_renderer, width, height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
     SDL_SetRenderDrawBlendMode(_renderer, SDL_BLENDMODE_BLEND);
 
     if (!_gpuDevice)
+        _gpuDevice = SDL_GetGPURendererDevice(_renderer);
+
+    if (_gpuDevice)
     {
-        const char* rendererName = SDL_GetRendererName(_renderer);
-        log::info("Initialized renderer: {}", rendererName);
-        return;
-    }
+        const SDL_PropertiesID gpuProperties = SDL_GetGPUDeviceProperties(_gpuDevice);
+        const char* driverName = SDL_GetGPUDeviceDriver(_gpuDevice);
 
-    const SDL_PropertiesID gpuProperties = SDL_GetGPUDeviceProperties(_gpuDevice);
-    const char* gpuName =
-        SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_NAME_STRING, "Unknown");
-    const char* driverName = SDL_GetGPUDeviceDriver(_gpuDevice);
-    const char* driverVersion =
-        SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_VERSION_STRING, "Unknown");
-    const char* driverInfo =
-        SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_INFO_STRING, "None");
-
-    log::info("GPU Device: {}", gpuName);
-    log::info("GPU Driver: {}", (driverName ? driverName : "Unknown"));
-    log::info("GPU Driver Version: {}", driverVersion);
-    log::info("GPU Driver Info: {}", driverInfo);
-
-    if (driverName && std::string(driverName) == "direct3d12")
-        log::warn(
-            "Direct3D 12 backend detected. Please be aware that excessive texture swapping in a "
-            "single frame can cause descriptor heap exhaustion and visual artifacts on this "
-            "backend. Consider using Vulkan, texture atlases, or manual texture sorting if you "
-            "encounter issues."
+        log::info(
+            "GPU Device: {}",
+            SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_NAME_STRING, "Unknown")
         );
+        log::info("GPU Driver: {}", (driverName ? driverName : "Unknown"));
+        log::info(
+            "GPU Driver Version: {}",
+            SDL_GetStringProperty(
+                gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_VERSION_STRING, "Unknown"
+            )
+        );
+        log::info(
+            "GPU Driver Info: {}",
+            SDL_GetStringProperty(gpuProperties, SDL_PROP_GPU_DEVICE_DRIVER_INFO_STRING, "None")
+        );
+    }
+    else
+    {
+        log::info("Initialized renderer: {}", SDL_GetRendererName(_renderer));
+    }
 }
 
 void _quit()
@@ -113,6 +136,17 @@ void _quit()
         SDL_DestroyRenderer(_renderer);
         _renderer = nullptr;
     }
+}
+
+void setRenderBackend(const RenderBackend backend)
+{
+    if (_renderer)
+    {
+        log::warn("Renderer backend cannot be changed after window creation.");
+        return;
+    }
+
+    _forcedBackend = backend;
 }
 
 void clear(const Color& color)
@@ -252,7 +286,7 @@ Vec2 getOutputResolution()
     return _size;
 }
 
-std::unique_ptr<PixelArray> readPixels(const Rect& src)
+PixelArray readPixels(const Rect& src)
 {
     if (src.w < 0.0 || src.h < 0.0)
         throw std::invalid_argument("Source rectangle must have positive width and height");
@@ -264,14 +298,11 @@ std::unique_ptr<PixelArray> readPixels(const Rect& src)
     if (!surface)
         throw std::runtime_error("Failed to read pixels: " + std::string(SDL_GetError()));
 
-    return std::make_unique<PixelArray>(surface);
+    return PixelArray(surface);
 }
 
 void draw(const Texture& texture, const Transform& transform, const Vec2& anchor, const Vec2& pivot)
 {
-    if (!texture.getSDL())
-        throw std::runtime_error("Invalid texture provided for drawing");
-
     Rect clipArea = texture.getClipArea();
     if (clipArea.w <= 0.0 || clipArea.h <= 0.0)
         return;
@@ -313,10 +344,8 @@ void draw(const Texture& texture, const Transform& transform, const Vec2& anchor
     }
 }
 
-void draw(const Texture& texture, const Rect& dst)
+void draw(const Texture& texture, Rect dst)
 {
-    if (!texture.getSDL())
-        throw std::runtime_error("Invalid texture provided for drawing");
     if (texture.getAlpha() == 0.0f)
         return;
 
@@ -324,16 +353,15 @@ void draw(const Texture& texture, const Rect& dst)
     if (clipArea.w <= 0.0 || clipArea.h <= 0.0)
         return;
 
-    Rect dstRect = dst;
-    dstRect.x -= camera::getActivePos().x;
-    dstRect.y -= camera::getActivePos().y;
+    const Vec2 cameraPos = camera::getActivePos();
+    dst.x -= cameraPos.x;
+    dst.y -= cameraPos.y;
 
     const Vec2 rendRes = getCurrentResolution();
-    if (dstRect.getRight() < 0.0 || dstRect.x >= rendRes.x || dstRect.getBottom() < 0.0 ||
-        dstRect.y >= rendRes.y)
+    if (dst.getRight() < 0.0 || dst.x >= rendRes.x || dst.getBottom() < 0.0 || dst.y >= rendRes.y)
         return;
 
-    const auto dstSDLRect = static_cast<SDL_FRect>(dstRect);
+    const auto dstSDLRect = static_cast<SDL_FRect>(dst);
     const auto srcSDLRect = static_cast<SDL_FRect>(clipArea);
 
     SDL_FlipMode flipAxis = SDL_FLIP_NONE;
@@ -350,20 +378,49 @@ void draw(const Texture& texture, const Rect& dst)
     }
 }
 
-void drawBatch(
-    const Texture& texture, const std::vector<Transform>& transforms, const Vec2& anchor,
-    const Vec2& pivot, const std::optional<std::vector<Rect>>& clipRects
+void draw9Slice(
+    const Texture& texture, Rect dst, const Rect& slice, const Vec2& anchor, const Vec2& pivot
 )
 {
-    if (!texture.getSDL())
-        throw std::runtime_error("Invalid texture provided for drawing");
-    if (transforms.empty())
+    if (texture.getAlpha() == 0.0f)
         return;
 
     const Rect textureClipArea = texture.getClipArea();
     if (textureClipArea.w <= 0.0 || textureClipArea.h <= 0.0)
         return;
+
+    const auto [leftWidth, topHeight, rightWidth, bottomHeight] = static_cast<SDL_FRect>(slice);
+
+    const Vec2 cameraPos = camera::getActivePos();
+    dst.x -= cameraPos.x;
+    dst.y -= cameraPos.y;
+
+    const auto dstSDLRect = static_cast<SDL_FRect>(dst);
+    const auto srcSDLRect = static_cast<SDL_FRect>(textureClipArea);
+
+    if (!SDL_RenderTexture9Grid(
+            _renderer, texture.getSDL(), &srcSDLRect, leftWidth, rightWidth, topHeight,
+            bottomHeight, 1.0f, &dstSDLRect
+        ))
+    {
+        throw std::runtime_error(
+            "Failed to render 9-slice texture: " + std::string(SDL_GetError())
+        );
+    }
+}
+
+void drawBatch(
+    const Texture& texture, const std::vector<Transform>& transforms, const Vec2& anchor,
+    const Vec2& pivot, const std::optional<std::vector<Rect>>& clipRects
+)
+{
+    if (transforms.empty())
+        return;
     if (texture.getAlpha() == 0.0f)
+        return;
+
+    const Rect textureClipArea = texture.getClipArea();
+    if (textureClipArea.w <= 0.0 || textureClipArea.h <= 0.0)
         return;
 
     const Vec2 cameraPos = camera::getActivePos();
@@ -410,6 +467,64 @@ void drawBatch(
         }
     }
 }
+
+SDL_Renderer* _get()
+{
+    return _renderer;
+}
+
+SDL_GPUDevice* _getGPUDevice()
+{
+    return _gpuDevice;
+}
+
+bool _primaryActive()
+{
+    if (!_primaryTarget)
+        return false;
+
+    return SDL_GetRenderTarget(_renderer) == _primaryTarget->getSDL();
+}
+
+#ifdef KRAKEN_ENABLE_PYTHON
+class Batcher;
+
+static void drawBatchNDArray(
+    const Texture& texture,
+    nb::ndarray<const double, nb::ndim<2>, nb::c_contig, nb::device::cpu> arr, const Vec2& anchor,
+    const Vec2& pivot, Batcher* batcher
+);
+
+class Batcher
+{
+  public:
+    Batcher() = default;
+    ~Batcher() = default;
+
+    void preallocate(const size_t nSprites)
+    {
+        vertices.reserve(nSprites * 4);
+        indices.reserve(nSprites * 6);
+    }
+
+    void free()
+    {
+        vertices.clear();
+        vertices.shrink_to_fit();
+        indices.clear();
+        indices.shrink_to_fit();
+    }
+
+  private:
+    friend void drawBatchNDArray(
+        const Texture& texture,
+        nb::ndarray<const double, nb::ndim<2>, nb::c_contig, nb::device::cpu> arr,
+        const Vec2& anchor, const Vec2& pivot, Batcher* batcher
+    );
+
+    std::vector<SDL_Vertex> vertices;
+    std::vector<int> indices;
+};
 
 void drawBatchNDArray(
     const Texture& texture,
@@ -590,41 +705,16 @@ void drawBatchNDArray(
     }
 }
 
-void Batcher::preallocate(size_t nSprites)
-{
-    vertices.reserve(nSprites * 4);
-    indices.reserve(nSprites * 6);
-}
-
-void Batcher::free()
-{
-    vertices.clear();
-    vertices.shrink_to_fit();
-    indices.clear();
-    indices.shrink_to_fit();
-}
-
-SDL_Renderer* _get()
-{
-    return _renderer;
-}
-
-SDL_GPUDevice* _getGPUDevice()
-{
-    return _gpuDevice;
-}
-
-bool _primaryActive()
-{
-    if (!_primaryTarget)
-        return false;
-
-    return SDL_GetRenderTarget(_renderer) == _primaryTarget->getSDL();
-}
-
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
+
+    nb::enum_<RenderBackend>(module, "RenderBackend")
+        .value("AUTO", RenderBackend::Auto)
+        .value("LEGACY", RenderBackend::Legacy)
+        .value("VULKAN", RenderBackend::Vulkan)
+        .value("METAL", RenderBackend::Metal)
+        .value("DIRECT3D12", RenderBackend::Direct3d12);
 
     auto subRenderer = module.def_submodule("renderer", "Functions for rendering graphics");
 
@@ -689,6 +779,16 @@ Raises:
 Unset any previously configured virtual resolution and restore rendering directly to the output.
     )doc");
 
+    subRenderer.def("set_render_backend", &setRenderBackend, "backend"_a, R"doc(
+Set the renderer backend to use for future initialization. This must be called before creating the window/renderer.
+
+Args:
+    backend (RenderBackend): One of the RenderBackend enum values.
+
+Notes:
+    Calling this after the renderer has been created has no effect.
+    )doc");
+
     subRenderer.def("get_virtual_resolution", &getVirtualResolution, R"doc(
 Get the currently configured virtual resolution (the internal render target size).
 If no virtual resolution is set, this returns the current output resolution.
@@ -737,8 +837,8 @@ Args:
         )doc"
     );
 
-    subRenderer.def(
-        "draw", nb::overload_cast<const Texture&, const Rect&>(&draw), "texture"_a, "dst"_a, R"doc(
+    subRenderer
+        .def("draw", nb::overload_cast<const Texture&, Rect>(&draw), "texture"_a, "dst"_a, R"doc(
 Render a texture stretched into a destination rectangle.
 
 This is a simpler alternative to the transform-based draw when you only
@@ -748,8 +848,7 @@ The source region is determined by the texture's clip area.
 Args:
     texture (Texture): The texture to render.
     dst (Rect): Destination rectangle on screen.
-        )doc"
-    );
+        )doc");
 
     subRenderer.def("read_pixels", &readPixels, "src"_a = Rect{}, R"doc(
 Read pixel data from the renderer within the specified rectangle.
@@ -764,6 +863,24 @@ Returns:
 Raises:
     RuntimeError: If reading pixels fails.
         )doc");
+
+    subRenderer.def(
+        "draw_9slice", &draw9Slice, "texture"_a, "dst"_a, "slice"_a, "anchor"_a = Anchor::TOP_LEFT,
+        "pivot"_a = Anchor::CENTER, R"doc(
+Render a texture using 9-slice scaling (9-grid).
+
+This divides the texture into 9 regions: 4 corners (unscaled), 4 edges (scaled in one axis),
+and 1 center (scaled in both axes).
+
+Args:
+    texture (Texture): The source texture.
+    dst (Rect): The destination rectangle on screen.
+    slice (Rect): A rectangle defining the slice widths/heights.
+                 x = left_width, y = top_height, w = right_width, h = bottom_height.
+    anchor (Vec2, optional): The anchor point. Defaults to top left.
+    pivot (Vec2, optional): The rotation pivot. Defaults to center.
+        )doc"
+    );
 
     subRenderer.def(
         "draw_batch", &drawBatch, "texture"_a, "transforms"_a, "anchor"_a = Anchor::TOP_LEFT,
@@ -812,4 +929,6 @@ Raises:
         )doc"
     );
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace kn::renderer

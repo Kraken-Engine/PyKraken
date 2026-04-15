@@ -1,9 +1,13 @@
 #include "Ease.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/function.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
+#include <algorithm>
 #include <cmath>
 #include <utility>
+#include <vector>
 
 #include "Time.hpp"
 
@@ -17,31 +21,43 @@
 
 namespace kn
 {
+static std::vector<Tween*> _tweens;
+
 Tween::Tween(ease::EasingFunction easeFunc, const double duration)
     : easingFunc(std::move(easeFunc)),
       duration(duration)
 {
+    _tweens.push_back(this);
 }
 
-Vec2 Tween::step()
+Tween::~Tween()
+{
+    std::erase(_tweens, this);
+}
+
+void Tween::update(const double delta)
 {
     if (state == State::PAUSED || state == State::DONE)
-        return getCurrentPosition();
+        return;
 
-    const double delta = kn::time::getDelta();
+    const double maxDuration = std::max(duration, 0.0);
     elapsedTime += forward ? delta : -delta;
-    elapsedTime = std::max(0.0, std::min(elapsedTime, duration));
+    elapsedTime = std::clamp(elapsedTime, 0.0, maxDuration);
 
-    if (elapsedTime == duration || elapsedTime == 0.0)
+    if (forward && elapsedTime >= maxDuration)
         state = State::DONE;
-
-    return getCurrentPosition();
+    else if (!forward && elapsedTime <= 0.0)
+        state = State::DONE;
 }
 
 Vec2 Tween::getCurrentPosition() const
 {
-    double t = elapsedTime / duration;
-    t = std::max(0.0, std::min(t, 1.0));
+    const double maxDuration = std::max(duration, 0.0);
+    if (maxDuration == 0.0)
+        return forward ? endPos : startPos;
+
+    double t = elapsedTime / maxDuration;
+    t = std::clamp(t, 0.0, 1.0);
     const double easedT = easingFunc(t);
     return math::lerp(startPos, endPos, easedT);
 }
@@ -59,14 +75,15 @@ void Tween::resume()
 
 void Tween::restart()
 {
-    elapsedTime = forward ? 0.0 : duration;
-    state = State::PLAYING;
+    const double maxDuration = std::max(duration, 0.0);
+    elapsedTime = forward ? 0.0 : maxDuration;
+    state = maxDuration == 0.0 ? State::DONE : State::PLAYING;
 }
 
 void Tween::reverse()
 {
     forward = !forward;
-    state = State::PLAYING;
+    state = duration > 0.0 ? State::PLAYING : State::DONE;
 }
 
 bool Tween::isDone() const
@@ -76,6 +93,13 @@ bool Tween::isDone() const
 
 namespace ease
 {
+void _tick()
+{
+    const double delta = time::getDelta();
+    for (auto* tween : _tweens)
+        tween->update(delta);
+}
+
 double linear(const double t)
 {
     return t;
@@ -281,6 +305,7 @@ double inOutBounce(const double t)
     return 0.5 * outBounce(t * 2 - 1) + 0.5;
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -589,14 +614,14 @@ The ending position of the animation.
 
         .def_prop_ro("is_done", &Tween::isDone, R"doc(
 Check whether the animation has finished.
-    )doc")
+            )doc")
+        .def_prop_ro("current_pos", &Tween::getCurrentPosition, R"doc(
+    Get the current interpolated position snapshot.
 
-        .def("step", &Tween::step, R"doc(
-Advance the animation and get its current position.
+    Returns:
+        Vec2: Interpolated position.
+            )doc")
 
-Returns:
-    Vec2: Interpolated position.
-    )doc")
         .def("pause", &Tween::pause, R"doc(
 Pause the animation's progression.
     )doc")
@@ -610,5 +635,7 @@ Restart the animation from the beginning.
 Reverse the direction of the animation.
     )doc");
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace ease
 }  // namespace kn

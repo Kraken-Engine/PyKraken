@@ -1,7 +1,9 @@
 #include "Input.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <algorithm>
 #include <unordered_map>
@@ -22,7 +24,7 @@ overloaded(Ts...) -> overloaded<Ts...>;
 
 namespace kn
 {
-InputAction::InputAction(const SDL_Scancode scan)
+InputAction::InputAction(const Scancode scan)
     : data(scan)
 {
 }
@@ -37,13 +39,13 @@ InputAction::InputAction(const MouseButton mButton)
 {
 }
 
-InputAction::InputAction(const SDL_GamepadButton cButton, const int slot)
+InputAction::InputAction(const GamepadButton cButton, const int slot)
     : data(cButton),
       padSlot(slot)
 {
 }
 
-InputAction::InputAction(const SDL_GamepadAxis axis, const bool isPositive, const int slot)
+InputAction::InputAction(const GamepadAxis axis, const bool isPositive, const int slot)
     : data(std::make_pair(axis, isPositive)),
       padSlot(slot)
 {
@@ -84,7 +86,7 @@ static double getStrength(const std::string& name)
     {
         std::visit(
             overloaded{
-                [&](const SDL_Scancode scan)
+                [&](const Scancode scan)
                 {
                     if (key::isPressed(scan))
                         strength = std::max(strength, 1.0);
@@ -99,25 +101,25 @@ static double getStrength(const std::string& name)
                     if (mouse::isPressed(mButton))
                         strength = std::max(strength, 1.0);
                 },
-                [&](const SDL_GamepadButton cButton)
+                [&](const GamepadButton cButton)
                 {
                     if (gamepad::isPressed(cButton, action.padSlot))
                         strength = std::max(strength, 1.0);
                 },
-                [&](const std::pair<SDL_GamepadAxis, bool>& axisPair)
+                [&](const std::pair<GamepadAxis, bool>& axisPair)
                 {
                     auto [axis, isPositive] = axisPair;
 
-                    auto process = [&](const int a, const double value)
+                    auto process = [&](const GamepadAxis a, const double value)
                     {
                         if (axis == a && ((isPositive && value > 0) || (!isPositive && value < 0)))
                             strength = std::max(strength, std::abs(value));
                     };
 
-                    process(SDL_GAMEPAD_AXIS_LEFTX, leftStick.x);
-                    process(SDL_GAMEPAD_AXIS_LEFTY, leftStick.y);
-                    process(SDL_GAMEPAD_AXIS_RIGHTX, rightStick.x);
-                    process(SDL_GAMEPAD_AXIS_RIGHTY, rightStick.y);
+                    process(GamepadAxis::LeftX, leftStick.x);
+                    process(GamepadAxis::LeftY, leftStick.y);
+                    process(GamepadAxis::RightX, rightStick.x);
+                    process(GamepadAxis::RightY, rightStick.y);
                 },
             },
             action.data
@@ -160,12 +162,12 @@ bool isPressed(const std::string& name)
         {
             return std::visit(
                 overloaded{
-                    [](const SDL_Scancode scan) -> bool { return key::isPressed(scan); },
+                    [](const Scancode scan) -> bool { return key::isPressed(scan); },
                     [](const Keycode key) -> bool { return key::isPressed(key); },
                     [](const MouseButton mButton) -> bool { return mouse::isPressed(mButton); },
-                    [&](const SDL_GamepadButton cButton) -> bool
+                    [&](const GamepadButton cButton) -> bool
                     { return gamepad::isPressed(cButton, action.padSlot); },
-                    [](const std::pair<SDL_GamepadAxis, bool>&) -> bool { return false; },
+                    [](const std::pair<GamepadAxis, bool>&) -> bool { return false; },
                 },
                 action.data
             );
@@ -185,12 +187,12 @@ bool isJustPressed(const std::string& name)
         {
             return std::visit(
                 overloaded{
-                    [](const SDL_Scancode scan) -> bool { return key::isJustPressed(scan); },
+                    [](const Scancode scan) -> bool { return key::isJustPressed(scan); },
                     [](const Keycode key) -> bool { return key::isJustPressed(key); },
                     [](const MouseButton mButton) -> bool { return mouse::isJustPressed(mButton); },
-                    [&](const SDL_GamepadButton cButton) -> bool
+                    [&](const GamepadButton cButton) -> bool
                     { return gamepad::isJustPressed(cButton, action.padSlot); },
-                    [](const std::pair<SDL_GamepadAxis, bool>&) -> bool { return false; },
+                    [](const std::pair<GamepadAxis, bool>&) -> bool { return false; },
                 },
                 action.data
             );
@@ -210,13 +212,13 @@ bool isJustReleased(const std::string& name)
         {
             return std::visit(
                 overloaded{
-                    [](const SDL_Scancode scan) -> bool { return key::isJustReleased(scan); },
+                    [](const Scancode scan) -> bool { return key::isJustReleased(scan); },
                     [](const Keycode key) -> bool { return key::isJustReleased(key); },
                     [](const MouseButton mButton) -> bool
                     { return mouse::isJustReleased(mButton); },
-                    [&](const SDL_GamepadButton cButton) -> bool
+                    [&](const GamepadButton cButton) -> bool
                     { return gamepad::isJustReleased(cButton, action.padSlot); },
-                    [](const std::pair<SDL_GamepadAxis, bool>&) -> bool { return false; },
+                    [](const std::pair<GamepadAxis, bool>&) -> bool { return false; },
                 },
                 action.data
             );
@@ -224,6 +226,7 @@ bool isJustReleased(const std::string& name)
     );
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -232,7 +235,7 @@ void _bind(nb::module_& module)
 Represents a single input trigger such as a key, mouse button, or gamepad control.
     )doc")
 
-        .def(nb::init<SDL_Scancode>(), "scancode"_a, R"doc(
+        .def(nb::init<Scancode>(), "scancode"_a, R"doc(
 Create an input action from a scancode.
 
 Args:
@@ -254,7 +257,7 @@ Args:
         )doc")
 
         .def(
-            nb::init<SDL_GamepadButton, int>(), "gamepad_button"_a, "slot"_a = 0,
+            nb::init<GamepadButton, int>(), "gamepad_button"_a, "slot"_a = 0,
             R"doc(
 Create an input action from a gamepad button.
 
@@ -265,7 +268,7 @@ Args:
         )
 
         .def(
-            nb::init<SDL_GamepadAxis, bool, int>(), "gamepad_axis"_a, "is_positive"_a, "slot"_a = 0,
+            nb::init<GamepadAxis, bool, int>(), "gamepad_axis"_a, "is_positive"_a, "slot"_a = 0,
             R"doc(
 Create an input action from a gamepad axis direction.
 
@@ -349,5 +352,7 @@ Returns:
     bool: True if released this frame only.
         )doc");
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace input
 }  // namespace kn

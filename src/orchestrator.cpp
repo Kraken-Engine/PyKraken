@@ -1,8 +1,9 @@
 #include "Orchestrator.hpp"
 
+#ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/function.h>
-#include <nanobind/stl/optional.h>
-#include <nanobind/stl/shared_ptr.h>
+#include <nanobind/stl/unique_ptr.h>
+#endif  // KRAKEN_ENABLE_PYTHON
 
 #include <algorithm>
 #include <cmath>
@@ -32,6 +33,15 @@ void MoveToEffect::update(Transform& transform, double t)
     transform.pos.y = m_startPos.y + (targetPos.y - m_startPos.y) * easedT;
 }
 
+std::unique_ptr<Effect> MoveToEffect::clone() const
+{
+    auto effect = std::make_unique<MoveToEffect>();
+    effect->targetPos = targetPos;
+    effect->duration = duration;
+    effect->easing = easing;
+    return effect;
+}
+
 // ----- ScaleToEffect -----
 void ScaleToEffect::start(Transform& transform)
 {
@@ -40,9 +50,36 @@ void ScaleToEffect::start(Transform& transform)
 
 void ScaleToEffect::update(Transform& transform, double t)
 {
-    const double easedT = easing(t);
-    transform.scale.x = m_startScale.x + (targetScale.x - m_startScale.x) * easedT;
-    transform.scale.y = m_startScale.y + (targetScale.y - m_startScale.y) * easedT;
+    transform.scale = m_startScale + (targetScale - m_startScale) * easing(t);
+}
+
+std::unique_ptr<Effect> ScaleToEffect::clone() const
+{
+    auto effect = std::make_unique<ScaleToEffect>();
+    effect->targetScale = targetScale;
+    effect->duration = duration;
+    effect->easing = easing;
+    return effect;
+}
+
+// ----- ScaleByEffect -----
+void ScaleByEffect::start(Transform& transform)
+{
+    m_startScale = transform.scale;
+}
+
+void ScaleByEffect::update(Transform& transform, double t)
+{
+    transform.scale = m_startScale + deltaScale * easing(t);
+}
+
+std::unique_ptr<Effect> ScaleByEffect::clone() const
+{
+    auto effect = std::make_unique<ScaleByEffect>();
+    effect->deltaScale = deltaScale;
+    effect->duration = duration;
+    effect->easing = easing;
+    return effect;
 }
 
 // ----- RotateToEffect -----
@@ -71,6 +108,16 @@ void RotateToEffect::update(Transform& transform, double t)
     transform.angle = m_startAngle + delta * easedT;
 }
 
+std::unique_ptr<Effect> RotateToEffect::clone() const
+{
+    auto effect = std::make_unique<RotateToEffect>();
+    effect->targetAngle = targetAngle;
+    effect->clockwise = clockwise;
+    effect->duration = duration;
+    effect->easing = easing;
+    return effect;
+}
+
 // ----- RotateByEffect -----
 void RotateByEffect::start(Transform& transform)
 {
@@ -84,7 +131,27 @@ void RotateByEffect::update(Transform& transform, double t)
     transform.angle = m_startAngle + delta * easedT;
 }
 
+std::unique_ptr<Effect> RotateByEffect::clone() const
+{
+    auto effect = std::make_unique<RotateByEffect>();
+    effect->deltaAngle = deltaAngle;
+    effect->clockwise = clockwise;
+    effect->duration = duration;
+    effect->easing = easing;
+    return effect;
+}
+
 // ----- ShakeEffect -----
+std::unique_ptr<Effect> ShakeEffect::clone() const
+{
+    auto effect = std::make_unique<ShakeEffect>();
+    effect->amplitude = amplitude;
+    effect->frequency = frequency;
+    effect->duration = duration;
+    effect->easing = easing;
+    return effect;
+}
+
 void ShakeEffect::start(Transform& transform)
 {
     m_originalPos = transform.pos;
@@ -119,6 +186,15 @@ void CallEffect::start([[maybe_unused]] Transform& transform)
     m_called = false;
 }
 
+std::unique_ptr<Effect> CallEffect::clone() const
+{
+    auto effect = std::make_unique<CallEffect>();
+    effect->callback = callback;
+    effect->duration = duration;
+    effect->easing = easing;
+    return effect;
+}
+
 void CallEffect::update([[maybe_unused]] Transform& transform, [[maybe_unused]] double t)
 {
     if (!m_called && callback)
@@ -129,17 +205,22 @@ void CallEffect::update([[maybe_unused]] Transform& transform, [[maybe_unused]] 
 }
 
 // ----- Orchestrator -----
+Orchestrator::Orchestrator(Transform& target)
+    : m_target(&target)
+{
+}
+
 Orchestrator::~Orchestrator()
 {
     std::erase(_orchestrators, this);
 }
 
-void Orchestrator::setTarget(Transform* target)
+void Orchestrator::setTarget(Transform& target)
 {
-    m_target = target;
+    m_target = &target;
 }
 
-Orchestrator& Orchestrator::parallel(const std::vector<std::shared_ptr<Effect>>& effects)
+Orchestrator& Orchestrator::parallel(std::vector<std::unique_ptr<Effect>> effects)
 {
     if (m_finalized)
     {
@@ -148,7 +229,6 @@ Orchestrator& Orchestrator::parallel(const std::vector<std::shared_ptr<Effect>>&
     }
 
     Step step;
-    step.effects = effects;
 
     // Duration is the max of all parallel effects
     for (const auto& effect : effects)
@@ -157,13 +237,18 @@ Orchestrator& Orchestrator::parallel(const std::vector<std::shared_ptr<Effect>>&
             step.duration = effect->duration;
     }
 
+    step.effects = std::move(effects);
+
     m_steps.push_back(std::move(step));
     return *this;
 }
 
-Orchestrator& Orchestrator::then(std::shared_ptr<Effect> effect)
+Orchestrator& Orchestrator::then(std::unique_ptr<Effect> effect)
 {
-    return parallel(std::vector<std::shared_ptr<Effect>>{std::move(effect)});
+    std::vector<std::unique_ptr<Effect>> vec;
+    vec.push_back(std::move(effect));
+
+    return parallel(std::move(vec));
 }
 
 void Orchestrator::finalize()
@@ -303,6 +388,85 @@ void Orchestrator::update(double dt)
     }
 }
 
+namespace fx
+{
+std::unique_ptr<Effect> moveTo(const Vec2& pos, double dur, const ease::EasingFunction& easeFunc)
+{
+    auto effect = std::make_unique<MoveToEffect>();
+    effect->targetPos = pos;
+    effect->duration = dur;
+    effect->easing = easeFunc ? easeFunc : [](double t) { return t; };
+    return effect;
+}
+
+std::unique_ptr<Effect> scaleTo(const Vec2& scale, double dur, const ease::EasingFunction& easeFunc)
+{
+    auto effect = std::make_unique<ScaleToEffect>();
+    effect->targetScale = scale;
+    effect->duration = dur;
+    effect->easing = easeFunc ? easeFunc : [](double t) { return t; };
+    return effect;
+}
+
+std::unique_ptr<Effect> scaleBy(double scale, double dur, const ease::EasingFunction& easeFunc)
+{
+    auto effect = std::make_unique<ScaleByEffect>();
+    effect->deltaScale = Vec2{scale, scale};
+    effect->duration = dur;
+    effect->easing = easeFunc ? easeFunc : [](double t) { return t; };
+    return effect;
+}
+
+std::unique_ptr<Effect> rotateTo(
+    double angle, bool clockwise, double dur, const ease::EasingFunction& easeFunc
+)
+{
+    auto effect = std::make_unique<RotateToEffect>();
+    effect->targetAngle = angle;
+    effect->clockwise = clockwise;
+    effect->duration = dur;
+    effect->easing = easeFunc ? easeFunc : [](double t) { return t; };
+    return effect;
+}
+
+std::unique_ptr<Effect> rotateBy(
+    double deltaAngle, bool clockwise, double dur, const ease::EasingFunction& easeFunc
+)
+{
+    auto effect = std::make_unique<RotateByEffect>();
+    effect->deltaAngle = deltaAngle;
+    effect->clockwise = clockwise;
+    effect->duration = dur;
+    effect->easing = easeFunc ? easeFunc : [](double t) { return t; };
+    return effect;
+}
+
+std::unique_ptr<Effect> shake(double amp, double freq, double dur)
+{
+    auto effect = std::make_unique<ShakeEffect>();
+    effect->amplitude = amp;
+    effect->frequency = freq;
+    effect->duration = dur;
+    return effect;
+}
+
+std::unique_ptr<Effect> call(const std::function<void()>& callback)
+{
+    auto effect = std::make_unique<CallEffect>();
+    effect->callback = callback;
+    effect->duration = 0.0;  // Instant
+    return effect;
+}
+
+std::unique_ptr<Effect> wait(double dur)
+{
+    auto effect = std::make_unique<CallEffect>();
+    effect->callback = nullptr;
+    effect->duration = dur;
+    return effect;
+}
+}  // namespace fx
+
 namespace orchestrator
 {
 void _tick()
@@ -312,6 +476,7 @@ void _tick()
         orch->update(dt);
 }
 
+#ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
@@ -323,6 +488,9 @@ Predefined effects for use with the Orchestrator.
     // ----- Effect base class (not directly instantiable) -----
     nb::class_<Effect>(subFx, "Effect", R"doc(
 Base class for timeline effects. Not directly instantiable.
+    )doc")
+        .def("clone", &Effect::clone, R"doc(
+Create a copy of this effect. Used internally by the Orchestrator when adding effects to the timeline.
     )doc");
 
     // ----- Orchestrator -----
@@ -348,59 +516,30 @@ Methods:
     stop(): Stop the animation and reset to the beginning.
     rewind(): Reset the animation to the beginning without stopping.
     )doc")
-        .def(
-            "__init__",
-            [](Orchestrator* self, const nb::object& target) -> void
-            {
-                Orchestrator orch;
-                if (nb::isinstance<Transform>(target))
-                {
-                    orch.setTarget(nb::cast<Transform*>(target));
-                }
-                else if (nb::hasattr(target, "transform"))
-                {
-                    auto transformAttr = target.attr("transform");
-                    if (nb::isinstance<Transform>(transformAttr))
-                        orch.setTarget(nb::cast<Transform*>(transformAttr));
-                    else
-                        throw nb::type_error(
-                            "The 'transform' attribute must be a Transform instance"
-                        );
-                }
-                else
-                {
-                    throw nb::type_error(
-                        "Target must be a Transform or an object with a 'transform' attribute"
-                    );
-                }
-
-                new (self) Orchestrator(std::move(orch));
-            },
-            "target"_a, R"doc(
+        .def(nb::init<Transform&>(), "target"_a, R"doc(
 Create an Orchestrator for animating transforms.
 
 Args:
-    target: Either a Transform object or an object with a 'transform' attribute.
-             )doc"
-        )
+    target (Transform): The transform to animate.
+             )doc")
         .def(
             "parallel",
             [](Orchestrator& self, const nb::args& effects) -> Orchestrator&
             {
-                std::vector<std::shared_ptr<Effect>> effectVec;
+                std::vector<std::unique_ptr<Effect>> effectVec;
                 effectVec.reserve(effects.size());
                 for (const auto& arg : effects)
                 {
                     if (nb::isinstance<Effect>(arg))
-                        effectVec.push_back(nb::cast<std::shared_ptr<Effect>>(arg));
+                        effectVec.push_back(nb::cast<std::unique_ptr<Effect>>(arg));
                     else
                         throw nb::type_error("parallel() arguments must all be Effect objects");
                 }
 
-                return self.parallel(effectVec);
+                return self.parallel(std::move(effectVec));
             },
-            nb::sig("def parallel(self, *effects: fx.Effect) -> Orchestrator"),
-            R"doc(
+            nb::rv_policy::reference,
+            nb::sig("def parallel(self, *effects: fx.Effect) -> Orchestrator"), R"doc(
 Add multiple effects to run in parallel.
 
 Args:
@@ -410,7 +549,7 @@ Returns:
     Orchestrator: Self for method chaining.
              )doc"
         )
-        .def("then", &Orchestrator::then, "effect"_a, R"doc(
+        .def("then", &Orchestrator::then, nb::rv_policy::reference, "effect"_a, R"doc(
 Add a single effect to the timeline.
 
 Args:
@@ -455,18 +594,7 @@ Whether the animation should loop when finished.
              )doc");
 
     // ----- fx functions (private, accessed via pykraken/fx.py) -----
-    subFx.def(
-        "move_to",
-        [](const Vec2& pos, double dur,
-           std::optional<std::function<double(double)>> easeFunc) -> std::shared_ptr<Effect>
-        {
-            auto effect = std::make_shared<MoveToEffect>();
-            effect->targetPos = pos;
-            effect->duration = dur;
-            effect->easing = easeFunc.value_or([](double t) { return t; });
-            return effect;
-        },
-        "pos"_a, "dur"_a = 0.0, "ease"_a = nb::none(), R"doc(
+    subFx.def("move_to", &fx::moveTo, "pos"_a, "dur"_a = 0.0, "ease"_a = nb::none(), R"doc(
 Create a move-to effect.
 
 Args:
@@ -476,55 +604,35 @@ Args:
 
 Returns:
     Effect: The move-to effect.
-        )doc"
-    );
+        )doc");
 
-    subFx.def(
-        "scale_to",
-        [](const nb::object& scaleObj, double dur,
-           std::optional<std::function<double(double)>> easeFunc) -> std::shared_ptr<Effect>
-        {
-            auto effect = std::make_shared<ScaleToEffect>();
-
-            if (scaleObj.is_none())
-                effect->targetScale = Vec2{1.0};
-            else if (nb::isinstance<nb::float_>(scaleObj) || nb::isinstance<nb::int_>(scaleObj))
-                effect->targetScale = Vec2{nb::cast<double>(scaleObj)};
-            else if (nb::isinstance<Vec2>(scaleObj))
-                effect->targetScale = nb::cast<Vec2>(scaleObj);
-            else
-                throw nb::type_error("scale must be a number or Vec2");
-
-            effect->duration = dur;
-            effect->easing = easeFunc.value_or([](double t) { return t; });
-            return effect;
-        },
-        "scale"_a = nb::none(), "dur"_a = 0.0, "ease"_a = nb::none(), R"doc(
+    subFx.def("scale_to", &fx::scaleTo, "scale"_a, "dur"_a = 0.0, "ease"_a = nb::none(), R"doc(
 Create a scale-to effect.
 
 Args:
-    scale (float or Vec2): Target scale. A single number applies to both axes.
+    scale (Vec2): Target scale exact dimensions.
     dur (float): Duration in seconds.
     ease (callable): Easing function (t -> t).
 
 Returns:
     Effect: The scale-to effect.
-        )doc"
-    );
+        )doc");
+
+    subFx.def("scale_by", &fx::scaleBy, "scale"_a, "dur"_a = 0.0, "ease"_a = nb::none(), R"doc(
+Create a scale-by effect.
+
+Args:
+    scale (float): Delta scalar to apply to the scale.
+    dur (float): Duration in seconds.
+    ease (callable): Easing function (t -> t).
+
+Returns:
+    Effect: The scale-by effect.
+        )doc");
 
     subFx.def(
-        "rotate_to",
-        [](double angle, bool clockwise, double dur,
-           std::optional<std::function<double(double)>> easeFunc) -> std::shared_ptr<Effect>
-        {
-            auto effect = std::make_shared<RotateToEffect>();
-            effect->targetAngle = angle;
-            effect->clockwise = clockwise;
-            effect->duration = dur;
-            effect->easing = easeFunc.value_or([](double t) { return t; });
-            return effect;
-        },
-        "angle"_a, "clockwise"_a = true, "dur"_a = 0.0, "ease"_a = nb::none(), R"doc(
+        "rotate_to", &fx::rotateTo, "angle"_a, "clockwise"_a = true, "dur"_a = 0.0,
+        "ease"_a = nb::none(), R"doc(
 Create a rotate-to effect.
 
 Args:
@@ -539,19 +647,8 @@ Returns:
     );
 
     subFx.def(
-        "rotate_by",
-        [](double delta, bool clockwise, double dur,
-           std::optional<std::function<double(double)>> easeFunc) -> std::shared_ptr<Effect>
-        {
-            auto effect = std::make_shared<RotateByEffect>();
-            effect->deltaAngle = delta;
-            effect->clockwise = clockwise;
-            effect->duration = dur;
-            effect->easing = easeFunc.value_or([](double t) { return t; });
-            return effect;
-        },
-        "delta"_a, "clockwise"_a = true, "dur"_a = 0.0, "ease"_a = nb::none(),
-        R"doc(
+        "rotate_by", &fx::rotateBy, "delta"_a, "clockwise"_a = true, "dur"_a = 0.0,
+        "ease"_a = nb::none(), R"doc(
 Create a rotate-by effect.
 
 Args:
@@ -565,18 +662,7 @@ Returns:
         )doc"
     );
 
-    subFx.def(
-        "shake",
-        [](double amp, double freq, double dur) -> std::shared_ptr<Effect>
-        {
-            auto effect = std::make_shared<ShakeEffect>();
-            effect->amplitude = amp;
-            effect->frequency = freq;
-            effect->duration = dur;
-            return effect;
-        },
-        "amp"_a, "freq"_a, "dur"_a,
-        R"doc(
+    subFx.def("shake", &fx::shake, "amp"_a, "freq"_a, "dur"_a, R"doc(
 Create a shake effect.
 
 Args:
@@ -586,19 +672,9 @@ Args:
 
 Returns:
     Effect: The shake effect.
-        )doc"
-    );
+        )doc");
 
-    subFx.def(
-        "call",
-        [](const std::function<void()>& callback) -> std::shared_ptr<Effect>
-        {
-            auto effect = std::make_shared<CallEffect>();
-            effect->callback = callback;
-            effect->duration = 0.0;  // Instant
-            return effect;
-        },
-        "callback"_a, R"doc(
+    subFx.def("call", &fx::call, "callback"_a, R"doc(
 Create an effect that calls a function.
 
 Args:
@@ -606,20 +682,9 @@ Args:
 
 Returns:
     Effect: The call effect.
-        )doc"
-    );
+        )doc");
 
-    subFx.def(
-        "wait",
-        [](double dur) -> std::shared_ptr<Effect>
-        {
-            // Create a dummy effect that just waits
-            auto effect = std::make_shared<CallEffect>();
-            effect->callback = nullptr;
-            effect->duration = dur;
-            return effect;
-        },
-        "dur"_a, R"doc(
+    subFx.def("wait", &fx::wait, "dur"_a, R"doc(
 Create a wait/delay effect.
 
 Args:
@@ -627,8 +692,9 @@ Args:
 
 Returns:
     Effect: The wait effect.
-        )doc"
-    );
+        )doc");
 }
+#endif  // KRAKEN_ENABLE_PYTHON
+
 }  // namespace orchestrator
 }  // namespace kn
