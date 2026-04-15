@@ -34,7 +34,7 @@ jobs:
           key: ${{ runner.os }}-cibw-cache-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-cibw-cache-
-          max-size: 2G
+          max-size: 5G
 
       - name: Setup ccache (Linux Container)
         if: runner.os == 'Linux'
