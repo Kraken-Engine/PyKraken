@@ -5,6 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) when possible.
 
+## [1.7.2] - TBA
+
+### Added
+- New `shaders.Sampler` class.
+- New `WrapMode` enum for shader sampler addressing modes.
+- New `TextureUsage` flag enum for specifying how a texture is intended to be used.
+- `Texture` read-only `.usage` property for checking a texture's usage flags and `.has_usage(usage)` helper method for checking specific usage flags.
+- `camera.get_active_angle()` function for getting the angle of the active camera.
+- Tilemap `draw` APIs now accept optional `angle` and `pivot` parameters.
+- Added `angle` property to the `Camera` class.
+- New `Shader.set_texture_sampler` method for sampling multiple textures in a binded shader.
+- `log` submodule now has explicit `enable` and `disable` functions.
+- More cli tools:
+  - `init` for quickstarting a pykraken project
+  - `docs` for opening the documentation in the default web browser.
+- `Polygon.set_centroid` method for setting an exact position of a polygon.
+
+### Changed
+- All `Texture` constructors now use `FilterMode` and have an additional `usage` parameter.
+- `PixelArray` constructor accepting a `Vec2` size parameter changed to accept separate `width` and `height` integer parameters for type safety.
+- Camera API was refactored to explicit world/local semantics (`world_pos`, `local_pos`) with new local/world movement helpers.
+- `camera.world_to_screen` / `camera.screen_to_world` now account for active camera rotation, not just translation.
+- Primitive drawing and text rendering now consistently use camera transforms, including camera rotation.
+- `renderer.draw(texture, dst)` now supports optional `angle` and `pivot` parameters for screen-space rectangle drawing.
+- `renderer.set_default_scale_mode` / `renderer.get_default_scale_mode` renamed to `renderer.set_default_filter_mode` / `renderer.get_default_filter_mode`.
+- Shader creation now uses the `Shader` constructor directly rather than factory function.
+- Renamed `TextureScaleMode` to `FilterMode` for ambiguity with the shader API.
+- UI drawing is now unaffected by any active world camera.
+- *"kraken-clean"* font renamed to *"kraken-modern"*
+- `Polygon` rotation and scaling methods use its centroid now instead of a specified pivot point.
+
+### Removed
+- Removed `pykraken.shader_uniform` helper module and its `ShaderUniform` class in favor of native buffer-like data.
+
+### Fixed
+- Fixed tilemap tileset GID range handling by avoiding TMXLite `getLastGID()` for tileset bounds resolution.
+- Fixed shader baker error handling for failed SPIR-V/MSL compilation.
+- A lot of UI stuff now has docstrings.
+
 ## [1.7.1] - 2026-04-15
 
 ### Added
@@ -26,12 +65,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `renderer` submodule now has a `set_render_backend` function for manually setting the rendering backend instead of relying on automatic selection.
 - New `RenderBackend` enum for specifying rendering backends.
 - `camera.unset()` function for unsetting the active camera.
+- New `fx.scale_by` function for scaling an effect by a factor instead of to a specific size.
+- New `gamepad.get_type` function for getting the type of a connected gamepad.
+- Loading a shader moved from `Shader` constructor to a new `shaders.load` function that returns a `Shader` object.
 
 ### Changed
 - Renamed `Align` enum to `TextAlign` for specificity.
 - Physics `World` constructor's gravity parameter is now optional and defaults to zero gravity.
 - `fx.Effect` objects are now stateful, single-use objects to be consumed by an `Orchestrator` timeline, rather than reusable templates.
 - Rename `ShaderState` class to `Shader` for simplicity.
+- `Orchestrator` constructor only accepts `Transform` objects now.
+- `fx.scale_to` function's `scale` property enforces the `Vec2` type for type safety.
 
 ### Removed
 - Physics `Body` types no longer have a `debug_draw` method.

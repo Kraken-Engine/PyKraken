@@ -8,6 +8,7 @@
 
 #include <filesystem>
 #include <type_traits>
+#include <vector>
 
 #ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
@@ -15,9 +16,19 @@ namespace nb = nanobind;
 
 namespace kn
 {
+class Texture;
+
+enum class WrapMode : uint8_t
+{
+    Clamp,
+    Mirror,
+    Repeat,
+};
+
 namespace shaders
 {
 class Shader;
+class Sampler;
 
 #ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module);
@@ -25,12 +36,14 @@ void _bind(nb::module_& module);
 
 void _quit();
 
-Shader load(const std::filesystem::path& fragmentBasePath, uint32_t uniformBufferCount = 0);
-
 class Shader
 {
   public:
     Shader() = delete;
+    Shader(
+        const std::filesystem::path& fragmentBasePath, uint32_t uniformBufferCount = 0,
+        uint32_t samplerCount = 1
+    );
     ~Shader();
 
     // Move-Only
@@ -42,6 +55,8 @@ class Shader
     void bind() const;
     void unbind() const;
 
+    void setTextureSampler(const uint32_t binding, const Texture& texture, const Sampler& sampler);
+
     template <typename UniformType>
     void setUniform(const uint32_t binding, const UniformType& data) const
     {
@@ -52,17 +67,47 @@ class Shader
     }
 
   private:
-    Shader(SDL_GPUShader* m_fragShader, SDL_GPURenderState* m_renderState);
+    SDL_GPUShader* m_fragShader = nullptr;
+    SDL_GPURenderState* m_renderState = nullptr;
 
-    SDL_GPUShader* m_fragShader;
-    SDL_GPURenderState* m_renderState;
+    uint32_t m_samplerCount = 0;
+    std::vector<SDL_GPUTextureSamplerBinding> m_samplerBindings;
 
     friend void _quit();
-    friend Shader load(const std::filesystem::path& fragmentBasePath, uint32_t uniformBufferCount);
 
 #ifdef KRAKEN_ENABLE_PYTHON
     friend void _bind(nb::module_& module);
 #endif  // KRAKEN_ENABLE_PYTHON
 };
+
+class Sampler
+{
+  public:
+    Sampler() = delete;
+    Sampler(
+        const FilterMode minFilter = FilterMode::Default,
+        const FilterMode magFilter = FilterMode::Default, const WrapMode wrapU = WrapMode::Clamp,
+        const WrapMode wrapV = WrapMode::Clamp
+    );
+    ~Sampler();
+
+    // Move-Only
+    Sampler(const Sampler&) = delete;
+    Sampler& operator=(const Sampler&) = delete;
+    Sampler(Sampler&& other) noexcept;
+    Sampler& operator=(Sampler&& other) noexcept;
+
+    SDL_GPUSampler* getSDL() const noexcept;
+
+  private:
+    SDL_GPUSampler* m_sampler = nullptr;
+
+    friend void _quit();
+
+#ifdef KRAKEN_ENABLE_PYTHON
+    friend void _bind(nb::module_& module);
+#endif  // KRAKEN_ENABLE_PYTHON
+};
+
 }  // namespace shaders
 }  // namespace kn

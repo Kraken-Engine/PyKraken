@@ -79,9 +79,7 @@ void Text::draw(Vec2 pos, const Vec2& anchor) const
     if (!TTF_GetTextFont(m_text))
         throw std::runtime_error("Text font is not set or has gone out of scope");
 
-    const Vec2 cameraPos = camera::getActivePos();
-    pos.x -= cameraPos.x;
-    pos.y -= cameraPos.y;
+    pos = camera::worldToScreen(pos);
 
     // Get text size so we can offset based on the anchor
     int textW = 0, textH = 0;
@@ -278,7 +276,7 @@ Note:
         .def(
             nb::init<const Font&, const std::string&>(), "font"_a, "text"_a = "",
             R"doc(
-Create a Text object.
+Create a Text object. The font object must remain in-scope for the lifetime of the Text.
 
 Args:
     font (Font): The font to use for rendering this text.

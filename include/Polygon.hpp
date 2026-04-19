@@ -21,33 +21,32 @@ class Polygon
 
     Polygon() = default;
     explicit Polygon(const std::vector<Vec2>& points);
-    Polygon(uint32_t n, double radius);
+    Polygon(uint32_t n, double radius, const Vec2& centroid = Vec2::ZERO);
     ~Polygon() = default;
 
     [[nodiscard]] Polygon copy() const;
 
     [[nodiscard]] double getPerimeter() const;
-
     [[nodiscard]] double getArea() const;
 
     [[nodiscard]] Vec2 getCentroid() const;
+    void setCentroid(const Vec2& centroid);
 
     [[nodiscard]] class Rect getRect() const;
 
     [[nodiscard]] bool isConvex() const;
-
     [[nodiscard]] bool isConcave() const;
 
-    void rotate(double angle, const Vec2& pivot = {0.5, 0.5});
-    Polygon rotated(double angle, const Vec2& pivot = {0.5, 0.5}) const;
+    void rotate(double angle);
+    Polygon rotated(double angle) const;
 
     void move(const Vec2& offset);
     Polygon moved(const Vec2& offset) const;
 
-    void scaleBy(double factor, const Vec2& pivot = {0.5, 0.5});
-    void scaleBy(const Vec2& factor, const Vec2& pivot = {0.5, 0.5});
-    Polygon scaledBy(double factor, const Vec2& pivot = {0.5, 0.5}) const;
-    Polygon scaledBy(const Vec2& factor, const Vec2& pivot = {0.5, 0.5}) const;
+    void scaleBy(double factor);
+    void scaleBy(const Vec2& factor);
+    Polygon scaledBy(double factor) const;
+    Polygon scaledBy(const Vec2& factor) const;
 };
 
 #ifdef KRAKEN_ENABLE_PYTHON

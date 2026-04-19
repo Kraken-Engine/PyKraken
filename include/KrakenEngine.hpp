@@ -55,7 +55,7 @@
 
 #define KN_VERSION_MAJOR 1
 #define KN_VERSION_MINOR 7
-#define KN_VERSION_PATCH 1
+#define KN_VERSION_PATCH 2
 
 namespace kn
 {
@@ -99,7 +99,7 @@ inline constexpr const char* getArchitecture()
 inline void init(const bool debug = false)
 {
     if (debug)
-        kn::log::_init();
+        kn::log::enable();
 
     // Log platform and architecture at startup for diagnostics.
     kn::log::info("Platform: {} ({})", detail::getPlatform(), detail::getArchitecture());
@@ -113,6 +113,8 @@ inline void init(const bool debug = false)
 
 inline void quit()
 {
+    kn::log::disable();
+
     // Text objects must be destroyed first (they reference fonts and text engine).
     kn::text::_quit();
 

@@ -2,20 +2,21 @@
 
 #ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/nanobind.h>
-#endif // KRAKEN_ENABLE_PYTHON
+#endif  // KRAKEN_ENABLE_PYTHON
 #include <spdlog/spdlog.h>
 
 #ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
-#endif // KRAKEN_ENABLE_PYTHON
+#endif  // KRAKEN_ENABLE_PYTHON
 
 namespace kn::log
 {
-void _init();
+void enable();
+void disable();
 
 #ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module);
-#endif // KRAKEN_ENABLE_PYTHON
+#endif  // KRAKEN_ENABLE_PYTHON
 
 extern bool _loggerEnabled;
 

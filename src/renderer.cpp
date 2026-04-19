@@ -6,6 +6,9 @@
 #include <nanobind/stl/vector.h>
 #endif  // KRAKEN_ENABLE_PYTHON
 
+#include <cmath>
+#include <limits>
+
 #include "Camera.hpp"
 #include "Log.hpp"
 #include "PixelArray.hpp"
@@ -20,9 +23,45 @@ constexpr double CONVERSION = 180.0 / M_PI;
 
 namespace kn::renderer
 {
+static Rect _rotatedBounds(const Rect& dstRect, const double angle, const Vec2& pivot)
+{
+    if (angle == 0.0)
+        return dstRect;
+
+    const double c = std::cos(angle);
+    const double s = std::sin(angle);
+
+    const Vec2 corners[4] = {
+        {0.0, 0.0},
+        {dstRect.w, 0.0},
+        {dstRect.w, dstRect.h},
+        {0.0, dstRect.h},
+    };
+
+    double minX = std::numeric_limits<double>::infinity();
+    double minY = std::numeric_limits<double>::infinity();
+    double maxX = -std::numeric_limits<double>::infinity();
+    double maxY = -std::numeric_limits<double>::infinity();
+
+    const Vec2 pivotPoint = dstRect.getSize() * pivot;
+    for (const auto& corner : corners)
+    {
+        const auto [localX, localY] = corner - pivotPoint;
+        const double rotatedX = localX * c - localY * s + pivotPoint.x;
+        const double rotatedY = localX * s + localY * c + pivotPoint.y;
+
+        minX = std::min(minX, rotatedX);
+        minY = std::min(minY, rotatedY);
+        maxX = std::max(maxX, rotatedX);
+        maxY = std::max(maxY, rotatedY);
+    }
+
+    return {dstRect.x + minX, dstRect.y + minY, maxX - minX, maxY - minY};
+}
+
 static SDL_Renderer* _renderer = nullptr;
 static SDL_GPUDevice* _gpuDevice = nullptr;
-static TextureScaleMode _defaultScaleMode = TextureScaleMode::LINEAR;
+static FilterMode _defaultFilterMode = FilterMode::Linear;
 static Texture* _primaryTarget = nullptr;
 static RenderBackend _forcedBackend = RenderBackend::Auto;
 
@@ -160,7 +199,12 @@ void clear(const Color& color)
 
 void setTarget(const Texture* target)
 {
-    if (!target)
+    if (target)
+    {
+        if (!target->hasUsage(TextureUsage::Drawable))
+            throw std::runtime_error("Texture is not drawable, cannot set as render target");
+    }
+    else
     {
         if (!SDL_SetRenderTarget(_renderer, (_primaryTarget) ? _primaryTarget->getSDL() : nullptr))
             throw std::runtime_error(
@@ -174,14 +218,14 @@ void setTarget(const Texture* target)
         throw std::runtime_error("Failed to set render target: " + std::string(SDL_GetError()));
 }
 
-void setDefaultScaleMode(const TextureScaleMode scaleMode)
+void setDefaultFilterMode(const FilterMode filter)
 {
-    _defaultScaleMode = scaleMode;
+    _defaultFilterMode = filter == FilterMode::Default ? FilterMode::Linear : filter;
 }
 
-TextureScaleMode getDefaultScaleMode()
+FilterMode getDefaultFilterMode()
 {
-    return _defaultScaleMode;
+    return _defaultFilterMode;
 }
 
 void present()
@@ -197,10 +241,13 @@ void present()
     // Hold old cam pos and set pos to origin
     kn::Camera* currCamera = camera::_getActiveCamera();
     Vec2 cameraPos;
+    double cameraAngle = 0.0;
     if (currCamera)
     {
-        cameraPos = currCamera->getPos();
-        currCamera->setPos({0.0, 0.0});
+        cameraPos = currCamera->getWorldPos();
+        cameraAngle = currCamera->getAngle();
+        currCamera->setWorldPos({0.0, 0.0});
+        currCamera->setAngle(0.0);
     }
 
     // Truly reset render target since SetTarget bit my butt
@@ -217,7 +264,10 @@ void present()
     // Restore custom renderer size and cam pos
     setTarget(_primaryTarget);
     if (currCamera)
-        currCamera->setPos(cameraPos);
+    {
+        currCamera->setWorldPos(cameraPos);
+        currCamera->setAngle(cameraAngle);
+    }
 }
 
 void setVirtualResolution(const int width, const int height)
@@ -231,7 +281,7 @@ void setVirtualResolution(const int width, const int height)
         _primaryTarget = nullptr;
     }
 
-    _primaryTarget = new Texture(width, height, TextureScaleMode::NEAREST);
+    _primaryTarget = new Texture(width, height);
     setTarget(_primaryTarget);
 }
 
@@ -303,6 +353,9 @@ PixelArray readPixels(const Rect& src)
 
 void draw(const Texture& texture, const Transform& transform, const Vec2& anchor, const Vec2& pivot)
 {
+    if (!texture.hasUsage(TextureUsage::Drawable))
+        throw std::runtime_error("Texture is not drawable");
+
     Rect clipArea = texture.getClipArea();
     if (clipArea.w <= 0.0 || clipArea.h <= 0.0)
         return;
@@ -312,13 +365,16 @@ void draw(const Texture& texture, const Transform& transform, const Vec2& anchor
     Rect dstRect{0.0, 0.0, clipArea.getSize() * transform.scale};
 
     // Position based on anchor
-    const Vec2 pos = transform.pos - camera::getActivePos();
+    const Vec2 pos = camera::worldToScreen(transform.pos);
     dstRect.setTopLeft(pos - (dstRect.getSize() * anchor));
 
-    // cull using the logical resolution (camera/view is already in logical/world coords)
+    const double renderAngle = transform.angle + camera::getActiveAngle();
+
+    // cull using the rotated bounds so rotated quads don't disappear early near the edge
+    const Rect cullRect = _rotatedBounds(dstRect, renderAngle, pivot);
     const Vec2 rendRes = getCurrentResolution();
-    if (dstRect.getRight() < 0.0 || dstRect.x >= rendRes.x || dstRect.getBottom() < 0.0 ||
-        dstRect.y >= rendRes.y)
+    if (cullRect.getRight() < 0.0 || cullRect.x >= rendRes.x || cullRect.getBottom() < 0.0 ||
+        cullRect.y >= rendRes.y)
     {
         return;
     }
@@ -336,7 +392,7 @@ void draw(const Texture& texture, const Transform& transform, const Vec2& anchor
         flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_VERTICAL);
 
     if (!SDL_RenderTextureRotated(
-            _renderer, texture.getSDL(), &srcSDLRect, &dstSDLRect, TO_DEGREES(transform.angle),
+            _renderer, texture.getSDL(), &srcSDLRect, &dstSDLRect, TO_DEGREES(renderAngle),
             &pivotPoint, flipAxis
         ))
     {
@@ -344,8 +400,11 @@ void draw(const Texture& texture, const Transform& transform, const Vec2& anchor
     }
 }
 
-void draw(const Texture& texture, Rect dst)
+void draw(const Texture& texture, Rect dst, const double angle, const Vec2& pivot)
 {
+    if (!texture.hasUsage(TextureUsage::Drawable))
+        throw std::runtime_error("Texture is not drawable");
+
     if (texture.getAlpha() == 0.0f)
         return;
 
@@ -353,16 +412,17 @@ void draw(const Texture& texture, Rect dst)
     if (clipArea.w <= 0.0 || clipArea.h <= 0.0)
         return;
 
-    const Vec2 cameraPos = camera::getActivePos();
-    dst.x -= cameraPos.x;
-    dst.y -= cameraPos.y;
+    const Vec2 worldCenter = dst.getCenter();
 
     const Vec2 rendRes = getCurrentResolution();
-    if (dst.getRight() < 0.0 || dst.x >= rendRes.x || dst.getBottom() < 0.0 || dst.y >= rendRes.y)
+    const Rect cullRect = _rotatedBounds(dst, angle, pivot);
+    if (cullRect.getRight() < 0.0 || cullRect.x >= rendRes.x || cullRect.getBottom() < 0.0 ||
+        cullRect.y >= rendRes.y)
         return;
 
     const auto dstSDLRect = static_cast<SDL_FRect>(dst);
     const auto srcSDLRect = static_cast<SDL_FRect>(clipArea);
+    const auto pivotPoint = static_cast<SDL_FPoint>(dst.getSize() * pivot);
 
     SDL_FlipMode flipAxis = SDL_FLIP_NONE;
     if (texture.flip.h)
@@ -371,7 +431,8 @@ void draw(const Texture& texture, Rect dst)
         flipAxis = static_cast<SDL_FlipMode>(flipAxis | SDL_FLIP_VERTICAL);
 
     if (!SDL_RenderTextureRotated(
-            _renderer, texture.getSDL(), &srcSDLRect, &dstSDLRect, 0.0, nullptr, flipAxis
+            _renderer, texture.getSDL(), &srcSDLRect, &dstSDLRect, TO_DEGREES(angle), &pivotPoint,
+            flipAxis
         ))
     {
         throw std::runtime_error("Failed to render texture: " + std::string(SDL_GetError()));
@@ -379,9 +440,13 @@ void draw(const Texture& texture, Rect dst)
 }
 
 void draw9Slice(
-    const Texture& texture, Rect dst, const Rect& slice, const Vec2& anchor, const Vec2& pivot
+    const Texture& texture, const Rect& dst, const Rect& slice, const Vec2& anchor,
+    const Vec2& pivot
 )
 {
+    if (!texture.hasUsage(TextureUsage::Drawable))
+        throw std::runtime_error("Texture is not drawable");
+
     if (texture.getAlpha() == 0.0f)
         return;
 
@@ -390,10 +455,6 @@ void draw9Slice(
         return;
 
     const auto [leftWidth, topHeight, rightWidth, bottomHeight] = static_cast<SDL_FRect>(slice);
-
-    const Vec2 cameraPos = camera::getActivePos();
-    dst.x -= cameraPos.x;
-    dst.y -= cameraPos.y;
 
     const auto dstSDLRect = static_cast<SDL_FRect>(dst);
     const auto srcSDLRect = static_cast<SDL_FRect>(textureClipArea);
@@ -414,9 +475,10 @@ void drawBatch(
     const Vec2& pivot, const std::optional<std::vector<Rect>>& clipRects
 )
 {
-    if (transforms.empty())
-        return;
-    if (texture.getAlpha() == 0.0f)
+    if (!texture.hasUsage(TextureUsage::Drawable))
+        throw std::runtime_error("Texture is not drawable");
+
+    if (transforms.empty() || texture.getAlpha() == 0.0f)
         return;
 
     const Rect textureClipArea = texture.getClipArea();
@@ -424,6 +486,8 @@ void drawBatch(
         return;
 
     const Vec2 cameraPos = camera::getActivePos();
+    const double cameraAngle = camera::getActiveAngle();
+
     const Vec2 rendRes = getCurrentResolution();
 
     SDL_FlipMode flipAxis = SDL_FLIP_NONE;
@@ -448,18 +512,21 @@ void drawBatch(
         const Vec2 clipSize = clipArea.getSize();
 
         Rect dstRect{0.0, 0.0, clipSize * transform.scale};
-        const Vec2 pos = transform.pos - cameraPos;
+        const Vec2 pos = camera::worldToScreen(transform.pos);
         dstRect.setTopLeft(pos - (dstRect.getSize() * anchor));
 
-        if (dstRect.getRight() < 0.0 || dstRect.x >= rendRes.x || dstRect.getBottom() < 0.0 ||
-            dstRect.y >= rendRes.y)
+        const double renderAngle = transform.angle + cameraAngle;
+
+        const Rect cullRect = _rotatedBounds(dstRect, renderAngle, pivot);
+        if (cullRect.getRight() < 0.0 || cullRect.x >= rendRes.x || cullRect.getBottom() < 0.0 ||
+            cullRect.y >= rendRes.y)
             continue;
 
         const auto dstSDLRect = static_cast<SDL_FRect>(dstRect);
         const auto pivotPoint = static_cast<SDL_FPoint>(dstRect.getSize() * pivot);
 
         if (!SDL_RenderTextureRotated(
-                _renderer, texture.getSDL(), &srcSDLRect, &dstSDLRect, TO_DEGREES(transform.angle),
+                _renderer, texture.getSDL(), &srcSDLRect, &dstSDLRect, TO_DEGREES(renderAngle),
                 &pivotPoint, flipAxis
             ))
         {
@@ -532,8 +599,8 @@ void drawBatchNDArray(
     const Vec2& pivot, Batcher* batcher
 )
 {
-    if (!texture.getSDL())
-        throw std::runtime_error("Invalid texture provided for drawing");
+    if (!texture.hasUsage(TextureUsage::Drawable))
+        throw std::runtime_error("Texture is not drawable");
 
     const size_t n = arr.shape(0);
     const size_t cols = arr.shape(1);
@@ -556,6 +623,8 @@ void drawBatchNDArray(
         return;
 
     const Vec2 cameraPos = camera::getActivePos();
+    const double cameraAngle = camera::getActiveAngle();
+
     const Vec2 rendRes = getCurrentResolution();
     SDL_Texture* sdlTexture = texture.getSDL();
 
@@ -599,7 +668,7 @@ void drawBatchNDArray(
     {
         const double* row = data + i * cols;
         const Vec2 pos = Vec2{row[0], row[1]} - cameraPos;
-        const double angle = (cols >= 3) ? row[2] : 0.0;
+        const double angle = ((cols >= 3) ? row[2] : 0.0) + cameraAngle;
 
         Vec2 scale{1.0};
         if (cols >= 4)
@@ -621,8 +690,9 @@ void drawBatchNDArray(
         Rect dstRect{0.0, 0.0, clipSize * scale};
         dstRect.setTopLeft(pos - (dstRect.getSize() * anchor));
 
-        if (dstRect.getRight() < 0.0 || dstRect.x >= rendRes.x || dstRect.getBottom() < 0.0 ||
-            dstRect.y >= rendRes.y)
+        const Rect cullRect = _rotatedBounds(dstRect, angle, pivot);
+        if (cullRect.getRight() < 0.0 || cullRect.x >= rendRes.x || cullRect.getBottom() < 0.0 ||
+            cullRect.y >= rendRes.y)
             continue;
 
         float u1, v1, u2, v2;
@@ -710,11 +780,11 @@ void _bind(nb::module_& module)
     using namespace nb::literals;
 
     nb::enum_<RenderBackend>(module, "RenderBackend")
-        .value("AUTO", RenderBackend::Auto)
-        .value("LEGACY", RenderBackend::Legacy)
-        .value("VULKAN", RenderBackend::Vulkan)
-        .value("METAL", RenderBackend::Metal)
-        .value("DIRECT3D12", RenderBackend::Direct3d12);
+        .value("AUTO", RenderBackend::Auto, "Auto select the best available GPU backend.")
+        .value("LEGACY", RenderBackend::Legacy, "Use the legacy OpenGL backend.")
+        .value("VULKAN", RenderBackend::Vulkan, "Use the Vulkan backend.")
+        .value("METAL", RenderBackend::Metal, "Use the Metal backend.")
+        .value("DIRECT3D12", RenderBackend::Direct3d12, "Use the Direct3D 12 backend.");
 
     auto subRenderer = module.def_submodule("renderer", "Functions for rendering graphics");
 
@@ -733,18 +803,18 @@ Args:
 Free the allocated internal memory.
         )doc");
 
-    subRenderer.def("set_default_scale_mode", &setDefaultScaleMode, "scale_mode"_a, R"doc(
-Set the default TextureScaleMode for new textures. The factory default is TextureScaleMode.LINEAR.
+    subRenderer.def("set_default_filter_mode", &setDefaultFilterMode, "filter"_a, R"doc(
+Set the default FilterMode for new textures. The factory default is FilterMode::Default.
 
 Args:
-    scale_mode (TextureScaleMode): The default scaling/filtering mode to use for new textures.
+    filter (FilterMode): The default scaling/filtering mode to use for new textures.
     )doc");
 
-    subRenderer.def("get_default_scale_mode", &getDefaultScaleMode, R"doc(
-Get the current default TextureScaleMode for new textures.
+    subRenderer.def("get_default_filter_mode", &getDefaultFilterMode, R"doc(
+Get the current default FilterMode for new textures.
 
 Returns:
-    TextureScaleMode: The current default scaling/filtering mode.
+    FilterMode: The current default scaling/filtering mode.
     )doc");
 
     subRenderer.def("clear", &clear, "color"_a = Color{}, R"doc(
@@ -780,13 +850,11 @@ Unset any previously configured virtual resolution and restore rendering directl
     )doc");
 
     subRenderer.def("set_render_backend", &setRenderBackend, "backend"_a, R"doc(
-Set the renderer backend to use for future initialization. This must be called before creating the window/renderer.
+Set the renderer backend to use for future initialization.
+This must be called before creating the window/renderer, otherwise it will have no effect.
 
 Args:
     backend (RenderBackend): One of the RenderBackend enum values.
-
-Notes:
-    Calling this after the renderer has been created has no effect.
     )doc");
 
     subRenderer.def("get_virtual_resolution", &getVirtualResolution, R"doc(
@@ -837,37 +905,27 @@ Args:
         )doc"
     );
 
-    subRenderer
-        .def("draw", nb::overload_cast<const Texture&, Rect>(&draw), "texture"_a, "dst"_a, R"doc(
-Render a texture stretched into a destination rectangle.
+    subRenderer.def(
+        "draw", nb::overload_cast<const Texture&, Rect, double, const Vec2&>(&draw), "texture"_a,
+        "dst"_a, "angle"_a = 0.0, "pivot"_a = Anchor::CENTER, R"doc(
+Render a texture stretched into a destination rectangle without a camera's transform applied.
 
 This is a simpler alternative to the transform-based draw when you only
-need to place a texture at a specific screen rectangle without rotation.
+need to place a texture at a specific screen rectangle.
 The source region is determined by the texture's clip area.
 
 Args:
     texture (Texture): The texture to render.
     dst (Rect): Destination rectangle on screen.
-        )doc");
-
-    subRenderer.def("read_pixels", &readPixels, "src"_a = Rect{}, R"doc(
-Read pixel data from the renderer within the specified rectangle.
-
-Args:
-    src (Rect, optional): The rectangle area to read pixels from.
-        Defaults to entire renderer if None or area has no width or height.
-
-Returns:
-    PixelArray: An array containing the pixel data.
-
-Raises:
-    RuntimeError: If reading pixels fails.
-        )doc");
+    angle (float, optional): The rotation angle in degrees. Defaults to 0.0.
+    pivot (Vec2, optional): The rotation pivot (0.0-1.0). Defaults to center (0.5, 0.5).
+        )doc"
+    );
 
     subRenderer.def(
         "draw_9slice", &draw9Slice, "texture"_a, "dst"_a, "slice"_a, "anchor"_a = Anchor::TOP_LEFT,
         "pivot"_a = Anchor::CENTER, R"doc(
-Render a texture using 9-slice scaling (9-grid).
+Render a texture using 9-slice scaling (9-grid). The camera's transform is not applied to this draw.
 
 This divides the texture into 9 regions: 4 corners (unscaled), 4 edges (scaled in one axis),
 and 1 center (scaled in both axes).
@@ -875,8 +933,7 @@ and 1 center (scaled in both axes).
 Args:
     texture (Texture): The source texture.
     dst (Rect): The destination rectangle on screen.
-    slice (Rect): A rectangle defining the slice widths/heights.
-                 x = left_width, y = top_height, w = right_width, h = bottom_height.
+    slice (Rect): A rectangle defining the slice widths/heights (left_width, top_height, right_width, bottom_height).
     anchor (Vec2, optional): The anchor point. Defaults to top left.
     pivot (Vec2, optional): The rotation pivot. Defaults to center.
         )doc"
@@ -928,6 +985,20 @@ Raises:
     ValueError: If the array does not have 2, 3, 4, 5, or 9 columns.
         )doc"
     );
+
+    subRenderer.def("read_pixels", &readPixels, "src"_a = Rect{}, R"doc(
+Read pixel data from the renderer within the specified rectangle.
+
+Args:
+    src (Rect, optional): The rectangle area to read pixels from.
+        Defaults to entire renderer if None or area has no width or height.
+
+Returns:
+    PixelArray: An array containing the pixel data.
+
+Raises:
+    RuntimeError: If reading pixels fails.
+        )doc");
 }
 #endif  // KRAKEN_ENABLE_PYTHON
 

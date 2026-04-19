@@ -6,6 +6,7 @@ def main():
     stub_dir = pathlib.Path(sys.argv[1])
 
     for p in stub_dir.rglob('*.pyi'):
+        content = ""
         content = p.read_text('utf-8')
 
         # 1. Fix the generic PathLike missing type across ALL files

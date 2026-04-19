@@ -23,7 +23,7 @@ Polygon::Polygon(const std::vector<Vec2>& points)
 {
 }
 
-Polygon::Polygon(const uint32_t n, const double radius)
+Polygon::Polygon(const uint32_t n, const double radius, const Vec2& centroid)
 {
     if (n == 0)
         return;
@@ -35,6 +35,8 @@ Polygon::Polygon(const uint32_t n, const double radius)
         const double angle = i * angleStep;
         points.emplace_back(radius * std::cos(angle), radius * std::sin(angle));
     }
+
+    setCentroid(centroid);
 }
 
 Polygon Polygon::copy() const
@@ -68,7 +70,7 @@ double Polygon::getArea() const
     {
         const Vec2& current = points[i];
         const Vec2& next = points[(i + 1) % points.size()];
-        sum += current.x * next.y - next.x * current.y;
+        sum += math::cross(current, next);
     }
 
     return std::abs(sum) * 0.5;
@@ -82,41 +84,39 @@ Vec2 Polygon::getCentroid() const
 
     if (n == 1)
         return points[0];
-
     if (n == 2)
         return {(points[0].x + points[1].x) * 0.5, (points[0].y + points[1].y) * 0.5};
 
-    double cx = 0.0;
-    double cy = 0.0;
+    Vec2 centroid{0.0, 0.0};
     double signedArea = 0.0;
 
     for (size_t i = 0; i < n; ++i)
     {
         const Vec2& current = points[i];
         const Vec2& next = points[(i + 1) % n];
-        double cross = current.x * next.y - next.x * current.y;
+        const double cross = math::cross(current, next);
         signedArea += cross;
-        cx += (current.x + next.x) * cross;
-        cy += (current.y + next.y) * cross;
+        centroid += (current + next) * cross;
     }
 
     signedArea *= 0.5;
     if (std::abs(signedArea) < 1e-10)
     {
-        double sumX = 0.0;
-        double sumY = 0.0;
+        Vec2 sum{0.0, 0.0};
         for (const auto& point : points)
-        {
-            sumX += point.x;
-            sumY += point.y;
-        }
-        return {sumX / n, sumY / n};
+            sum += point;
+        return sum / n;
     }
 
-    cx /= (6.0 * signedArea);
-    cy /= (6.0 * signedArea);
+    centroid /= (6.0 * signedArea);
+    return centroid;
+}
 
-    return {cx, cy};
+void Polygon::setCentroid(const Vec2& centroid)
+{
+    const Vec2 currentCentroid = getCentroid();
+    const Vec2 offset = centroid - currentCentroid;
+    move(offset);
 }
 
 bool Polygon::isConvex() const
@@ -134,7 +134,7 @@ bool Polygon::isConvex() const
         const Vec2& p2 = points[(i + 1) % n];
         const Vec2& p3 = points[(i + 2) % n];
 
-        double cp = (p2.x - p1.x) * (p3.y - p2.y) - (p2.y - p1.y) * (p3.x - p2.x);
+        double cp = math::cross(p2 - p1, p3 - p2);
         if (std::abs(cp) > 1e-10)  // Ignore very small cross products
         {
             if (!initialized)
@@ -148,6 +148,7 @@ bool Polygon::isConvex() const
             }
         }
     }
+
     return true;
 }
 
@@ -177,28 +178,17 @@ Rect Polygon::getRect() const
     return {minX, minY, maxX - minX, maxY - minY};
 }
 
-void Polygon::rotate(double angle, const Vec2& pivot)
+void Polygon::rotate(double angle)
 {
-    const Rect bounds = getRect();
-    const Vec2 absPivot = bounds.getTopLeft() + bounds.getSize() * pivot;
-
-    const double cosA = std::cos(angle);
-    const double sinA = std::sin(angle);
-
+    const Vec2 absPivot = getCentroid();
     for (auto& point : points)
-    {
-        const double dx = point.x - absPivot.x;
-        const double dy = point.y - absPivot.y;
-
-        point.x = absPivot.x + dx * cosA - dy * sinA;
-        point.y = absPivot.y + dx * sinA + dy * cosA;
-    }
+        point = absPivot + (point - absPivot).rotated(angle);
 }
 
-Polygon Polygon::rotated(double angle, const Vec2& pivot) const
+Polygon Polygon::rotated(double angle) const
 {
     Polygon p = *this;
-    p.rotate(angle, pivot);
+    p.rotate(angle);
     return p;
 }
 
@@ -215,41 +205,31 @@ Polygon Polygon::moved(const Vec2& offset) const
     return p;
 }
 
-void Polygon::scaleBy(double factor, const Vec2& pivot)
+void Polygon::scaleBy(double factor)
 {
-    const Rect bounds = getRect();
-    const Vec2 absPivot = bounds.getTopLeft() + bounds.getSize() * pivot;
-
+    const Vec2 absPivot = getCentroid();
     for (auto& point : points)
-    {
-        point.x = absPivot.x + (point.x - absPivot.x) * factor;
-        point.y = absPivot.y + (point.y - absPivot.y) * factor;
-    }
+        point = absPivot + (point - absPivot) * factor;
 }
 
-void Polygon::scaleBy(const Vec2& factor, const Vec2& pivot)
+void Polygon::scaleBy(const Vec2& factor)
 {
-    const Rect bounds = getRect();
-    const Vec2 absPivot = bounds.getTopLeft() + bounds.getSize() * pivot;
-
+    const Vec2 absPivot = getCentroid();
     for (auto& point : points)
-    {
-        point.x = absPivot.x + (point.x - absPivot.x) * factor.x;
-        point.y = absPivot.y + (point.y - absPivot.y) * factor.y;
-    }
+        point = absPivot + (point - absPivot) * factor;
 }
 
-Polygon Polygon::scaledBy(double factor, const Vec2& pivot) const
+Polygon Polygon::scaledBy(double factor) const
 {
     Polygon p = *this;
-    p.scaleBy(factor, pivot);
+    p.scaleBy(factor);
     return p;
 }
 
-Polygon Polygon::scaledBy(const Vec2& factor, const Vec2& pivot) const
+Polygon Polygon::scaledBy(const Vec2& factor) const
 {
     Polygon p = *this;
-    p.scaleBy(factor, pivot);
+    p.scaleBy(factor);
     return p;
 }
 
@@ -275,17 +255,28 @@ Create a polygon from a vector of Vec2 points.
 Args:
     points (Sequence[Vec2]): List of Vec2 points defining the polygon vertices.
         )doc")
-        .def(nb::init<uint32_t, double>(), "n"_a, "radius"_a, R"doc(
+        .def(
+            nb::init<uint32_t, double, const Vec2&>(), "n"_a, "radius"_a, "centroid"_a = Vec2::ZERO,
+            R"doc(
 Create a regular polygon with n sides inscribed in a circle of the given radius.
 
 Args:
     n (int): The number of sides (vertices) of the regular polygon.
     radius (float): The radius of the circumscribed circle for the regular polygon.
-        )doc")
+    centroid (Vec2, optional): The center point of the polygon. Defaults to (0, 0).
+        )doc"
+        )
 
         .def_rw("points", &Polygon::points, R"doc(
 The list of Vec2 points that define the polygon vertices.
         )doc")
+        .def_prop_rw("centroid", &Polygon::getCentroid, &Polygon::setCentroid, R"doc(
+Get or set the centroid of the polygon.
+
+Returns:
+    Vec2: The center point of the polygon.
+        )doc")
+
         .def_prop_ro("perimeter", &Polygon::getPerimeter, R"doc(
 Get the perimeter of the polygon.
 
@@ -297,12 +288,6 @@ Get the area of the polygon.
 
 Returns:
     float: The area enclosed by the polygon.
-        )doc")
-        .def_prop_ro("centroid", &Polygon::getCentroid, R"doc(
-Get the centroid of the polygon.
-
-Returns:
-    Vec2: The center point of the polygon.
         )doc")
         .def_prop_ro("is_convex", &Polygon::isConvex, R"doc(
 Check if the polygon is convex.
@@ -329,22 +314,17 @@ Return a copy of the polygon.
 Returns:
     Polygon: A new polygon with the same points.
         )doc")
-        .def(
-            "rotate", &Polygon::rotate, "angle"_a, "pivot"_a = Anchor::CENTER,
-            R"doc(
-Rotate the polygon around a pivot point.
+        .def("rotate", &Polygon::rotate, "angle"_a, R"doc(
+Rotate the polygon around its centroid.
 
 Args:
     angle (float): The rotation angle in radians.
-    pivot (Vec2, optional): The normalized point relative to the polygon's bounding box to rotate around. Defaults to center (0.5, 0.5).
-        )doc"
-        )
-        .def("rotated", &Polygon::rotated, "angle"_a, "pivot"_a = Anchor::CENTER, R"doc(
+        )doc")
+        .def("rotated", &Polygon::rotated, "angle"_a, R"doc(
 Return a rotated copy of the polygon.
 
 Args:
     angle (float): The rotation angle in radians.
-    pivot (Vec2, optional): The normalized point relative to the polygon's bounding box to rotate around. Defaults to center (0.5, 0.5).
 
 Returns:
     Polygon: A new polygon that is a rotated version of this polygon.
@@ -356,49 +336,42 @@ Args:
     offset (Vec2): The offset to move by.
         )doc")
         .def(
-            "scale_by", nb::overload_cast<double, const Vec2&>(&Polygon::scaleBy), "factor"_a,
-            "pivot"_a = Anchor::CENTER,
+            "scale_by", nb::overload_cast<double>(&Polygon::scaleBy), "factor"_a,
             R"doc(
-Scale the polygon uniformly from a pivot point.
+Scale the polygon uniformly from its centroid.
 
 Args:
     factor (float): The scaling factor.
-    pivot (Vec2, optional): The normalized point relative to the polygon's bounding box to scale from. Defaults to center (0.5, 0.5).
         )doc"
         )
         .def(
-            "scale_by", nb::overload_cast<const Vec2&, const Vec2&>(&Polygon::scaleBy), "factor"_a,
-            "pivot"_a = Anchor::CENTER,
+            "scale_by", nb::overload_cast<const Vec2&>(&Polygon::scaleBy), "factor"_a,
             R"doc(
-Scale the polygon non-uniformly from a pivot point.
+Scale the polygon non-uniformly from its centroid.
 
 Args:
     factor (Vec2): The scaling factors for x and y.
-    pivot (Vec2, optional): The normalized point relative to the polygon's bounding box to scale from. Defaults to center (0.5, 0.5).
         )doc"
         )
         .def(
-            "scaled_by", nb::overload_cast<double, const Vec2&>(&Polygon::scaledBy, nb::const_),
-            "factor"_a, "pivot"_a = Anchor::CENTER, R"doc(
+            "scaled_by", nb::overload_cast<double>(&Polygon::scaledBy, nb::const_), "factor"_a,
+            R"doc(
 Return a uniformly scaled copy of the polygon.
 
 Args:
     factor (float): The scaling factor.
-    pivot (Vec2, optional): The normalized point relative to the polygon's bounding box to scale from. Defaults to center (0.5, 0.5).
 
 Returns:
     Polygon: A new polygon that is a scaled version of this polygon.
         )doc"
         )
         .def(
-            "scaled_by",
-            nb::overload_cast<const Vec2&, const Vec2&>(&Polygon::scaledBy, nb::const_), "factor"_a,
-            "pivot"_a = Anchor::CENTER, R"doc(
+            "scaled_by", nb::overload_cast<const Vec2&>(&Polygon::scaledBy, nb::const_), "factor"_a,
+            R"doc(
 Return a non-uniformly scaled copy of the polygon.
 
 Args:
     factor (Vec2): The scaling factors for x and y.
-    pivot (Vec2, optional): The normalized point relative to the polygon's bounding box to scale from. Defaults to center (0.5, 0.5).
 
 Returns:
     Polygon: A new polygon that is a scaled version of this polygon.

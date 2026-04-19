@@ -1,6 +1,6 @@
 [project]
 name = "kraken-engine"
-version = "1.7.1"
+version = "1.7.2"
 description = "Python bindings for Kraken Engine"
 readme = "README.md"
 requires-python = ">=3.12"

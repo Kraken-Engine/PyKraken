@@ -22,7 +22,6 @@ namespace kn
 {
 class Texture;
 class PixelArray;
-enum class TextureScaleMode;
 
 enum class RenderBackend
 {
@@ -61,8 +60,8 @@ Vec2 getOutputResolution();
 
 PixelArray readPixels(const Rect& src = {});
 
-void setDefaultScaleMode(TextureScaleMode scaleMode);
-TextureScaleMode getDefaultScaleMode();
+void setDefaultFilterMode(FilterMode filter);
+FilterMode getDefaultFilterMode();
 
 void setTarget(const Texture* target);
 
@@ -71,11 +70,13 @@ void draw(
     const Vec2& pivot = Anchor::CENTER
 );
 
-void draw(const Texture& texture, Rect dst);
+void draw(
+    const Texture& texture, Rect dst, double angle = 0.0, const Vec2& pivot = Anchor::CENTER
+);
 
 void draw9Slice(
-    const Texture& texture, Rect dst, const Rect& slice, const Vec2& anchor = Anchor::TOP_LEFT,
-    const Vec2& pivot = Anchor::CENTER
+    const Texture& texture, const Rect& dst, const Rect& slice,
+    const Vec2& anchor = Anchor::TOP_LEFT, const Vec2& pivot = Anchor::CENTER
 );
 
 void drawBatch(

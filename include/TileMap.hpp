@@ -127,7 +127,7 @@ class Layer
     Layer() = default;
     virtual ~Layer() = default;
 
-    virtual void draw() = 0;
+    virtual void draw(double angle = 0.0, const Vec2& pivot = Vec2{0.5, 0.5}) = 0;
     virtual void setOpacity(double value) = 0;
     virtual double getOpacity() const = 0;
 
@@ -181,10 +181,11 @@ class TileLayer : public Layer
     ~TileLayer() = default;
 
     [[nodiscard]] const std::vector<Tile>& getTiles() const;
+
     [[nodiscard]] std::vector<TileResult> getFromArea(const Rect& area) const;
     [[nodiscard]] std::optional<TileResult> getFromPoint(const Vec2& position) const;
 
-    void draw() override;
+    void draw(double angle = 0.0, const Vec2& pivot = Vec2{0.5, 0.5}) override;
     void setOpacity(double value) override;
     double getOpacity() const override;
 
@@ -250,7 +251,7 @@ class ObjectGroup : public Layer
 
     [[nodiscard]] tmx::ObjectGroup::DrawOrder getDrawOrder() const;
     [[nodiscard]] const std::vector<MapObject>& getObjects() const;
-    void draw() override;
+    void draw(double angle = 0.0, const Vec2& pivot = Vec2{0.5, 0.5}) override;
     void setOpacity(double value) override;
     double getOpacity() const override;
 
@@ -270,7 +271,7 @@ class ImageLayer : public Layer
     ~ImageLayer() = default;
 
     [[nodiscard]] std::shared_ptr<Texture> getTexture() const;
-    void draw() override;
+    void draw(double angle = 0.0, const Vec2& pivot = Vec2{0.5, 0.5}) override;
     void setOpacity(double value) override;
     double getOpacity() const override;
 
@@ -285,10 +286,10 @@ class Map
   public:
     Color backgroundColor{};
 
-    Map() = default;
+    Map(const std::filesystem::path& tmxPath = "");
     ~Map() = default;
 
-    void draw();
+    void draw(double angle = 0.0, const Vec2& pivot = Vec2{0.5, 0.5});
     void load(const std::filesystem::path& tmxPath);
 
     [[nodiscard]] tmx::Orientation getOrientation() const;
