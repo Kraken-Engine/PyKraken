@@ -26,25 +26,6 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
 
-      - name: Setup ccache / sccache (Host)
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          # MSVC requires sccache. macOS uses standard ccache.
-          variant: ${{ runner.os == 'Windows' && 'sccache' || 'ccache' }}
-          key: ${{ runner.os }}-cibw-cache-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-cibw-cache-
-          max-size: 5G
-
-      - name: Setup ccache (Linux Container)
-        if: runner.os == 'Linux'
-        uses: actions/cache@v4
-        with:
-          path: .ccache
-          key: Linux-cibw-cache-${{ github.sha }}
-          restore-keys: |
-            Linux-cibw-cache-
-
       - name: Setup vcpkg Cache (Linux Container)
         if: runner.os == 'Linux'
         uses: actions/cache@v4
@@ -57,7 +38,6 @@ jobs:
       - name: Create Cache Directories (Linux)
         if: runner.os == 'Linux'
         run: |
-          mkdir -p .ccache
           mkdir -p .vcpkg_cache
 
       - name: Set up vcpkg
@@ -88,8 +68,6 @@ jobs:
             VCPKG_ROOT=C:/vcpkg
             VCPKG_DEFAULT_TRIPLET=x64-windows-release
             CMAKE_GENERATOR=Ninja
-            CMAKE_C_COMPILER_LAUNCHER=sccache
-            CMAKE_CXX_COMPILER_LAUNCHER=sccache
             VCPKG_KEEP_PDB=0
 
           # --- macOS ---
@@ -99,16 +77,14 @@ jobs:
             CXX=clang++
             MACOSX_DEPLOYMENT_TARGET=15.0
             CMAKE_GENERATOR=Ninja
-            CMAKE_C_COMPILER_LAUNCHER=ccache
-            CMAKE_CXX_COMPILER_LAUNCHER=ccache
             VCPKG_ROOT=/Users/runner/work/vcpkg
             VCPKG_DEFAULT_TRIPLET=arm64-osx-release
 
           # --- Linux ---
           CIBW_MANYLINUX_X86_64_IMAGE: "manylinux_2_28"
           CIBW_BEFORE_ALL_LINUX: >
-            dnf -y install
-            ninja-build ccache git curl zip unzip tar
+            dnf -y install gcc gcc-c++
+            ninja-build git curl zip unzip tar
             alsa-lib-devel pipewire-devel pulseaudio-libs-devel
             libX11-devel libXext-devel libXft-devel
             libXrandr-devel libXcursor-devel libXi-devel libXinerama-devel libXfixes-devel libXScrnSaver-devel libXtst-devel
@@ -125,10 +101,7 @@ jobs:
           CIBW_ENVIRONMENT_LINUX: >
             CC=gcc
             CXX=g++
-            CCACHE_DIR=/project/.ccache
             CMAKE_GENERATOR=Ninja
-            CMAKE_C_COMPILER_LAUNCHER=ccache
-            CMAKE_CXX_COMPILER_LAUNCHER=ccache
             VCPKG_ROOT=/opt/vcpkg
             VCPKG_DEFAULT_TRIPLET=x64-linux-release
             VCPKG_DEFAULT_BINARY_CACHE=/project/.vcpkg_cache
