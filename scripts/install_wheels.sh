@@ -14,7 +14,7 @@ else
     exit 1
 fi
 
-echo "--- Installing dev-requirements ---"
-if [ -f "dev-requirements.txt" ]; then
-    pip install -r dev-requirements.txt
+echo "--- Installing requirements ---"
+if [ -f "requirements.txt" ]; then
+    pip install -r requirements.txt
 fi

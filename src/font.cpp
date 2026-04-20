@@ -29,7 +29,7 @@ Font::Font(const std::filesystem::path& fileDir, int ptSize)
     if (ptSize < 8)
         ptSize = 8;
 
-    if (fileDir.string() == "kraken-clean")
+    if (fileDir.string() == "kraken-modern")
     {
         SDL_IOStream* rw = SDL_IOFromMem(SpaceGrotesk_ttf, SpaceGrotesk_ttf_len);
         m_font = TTF_OpenFontIO(rw, true, static_cast<float>(ptSize));
@@ -317,7 +317,7 @@ This class wraps an SDL_ttf font and manages font properties like size,
 style, and alignment. You can load fonts from a file path or use one of
 the built-in typefaces:
 
-- "kraken-clean": A clean sans-serif font bundled with the engine.
+- "kraken-modern": A modern sans-serif font bundled with the engine.
 - "kraken-retro": A pixel/retro font bundled with the engine. Point size is
                   rounded to the nearest multiple of 8 for crisp rendering.
 
@@ -332,7 +332,7 @@ Create a Font.
 
 Args:
     file_dir (str | os.PathLike[str]): Path to a .ttf font file, or one of the built-in names
-                    "kraken-clean" or "kraken-retro".
+                    "kraken-modern" or "kraken-retro".
     pt_size (int): The point size. Values below 8 are clamped to 8. For
                    "kraken-retro", the size is rounded to the nearest multiple
                    of 8 to preserve pixel alignment.

@@ -28,6 +28,101 @@ namespace kn::draw
 {
 SDL_Renderer* rend = nullptr;
 
+// Line helper for thick lines
+void _thickLine(const Line& line, const Color& color, double thickness);
+
+namespace
+{
+bool isScreenAabbVisible(
+    const double minX, const double minY, const double maxX, const double maxY,
+    const Vec2& renderSize
+)
+{
+    return !(maxX < 0.0 || maxY < 0.0 || minX >= renderSize.x || minY >= renderSize.y);
+}
+
+bool arePointsVisible(const std::vector<Vec2>& points, const Vec2& renderSize)
+{
+    if (points.empty())
+        return false;
+
+    auto [minX, minY] = points.front();
+    auto [maxX, maxY] = points.front();
+
+    for (const Vec2& point : points)
+    {
+        minX = std::min(minX, point.x);
+        minY = std::min(minY, point.y);
+        maxX = std::max(maxX, point.x);
+        maxY = std::max(maxY, point.y);
+    }
+
+    return isScreenAabbVisible(minX, minY, maxX, maxY, renderSize);
+}
+
+std::vector<Vec2> toScreenPoints(const std::vector<Vec2>& worldPoints)
+{
+    std::vector<Vec2> screenPoints;
+    screenPoints.reserve(worldPoints.size());
+
+    for (const Vec2& worldPoint : worldPoints)
+        screenPoints.push_back(camera::worldToScreen(worldPoint));
+
+    return screenPoints;
+}
+
+std::vector<Vec2> getEllipsePoints(
+    const Vec2& center, const double radiusX, const double radiusY, const int numSegments
+)
+{
+    const int segments = std::max(8, numSegments);
+
+    std::vector<Vec2> points;
+    points.reserve(static_cast<size_t>(segments));
+
+    for (int i = 0; i < segments; ++i)
+    {
+        const double theta = (2.0 * M_PI * static_cast<double>(i)) / static_cast<double>(segments);
+        points.push_back(center + Vec2(cos(theta) * radiusX, sin(theta) * radiusY));
+    }
+
+    return points;
+}
+
+void drawPolylineScreen(
+    const std::vector<Vec2>& points, const Color& color, const double thickness, const bool closed
+)
+{
+    if (points.size() < 2)
+        return;
+
+    if (thickness <= 1.0)
+    {
+        if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+            throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
+
+        std::vector<SDL_FPoint> sdlPoints;
+        sdlPoints.reserve(points.size() + (closed ? 1 : 0));
+        for (const Vec2& point : points)
+            sdlPoints.push_back(static_cast<SDL_FPoint>(point));
+
+        if (closed)
+            sdlPoints.push_back(sdlPoints.front());
+
+        if (!SDL_RenderLines(rend, sdlPoints.data(), static_cast<int>(sdlPoints.size())))
+            throw std::runtime_error("Failed to render polyline: " + std::string(SDL_GetError()));
+
+        return;
+    }
+
+    for (size_t i = 0; i < points.size() - 1; ++i)
+        _thickLine(Line(points[i], points[i + 1]), color, thickness);
+
+    if (closed)
+        _thickLine(Line(points.back(), points.front()), color, thickness);
+}
+}  // namespace
+
 // Ellipse helpers
 void _ellipseFilled(
     const Vec2& center, double radiusX, double radiusY, const Color& color, int numSegments
@@ -67,12 +162,13 @@ void circle(const Circle& circle, const Color& color, const double thickness, co
     if (circle.radius < 1.0 || color.a == 0)
         return;
 
-    const Vec2 cameraPos = camera::getActivePos();
     const Vec2 rendRes = renderer::getCurrentResolution();
 
-    const Vec2 center = circle.pos - cameraPos;
-    if (center.x + circle.radius < 0.0 || center.y + circle.radius < 0.0 ||
-        center.x - circle.radius >= rendRes.x || center.y - circle.radius >= rendRes.y)
+    const Vec2 center = camera::worldToScreen(circle.pos);
+    if (!isScreenAabbVisible(
+            center.x - circle.radius, center.y - circle.radius, center.x + circle.radius,
+            center.y + circle.radius, rendRes
+        ))
     {
         return;
     }
@@ -95,7 +191,6 @@ void circles(
     if (circles.empty() || color.a == 0)
         return;
 
-    const Vec2 cameraPos = camera::getActivePos();
     const Vec2 rendRes = renderer::getCurrentResolution();
 
     for (const Circle& circle : circles)
@@ -103,9 +198,11 @@ void circles(
         if (circle.radius < 1.0)
             continue;
 
-        const Vec2 center = circle.pos - cameraPos;
-        if (center.x + circle.radius < 0.0 || center.y + circle.radius < 0.0 ||
-            center.x - circle.radius >= rendRes.x || center.y - circle.radius >= rendRes.y)
+        const Vec2 center = camera::worldToScreen(circle.pos);
+        if (!isScreenAabbVisible(
+                center.x - circle.radius, center.y - circle.radius, center.x + circle.radius,
+                center.y + circle.radius, rendRes
+            ))
         {
             continue;
         }
@@ -131,21 +228,20 @@ void capsule(
     if (capsule.radius < 1.0 || color.a == 0)
         return;
 
-    const Vec2 cameraPos = camera::getActivePos();
     const Vec2 rendRes = renderer::getCurrentResolution();
 
-    const double radius = capsule.radius;
-    const Vec2 p1 = capsule.p1 - cameraPos;
-    const Vec2 p2 = capsule.p2 - cameraPos;
+    const double r = capsule.radius;
+    const Vec2 p1 = camera::worldToScreen(capsule.p1);
+    const Vec2 p2 = camera::worldToScreen(capsule.p2);
 
-    const double minX = std::min(p1.x, p2.x) - radius;
-    const double minY = std::min(p1.y, p2.y) - radius;
-    const double maxX = std::max(p1.x, p2.x) + radius;
-    const double maxY = std::max(p1.y, p2.y) + radius;
+    const double minX = std::min(p1.x, p2.x) - r;
+    const double minY = std::min(p1.y, p2.y) - r;
+    const double maxX = std::max(p1.x, p2.x) + r;
+    const double maxY = std::max(p1.y, p2.y) + r;
     if (maxX < 0.0 || maxY < 0.0 || minX >= rendRes.x || minY >= rendRes.y)
         return;
 
-    const bool filled = (thickness <= 0.0 || thickness >= radius);
+    const bool filled = (thickness <= 0.0 || thickness >= r);
     if (filled)
         _capsuleFilled(capsule, color, numSegments);
     else
@@ -160,7 +256,6 @@ void capsules(
     if (!rend)
         throw std::runtime_error("Renderer not yet initialized");
 
-    const Vec2 cameraPos = camera::getActivePos();
     const Vec2 rendRes = renderer::getCurrentResolution();
 
     for (const auto& c : capsules)
@@ -168,18 +263,18 @@ void capsules(
         if (c.radius < 1.0 || color.a == 0)
             continue;
 
-        const double radius = c.radius;
-        const Vec2 p1 = c.p1 - cameraPos;
-        const Vec2 p2 = c.p2 - cameraPos;
+        const double r = c.radius;
+        const Vec2 p1 = camera::worldToScreen(c.p1);
+        const Vec2 p2 = camera::worldToScreen(c.p2);
 
-        const double minX = std::min(p1.x, p2.x) - radius;
-        const double minY = std::min(p1.y, p2.y) - radius;
-        const double maxX = std::max(p1.x, p2.x) + radius;
-        const double maxY = std::max(p1.y, p2.y) + radius;
+        const double minX = std::min(p1.x, p2.x) - r;
+        const double minY = std::min(p1.y, p2.y) - r;
+        const double maxX = std::max(p1.x, p2.x) + r;
+        const double maxY = std::max(p1.y, p2.y) + r;
         if (maxX < 0.0 || maxY < 0.0 || minX >= rendRes.x || minY >= rendRes.y)
             continue;
 
-        const bool filled = (thickness <= 0.0 || thickness >= radius);
+        const bool filled = (thickness <= 0.0 || thickness >= r);
         if (filled)
             _capsuleFilled(c, color, numSegments);
         else
@@ -196,7 +291,7 @@ void point(Vec2 point, const Color& color)
         return;
 
     const Vec2 rendRes = renderer::getCurrentResolution();
-    point -= camera::getActivePos();
+    point = camera::worldToScreen(point);
     if (point.x < 0.0 || point.y < 0.0 || point.x >= rendRes.x || point.y >= rendRes.y)
         return;
 
@@ -221,11 +316,10 @@ void points(const std::vector<Vec2>& points, const Color& color)
     std::vector<SDL_FPoint> sdlPoints;
     sdlPoints.reserve(points.size());
 
-    const Vec2 cameraPos = camera::getActivePos();
     const Vec2 rendRes = renderer::getCurrentResolution();
     for (Vec2 point : points)
     {
-        point -= cameraPos;
+        point = camera::worldToScreen(point);
         if (point.x >= 0.0 && point.y >= 0.0 && point.x < rendRes.x && point.y < rendRes.y)
             sdlPoints.push_back(static_cast<SDL_FPoint>(point));
     }
@@ -261,11 +355,10 @@ void pointsFromNDArray(
 
     const auto* data = arr.data();
     const Vec2 rendRes = renderer::getCurrentResolution();
-    const Vec2 cameraPos = camera::getActivePos();
     for (size_t i = 0; i < n; ++i)
     {
         Vec2 pos = {data[i * 2], data[i * 2 + 1]};
-        pos -= cameraPos;
+        pos = camera::worldToScreen(pos);
         if (pos.x >= 0.0 && pos.y >= 0.0 && pos.x < rendRes.x && pos.y < rendRes.y)
             sdlPoints.push_back(static_cast<SDL_FPoint>(pos));
     }
@@ -283,19 +376,21 @@ void ellipse(Rect bounds, const Color& color, const double thickness, const int 
     if (bounds.w < 1 || bounds.h < 1 || color.a == 0)
         return;
 
-    const Vec2 center = bounds.getCenter() - camera::getActivePos();
+    const Vec2 center = bounds.getCenter();
     const double radiusX = bounds.w / 2.0;
     const double radiusY = bounds.h / 2.0;
+    const std::vector<Vec2> screenPoints = toScreenPoints(
+        getEllipsePoints(center, radiusX, radiusY, numSegments)
+    );
+
+    if (!arePointsVisible(screenPoints, renderer::getCurrentResolution()))
+        return;
 
     const bool filled = (thickness <= 0.0 || (thickness >= radiusX && thickness >= radiusY));
     if (filled)
-    {
-        _ellipseFilled(center, radiusX, radiusY, color, numSegments);
-    }
+        _polygonFilled(Polygon(screenPoints), color);
     else
-    {
-        _ellipseOutline(center, radiusX, radiusY, color, thickness, numSegments);
-    }
+        drawPolylineScreen(screenPoints, color, thickness, true);
 }
 
 void ellipses(
@@ -309,24 +404,25 @@ void ellipses(
     if (bounds.empty() || color.a == 0)
         return;
 
-    const Vec2 cameraPos = camera::getActivePos();
     for (const auto& rect : bounds)
     {
         if (rect.w < 1 || rect.h < 1)
             continue;
 
-        const Vec2 center = rect.getCenter() - cameraPos;
+        const Vec2 center = rect.getCenter();
         const double radiusX = rect.w / 2.0;
         const double radiusY = rect.h / 2.0;
+        const std::vector<Vec2> screenPoints = toScreenPoints(
+            getEllipsePoints(center, radiusX, radiusY, numSegments)
+        );
+
+        if (!arePointsVisible(screenPoints, renderer::getCurrentResolution()))
+            continue;
 
         if (thickness <= 0.0 || (thickness >= radiusX && thickness >= radiusY))
-        {
-            _ellipseFilled(center, radiusX, radiusY, color, numSegments);
-        }
+            _polygonFilled(Polygon(screenPoints), color);
         else
-        {
-            _ellipseOutline(center, radiusX, radiusY, color, thickness, numSegments);
-        }
+            drawPolylineScreen(screenPoints, color, thickness, true);
     }
 }
 
@@ -338,22 +434,22 @@ void line(Line line, const Color& color, const double thickness)
     if (color.a == 0)
         return;
 
-    const Vec2 cameraPos = camera::getActivePos();
-    line.move(-cameraPos);
+    const Vec2 screenA = line.getA();
+    const Vec2 screenB = line.getB();
 
     if (thickness <= 1.0)
     {
-        const auto a = static_cast<SDL_FPoint>(line.getA());
-        const auto b = static_cast<SDL_FPoint>(line.getB());
+        const auto a = static_cast<SDL_FPoint>(screenA);
+        const auto b = static_cast<SDL_FPoint>(screenB);
+
         if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
             throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
-
         if (!SDL_RenderLine(rend, a.x, a.y, b.x, b.y))
             throw std::runtime_error("Failed to render line: " + std::string(SDL_GetError()));
     }
     else
     {
-        _thickLine(line, color, thickness);
+        _thickLine({screenA, screenB}, color, thickness);
     }
 }
 
@@ -365,28 +461,30 @@ void lines(const std::vector<Line>& lines, const Color& color, const double thic
     if (lines.empty() || color.a == 0)
         return;
 
-    const Vec2 cameraPos = camera::getActivePos();
     if (thickness <= 1.0)
     {
         if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
             throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
 
-        for (auto line : lines)
+        for (const auto& line : lines)
         {
-            line.move(-cameraPos);
-            const auto a = static_cast<SDL_FPoint>(line.getA());
-            const auto b = static_cast<SDL_FPoint>(line.getB());
+            const auto a = static_cast<SDL_FPoint>(camera::worldToScreen(line.getA()));
+            const auto b = static_cast<SDL_FPoint>(camera::worldToScreen(line.getB()));
+
             if (!SDL_RenderLine(rend, a.x, a.y, b.x, b.y))
                 throw std::runtime_error("Failed to render line: " + std::string(SDL_GetError()));
         }
     }
     else
     {
-        for (auto line : lines)
-        {
-            line.move(-cameraPos);
-            _thickLine(line, color, thickness);
-        }
+        for (const auto& line : lines)
+            _thickLine(
+                {
+                    camera::worldToScreen(line.getA()),
+                    camera::worldToScreen(line.getB()),
+                },
+                color, thickness
+            );
     }
 }
 
@@ -401,18 +499,6 @@ void rect(
     if (color.a == 0 || rect.w < 1.0 || rect.h < 1.0)
         return;
 
-    if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
-        throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
-
-    rect.setTopLeft(rect.getTopLeft() - camera::getActivePos());
-
-    const Vec2 rendRes = renderer::getCurrentResolution();
-    if (rect.getRight() < 0.0 || rect.getBottom() < 0.0 || rect.x >= rendRes.x ||
-        rect.y >= rendRes.y)
-    {
-        return;
-    }
-
     if (radiusTopLeft < 0.0)
         radiusTopLeft = borderRadius;
     if (radiusTopRight < 0.0)
@@ -422,7 +508,8 @@ void rect(
     if (radiusBottomLeft < 0.0)
         radiusBottomLeft = borderRadius;
 
-    // If has any rounded corners, use polygon rendering
+    std::vector<Vec2> worldPoints;
+
     if (radiusTopLeft > 0.0 || radiusTopRight > 0.0 || radiusBottomRight > 0.0 ||
         radiusBottomLeft > 0.0)
     {
@@ -433,53 +520,22 @@ void rect(
             std::clamp(radiusBottomRight, 0.0, maxRadius),
             std::clamp(radiusBottomLeft, 0.0, maxRadius),
         };
-
-        if (thickness <= 0 || thickness > rect.w / 2.0 || thickness > rect.h / 2.0)
-        {
-            _polygonFilled(_roundedRectPolygon(rect, radii), color);
-            return;
-        }
-
-        for (int i = 0; i < thickness; ++i)
-        {
-            Rect insetRect = rect;
-            insetRect.inflate({-2.0 * i, -2.0 * i});
-            if (insetRect.w <= 0.0 || insetRect.h <= 0.0)
-                break;
-
-            const std::array<double, 4> insetRadii = {
-                std::max(0.0, radiusTopLeft - i),
-                std::max(0.0, radiusTopRight - i),
-                std::max(0.0, radiusBottomRight - i),
-                std::max(0.0, radiusBottomLeft - i),
-            };
-            _roundedRectOutline(insetRect, color, insetRadii);
-        }
-
-        return;
+        worldPoints = _roundedRectPolygon(rect, radii).points;
+    }
+    else
+    {
+        const auto corners = rect.getCorners();
+        worldPoints.insert(worldPoints.end(), corners.begin(), corners.end());
     }
 
-    auto sdlRect = static_cast<SDL_FRect>(rect);
+    std::vector<Vec2> screenPoints = toScreenPoints(worldPoints);
+    if (!arePointsVisible(screenPoints, renderer::getCurrentResolution()))
+        return;
 
     if (thickness <= 0 || thickness > rect.w / 2.0 || thickness > rect.h / 2.0)
-    {
-        if (!SDL_RenderFillRect(rend, &sdlRect))
-            throw std::runtime_error(
-                "Failed to render filled rectangle: " + std::string(SDL_GetError())
-            );
-        return;
-    }
-
-    if (!SDL_RenderRect(rend, &sdlRect))
-        throw std::runtime_error("Failed to render rectangle: " + std::string(SDL_GetError()));
-
-    for (int i = 1; i < thickness; i++)
-    {
-        rect.inflate({-2, -2});
-        sdlRect = static_cast<SDL_FRect>(rect);
-        if (!SDL_RenderRect(rend, &sdlRect))
-            throw std::runtime_error("Failed to render rectangle: " + std::string(SDL_GetError()));
-    }
+        _polygonFilled(Polygon(screenPoints), color);
+    else
+        drawPolylineScreen(screenPoints, color, static_cast<double>(thickness), true);
 }
 
 void rects(
@@ -505,90 +561,11 @@ void rects(
     if (radiusBottomLeft < 0.0)
         radiusBottomLeft = borderRadius;
 
-    if (radiusTopLeft > 0.0 || radiusTopRight > 0.0 || radiusBottomRight > 0.0 ||
-        radiusBottomLeft > 0.0)
-    {
-        for (const Rect& rectValue : rects)
-            rect(
-                rectValue, color, thickness, borderRadius, radiusTopLeft, radiusTopRight,
-                radiusBottomRight, radiusBottomLeft
-            );
-        return;
-    }
-
-    if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
-        throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
-
-    const Vec2 cameraPos = camera::getActivePos();
-    const Vec2 rendRes = renderer::getCurrentResolution();
-
-    // Convert to SDL_FRect array with camera offset
-    std::vector<SDL_FRect> sdlRects;
-    sdlRects.reserve(rects.size());
-    for (const Rect& rect : rects)
-    {
-        if (rect.w < 1.0 || rect.h < 1.0)
-            continue;
-
-        const double x = rect.x - cameraPos.x;
-        const double y = rect.y - cameraPos.y;
-        if (x + rect.w < 0.0 || y + rect.h < 0.0 || x >= rendRes.x || y >= rendRes.y)
-            continue;
-
-        const SDL_FRect sdlRect{
-            static_cast<float>(x),
-            static_cast<float>(y),
-            static_cast<float>(rect.w),
-            static_cast<float>(rect.h),
-        };
-        sdlRects.push_back(sdlRect);
-    }
-
-    if (sdlRects.empty())
-        return;
-
-    // For filled rectangles or thick outlines, use batch fill
-    if (thickness <= 0)
-    {
-        if (!SDL_RenderFillRects(rend, sdlRects.data(), static_cast<int>(sdlRects.size())))
-            throw std::runtime_error(
-                "Failed to render filled rectangles: " + std::string(SDL_GetError())
-            );
-        return;
-    }
-
-    if (!SDL_RenderRects(rend, sdlRects.data(), static_cast<int>(sdlRects.size())))
-        throw std::runtime_error("Failed to render rectangles: " + std::string(SDL_GetError()));
-
-    if (thickness == 1)
-        return;
-
-    for (int i = 1; i < thickness; i++)
-    {
-        std::vector<SDL_FRect> innerRects;
-        innerRects.reserve(rects.size());
-
-        for (const Rect& rect : rects)
-        {
-            // Skip if thickness exceeds rectangle dimensions
-            if (i >= rect.w / 2.0 || i >= rect.h / 2.0)
-                continue;
-
-            const SDL_FRect innerRect = {
-                static_cast<float>(rect.x - cameraPos.x + i),
-                static_cast<float>(rect.y - cameraPos.y + i),
-                static_cast<float>(rect.w - 2 * i),
-                static_cast<float>(rect.h - 2 * i),
-            };
-            innerRects.push_back(std::move(innerRect));
-        }
-
-        if (innerRects.empty())
-            break;
-
-        if (!SDL_RenderRects(rend, innerRects.data(), static_cast<int>(innerRects.size())))
-            throw std::runtime_error("Failed to render rectangles: " + std::string(SDL_GetError()));
-    }
+    for (const Rect& rectValue : rects)
+        rect(
+            rectValue, color, thickness, borderRadius, radiusTopLeft, radiusTopRight,
+            radiusBottomRight, radiusBottomLeft
+        );
 }
 
 void polygon(const Polygon& polygon, const Color& color, const bool filled)
@@ -607,19 +584,19 @@ void polygon(const Polygon& polygon, const Color& color, const bool filled)
     if ((size <= 2 || !filled) && !SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
         throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
 
-    const Vec2 cameraPos = camera::getActivePos();
     if (size == 1)
     {
-        const auto [x, y] = static_cast<SDL_FPoint>(polygon.points.at(0) - cameraPos);
+        const auto [x, y] = static_cast<SDL_FPoint>(camera::worldToScreen(polygon.points.at(0)));
         if (!SDL_RenderPoint(rend, x, y))
             throw std::runtime_error("Failed to render point: " + std::string(SDL_GetError()));
 
         return;
     }
+
     if (size == 2)
     {
-        const auto a = static_cast<SDL_FPoint>(polygon.points.at(0) - cameraPos);
-        const auto b = static_cast<SDL_FPoint>(polygon.points.at(1) - cameraPos);
+        const auto a = static_cast<SDL_FPoint>(camera::worldToScreen(polygon.points.at(0)));
+        const auto b = static_cast<SDL_FPoint>(camera::worldToScreen(polygon.points.at(1)));
 
         if (!SDL_RenderLine(rend, a.x, a.y, b.x, b.y))
             throw std::runtime_error("Failed to render line: " + std::string(SDL_GetError()));
@@ -627,8 +604,7 @@ void polygon(const Polygon& polygon, const Color& color, const bool filled)
         return;
     }
 
-    Polygon cameraPolygon = polygon;
-    cameraPolygon.move(-cameraPos);
+    Polygon cameraPolygon(toScreenPoints(polygon.points));
 
     // Just draw lines if not filled
     if (!filled)
@@ -663,8 +639,6 @@ void polygons(const std::vector<Polygon>& polygons, const Color& color, const bo
     if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
         throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
 
-    const Vec2 cameraPos = camera::getActivePos();
-
     for (const Polygon& polygon : polygons)
     {
         const size_t size = polygon.points.size();
@@ -672,7 +646,9 @@ void polygons(const std::vector<Polygon>& polygons, const Color& color, const bo
             continue;
         if (size == 1)
         {
-            const auto [x, y] = static_cast<SDL_FPoint>(polygon.points.at(0) - cameraPos);
+            const auto [x, y] = static_cast<SDL_FPoint>(
+                camera::worldToScreen(polygon.points.at(0))
+            );
             if (!SDL_RenderPoint(rend, x, y))
                 throw std::runtime_error("Failed to render point: " + std::string(SDL_GetError()));
 
@@ -680,8 +656,8 @@ void polygons(const std::vector<Polygon>& polygons, const Color& color, const bo
         }
         if (size == 2)
         {
-            const auto a = static_cast<SDL_FPoint>(polygon.points.at(0) - cameraPos);
-            const auto b = static_cast<SDL_FPoint>(polygon.points.at(1) - cameraPos);
+            const auto a = static_cast<SDL_FPoint>(camera::worldToScreen(polygon.points.at(0)));
+            const auto b = static_cast<SDL_FPoint>(camera::worldToScreen(polygon.points.at(1)));
 
             if (!SDL_RenderLine(rend, a.x, a.y, b.x, b.y))
                 throw std::runtime_error("Failed to render line: " + std::string(SDL_GetError()));
@@ -689,8 +665,7 @@ void polygons(const std::vector<Polygon>& polygons, const Color& color, const bo
             continue;
         }
 
-        Polygon cameraPolygon = polygon;
-        cameraPolygon.move(-cameraPos);
+        Polygon cameraPolygon(toScreenPoints(polygon.points));
 
         if (!filled)
         {
@@ -701,11 +676,9 @@ void polygons(const std::vector<Polygon>& polygons, const Color& color, const bo
             points.push_back(points.front());
 
             if (!SDL_RenderLines(rend, points.data(), static_cast<int>(points.size())))
-            {
                 throw std::runtime_error(
                     "Failed to render polygon outline: " + std::string(SDL_GetError())
                 );
-            }
 
             continue;
         }
@@ -724,15 +697,15 @@ void geometry(
     if (vertices.empty())
         return;
 
-    const Vec2 cameraPos = camera::getActivePos();
+    if (texture && !texture->hasUsage(TextureUsage::Drawable))
+        throw std::runtime_error("Texture is not drawable");
 
     std::vector<SDL_Vertex> sdlVertices;
     sdlVertices.reserve(vertices.size());
-
     for (const auto& v : vertices)
     {
         const SDL_Vertex vert{
-            static_cast<SDL_FPoint>(v.pos - cameraPos),
+            static_cast<SDL_FPoint>(camera::worldToScreen(v.pos)),
             static_cast<SDL_FColor>(v.color),
             static_cast<SDL_FPoint>(v.texCoord),
         };
@@ -744,9 +717,7 @@ void geometry(
             static_cast<int>(sdlVertices.size()), indices.empty() ? nullptr : indices.data(),
             static_cast<int>(indices.size())
         ))
-    {
         throw std::runtime_error("Failed to draw geometry: " + std::string(SDL_GetError()));
-    }
 }
 
 void bezier(
@@ -766,13 +737,12 @@ void bezier(
     std::vector<Vec2> points;
     points.reserve(numSegments + 1);
 
-    const Vec2 cameraPos = camera::getActivePos();
-
     for (int i = 0; i <= numSegments; ++i)
     {
         const double t = static_cast<double>(i) / static_cast<double>(numSegments);
         Vec2 p;
         const double mt = 1.0 - t;
+
         if (controlPoints.size() == 3)
         {
             p = controlPoints[0] * (mt * mt) + controlPoints[1] * (2.0 * mt * t) +
@@ -783,31 +753,27 @@ void bezier(
             p = controlPoints[0] * (mt * mt * mt) + controlPoints[1] * (3.0 * mt * mt * t) +
                 controlPoints[2] * (3.0 * mt * t * t) + controlPoints[3] * (t * t * t);
         }
-        points.push_back(p - cameraPos);
+
+        points.push_back(camera::worldToScreen(p));
     }
 
-    if (thickness <= 1.0)
-    {
-        std::vector<SDL_FPoint> sdlPoints;
-        sdlPoints.reserve(points.size());
-        for (const auto& p : points)
-            sdlPoints.push_back(static_cast<SDL_FPoint>(p));
-
-        if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
-            throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
-
-        if (!SDL_RenderLines(rend, sdlPoints.data(), static_cast<int>(sdlPoints.size())))
-            throw std::runtime_error(
-                "Failed to render bezier lines: " + std::string(SDL_GetError())
-            );
-    }
-    else
+    if (thickness > 1.0)
     {
         for (size_t i = 0; i < points.size() - 1; ++i)
-        {
-            _thickLine(Line(points[i], points[i + 1]), color, thickness);
-        }
+            _thickLine({points[i], points[i + 1]}, color, thickness);
+        return;
     }
+
+    std::vector<SDL_FPoint> sdlPoints;
+    sdlPoints.reserve(points.size());
+    for (const auto& p : points)
+        sdlPoints.push_back(static_cast<SDL_FPoint>(p));
+
+    if (!SDL_SetRenderDrawColor(rend, color.r, color.g, color.b, color.a))
+        throw std::runtime_error("Failed to set draw color: " + std::string(SDL_GetError()));
+
+    if (!SDL_RenderLines(rend, sdlPoints.data(), static_cast<int>(sdlPoints.size())))
+        throw std::runtime_error("Failed to render bezier lines: " + std::string(SDL_GetError()));
 }
 
 void sector(
@@ -821,16 +787,14 @@ void sector(
     if (circle.radius < 1.0 || color.a == 0)
         return;
 
-    const Vec2 cameraPos = camera::getActivePos();
     const Vec2 rendRes = renderer::getCurrentResolution();
-    const Vec2 center = circle.pos - cameraPos;
+    const Vec2 center = camera::worldToScreen(circle.pos);
+    const double cameraAngle = camera::getActiveAngle();
 
     // Basic culling
     if (center.x + circle.radius < 0.0 || center.y + circle.radius < 0.0 ||
         center.x - circle.radius >= rendRes.x || center.y - circle.radius >= rendRes.y)
-    {
         return;
-    }
 
     const auto fColor = static_cast<SDL_FColor>(color);
     const int segments = std::max(1, numSegments);
@@ -848,7 +812,7 @@ void sector(
         for (int i = 0; i <= segments; ++i)
         {
             double t = static_cast<double>(i) / static_cast<double>(segments);
-            double theta = startAngle + (endAngle - startAngle) * t;
+            double theta = startAngle + (endAngle - startAngle) * t + cameraAngle;
             Vec2 p = center + Vec2(cos(theta), sin(theta)) * circle.radius;
             vertices.push_back({static_cast<SDL_FPoint>(p), fColor, {}});
         }
@@ -869,60 +833,58 @@ void sector(
             throw std::runtime_error(
                 std::string("Failed to render sector geometry: ") + SDL_GetError()
             );
+
+        return;
     }
-    else
+
+    // Outline arc with thickness
+    std::vector<SDL_Vertex> vertices;
+    vertices.reserve((segments + 1) * 2);
+
+    for (int i = 0; i <= segments; ++i)
     {
-        // Outline arc with thickness
-        std::vector<SDL_Vertex> vertices;
-        vertices.reserve((segments + 1) * 2);
+        double t = static_cast<double>(i) / static_cast<double>(segments);
+        double theta = startAngle + (endAngle - startAngle) * t + cameraAngle;
+        double cosT = cos(theta);
+        double sinT = sin(theta);
 
-        for (int i = 0; i <= segments; ++i)
-        {
-            double t = static_cast<double>(i) / static_cast<double>(segments);
-            double theta = startAngle + (endAngle - startAngle) * t;
-            double cosT = cos(theta);
-            double sinT = sin(theta);
-
-            // Outer vertex
-            vertices.push_back({
-                static_cast<SDL_FPoint>(center + Vec2(cosT, sinT) * circle.radius),
-                fColor,
-                {},
-            });
-            // Inner vertex
-            vertices.push_back({
-                static_cast<SDL_FPoint>(center + Vec2(cosT, sinT) * (circle.radius - thickness)),
-                fColor,
-                {},
-            });
-        }
-
-        std::vector<int> indices;
-        indices.reserve(segments * 6);
-        for (int i = 0; i < segments; ++i)
-        {
-            int topL = i * 2;
-            int botL = i * 2 + 1;
-            int topR = (i + 1) * 2;
-            int botR = (i + 1) * 2 + 1;
-
-            indices.push_back(topL);
-            indices.push_back(topR);
-            indices.push_back(botL);
-
-            indices.push_back(topR);
-            indices.push_back(botR);
-            indices.push_back(botL);
-        }
-
-        if (!SDL_RenderGeometry(
-                rend, nullptr, vertices.data(), static_cast<int>(vertices.size()), indices.data(),
-                static_cast<int>(indices.size())
-            ))
-            throw std::runtime_error(
-                std::string("Failed to render sector outline: ") + SDL_GetError()
-            );
+        // Outer vertex
+        vertices.push_back({
+            static_cast<SDL_FPoint>(center + Vec2(cosT, sinT) * circle.radius),
+            fColor,
+            {},
+        });
+        // Inner vertex
+        vertices.push_back({
+            static_cast<SDL_FPoint>(center + Vec2(cosT, sinT) * (circle.radius - thickness)),
+            fColor,
+            {},
+        });
     }
+
+    std::vector<int> indices;
+    indices.reserve(segments * 6);
+    for (int i = 0; i < segments; ++i)
+    {
+        int topL = i * 2;
+        int botL = i * 2 + 1;
+        int topR = (i + 1) * 2;
+        int botR = (i + 1) * 2 + 1;
+
+        indices.push_back(topL);
+        indices.push_back(topR);
+        indices.push_back(botL);
+
+        indices.push_back(topR);
+        indices.push_back(botR);
+        indices.push_back(botL);
+    }
+
+    if (!SDL_RenderGeometry(
+            rend, nullptr, vertices.data(), static_cast<int>(vertices.size()), indices.data(),
+            static_cast<int>(indices.size())
+        ))
+        throw std::runtime_error(std::string("Failed to render sector outline: ") + SDL_GetError());
 }
 
 void polyline(
@@ -935,12 +897,10 @@ void polyline(
     if (points.size() < 2 || color.a == 0)
         return;
 
-    const Vec2 cameraPos = camera::getActivePos();
-
     std::vector<SDL_FPoint> sdlPoints;
     sdlPoints.reserve(points.size() + (closed ? 1 : 0));
     for (const auto& p : points)
-        sdlPoints.push_back(static_cast<SDL_FPoint>(p - cameraPos));
+        sdlPoints.push_back(static_cast<SDL_FPoint>(camera::worldToScreen(p)));
 
     if (closed && !sdlPoints.empty())
         sdlPoints.push_back(sdlPoints.front());
@@ -977,9 +937,7 @@ void _polygonFilled(const Polygon& polygon, const Color& color)
     sdlVertices.reserve(polygon.points.size());
 
     for (const auto& point : polygon.points)
-    {
         sdlVertices.push_back({static_cast<SDL_FPoint>(point), fColor, {}});
-    }
 
     if (!SDL_RenderGeometry(
             rend, nullptr, sdlVertices.data(), static_cast<int>(sdlVertices.size()),
@@ -1103,9 +1061,8 @@ void _ellipseOutline(
 
 void _capsuleFilled(const Capsule& capsule, const Color& color, int numSegments)
 {
-    const Vec2 cameraPos = camera::getActivePos();
-    const Vec2 p1 = capsule.p1 - cameraPos;
-    const Vec2 p2 = capsule.p2 - cameraPos;
+    const Vec2 p1 = camera::worldToScreen(capsule.p1);
+    const Vec2 p2 = camera::worldToScreen(capsule.p2);
 
     const double radius = capsule.radius;
     const auto fColor = static_cast<SDL_FColor>(color);
@@ -1150,9 +1107,8 @@ void _capsuleFilled(const Capsule& capsule, const Color& color, int numSegments)
 
 void _capsuleOutline(const Capsule& capsule, const Color& color, double thickness, int numSegments)
 {
-    const Vec2 cameraPos = camera::getActivePos();
-    const Vec2 p1 = capsule.p1 - cameraPos;
-    const Vec2 p2 = capsule.p2 - cameraPos;
+    const Vec2 p1 = camera::worldToScreen(capsule.p1);
+    const Vec2 p2 = camera::worldToScreen(capsule.p2);
 
     const double rOuter = capsule.radius;
     const double rInner = capsule.radius - thickness;
@@ -1243,12 +1199,10 @@ void _thickLine(const Line& line, const Color& color, double thickness)
     vertices[2] = {static_cast<SDL_FPoint>(b + offset), fColor, {}};
     vertices[3] = {static_cast<SDL_FPoint>(b - offset), fColor, {}};
 
-    int indices[6] = {0, 1, 2, 2, 1, 3};
+    static constexpr int indices[6] = {0, 1, 2, 2, 1, 3};
 
     if (!SDL_RenderGeometry(rend, nullptr, vertices, 4, indices, 6))
-    {
         throw std::runtime_error(std::string("Failed to render thick line: ") + SDL_GetError());
-    }
 }
 
 Polygon _roundedRectPolygon(const Rect& rect, const std::array<double, 4>& radii)

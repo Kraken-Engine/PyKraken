@@ -32,7 +32,7 @@ class PixelArray
   public:
     PixelArray() = default;
     explicit PixelArray(SDL_Surface* sdlSurface);
-    explicit PixelArray(const Vec2& size);
+    explicit PixelArray(int width, int height);
     explicit PixelArray(const std::filesystem::path& filePath);
     ~PixelArray();
 

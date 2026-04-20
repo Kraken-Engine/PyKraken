@@ -11,7 +11,7 @@ namespace kn::log
 {
 bool _loggerEnabled = false;
 
-void _init()
+void enable()
 {
     if (_loggerEnabled)
     {
@@ -28,12 +28,30 @@ void _init()
     _loggerEnabled = true;
 }
 
+void disable()
+{
+    if (!_loggerEnabled)
+        return;
+
+    spdlog::set_default_logger(nullptr);
+    spdlog::drop("console");
+
+    _loggerEnabled = false;
+}
+
 #ifdef KRAKEN_ENABLE_PYTHON
 void _bind(nb::module_& module)
 {
     using namespace nb::literals;
 
     auto subLog = module.def_submodule("log", "Logging utilities");
+
+    subLog.def("enable", &enable, R"doc(
+Enable the logger.
+    )doc");
+    subLog.def("disable", &disable, R"doc(
+Disable the logger.
+    )doc");
 
     subLog.def("info", [](const std::string& fmt) { info("{}", fmt); }, "message"_a, R"doc(
 Log an informational message.

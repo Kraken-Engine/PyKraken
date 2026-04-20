@@ -169,7 +169,7 @@ static void _drawString(b2Vec2 p, const char* str, b2HexColor color, void* conte
     auto* debugContext = static_cast<DebugDrawContext*>(context);
 
     if (!debugContext->debugFont)
-        debugContext->debugFont = std::make_unique<Font>("kraken-clean", 16);
+        debugContext->debugFont = std::make_unique<Font>("kraken-modern", 16);
     if (!debugContext->debugText)
         debugContext->debugText = std::make_unique<Text>(*debugContext->debugFont);
 

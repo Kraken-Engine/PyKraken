@@ -73,6 +73,7 @@ void Vec2::rotate(const double rad)
     const double sinTheta = std::sin(rad);
     const double newX = x * cosTheta - y * sinTheta;
     const double newY = x * sinTheta + y * cosTheta;
+
     x = newX;
     y = newY;
 }
@@ -91,9 +92,6 @@ PolarCoordinate Vec2::toPolar() const
 
 void Vec2::scaleToLength(const double scalar)
 {
-    if (isZero() || scalar == 1.0)
-        return;
-
     if (scalar == 0.0)
     {
         x = 0.0;
@@ -101,7 +99,14 @@ void Vec2::scaleToLength(const double scalar)
         return;
     }
 
-    const double scale = scalar / getLength();
+    if (isZero())
+        return;  // cannot determine direction for a zero vector
+
+    const double length = getLength();
+    if (std::abs(length - scalar) < 1e-12)
+        return;
+
+    const double scale = scalar / length;
     x *= scale;
     y *= scale;
 }

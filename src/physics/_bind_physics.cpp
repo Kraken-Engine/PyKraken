@@ -811,7 +811,24 @@ Args:
             "contacts"_a = false, "graph_colors"_a = false, "contact_normals"_a = false,
             "contact_impulses"_a = false, "contact_features"_a = false,
             "friction_impulses"_a = false, "islands"_a = false, R"doc(
-Draw physics debug geometry.
+Draw physics debug geometry. If shapes are disabled, the filled_shapes option is ignored.
+
+Args:
+    color (Color, optional): The color to use for drawing. Defaults to red.
+    filled_shapes (bool, optional): Whether to draw filled shapes. Defaults to False.
+    shapes (bool, optional): Whether to draw collider shapes. Defaults to True.
+    joints (bool, optional): Whether to draw joints. Defaults to True.
+    joint_extras (bool, optional): Whether to draw extra joint info like limits. Defaults to True.
+    bounds (bool, optional): Whether to draw body AABBs. Defaults to False.
+    mass (bool, optional): Whether to draw mass indicators. Defaults to False.
+    body_names (bool, optional): Whether to draw body names. Defaults to False.
+    contacts (bool, optional): Whether to draw contact points. Defaults to False.
+    graph_colors (bool, optional): Whether to use graph colors for contact points. Defaults to False.
+    contact_normals (bool, optional): Whether to draw contact normals. Defaults to False.
+    contact_impulses (bool, optional): Whether to draw contact impulse vectors. Defaults to False.
+    contact_features (bool, optional): Whether to draw contact feature points. Defaults to False.
+    friction_impulses (bool, optional): Whether to draw friction impulse vectors. Defaults to False.
+    islands (bool, optional): Whether to color bodies by island. Defaults to False.
             )doc"
         )
 

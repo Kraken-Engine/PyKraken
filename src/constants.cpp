@@ -61,6 +61,15 @@ Horizontal alignment options for text.
         .value("CENTER", TextAlign::Center, "Center alignment")
         .value("RIGHT", TextAlign::Right, "Right alignment");
 
+    // Define FilterMode enum
+    nb::enum_<FilterMode>(module, "FilterMode", R"doc(
+Texture scaling and filtering modes.
+    )doc")
+        .value("NEAREST", FilterMode::Nearest, "Nearest-neighbor scaling")
+        .value("LINEAR", FilterMode::Linear, "Linear filtering")
+        .value("PIXEL_ART", FilterMode::PixelArt, "Pixel-art friendly scaling")
+        .value("DEFAULT", FilterMode::Default, "Renderer default scaling");
+
     // Define event types
     nb::enum_<EventType>(module, "EventType", R"doc(
 SDL event type constants for input and system events.

@@ -294,7 +294,7 @@ int Mask::getHeight() const
 
 PixelArray Mask::getPixelArray(const Color& color) const
 {
-    PixelArray pixelArray(Vec2{m_width, m_height});
+    PixelArray pixelArray(m_width, m_height);
 
     SDL_Surface* surface = pixelArray.getSDL();
     if (!surface)

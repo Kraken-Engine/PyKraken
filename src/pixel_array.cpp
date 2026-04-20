@@ -24,12 +24,9 @@ PixelArray::PixelArray(SDL_Surface* sdlSurface)
 {
 }
 
-PixelArray::PixelArray(const Vec2& size)
+PixelArray::PixelArray(const int width, const int height)
 {
-    m_surface = SDL_CreateSurface(
-        static_cast<int>(size.x), static_cast<int>(size.y), SDL_PIXELFORMAT_RGBA32
-    );
-
+    m_surface = SDL_CreateSurface(width, height, SDL_PIXELFORMAT_RGBA32);
     if (!m_surface)
         throw std::runtime_error("PixelArray failed to create: " + std::string(SDL_GetError()));
 }
@@ -709,11 +706,12 @@ A PixelArray is a 2D array of pixels that can be manipulated, drawn on, and used
 for texture creation or blitting to other PixelArrays. Supports pixel-level operations,
 color key transparency, and alpha blending.
     )doc")
-        .def(nb::init<const Vec2&>(), "size"_a, R"doc(
+        .def(nb::init<int, int>(), "width"_a, "height"_a, R"doc(
 Create a new PixelArray with the specified dimensions.
 
 Args:
-    size (Vec2): The size of the pixel array as (width, height).
+    width (int): The width of the pixel array.
+    height (int): The height of the pixel array.
 
 Raises:
     RuntimeError: If pixel array creation fails.

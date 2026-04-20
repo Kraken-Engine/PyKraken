@@ -3,6 +3,9 @@
 #include <nanobind/stl/bind_vector.h>
 #endif  // KRAKEN_ENABLE_PYTHON
 
+#include <algorithm>
+#include <cmath>
+
 #include "TileMap.hpp"
 
 // clang-format off
@@ -35,10 +38,88 @@
 #define M_PI_2 1.5707963267948966192313216916398
 #endif
 
+namespace
+{
+constexpr int TILEMAP_ELLIPSE_SEGMENTS = 24;
+
+kn::Vec2 rotatePoint(const kn::Vec2& point, const kn::Vec2& pivot, const double angle)
+{
+    if (angle == 0.0)
+        return point;
+
+    kn::Vec2 rotated = point - pivot;
+    rotated.rotate(angle);
+    return pivot + rotated;
+}
+
+kn::Vec2 getMapPivotWorld(const kn::tilemap::Map* map, const kn::Vec2& pivot)
+{
+    if (!map)
+        return {};
+
+    const kn::Rect bounds = map->getBounds();
+    return bounds.getTopLeft() + bounds.getSize() * pivot;
+}
+
+std::vector<kn::Vec2> rotatePoints(
+    const std::vector<kn::Vec2>& points, const kn::Vec2& pivot, const double angle
+)
+{
+    std::vector<kn::Vec2> rotatedPoints;
+    rotatedPoints.reserve(points.size());
+
+    for (const auto& point : points)
+        rotatedPoints.push_back(rotatePoint(point, pivot, angle));
+
+    return rotatedPoints;
+}
+
+std::vector<kn::Vec2> rotateRectCorners(
+    const kn::Rect& rect, const kn::Vec2& pivot, const double angle
+)
+{
+    const auto corners = rect.getCorners();
+    std::vector<kn::Vec2> rotatedCorners;
+    rotatedCorners.reserve(corners.size());
+
+    for (const auto& corner : corners)
+        rotatedCorners.push_back(rotatePoint(corner, pivot, angle));
+
+    return rotatedCorners;
+}
+
+std::vector<kn::Vec2> rotateEllipsePoints(
+    const kn::Rect& rect, const kn::Vec2& pivot, const double angle
+)
+{
+    std::vector<kn::Vec2> points;
+    points.reserve(TILEMAP_ELLIPSE_SEGMENTS);
+
+    const kn::Vec2 center = rect.getCenter();
+    const kn::Vec2 radius = rect.getSize() * 0.5;
+
+    for (int i = 0; i < TILEMAP_ELLIPSE_SEGMENTS; ++i)
+    {
+        const double t = (2.0 * M_PI * static_cast<double>(i)) /
+                         static_cast<double>(TILEMAP_ELLIPSE_SEGMENTS);
+        const kn::Vec2 point{center.x + std::cos(t) * radius.x, center.y + std::sin(t) * radius.y};
+        points.push_back(rotatePoint(point, pivot, angle));
+    }
+
+    return points;
+}
+}  // namespace
+
 namespace kn
 {
 namespace tilemap
 {
+Map::Map(const std::filesystem::path& tmxPath)
+{
+    if (!tmxPath.empty())
+        load(tmxPath);
+}
+
 void Map::load(const std::filesystem::path& tmxPath)
 {
     tmx::Map tmxMap;
@@ -284,7 +365,8 @@ void Map::load(const std::filesystem::path& tmxPath)
 
         TileSet tileSet;
         tileSet.m_firstGID = tmxTileset.getFirstGID();
-        tileSet.m_lastGID = tmxTileset.getLastGID();
+        // TMXLite is a goober DO NOT use .getLastGID
+        tileSet.m_lastGID = tileSet.m_firstGID;
         tileSet.m_name = tmxTileset.getName();
         tileSet.m_tileSize = {tsTileSize.x, tsTileSize.y};
         tileSet.m_spacing = tmxTileset.getSpacing();
@@ -444,12 +526,10 @@ tmx::Orientation Map::getOrientation() const
     return m_orient;
 }
 
-void Map::draw()
+void Map::draw(const double angle, const Vec2& pivot)
 {
     for (const auto& layer : m_layers)
-    {
-        layer->draw();
-    }
+        layer->draw(angle, pivot);
 }
 
 tmx::RenderOrder Map::getRenderOrder() const
@@ -537,12 +617,9 @@ std::vector<std::shared_ptr<ImageLayer>> Map::getImageLayers() const
 {
     std::vector<std::shared_ptr<ImageLayer>> layers;
     for (const auto& layer : m_layers)
-    {
         if (layer->getType() == tmx::Layer::Type::Image)
-        {
             layers.push_back(std::static_pointer_cast<ImageLayer>(layer));
-        }
-    }
+
     return layers;
 }
 
@@ -705,7 +782,7 @@ static HexTransformInfo decodeHexTransform(const uint8_t rawFlipFlags)
     return {rotation, h, v};
 }
 
-void TileLayer::draw()
+void TileLayer::draw(const double angle, const Vec2& pivot)
 {
     if (!visible)
         return;
@@ -729,20 +806,36 @@ void TileLayer::draw()
     int camMaxX = mapW - 1;
     int camMaxY = mapH - 1;
 
-    if (orient == tmx::Orientation::Orthogonal)
-    {
-        // Compute visible tile range from the active camera and clamp to map bounds.
-        const Vec2 camPos = camera::getActivePos();
-        const Vec2 rendRes = renderer::getCurrentResolution();
-        const double camLeft = camPos.x;
-        const double camTop = camPos.y;
-        const double camRight = camLeft + rendRes.x;
-        const double camBottom = camTop + rendRes.y;
+    const bool rotateLayer = angle != 0.0;
+    const Vec2 pivotWorld = rotateLayer ? getMapPivotWorld(m_map, pivot) : Vec2{};
 
-        camMinX = static_cast<int>(std::floor((camLeft - offset.x) / tileW));
-        camMinY = static_cast<int>(std::floor((camTop - offset.y) / tileH));
-        camMaxX = static_cast<int>(std::floor((camRight - offset.x) / tileW));
-        camMaxY = static_cast<int>(std::floor((camBottom - offset.y) / tileH));
+    if (orient == tmx::Orientation::Orthogonal && !rotateLayer)
+    {
+        // Compute a conservative world-space camera coverage from all screen corners so
+        // culling remains correct even when the active camera is rotated.
+        const Rect rendSize{renderer::getCurrentResolution()};
+        const std::array<Vec2, 4> worldCorners = {
+            camera::screenToWorld(rendSize.getTopLeft()),
+            camera::screenToWorld(rendSize.getTopRight()),
+            camera::screenToWorld(rendSize.getBottomLeft()),
+            camera::screenToWorld(rendSize.getBottomRight()),
+        };
+
+        auto [camLeft, camTop] = worldCorners[0];
+        auto [camRight, camBottom] = worldCorners[0];
+        for (const Vec2& corner : worldCorners)
+        {
+            camLeft = std::min(camLeft, corner.x);
+            camTop = std::min(camTop, corner.y);
+            camRight = std::max(camRight, corner.x);
+            camBottom = std::max(camBottom, corner.y);
+        }
+
+        // Expand by one tile to hide precision edge artifacts while rotating.
+        camMinX = static_cast<int>(std::floor((camLeft - offset.x) / tileW)) - 1;
+        camMinY = static_cast<int>(std::floor((camTop - offset.y) / tileH)) - 1;
+        camMaxX = static_cast<int>(std::floor((camRight - offset.x) / tileW)) + 1;
+        camMaxY = static_cast<int>(std::floor((camBottom - offset.y) / tileH)) + 1;
 
         camMinX = std::max(0, std::min(mapW - 1, camMinX));
         camMinY = std::max(0, std::min(mapH - 1, camMinY));
@@ -904,6 +997,12 @@ void TileLayer::draw()
                 setTexture->flip.v = flipInfo.v;
             }
 
+            if (rotateLayer)
+            {
+                renderTransform.pos = rotatePoint(renderTransform.pos, pivotWorld, angle);
+                renderTransform.angle += angle;
+            }
+
             setTexture->setClipArea(setTile->getClipArea());
             renderer::draw(*setTexture, renderTransform);
         }
@@ -923,11 +1022,10 @@ std::vector<TileLayer::TileResult> TileLayer::getFromArea(const Rect& area) cons
         const double layerTop = offset.y;
         const double layerRight = layerLeft + static_cast<double>(mapW) * tileW;
         const double layerBottom = layerTop + static_cast<double>(mapH) * tileH;
+
         if (area.getRight() < layerLeft || area.getLeft() > layerRight ||
             area.getBottom() < layerTop || area.getTop() > layerBottom)
-        {
             return {};
-        }
     }
 
     // Calculate the grid range (clamped to map boundaries)
@@ -971,13 +1069,9 @@ std::vector<TileLayer::TileResult> TileLayer::getFromArea(const Rect& area) cons
 std::optional<TileLayer::TileResult> TileLayer::getFromPoint(const Vec2& position) const
 {
     // Adjust position by the layer's offset
-    const double localX = position.x - offset.x;
-    const double localY = position.y - offset.y;
-
-    const double tileW = m_map->getTileSize().x;
-    const double tileH = m_map->getTileSize().y;
-    const double mapW = m_map->getMapSize().x;
-    const double mapH = m_map->getMapSize().y;
+    const auto [localX, localY] = position - offset;
+    const auto [tileW, tileH] = m_map->getTileSize();
+    const auto [mapW, mapH] = m_map->getMapSize();
 
     // Convert world coordinates to grid coordinates
     const auto x = static_cast<int>(std::floor(localX / tileW));
@@ -985,15 +1079,11 @@ std::optional<TileLayer::TileResult> TileLayer::getFromPoint(const Vec2& positio
 
     // Bounds check
     if (x < 0 || x >= mapW || y < 0 || y >= mapH)
-    {
         return std::nullopt;
-    }
 
     const auto index = static_cast<size_t>(y * mapW + x);
     if (index >= m_tiles.size())
-    {
         return std::nullopt;
-    }
 
     const TileResult result{
         m_tiles[index],
@@ -1068,10 +1158,110 @@ double ObjectGroup::getOpacity() const
     return m_opacity;
 }
 
-void ObjectGroup::draw()
+void ObjectGroup::draw(const double angle, const Vec2& pivot)
 {
     if (!visible)
         return;
+
+    const bool rotateLayer = angle != 0.0;
+    const Vec2 pivotWorld = rotateLayer ? getMapPivotWorld(m_map, pivot) : Vec2{};
+
+    if (!rotateLayer)
+    {
+        for (const auto& obj : m_objects)
+        {
+            if (!obj.visible)
+                continue;
+
+            if (obj.getTileID() != 0)
+            {
+                const uint32_t gid = obj.getTileID();
+
+                const TileSet* foundTS = nullptr;
+                for (const auto& ts : m_map->getTileSets())
+                {
+                    if (ts.hasTile(gid))
+                    {
+                        foundTS = &ts;
+                        break;
+                    }
+                }
+
+                if (!foundTS)
+                    continue;
+
+                const auto* tile = foundTS->getTile(gid);
+                auto setTexture = foundTS->getTexture();
+                if (!tile || !setTexture)
+                    continue;
+
+                setTexture->setAlpha(static_cast<float>(m_opacity));
+                if (tile && setTexture)
+                {
+                    Transform renderTransform = obj.transform;
+                    renderTransform.pos += offset;
+                    setTexture->setClipArea(tile->getClipArea());
+                    renderer::draw(*setTexture, renderTransform);
+                }
+
+                continue;
+            }
+
+            const Vec2 renderOffset = offset + obj.transform.pos;
+            Color drawColor = color;
+            drawColor.a = static_cast<uint8_t>(static_cast<double>(drawColor.a) * m_opacity);
+
+            switch (obj.getShapeType())
+            {
+            case tmx::Object::Shape::Rectangle:
+            {
+                Rect rect = obj.getRect();
+                // Only add offset since position is already included in rect
+                rect.setTopLeft(rect.getTopLeft() + offset);
+                draw::rect(rect, drawColor);
+                break;
+            }
+
+            case tmx::Object::Shape::Ellipse:
+            {
+                Rect rect = obj.getRect();
+                rect.setTopLeft(rect.getTopLeft() + offset);
+                draw::ellipse(rect, drawColor, true);
+                break;
+            }
+
+            case tmx::Object::Shape::Point:
+                if (const auto& verts = obj.getVertices(); !verts.empty())
+                    draw::point(verts[0] + renderOffset, drawColor);
+                break;
+
+            case tmx::Object::Shape::Polygon:
+            {
+                Polygon polygon{obj.getVertices()};
+                polygon.move(renderOffset);
+                draw::polygon(polygon, drawColor);
+                break;
+            }
+
+            case tmx::Object::Shape::Polyline:
+            {
+                const auto& verts = obj.getVertices();
+                if (verts.size() < 2)
+                    break;
+
+                for (size_t i = 1; i < verts.size(); ++i)
+                    draw::line({renderOffset + verts[i - 1], renderOffset + verts[i]}, drawColor);
+
+                break;
+            }
+
+            default:
+                break;
+            }
+        }
+
+        return;
+    }
 
     for (const auto& obj : m_objects)
     {
@@ -1105,6 +1295,8 @@ void ObjectGroup::draw()
             {
                 Transform renderTransform = obj.transform;
                 renderTransform.pos += offset;
+                renderTransform.pos = rotatePoint(renderTransform.pos, pivotWorld, angle);
+                renderTransform.angle += angle;
                 setTexture->setClipArea(tile->getClipArea());
                 renderer::draw(*setTexture, renderTransform);
             }
@@ -1121,9 +1313,8 @@ void ObjectGroup::draw()
         case tmx::Object::Shape::Rectangle:
         {
             Rect rect = obj.getRect();
-            // Only add offset since position is already included in rect
             rect.setTopLeft(rect.getTopLeft() + offset);
-            draw::rect(rect, drawColor);
+            draw::polygon(Polygon{rotateRectCorners(rect, pivotWorld, angle)}, drawColor);
             break;
         }
 
@@ -1131,20 +1322,23 @@ void ObjectGroup::draw()
         {
             Rect rect = obj.getRect();
             rect.setTopLeft(rect.getTopLeft() + offset);
-            draw::ellipse(rect, drawColor, true);
+            draw::polygon(Polygon{rotateEllipsePoints(rect, pivotWorld, angle)}, drawColor);
             break;
         }
 
         case tmx::Object::Shape::Point:
             if (const auto& verts = obj.getVertices(); !verts.empty())
-                draw::point(verts[0] + renderOffset, drawColor);
+                draw::point(rotatePoint(verts[0] + renderOffset, pivotWorld, angle), drawColor);
             break;
 
         case tmx::Object::Shape::Polygon:
         {
-            Polygon polygon{obj.getVertices()};
-            polygon.move(renderOffset);
-            draw::polygon(polygon, drawColor);
+            std::vector<Vec2> points;
+            points.reserve(obj.getVertices().size());
+            for (const auto& vert : obj.getVertices())
+                points.push_back(vert + renderOffset);
+            points = rotatePoints(points, pivotWorld, angle);
+            draw::polygon(Polygon{points}, drawColor);
             break;
         }
 
@@ -1154,8 +1348,14 @@ void ObjectGroup::draw()
             if (verts.size() < 2)
                 break;
 
-            for (size_t i = 1; i < verts.size(); ++i)
-                draw::line({renderOffset + verts[i - 1], renderOffset + verts[i]}, drawColor);
+            std::vector<Vec2> points;
+            points.reserve(verts.size());
+            for (const auto& vert : verts)
+                points.push_back(vert + renderOffset);
+
+            points = rotatePoints(points, pivotWorld, angle);
+
+            draw::polyline(points, drawColor);
 
             break;
         }
@@ -1171,12 +1371,22 @@ std::shared_ptr<Texture> ImageLayer::getTexture() const
     return m_texture;
 }
 
-void ImageLayer::draw()
+void ImageLayer::draw(const double angle, const Vec2& pivot)
 {
     if (!visible)
         return;
 
-    renderer::draw(*m_texture, transform);
+    Transform renderTransform = transform;
+    renderTransform.pos += offset;
+
+    if (angle != 0.0)
+    {
+        const Vec2 pivotWorld = getMapPivotWorld(m_map, pivot);
+        renderTransform.pos = rotatePoint(renderTransform.pos, pivotWorld, angle);
+        renderTransform.angle += angle;
+    }
+
+    renderer::draw(*m_texture, renderTransform);
 }
 
 void ImageLayer::setOpacity(const double value)
@@ -1441,7 +1651,13 @@ Layer opacity from 0.0 to 1.0.
         .def_prop_ro("name", &Layer::getName, R"doc(Layer name.)doc")
         .def_prop_ro("type", &Layer::getType, R"doc(Layer type enum.)doc")
 
-        .def("draw", &Layer::draw, R"doc(Draw the layer to the current renderer.)doc");
+        .def("draw", &Layer::draw, "angle"_a = 0.0, "pivot"_a = Vec2{0.5, 0.5}, R"doc(
+Draw the layer to the current renderer.
+
+Args:
+    angle (float, optional): Rotation angle in degrees. Defaults to 0.0.
+    pivot (Vec2, optional): Rotation pivot as normalized coordinates relative to the map size. Defaults to (0.5, 0.5).
+        )doc");
     nb::bind_vector<std::vector<std::shared_ptr<Layer>>>(subTilemap, "LayerList");
 
     // ----- TileLayer -----
@@ -1526,8 +1742,12 @@ Returns:
     Optional[TileLayer.TileResult]: TileResult entry if a tile exists at the position, None otherwise.
         )doc"
         )
-        .def("draw", &TileLayer::draw, R"doc(
+        .def("draw", &TileLayer::draw, "angle"_a = 0.0, "pivot"_a = Vec2{0.5, 0.5}, R"doc(
 Draw the tile layer.
+
+Args:
+    angle (float, optional): Rotation angle in degrees. Defaults to 0.0.
+    pivot (Vec2, optional): Rotation pivot as normalized coordinates relative to the map size. Defaults to (0.5, 0.5).
         )doc");
 
     // ----- MapObject -----
@@ -1676,8 +1896,12 @@ Drawing order for objects in the group.
             R"doc(MapObjectList of objects in the group.)doc"
         )
 
-        .def("draw", &ObjectGroup::draw, R"doc(
+        .def("draw", &ObjectGroup::draw, "angle"_a = 0.0, "pivot"_a = Vec2{0.5, 0.5}, R"doc(
 Draw the object group.
+
+Args:
+    angle (float, optional): Rotation angle in degrees. Defaults to 0.0.
+    pivot (Vec2, optional): Rotation pivot as normalized coordinates relative to the map size. Defaults to (0.5, 0.5).
         )doc");
 
     // ----- ImageLayer -----
@@ -1699,8 +1923,12 @@ Layer opacity from 0.0 to 1.0.
 Texture used by the image layer.
     )doc")
 
-        .def("draw", &ImageLayer::draw, R"doc(
+        .def("draw", &ImageLayer::draw, "angle"_a = 0.0, "pivot"_a = Vec2{0.5, 0.5}, R"doc(
 Draw the image layer.
+
+Args:
+    angle (float, optional): Rotation angle in degrees. Defaults to 0.0.
+    pivot (Vec2, optional): Rotation pivot as normalized coordinates relative to the map size. Defaults to (0.5, 0.5).
         )doc");
 
     // ----- Map -----
@@ -1728,7 +1956,12 @@ Methods:
     draw: Draw all layers.
     get_layer: Get a layer by name.
     )doc")
-        .def(nb::init<>())
+        .def(nb::init<const std::filesystem::path&>(), "tmx_path"_a = "", R"doc(
+Create a Map with the option to load an initial TMX file from the given path.
+
+Args:
+    tmx_path (str | os.PathLike[str], optional): Path to the TMX file to load during construction.
+        )doc")
 
         .def_rw("background_color", &Map::backgroundColor, R"doc(Map background color.)doc")
 
@@ -1774,7 +2007,16 @@ Load a TMX file from path.
 Args:
     tmx_path (str | os.PathLike[str]): Path to the TMX file to load.
         )doc")
-        .def("draw", &Map::draw, R"doc(Draw all layers.)doc")
+        .def(
+            "draw", &Map::draw, "angle"_a = 0.0, "pivot"_a = Vec2{0.5, 0.5},
+            R"doc(
+Draw all layers.
+
+Args:
+    angle (float, optional): Rotation angle in degrees to apply to the entire map. Defaults to 0.0.
+    pivot (Vec2, optional): Pivot point for rotation, as normalized coordinates relative to the map size. Defaults to (0.5, 0.5).
+            )doc"
+        )
         .def("get_layer", &Map::getLayer, "name"_a, nb::rv_policy::reference_internal, R"doc(
 Get a layer by its name. Will return None if not found.
 

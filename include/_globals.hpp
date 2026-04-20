@@ -242,6 +242,14 @@ enum class TextAlign
     Right,
 };
 
+enum class FilterMode : uint8_t
+{
+    Nearest,
+    Linear,
+    PixelArt,
+    Default,
+};
+
 enum class Keycode : SDL_Keycode
 {
     Unknown = SDLK_UNKNOWN,
