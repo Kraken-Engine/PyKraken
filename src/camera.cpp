@@ -161,6 +161,26 @@ Returns:
     float: The angle of the active camera in radians.
     )doc");
 
+    subCamera.def("world_to_screen", &camera::worldToScreen, "world_pos"_a, R"doc(
+Convert a world position to a screen position using the active camera's translation.
+
+Args:
+    world_pos (Vec2): The world position to convert.
+
+Returns:
+    Vec2: The resulting screen position.
+    )doc");
+
+    subCamera.def("screen_to_world", &camera::screenToWorld, "screen_pos"_a, R"doc(
+Convert a screen position to a world position using the active camera's translation.
+
+Args:
+    screen_pos (Vec2): The screen position to convert.
+
+Returns:
+    Vec2: The resulting world position.
+    )doc");
+
     nb::class_<Camera>(module, "Camera", R"doc(
 Represents a 2D camera used for rendering.
 
@@ -173,18 +193,17 @@ Args:
     set_active (bool, optional): Whether to set this camera as active, unsetting any existing active camera. Defaults to false.
         )doc")
 
-        .def_prop_rw("world_pos", &Camera::getWorldPos, &Camera::getWorldPos, R"doc(
+        .def_prop_rw("world_pos", &Camera::getWorldPos, &Camera::setWorldPos, R"doc(
 Get or set the camera's world position.
 
 Returns:
     Vec2: The camera's current world position.
-
-You can also assign a Vec2 or a (x, y) sequence to set the position.
         )doc")
         .def_prop_rw("local_pos", &Camera::getLocalPos, &Camera::setLocalPos, R"doc(
-Alias for pos.
-
 Get or set the camera position in camera-local space.
+
+Returns:
+    Vec2: The camera's current local position.
     )doc")
         .def_prop_rw("angle", &Camera::getAngle, &Camera::setAngle, R"doc(
 Get or set the camera angle in radians.

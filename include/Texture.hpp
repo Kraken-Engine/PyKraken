@@ -99,6 +99,7 @@ class Texture
 
     void _createGPUTexture(SDL_Surface* surface);
     void _createTexture(SDL_Surface* surface, TextureAccess access, FilterMode filter);
+    bool _isValidUsage(TextureUsage usage) const;
 };
 
 #ifdef KRAKEN_ENABLE_PYTHON

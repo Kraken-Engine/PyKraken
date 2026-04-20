@@ -26,11 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All `Texture` constructors now use `FilterMode` and have an additional `usage` parameter.
 - `PixelArray` constructor accepting a `Vec2` size parameter changed to accept separate `width` and `height` integer parameters for type safety.
 - Camera API was refactored to explicit world/local semantics (`world_pos`, `local_pos`) with new local/world movement helpers.
-- `camera.world_to_screen` / `camera.screen_to_world` now account for active camera rotation, not just translation.
-- Primitive drawing and text rendering now consistently use camera transforms, including camera rotation.
 - `renderer.draw(texture, dst)` now supports optional `angle` and `pivot` parameters for screen-space rectangle drawing.
 - `renderer.set_default_scale_mode` / `renderer.get_default_scale_mode` renamed to `renderer.set_default_filter_mode` / `renderer.get_default_filter_mode`.
-- Shader creation now uses the `Shader` constructor directly rather than factory function.
+- Shader creation now uses the `Shader` constructor directly rather than a factory function.
 - Renamed `TextureScaleMode` to `FilterMode` for ambiguity with the shader API.
 - UI drawing is now unaffected by any active world camera.
 - *"kraken-clean"* font renamed to *"kraken-modern"*
@@ -38,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - Removed `pykraken.shader_uniform` helper module and its `ShaderUniform` class in favor of native buffer-like data.
+- Removed `Camera` constructor asking for a default position as they'd be ambiguous.
 
 ### Fixed
 - Fixed tilemap tileset GID range handling by avoiding TMXLite `getLastGID()` for tileset bounds resolution.

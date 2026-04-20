@@ -418,7 +418,7 @@ Set the texture and sampler used for a fragment shader texture binding.
 
 Args:
     binding (int): Sampler binding index.
-    texture (Texture): Texture to bind.
+    texture (Texture): Texture to bind. Must have the `ShaderSampled` usage flag.
     sampler (Sampler): Sampler to use for the texture.
 
 Raises:

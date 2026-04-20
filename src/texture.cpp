@@ -13,6 +13,8 @@
 
 namespace kn
 {
+static TextureUsage _kAllowedUsages = TextureUsage::Drawable | TextureUsage::ShaderSampled;
+
 static SDL_ScaleMode _toSDLScaleMode(const FilterMode mode)
 {
     switch (mode)
@@ -32,6 +34,11 @@ Texture::Texture(
     const int width, const int height, const FilterMode filter, const TextureUsage usage
 )
 {
+    if (!_isValidUsage(usage))
+        throw std::invalid_argument(
+            "Invalid texture usage flags specified. Only Drawable and ShaderSampled are allowed."
+        );
+
     if (width < 1 || height < 1)
         throw std::invalid_argument("Texture size values must be at least 1");
 
@@ -62,6 +69,11 @@ Texture::Texture(
     const TextureUsage usage
 )
 {
+    if (!_isValidUsage(usage))
+        throw std::invalid_argument(
+            "Invalid texture usage flags specified. Only Drawable and ShaderSampled are allowed."
+        );
+
     SDL_Surface* surface = pixelArray.getSDL();
     SDL_Surface* uploadSurface = surface;
     SDL_Surface* keyedUploadSurface = nullptr;
@@ -154,6 +166,12 @@ Texture& Texture::operator=(Texture&& other) noexcept
     }
 
     return *this;
+}
+
+bool Texture::_isValidUsage(TextureUsage usage) const
+{
+    constexpr TextureUsage none = static_cast<TextureUsage>(0);
+    return usage != none && (usage & ~_kAllowedUsages) == none;
 }
 
 void Texture::_createTexture(

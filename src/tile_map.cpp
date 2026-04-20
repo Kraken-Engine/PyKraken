@@ -1655,8 +1655,8 @@ Layer opacity from 0.0 to 1.0.
 Draw the layer to the current renderer.
 
 Args:
-    angle (float, optional): Rotation angle in degrees.
-    pivot (Vec2, optional): Rotation pivot as normalized coordinates (0.0-1.0) relative to the map size.
+    angle (float, optional): Rotation angle in degrees. Defaults to 0.0.
+    pivot (Vec2, optional): Rotation pivot as normalized coordinates relative to the map size. Defaults to (0.5, 0.5).
         )doc");
     nb::bind_vector<std::vector<std::shared_ptr<Layer>>>(subTilemap, "LayerList");
 
@@ -1746,8 +1746,8 @@ Returns:
 Draw the tile layer.
 
 Args:
-    angle (float, optional): Rotation angle in degrees.
-    pivot (Vec2, optional): Rotation pivot as normalized coordinates (0.0-1.0) relative to the map size.
+    angle (float, optional): Rotation angle in degrees. Defaults to 0.0.
+    pivot (Vec2, optional): Rotation pivot as normalized coordinates relative to the map size. Defaults to (0.5, 0.5).
         )doc");
 
     // ----- MapObject -----
@@ -1900,8 +1900,8 @@ Drawing order for objects in the group.
 Draw the object group.
 
 Args:
-    angle (float, optional): Rotation angle in degrees.
-    pivot (Vec2, optional): Rotation pivot as normalized coordinates (0.0-1.0) relative to the map size.
+    angle (float, optional): Rotation angle in degrees. Defaults to 0.0.
+    pivot (Vec2, optional): Rotation pivot as normalized coordinates relative to the map size. Defaults to (0.5, 0.5).
         )doc");
 
     // ----- ImageLayer -----
@@ -1927,8 +1927,8 @@ Texture used by the image layer.
 Draw the image layer.
 
 Args:
-    angle (float, optional): Rotation angle in degrees.
-    pivot (Vec2, optional): Rotation pivot as normalized coordinates (0.0-1.0) relative to the map size.
+    angle (float, optional): Rotation angle in degrees. Defaults to 0.0.
+    pivot (Vec2, optional): Rotation pivot as normalized coordinates relative to the map size. Defaults to (0.5, 0.5).
         )doc");
 
     // ----- Map -----
@@ -2013,8 +2013,8 @@ Args:
 Draw all layers.
 
 Args:
-    angle (float, optional): Rotation angle in degrees to apply to the entire map.
-    pivot (Vec2, optional): Pivot point for rotation, as normalized coordinates (0.0-1.0) relative to the map size.
+    angle (float, optional): Rotation angle in degrees to apply to the entire map. Defaults to 0.0.
+    pivot (Vec2, optional): Pivot point for rotation, as normalized coordinates relative to the map size. Defaults to (0.5, 0.5).
             )doc"
         )
         .def("get_layer", &Map::getLayer, "name"_a, nb::rv_policy::reference_internal, R"doc(
