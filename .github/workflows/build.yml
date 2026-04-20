@@ -70,37 +70,13 @@ jobs:
             VCPKG_KEEP_PDB=0
 
           # --- macOS ---
-          CIBW_BEFORE_ALL_MACOS: >
-            brew install bison cpanm &&
-            export PATH="/opt/homebrew/opt/bison/bin:$PATH" &&
-            cpanm JSON &&
-            rm -rf /tmp/SDL_shadercross /tmp/shadercross-prefix &&
-            git clone --recursive --depth 1 https://github.com/libsdl-org/SDL_shadercross.git /tmp/SDL_shadercross &&
-            cmake -S /tmp/SDL_shadercross -B /tmp/SDL_shadercross/build -GNinja
-            -DCMAKE_BUILD_TYPE=Release
-            -DCMAKE_OSX_ARCHITECTURES=arm64
-            -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0
-            -DCMAKE_INSTALL_PREFIX=/tmp/shadercross-prefix
-            -DSDLSHADERCROSS_VENDORED=ON
-            -DSDLSHADERCROSS_STATIC=ON
-            -DSDLSHADERCROSS_SHARED=OFF
-            -DSDLSHADERCROSS_CLI=OFF
-            -DSDLSHADERCROSS_TESTS=OFF
-            -DSDLSHADERCROSS_WERROR=OFF
-            -DSDLSHADERCROSS_INSTALL=ON
-            -DSDLSHADERCROSS_INSTALL_RUNTIME=ON
-            -DSDLSHADERCROSS_INSTALL_CPACK=OFF
-            -DSDLSHADERCROSS_INSTALL_MAN=OFF &&
-            cmake --build /tmp/SDL_shadercross/build --parallel &&
-            cmake --install /tmp/SDL_shadercross/build
           CIBW_ENVIRONMENT_MACOS: >
             CC=clang CXX=clang++
             MACOSX_DEPLOYMENT_TARGET=15.0
             CMAKE_GENERATOR=Ninja
+            CMAKE_ARGS=-DSDL3_SHADERCROSS_VENDORED=ON
             VCPKG_ROOT=/Users/runner/work/vcpkg
             VCPKG_DEFAULT_TRIPLET=arm64-osx-release
-            SDL3_shadercross_ROOT=/tmp/shadercross-prefix
-            CMAKE_PREFIX_PATH=/tmp/shadercross-prefix
 
           # --- Linux ---
           CIBW_MANYLINUX_X86_64_IMAGE: "manylinux_2_28"
@@ -123,18 +99,10 @@ jobs:
           CIBW_ENVIRONMENT_LINUX: >
             CC=gcc CXX=g++
             CMAKE_GENERATOR=Ninja
+            CMAKE_ARGS=-DSDL3_SHADERCROSS_VENDORED=ON
             VCPKG_ROOT=/opt/vcpkg
             VCPKG_DEFAULT_TRIPLET=x64-linux-release
             VCPKG_DEFAULT_BINARY_CACHE=/project/.vcpkg_cache
-
-      - name: Dump SDL3 shadercross build log
-        if: failure() && runner.os == 'Linux'
-        run: |
-          if [ -f /opt/vcpkg/buildtrees/sdl3-shadercross/install-x64-linux-release-rel-out.log ]; then
-            tail -n 100 /opt/vcpkg/buildtrees/sdl3-shadercross/install-x64-linux-release-rel-out.log
-          else
-            echo "Log file not found."
-          fi
 
       - name: Upload wheels
         uses: actions/upload-artifact@v7
