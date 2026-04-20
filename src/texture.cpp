@@ -245,7 +245,7 @@ void Texture::_createGPUTexture(SDL_Surface* surface)
             "Failed to map GPU transfer buffer: " + std::string(SDL_GetError())
         );
     }
-    std::memcpy(mapped, surface->pixels, transBufInfo.size);
+    SDL_memcpy(mapped, surface->pixels, transBufInfo.size);
     SDL_UnmapGPUTransferBuffer(device, transBuf);
 
     SDL_GPUCommandBuffer* cmd = SDL_AcquireGPUCommandBuffer(device);
