@@ -30,7 +30,10 @@
         "opusfile"
       ]
     },
-    "sdl3-shadercross",
+    {
+      "name": "sdl3-shadercross",
+      "platform": "(windows & !arm32 & !uwp & !xbox) | (linux & x64)"
+    },
     {
       "name": "sdl3-ttf",
       "features": [
