@@ -17,7 +17,6 @@ classifiers = [
   "Operating System :: MacOS",
   "Operating System :: POSIX :: Linux",
 ]
-dependencies = ["pydantic==2.12.3"]
 license = "MIT"
 license-files = ["LICENSE"]
 

@@ -70,13 +70,13 @@ def main():
         help="Overwrite existing main.py if it exists"
     )
     init_parser.add_argument(
-        "--minimal",
+        "--demo",
         action="store_true",
-        help="Generate a minimal starter file"
+        help="Generate a starter file with text and shape rendering"
     )
 
     # --- DOCS COMMAND ---
-    docs_parser = subparsers.add_parser("docs", help="Open PyKraken documentation in browser")
+    subparsers.add_parser("docs", help="Open PyKraken documentation in browser")
 
     args = parser.parse_args()
 
@@ -167,7 +167,7 @@ while kn.window.is_open():
 kn.quit()
 """
 
-        default_template = """import pykraken as kn
+        demo_template = """import pykraken as kn
 from random import randint, choice
 
 WIN_SIZE = kn.Vec2(800, 600)
@@ -219,7 +219,7 @@ while kn.window.is_open():
 
 kn.quit()
 """
-        template = minimal_template if args.minimal else default_template
+        template = demo_template if args.demo else minimal_template
 
         try:
             os.makedirs(target_dir, exist_ok=True)

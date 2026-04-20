@@ -4,7 +4,7 @@
   "version-semver": "1.7.2",
   "description": "A 2D videogame development framework.",
   "homepage": "https://krakenengine.org/",
-  "builtin-baseline": "0b88aacde46a853151730fbe7d0b7ee45f4b6864",
+  "builtin-baseline": "256acc64012b23a13041d8705805e1f23b43a024",
   "dependencies": [
     "box2d",
     "pugixml",
@@ -30,6 +30,7 @@
         "opusfile"
       ]
     },
+    "sdl3-shadercross",
     {
       "name": "sdl3-ttf",
       "features": [
@@ -43,8 +44,7 @@
       ]
     },
     "tmxlite",
-    "zstd",
-    "sdl3-shadercross"
+    "zstd"
   ],
   "overrides": [
     {
@@ -62,6 +62,10 @@
     {
       "name": "sdl3-mixer",
       "version": "3.2.0"
+    },
+    {
+      "name": "sdl3-shadercross",
+      "version": "3.0.0-preview2"
     },
     {
       "name": "sdl3-ttf",
