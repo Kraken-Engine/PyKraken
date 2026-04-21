@@ -153,3 +153,4 @@ src/pykraken/_pykraken/
 src/pykraken/py.typed
 
 external/
+.codex

@@ -19,6 +19,8 @@ cmake_minimum_required(VERSION 3.15...3.27)
 # after editing C++ files.
 
 # --- vcpkg integration (Windows CI and local dev) ---
+set(_KRAKEN_VCPKG_TRIPLET "")
+
 if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
   set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
       CACHE STRING "Vcpkg toolchain file")
@@ -32,6 +34,26 @@ if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
   endif()
 
   set(VCPKG_APPLOCAL_DEPS OFF CACHE BOOL "" FORCE)
+endif()
+
+if(DEFINED VCPKG_TARGET_TRIPLET)
+  set(_KRAKEN_VCPKG_TRIPLET "${VCPKG_TARGET_TRIPLET}")
+elseif(DEFINED ENV{VCPKG_DEFAULT_TRIPLET})
+  set(_KRAKEN_VCPKG_TRIPLET "$ENV{VCPKG_DEFAULT_TRIPLET}")
+endif()
+
+if(_KRAKEN_VCPKG_TRIPLET)
+  set(_KRAKEN_VCPKG_INSTALLED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg_installed")
+
+  # scikit-build may invoke CMake before the vcpkg toolchain has a chance to
+  # populate find roots. Manifest installs still live here, so expose them
+  # explicitly for CONFIG packages such as spdlog, box2d, pugixml, and zstd.
+  if(EXISTS "${_KRAKEN_VCPKG_INSTALLED_DIR}/${_KRAKEN_VCPKG_TRIPLET}")
+    set(VCPKG_INSTALLED_DIR "${_KRAKEN_VCPKG_INSTALLED_DIR}"
+        CACHE PATH "Vcpkg installed package directory")
+    list(PREPEND CMAKE_PREFIX_PATH
+      "${_KRAKEN_VCPKG_INSTALLED_DIR}/${_KRAKEN_VCPKG_TRIPLET}")
+  endif()
 endif()
 
 project(KrakenEngine LANGUAGES CXX)
