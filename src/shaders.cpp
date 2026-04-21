@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <string>
+#include <utility>
 
 #include "Renderer.hpp"
 #include "Shaders.hpp"
@@ -44,6 +45,19 @@ namespace kn::shaders
 {
 // Static registry to track all shader states for proper cleanup
 static std::vector<Shader*> _shaderStates;
+
+static void _registerShaderState(Shader* shader)
+{
+    if (std::find(_shaderStates.begin(), _shaderStates.end(), shader) == _shaderStates.end())
+        _shaderStates.push_back(shader);
+}
+
+static void _unregisterShaderState(Shader* shader)
+{
+    auto it = std::find(_shaderStates.begin(), _shaderStates.end(), shader);
+    if (it != _shaderStates.end())
+        _shaderStates.erase(it);
+}
 
 Shader::Shader(
     const std::filesystem::path& fragmentBasePath, const uint32_t uniformBufferCount,
@@ -128,48 +142,51 @@ Shader::Shader(
     if (!m_renderState)
     {
         SDL_ReleaseGPUShader(renderer::_getGPUDevice(), m_fragShader);
+        m_fragShader = nullptr;
         throw std::runtime_error("Failed to create render state: " + std::string(SDL_GetError()));
     }
 
-    _shaderStates.push_back(this);
+    _registerShaderState(this);
 }
 
 Shader::Shader(Shader&& other) noexcept
     : m_fragShader(other.m_fragShader),
-      m_renderState(other.m_renderState)
+      m_renderState(other.m_renderState),
+      m_samplerCount(other.m_samplerCount),
+      m_samplerBindings(std::move(other.m_samplerBindings))
 {
-    // Steal pointers and nullify original
     other.m_fragShader = nullptr;
     other.m_renderState = nullptr;
+    other.m_samplerCount = 0;
 
-    // Update address in global registry
-    auto it = std::find(_shaderStates.begin(), _shaderStates.end(), &other);
-    if (it != _shaderStates.end())
-        *it = this;  // Swap old pointer for new address
+    _unregisterShaderState(&other);
+    if (m_renderState || m_fragShader)
+        _registerShaderState(this);
 }
 
 Shader& Shader::operator=(Shader&& other) noexcept
 {
     if (this != &other)
     {
-        // Clean up existing GPU resources first
+        _unregisterShaderState(this);
+
         if (m_renderState)
             SDL_DestroyGPURenderState(m_renderState);
         if (m_fragShader)
             SDL_ReleaseGPUShader(renderer::_getGPUDevice(), m_fragShader);
 
-        // Remove "other" from the registry to prevent dangling pointers.
-        auto it = std::find(_shaderStates.begin(), _shaderStates.end(), &other);
-        if (it != _shaderStates.end())
-            _shaderStates.erase(it);
-
-        // Steal pointers
         m_fragShader = other.m_fragShader;
         m_renderState = other.m_renderState;
+        m_samplerCount = other.m_samplerCount;
+        m_samplerBindings = std::move(other.m_samplerBindings);
 
-        // Nullify original
         other.m_fragShader = nullptr;
         other.m_renderState = nullptr;
+        other.m_samplerCount = 0;
+
+        _unregisterShaderState(&other);
+        if (m_renderState || m_fragShader)
+            _registerShaderState(this);
     }
 
     return *this;
@@ -177,11 +194,7 @@ Shader& Shader::operator=(Shader&& other) noexcept
 
 Shader::~Shader()
 {
-    // Remove from registry if still present
-    auto& shaders = _shaderStates;
-    auto it = std::find(shaders.begin(), shaders.end(), this);
-    if (it != shaders.end())
-        shaders.erase(it);
+    _unregisterShaderState(this);
 
     // Only clean up GPU resources if the device still exists
     // If _quit() was called, resources were already freed
