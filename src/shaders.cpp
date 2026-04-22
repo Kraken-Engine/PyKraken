@@ -47,7 +47,7 @@ static std::vector<Shader*> _shaderStates;
 
 Shader::Shader(
     const std::filesystem::path& fragmentBasePath, const uint32_t uniformBufferCount,
-    const uint32_t samplerCount
+    const uint32_t samplerCount, const std::vector<uint32_t>& storageBufferSizes
 )
 {
     SDL_GPUShaderFormat formats = SDL_GetGPUShaderFormats(renderer::_getGPUDevice());
@@ -98,7 +98,7 @@ Shader::Shader(
         .stage = SDL_GPU_SHADERSTAGE_FRAGMENT,
         .num_samplers = samplerCount,
         .num_storage_textures = 0,  // Not usable yet
-        .num_storage_buffers = 0,   // Not usable yet
+        .num_storage_buffers = storageBufferCount,
         .num_uniform_buffers = uniformBufferCount,
         .props = 0,
     };
@@ -114,14 +114,51 @@ Shader::Shader(
     }
     SDL_free(code);
 
+    m_storageBufferCount = static_cast<uint32_t>(storageBufferSizes.size());
+    m_storageBufferSizes = storageBufferSizes;
+
+    if (m_storageBufferCount > 0)
+    {
+        for (uint32_t i = 0; i < storageBufferCount; i++)
+        {
+            SDL_GPUBufferCreateInfo bufferInfo{
+                .usage = SDL_GPU_BUFFERUSAGE_GRAPHICS_STORAGE_READ,
+                .size = storageBufferSizes[i],
+                .props = 0
+            };
+            SDL_GPUBuffer* buffer = SDL_CreateGPUBuffer(renderer::_getGPUDevice(), &bufferInfo);
+            if (!buffer) 
+            {
+                throw std::runtime_error("Failed to create a GPU buffer: " + std::string(SDL_GetError()));
+            }
+            m_storageBuffers.push_back(buffer);
+            
+            SDL_GPUTransferBufferCreateInfo transferBufferInfo{
+                .usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
+                .size  = storageBufferSizes[i],
+                .props = 0
+            };
+            SDL_GPUTransferBuffer* transferBuffer = SDL_CreateGPUTransferBuffer(
+                renderer::_getGPUDevice(),
+                &transferBufferInfo
+            );
+            if (!transferBuffer)
+            {
+                throw std::runtime_error("Failed to create a GPU storage transfer buffer: "
+                    + std::string(SDL_GetError()));
+            }
+            m_storageTransferBuffers.push_back(transferBuffer);
+        }
+    }
+
     SDL_GPURenderStateCreateInfo renderStateInfo{
         .fragment_shader = m_fragShader,
         .num_sampler_bindings = 0,
         .sampler_bindings = nullptr,
         .num_storage_textures = 0,    // Not usable yet
         .storage_textures = nullptr,  // Not usable yet
-        .num_storage_buffers = 0,     // Not usable yet
-        .storage_buffers = nullptr,   // Not usable yet
+        .num_storage_buffers = storageBufferCount,
+        .storage_buffers = m_storageBuffers.data(),
         .props = 0,
     };
     m_renderState = SDL_CreateGPURenderState(renderer::_get(), &renderStateInfo);
@@ -153,11 +190,17 @@ Shader& Shader::operator=(Shader&& other) noexcept
     if (this != &other)
     {
         // Clean up existing GPU resources first
+        for (SDL_GPUTransferBuffer* transferBuffer : m_storageTransferBuffers)
+            SDL_ReleaseGPUTransferBuffer(renderer::_getGPUDevice(), transferBuffer);
+        for (SDL_GPUBuffer* buffer : m_storageBuffers)
+            SDL_ReleaseGPUBuffer(renderer::_getGPUDevice(), buffer);
         if (m_renderState)
             SDL_DestroyGPURenderState(m_renderState);
         if (m_fragShader)
             SDL_ReleaseGPUShader(renderer::_getGPUDevice(), m_fragShader);
-
+        m_storageTransferBuffers.clear();
+        m_storageBuffers.clear();
+            
         // Remove "other" from the registry to prevent dangling pointers.
         auto it = std::find(_shaderStates.begin(), _shaderStates.end(), &other);
         if (it != _shaderStates.end())
@@ -193,6 +236,12 @@ Shader::~Shader()
 
     if (m_fragShader)
     {
+        for (SDL_GPUTransferBuffer* transferBuffer : m_storageTransferBuffers)
+            SDL_ReleaseGPUTransferBuffer(renderer::_getGPUDevice(), transferBuffer);
+        for (SDL_GPUBuffer* buffer : m_storageBuffers)
+            SDL_ReleaseGPUBuffer(renderer::_getGPUDevice(), buffer);
+        m_storageTransferBuffers.clear();
+        m_storageBuffers.clear();
         SDL_ReleaseGPUShader(renderer::_getGPUDevice(), m_fragShader);
         m_fragShader = nullptr;
     }
@@ -232,6 +281,41 @@ void Shader::setTextureSampler(
         .texture = texture.getGPU(),
         .sampler = sampler.getSDL(),
     };
+}
+
+void Shader::setStorageBufferData(const uint32_t index, const void* data, const uint32_t len)
+{
+    if (!data)
+        throw std::runtime_error("Storage buffer data pointer is null");
+    if (index >= m_storageBufferCount)
+        throw std::runtime_error("Storage buffer index out of range");
+    if (len > m_storageBufferSizes[index])
+        throw std::runtime_error("Data size exceeds capacity");
+
+    uint8_t* ptr = static_cast<uint8_t*>(SDL_MapGPUTransferBuffer(
+        renderer::_getGPUDevice(),
+        m_storageTransferBuffers[index],
+        true
+    ));
+    memcpy(ptr, data, len);
+    SDL_UnmapGPUTransferBuffer(renderer::_getGPUDevice(), m_storageTransferBuffers[index]);
+
+    SDL_GPUCommandBuffer* command_buffer = SDL_AcquireGPUCommandBuffer(
+        renderer::_getGPUDevice()
+    );
+    SDL_GPUCopyPass* copy = SDL_BeginGPUCopyPass(command_buffer);
+    SDL_GPUTransferBufferLocation location{
+        .transfer_buffer = m_storageTransferBuffers[index],
+        .offset = 0
+    };
+    SDL_GPUBufferRegion region{
+        .buffer = m_storageBuffers[index],
+        .offset = 0,
+        .size = len
+    };
+    SDL_UploadToGPUBuffer(copy, &location, &region, true);
+    SDL_EndGPUCopyPass(copy);
+    SDL_SubmitGPUCommandBuffer(command_buffer);
 }
 
 Sampler::Sampler(
@@ -409,6 +493,45 @@ Args:
 Raises:
     TypeError: If the object does not provide compatible uniform data.
     RuntimeError: If the uniform data cannot be set.
+            )doc"
+        )
+        .def(
+            "set_storage_buffer_data",
+            [](const Shader& self, const Uint32 index, nb::object data)
+            {
+                Py_buffer view;
+
+                if (PyObject_GetBuffer(data.ptr(), &view, PyBUF_CONTIG_RO) != 0)
+                    throw nb::type_error("Expected a buffer-compatible object for uniform data");
+
+                try
+                {
+                    if (view.buf == nullptr || view.len < 0)
+                        throw nb::type_error("Invalid buffer object");
+
+                    self.setStorageBufferData(index, data.buf, static_cast<uint32_t>(data.len));
+                }
+                catch (...)
+                {
+                    PyBuffer_Release(&view);
+                    throw;
+                }
+
+                PyBuffer_Release(&view);
+            },
+            "index"_a, "data"_a,
+            nb::sig("def set_storage_buffer_data(self, index: int, data: collections.abc.Buffer, /) -> None"),
+            R"doc(
+Sets the data for a data storage buffer (an HLSL StructuredBuffer, untested for GLSL) for the fragment shader
+at the specified index.
+
+Args:
+    index (int): Shader buffer binding index.
+    data (Buffer): Buffer-compatible object containing the bytes to be given to the shader buffer.
+
+Raises:
+    TypeError: If the object does not provide compatible storage buffer data.
+    RuntimeError: If the storage buffer data cannot be set.
             )doc"
         )
         .def(
