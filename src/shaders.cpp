@@ -433,7 +433,7 @@ Encapsulates a GPU shader and its associated render state.
         )doc")
         .def(
             nb::init<const std::filesystem::path&, uint32_t, uint32_t, const std::vector<uint32_t>&>(), "fragment_base_path"_a,
-            "uniform_buffer_count"_a = 0, "sampler_count"_a = 1, "storage_buffer_sizes"_a = {}, R"doc(
+            "uniform_buffer_count"_a = 0, "sampler_count"_a = 1, "storage_buffer_sizes"_a = std::vector<uint32_t>{}, R"doc(
 Create a Shader instance from a fragment shader file.
 
 Args:
