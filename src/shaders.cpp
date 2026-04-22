@@ -432,14 +432,15 @@ Args:
 Encapsulates a GPU shader and its associated render state.
         )doc")
         .def(
-            nb::init<const std::filesystem::path&, uint32_t, uint32_t>(), "fragment_base_path"_a,
-            "uniform_buffer_count"_a = 0, "sampler_count"_a = 1, R"doc(
+            nb::init<const std::filesystem::path&, uint32_t, uint32_t, const std::vector<uint32_t>&>(), "fragment_base_path"_a,
+            "uniform_buffer_count"_a = 0, "sampler_count"_a = 1, "storage_buffer_sizes"_a = {}, R"doc(
 Create a Shader instance from a fragment shader file.
 
 Args:
     fragment_base_path (str): Base file name of the fragment shader. The appropriate backend extension will be appended automatically.
     uniform_buffer_count (int, optional): Number of uniform buffers used by the shader. Default is 0.
     sampler_count (int, optional): Number of samplers used by the shader. Default is 1.
+    storage_buffer_sizes (Sequence[int], optional): The storage buffer sizes in bytes used by the shader. Default is an empty sequence.
 
 Raises:
     RuntimeError: If the shader cannot be loaded or created.
