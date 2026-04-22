@@ -2,6 +2,7 @@
 #include <nanobind/ndarray.h>
 #include <nanobind/stl/filesystem.h>
 #include <nanobind/stl/string.h>
+#include <nanobind/stl/vector.h>
 #endif  // KRAKEN_ENABLE_PYTHON
 
 #include <algorithm>
