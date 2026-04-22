@@ -59,6 +59,7 @@ Shader::Shader(
     SDL_GPUShaderFormat shaderFormat = SDL_GPU_SHADERFORMAT_INVALID;
     const char* entrypoint;
     std::string extension;
+    m_storageBufferCount = static_cast<uint32_t>(storageBufferSizes.size());
 
     if (formats & SDL_GPU_SHADERFORMAT_SPIRV)
     {
@@ -98,7 +99,7 @@ Shader::Shader(
         .stage = SDL_GPU_SHADERSTAGE_FRAGMENT,
         .num_samplers = samplerCount,
         .num_storage_textures = 0,  // Not usable yet
-        .num_storage_buffers = storageBufferCount,
+        .num_storage_buffers = m_storageBufferCount,
         .num_uniform_buffers = uniformBufferCount,
         .props = 0,
     };
@@ -114,12 +115,11 @@ Shader::Shader(
     }
     SDL_free(code);
 
-    m_storageBufferCount = static_cast<uint32_t>(storageBufferSizes.size());
     m_storageBufferSizes = storageBufferSizes;
 
     if (m_storageBufferCount > 0)
     {
-        for (uint32_t i = 0; i < storageBufferCount; i++)
+        for (uint32_t i = 0; i < m_storageBufferCount; i++)
         {
             SDL_GPUBufferCreateInfo bufferInfo{
                 .usage = SDL_GPU_BUFFERUSAGE_GRAPHICS_STORAGE_READ,
@@ -157,7 +157,7 @@ Shader::Shader(
         .sampler_bindings = nullptr,
         .num_storage_textures = 0,    // Not usable yet
         .storage_textures = nullptr,  // Not usable yet
-        .num_storage_buffers = storageBufferCount,
+        .num_storage_buffers = m_storageBufferCount,
         .storage_buffers = m_storageBuffers.data(),
         .props = 0,
     };
@@ -509,7 +509,7 @@ Raises:
                     if (view.buf == nullptr || view.len < 0)
                         throw nb::type_error("Invalid buffer object");
 
-                    self.setStorageBufferData(index, data.buf, static_cast<uint32_t>(data.len));
+                    self.setStorageBufferData(index, view.buf, static_cast<uint32_t>(view.len));
                 }
                 catch (...)
                 {
