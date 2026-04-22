@@ -157,7 +157,7 @@ Shader::Shader(
         .sampler_bindings = nullptr,
         .num_storage_textures = 0,    // Not usable yet
         .storage_textures = nullptr,  // Not usable yet
-        .num_storage_buffers = m_storageBufferCount,
+        .num_storage_buffers = static_cast<int32_t>(m_storageBufferCount),
         .storage_buffers = m_storageBuffers.data(),
         .props = 0,
     };
@@ -497,7 +497,7 @@ Raises:
         )
         .def(
             "set_storage_buffer_data",
-            [](const Shader& self, const Uint32 index, nb::object data)
+            [](Shader& self, const Uint32 index, nb::object data)
             {
                 Py_buffer view;
 
