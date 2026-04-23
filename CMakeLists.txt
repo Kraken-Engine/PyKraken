@@ -40,6 +40,8 @@ if(DEFINED VCPKG_TARGET_TRIPLET)
   set(_KRAKEN_VCPKG_TRIPLET "${VCPKG_TARGET_TRIPLET}")
 elseif(DEFINED ENV{VCPKG_DEFAULT_TRIPLET})
   set(_KRAKEN_VCPKG_TRIPLET "$ENV{VCPKG_DEFAULT_TRIPLET}")
+elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg_installed/x64-linux")
+  set(_KRAKEN_VCPKG_TRIPLET "x64-linux")
 endif()
 
 if(_KRAKEN_VCPKG_TRIPLET)
@@ -75,6 +77,8 @@ else()
 endif()
 
 include(FetchContent)
+set(FETCHCONTENT_UPDATES_DISCONNECTED ON CACHE BOOL
+    "Skip remote updates for already-populated FetchContent dependencies" FORCE)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "KrakenEngine only supports static builds" FORCE)
 
 option(KRAKEN_VENDORED "Set default value for all *_VENDORED dependency options" OFF)
@@ -146,6 +150,7 @@ if(SDL3_IMAGE_VENDORED)
     GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
     GIT_TAG        release-3.4.0
     GIT_SHALLOW    TRUE
+    GIT_SUBMODULES external/jpeg external/libpng external/zlib
   )
   FetchContent_MakeAvailable(SDL_image)
 else()
@@ -373,6 +378,11 @@ if(KRAKEN_BUILD_PYTHON)
       INSTALL_RPATH "${CMAKE_BINARY_DIR}/_deps/sdl_shadercross-build/external/SPIRV-Cross;${CMAKE_BINARY_DIR}/_deps/sdl_shadercross-build/external/DirectXShaderCompiler/lib"
       INSTALL_RPATH_USE_LINK_PATH TRUE
     )
+  elseif(_KRAKEN_VCPKG_TRIPLET)
+    set_target_properties(_pykraken PROPERTIES
+      INSTALL_RPATH "$ORIGIN"
+      INSTALL_RPATH_USE_LINK_PATH TRUE
+    )
   else()
     set_target_properties(_pykraken PROPERTIES
       INSTALL_RPATH_USE_LINK_PATH TRUE
@@ -476,6 +486,17 @@ if(KRAKEN_BUILD_PYTHON)
     endif()
     if(_VENDORED_TARGETS)
       install(TARGETS ${_VENDORED_TARGETS} RUNTIME DESTINATION pykraken)
+    endif()
+  elseif(_KRAKEN_VCPKG_TRIPLET AND NOT SDL3_SHADERCROSS_VENDORED)
+    set(_KRAKEN_SHADERCROSS_RUNTIME_LIBS "")
+    if(DirectXShaderCompiler_dxcompiler_LIBRARY)
+      list(APPEND _KRAKEN_SHADERCROSS_RUNTIME_LIBS "${DirectXShaderCompiler_dxcompiler_LIBRARY}")
+    endif()
+    if(DirectXShaderCompiler_dxil_LIBRARY)
+      list(APPEND _KRAKEN_SHADERCROSS_RUNTIME_LIBS "${DirectXShaderCompiler_dxil_LIBRARY}")
+    endif()
+    if(_KRAKEN_SHADERCROSS_RUNTIME_LIBS)
+      install(FILES ${_KRAKEN_SHADERCROSS_RUNTIME_LIBS} DESTINATION pykraken)
     endif()
   endif()
 
