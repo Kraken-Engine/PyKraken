@@ -55,7 +55,7 @@
 
 #define KN_VERSION_MAJOR 1
 #define KN_VERSION_MINOR 7
-#define KN_VERSION_PATCH 2
+#define KN_VERSION_PATCH 3
 
 namespace kn
 {

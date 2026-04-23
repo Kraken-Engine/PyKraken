@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) when possible.
 
+## [1.7.3] - TBA
+
+### Added
+- `tilemap.Map` constructor now accepts an optional path to load on creation.
+- Camera rotation is now supported by modifying its `transform.angle` property.
+- Added two camera move helpers: `move_world` and `move_screen`
+
+### Changed
+- Instead of the highly confusing camera `world_pos` and `local_pos` properties,
+  position has been moved to a `transform` property .
+
+### Fixed
+- Improved UI context management.
+- Improved Texture move semantics.
+- Fixed segfault relating to shaders by correcting backend move semantics.
+- Fixed bug with `mouse.is_pressed` function where left clicks counted as both left and right clicks.
+
 ## [1.7.2] - TBA
 
 ### Added
