@@ -136,14 +136,16 @@ Texture::~Texture()
 
 Texture::Texture(Texture&& other) noexcept
     : flip(other.flip),
+      m_texPtr(other.m_texPtr),
+      m_gpuTexPtr(other.m_gpuTexPtr),
+      m_usage(other.m_usage),
       m_width(other.m_width),
       m_height(other.m_height),
-      m_clipArea(other.m_clipArea),
-      m_texPtr(other.m_texPtr),
-      m_gpuTexPtr(other.m_gpuTexPtr)
+      m_clipArea(other.m_clipArea)
 {
     other.m_texPtr = nullptr;
     other.m_gpuTexPtr = nullptr;
+    other.m_usage = static_cast<TextureUsage>(0);
 }
 
 Texture& Texture::operator=(Texture&& other) noexcept
@@ -161,8 +163,10 @@ Texture& Texture::operator=(Texture&& other) noexcept
         m_clipArea = other.m_clipArea;
         m_texPtr = other.m_texPtr;
         m_gpuTexPtr = other.m_gpuTexPtr;
+        m_usage = other.m_usage;
         other.m_texPtr = nullptr;
         other.m_gpuTexPtr = nullptr;
+        other.m_usage = static_cast<TextureUsage>(0);
     }
 
     return *this;

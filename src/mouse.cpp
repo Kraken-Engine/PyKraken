@@ -14,6 +14,16 @@ namespace kn::mouse
 constexpr size_t MOUSE_BUTTON_COUNT = 5;
 static bool _mousePressed[MOUSE_BUTTON_COUNT];
 static bool _mouseReleased[MOUSE_BUTTON_COUNT];
+static float _mouseRelX = 0.0f;
+static float _mouseRelY = 0.0f;
+
+namespace
+{
+size_t _buttonToIndex(const MouseButton button)
+{
+    return static_cast<size_t>(button) - 1;
+}
+}  // namespace
 
 Vec2 getPos()
 {
@@ -39,12 +49,12 @@ Vec2 getPos()
 
 Vec2 getRel()
 {
-    float dx, dy;
     float x0, y0, x1, y1;
 
     SDL_Renderer* r = renderer::_get();
 
-    SDL_GetRelativeMouseState(&dx, &dy);
+    const float dx = _mouseRelX;
+    const float dy = _mouseRelY;
     SDL_RenderCoordinatesFromWindow(r, 0.0f, 0.0f, &x0, &y0);
     SDL_RenderCoordinatesFromWindow(r, dx, dy, &x1, &y1);
 
@@ -63,17 +73,17 @@ Vec2 getRel()
 
 bool isPressed(MouseButton button)
 {
-    return SDL_GetMouseState(nullptr, nullptr) & static_cast<uint32_t>(button);
+    return SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_MASK(static_cast<uint32_t>(button));
 }
 
 bool isJustPressed(MouseButton button)
 {
-    return _mousePressed[static_cast<size_t>(button) - 1];
+    return _mousePressed[_buttonToIndex(button)];
 }
 
 bool isJustReleased(MouseButton button)
 {
-    return _mouseReleased[static_cast<size_t>(button) - 1];
+    return _mouseReleased[_buttonToIndex(button)];
 }
 
 void lock()
@@ -110,6 +120,8 @@ void _clearStates()
 {
     std::ranges::fill(_mousePressed, false);
     std::ranges::fill(_mouseReleased, false);
+    _mouseRelX = 0.0f;
+    _mouseRelY = 0.0f;
 }
 
 void _handleEvents(const SDL_Event& sdlEvent, Event& e)
@@ -117,6 +129,8 @@ void _handleEvents(const SDL_Event& sdlEvent, Event& e)
     switch (sdlEvent.type)
     {
     case SDL_EVENT_MOUSE_MOTION:
+        _mouseRelX += sdlEvent.motion.xrel;
+        _mouseRelY += sdlEvent.motion.yrel;
         e.data["which"] = sdlEvent.motion.which;
         e.data["x"] = sdlEvent.motion.x;
         e.data["y"] = sdlEvent.motion.y;

@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "name": "kraken-engine",
-  "version-semver": "1.7.2",
+  "version-semver": "1.7.3",
   "description": "A 2D videogame development framework.",
   "homepage": "https://krakenengine.org/",
   "builtin-baseline": "256acc64012b23a13041d8705805e1f23b43a024",
@@ -32,7 +32,7 @@
     },
     {
       "name": "sdl3-shadercross",
-      "platform": "windows & !arm32 & !uwp & !xbox"
+      "platform": "(windows & !arm32 & !uwp & !xbox) | (linux & x64)"
     },
     {
       "name": "sdl3-ttf",

@@ -79,6 +79,9 @@ class Shader
     std::vector<uint32_t> m_storageBufferSizes;
     std::vector<SDL_GPUTransferBuffer*> m_storageTransferBuffers;
 
+    void _releaseGPUResources() noexcept;
+    void _moveFrom(Shader& other) noexcept;
+
     friend void _quit();
 
 #ifdef KRAKEN_ENABLE_PYTHON

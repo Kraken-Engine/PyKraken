@@ -5,8 +5,6 @@
 
 namespace kn
 {
-static Vec2 _cameraPos{};
-static double _cameraAngle = 0.0;
 Camera* Camera::active = nullptr;
 
 Camera::Camera(const bool setActive)
@@ -15,59 +13,27 @@ Camera::Camera(const bool setActive)
         set();
 }
 
-void Camera::setWorldPos(const Vec2& worldPos)
-{
-    this->m_pos = worldPos;
-    if (active == this)
-        _cameraPos = worldPos;
-}
-
-Vec2 Camera::getWorldPos() const
-{
-    return m_pos;
-}
-
-Vec2 Camera::getLocalPos() const
-{
-    return m_pos.rotated(m_angle);
-}
-
-void Camera::setLocalPos(const Vec2& localPos)
-{
-    setWorldPos(localPos.rotated(-m_angle));
-}
-
-double Camera::getAngle() const
-{
-    return m_angle;
-}
-
-void Camera::setAngle(const double angle)
-{
-    m_angle = angle;
-    if (active == this)
-        _cameraAngle = angle;
-}
-
-void Camera::moveLocal(const Vec2& localDelta)
-{
-    setWorldPos(m_pos + localDelta.rotated(-m_angle));
-}
-
 void Camera::moveWorld(const Vec2& worldDelta)
 {
-    setWorldPos(m_pos + worldDelta);
+    transform.pos += worldDelta;
+}
+
+void Camera::moveScreen(const Vec2& screenDelta)
+{
+    transform.pos += screenDelta.rotated(-transform.angle);
+}
+
+void Camera::rotate(const double delta)
+{
+    transform.angle += delta;
 }
 
 Vec2 Camera::worldToScreen(const Vec2& worldPos) const
 {
-    Vec2 screenPos = worldPos - m_pos;
-    if (m_angle == 0.0)
-        return screenPos;
-
     const Vec2 center = renderer::getCurrentResolution() * 0.5;
-    screenPos -= center;
-    screenPos.rotate(m_angle);
+    Vec2 screenPos = worldPos - transform.pos;
+    if (transform.angle != 0.0)
+        screenPos.rotate(transform.angle);
     screenPos += center;
 
     return screenPos;
@@ -75,15 +41,11 @@ Vec2 Camera::worldToScreen(const Vec2& worldPos) const
 
 Vec2 Camera::screenToWorld(const Vec2& screenPos) const
 {
-    Vec2 worldPos = screenPos;
-    if (m_angle != 0.0)
-    {
-        const Vec2 center = renderer::getCurrentResolution() * 0.5;
-        worldPos -= center;
-        worldPos.rotate(-m_angle);
-        worldPos += center;
-    }
-    worldPos += m_pos;
+    const Vec2 center = renderer::getCurrentResolution() * 0.5;
+    Vec2 worldPos = screenPos - center;
+    if (transform.angle != 0.0)
+        worldPos.rotate(-transform.angle);
+    worldPos += transform.pos;
 
     return worldPos;
 }
@@ -91,18 +53,12 @@ Vec2 Camera::screenToWorld(const Vec2& screenPos) const
 void Camera::set()
 {
     active = this;
-    _cameraPos = m_pos;
-    _cameraAngle = m_angle;
 }
 
 void Camera::unset()
 {
     if (active == this)
-    {
         active = nullptr;
-        _cameraPos = Vec2{0, 0};
-        _cameraAngle = 0.0;
-    }
 }
 
 namespace camera
@@ -125,12 +81,18 @@ Vec2 screenToWorld(const Vec2& screenPos)
 
 Vec2 getActivePos()
 {
-    return _cameraPos;
+    if (Camera::active)
+        return Camera::active->transform.pos;
+
+    return {};
 }
 
 double getActiveAngle()
 {
-    return _cameraAngle;
+    if (Camera::active)
+        return Camera::active->transform.angle;
+
+    return 0.0;
 }
 
 Camera* _getActiveCamera()
@@ -162,7 +124,7 @@ Returns:
     )doc");
 
     subCamera.def("world_to_screen", &camera::worldToScreen, "world_pos"_a, R"doc(
-Convert a world position to a screen position using the active camera's translation.
+Convert a world position to a screen position using the active camera.
 
 Args:
     world_pos (Vec2): The world position to convert.
@@ -172,7 +134,7 @@ Returns:
     )doc");
 
     subCamera.def("screen_to_world", &camera::screenToWorld, "screen_pos"_a, R"doc(
-Convert a screen position to a world position using the active camera's translation.
+Convert a screen position to a world position using the active camera.
 
 Args:
     screen_pos (Vec2): The screen position to convert.
@@ -184,7 +146,7 @@ Returns:
     nb::class_<Camera>(module, "Camera", R"doc(
 Represents a 2D camera used for rendering.
 
-Controls the viewport's translation, allowing you to move the view of the world.
+The camera position is the world point displayed at the center of the current render target.
     )doc")
         .def(nb::init<bool>(), "set_active"_a = false, R"doc(
 Create a camera with an optional active state.
@@ -193,33 +155,28 @@ Args:
     set_active (bool, optional): Whether to set this camera as active, unsetting any existing active camera. Defaults to false.
         )doc")
 
-        .def_prop_rw("world_pos", &Camera::getWorldPos, &Camera::setWorldPos, R"doc(
-Get or set the camera's world position.
-
-Returns:
-    Vec2: The camera's current world position.
+        .def_rw("transform", &Camera::transform, R"doc(
+The camera transform. `transform.pos` is the world point at the center of the view.
+`transform.angle` rotates the rendered view in radians. `transform.scale` is reserved for future zoom support.
         )doc")
-        .def_prop_rw("local_pos", &Camera::getLocalPos, &Camera::setLocalPos, R"doc(
-Get or set the camera position in camera-local space.
 
-Returns:
-    Vec2: The camera's current local position.
-    )doc")
-        .def_prop_rw("angle", &Camera::getAngle, &Camera::setAngle, R"doc(
-Get or set the camera angle in radians.
-    )doc")
-
-        .def("move_local", &Camera::moveLocal, "delta"_a, R"doc(
-Move the camera by a delta in camera-local (screen) space.
-
-Args:
-    delta (Vec2): Local movement delta.
-    )doc")
         .def("move_world", &Camera::moveWorld, "delta"_a, R"doc(
 Move the camera by a delta in world space.
 
 Args:
     delta (Vec2): World movement delta.
+    )doc")
+        .def("move_screen", &Camera::moveScreen, "delta"_a, R"doc(
+Move the camera by a delta in screen/camera space.
+
+Args:
+    delta (Vec2): Screen-space movement delta.
+    )doc")
+        .def("rotate", &Camera::rotate, "delta"_a, R"doc(
+Rotate the camera view by a delta in radians.
+
+Args:
+    delta (float): Angle delta in radians.
     )doc")
 
         .def("set", &Camera::set, R"doc(
@@ -233,7 +190,7 @@ Unset this camera as the active one for rendering.
         )doc")
 
         .def("world_to_screen", &Camera::worldToScreen, "world_pos"_a, R"doc(
-Convert a world position to a screen position using this camera's translation.
+Convert a world position to a screen position using this camera.
 
 Args:
     world_pos (Vec2): The world position to convert.
@@ -243,7 +200,7 @@ Returns:
         )doc")
 
         .def("screen_to_world", &Camera::screenToWorld, "screen_pos"_a, R"doc(
-Convert a screen position to a world position using this camera's translation.
+Convert a screen position to a world position using this camera.
 
 Args:
     screen_pos (Vec2): The screen position to convert.

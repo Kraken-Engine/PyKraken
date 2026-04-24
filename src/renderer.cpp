@@ -240,14 +240,12 @@ void present()
 
     // Hold old cam pos and set pos to origin
     kn::Camera* currCamera = camera::_getActiveCamera();
-    Vec2 cameraPos;
-    double cameraAngle = 0.0;
+    Transform cameraXf;
     if (currCamera)
     {
-        cameraPos = currCamera->getWorldPos();
-        cameraAngle = currCamera->getAngle();
-        currCamera->setWorldPos({0.0, 0.0});
-        currCamera->setAngle(0.0);
+        cameraXf = currCamera->transform;
+        currCamera->transform.pos = {0.0, 0.0};
+        currCamera->transform.angle = 0.0;
     }
 
     // Truly reset render target since SetTarget bit my butt
@@ -264,10 +262,7 @@ void present()
     // Restore custom renderer size and cam pos
     setTarget(_primaryTarget);
     if (currCamera)
-    {
-        currCamera->setWorldPos(cameraPos);
-        currCamera->setAngle(cameraAngle);
-    }
+        currCamera->transform = cameraXf;
 }
 
 void setVirtualResolution(const int width, const int height)
@@ -485,7 +480,6 @@ void drawBatch(
     if (textureClipArea.w <= 0.0 || textureClipArea.h <= 0.0)
         return;
 
-    const Vec2 cameraPos = camera::getActivePos();
     const double cameraAngle = camera::getActiveAngle();
 
     const Vec2 rendRes = getCurrentResolution();
@@ -622,7 +616,6 @@ void drawBatchNDArray(
     if (alpha == 0.0f)
         return;
 
-    const Vec2 cameraPos = camera::getActivePos();
     const double cameraAngle = camera::getActiveAngle();
 
     const Vec2 rendRes = getCurrentResolution();
@@ -667,7 +660,7 @@ void drawBatchNDArray(
     for (size_t i = 0; i < n; ++i)
     {
         const double* row = data + i * cols;
-        const Vec2 pos = Vec2{row[0], row[1]} - cameraPos;
+        const Vec2 pos = camera::worldToScreen(Vec2{row[0], row[1]});
         const double angle = ((cols >= 3) ? row[2] : 0.0) + cameraAngle;
 
         Vec2 scale{1.0};

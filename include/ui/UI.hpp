@@ -78,8 +78,12 @@ class Context
     }
     Context& operator=(Context&& other) noexcept
     {
-        m_active = other.m_active;
-        other.m_active = false;
+        if (this != &other)
+        {
+            exit();
+            m_active = other.m_active;
+            other.m_active = false;
+        }
         return *this;
     }
 
@@ -106,8 +110,12 @@ class RootContext
     }
     RootContext& operator=(RootContext&& other) noexcept
     {
-        m_active = other.m_active;
-        other.m_active = false;
+        if (this != &other)
+        {
+            exit();
+            m_active = other.m_active;
+            other.m_active = false;
+        }
         return *this;
     }
 

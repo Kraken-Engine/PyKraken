@@ -5,6 +5,7 @@
 #endif  // KRAKEN_ENABLE_PYTHON
 
 #include "Math.hpp"
+#include "Transform.hpp"
 
 #ifdef KRAKEN_ENABLE_PYTHON
 namespace nb = nanobind;
@@ -15,19 +16,14 @@ namespace kn
 class Camera
 {
   public:
+    Transform transform{};
+
     Camera(bool setActive = false);
     ~Camera() = default;
 
-    [[nodiscard]] Vec2 getWorldPos() const;
-    void setWorldPos(const Vec2& worldPos);
-    [[nodiscard]] Vec2 getLocalPos() const;
-    void setLocalPos(const Vec2& localPos);
-
-    [[nodiscard]] double getAngle() const;
-    void setAngle(double angle);
-
-    void moveLocal(const Vec2& localDelta);
     void moveWorld(const Vec2& worldDelta);
+    void moveScreen(const Vec2& screenDelta);
+    void rotate(double delta);
 
     [[nodiscard]] Vec2 worldToScreen(const Vec2& worldPos) const;
     [[nodiscard]] Vec2 screenToWorld(const Vec2& screenPos) const;
@@ -36,10 +32,6 @@ class Camera
     void unset();
 
     static Camera* active;
-
-  private:
-    Vec2 m_pos;
-    double m_angle = 0.0;
 };
 
 namespace camera
