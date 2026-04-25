@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `tilemap.Map` constructor now accepts an optional path to load on creation.
 - Camera rotation is now supported by modifying its `transform.angle` property.
 - Added two camera move helpers: `move_world` and `move_screen`.
+- Added `storage_buffer_sizes` to `Shader` constructor.
+- New `Shader.set_storage_buffer_data` method for uploading data to a storage buffer binding.
 
 ### Changed
 - Instead of the highly confusing camera `world_pos` and `local_pos` properties,
