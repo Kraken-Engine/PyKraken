@@ -6,6 +6,7 @@
 #endif  // KRAKEN_ENABLE_PYTHON
 
 #include <algorithm>
+#include <limits>
 #include <string>
 #include <utility>
 
@@ -137,7 +138,7 @@ Shader::Shader(
         SDL_GPUBufferCreateInfo bufferInfo{
             .usage = SDL_GPU_BUFFERUSAGE_GRAPHICS_STORAGE_READ,
             .size = storageBufferSizes[i],
-            .props = 0
+            .props = 0,
         };
 
         SDL_GPUBuffer* buffer = SDL_CreateGPUBuffer(renderer::_getGPUDevice(), &bufferInfo);
@@ -151,7 +152,9 @@ Shader::Shader(
         m_storageBuffers.push_back(buffer);
 
         SDL_GPUTransferBufferCreateInfo transferBufferInfo{
-            .usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD, .size = storageBufferSizes[i], .props = 0
+            .usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
+            .size = storageBufferSizes[i],
+            .props = 0,
         };
 
         SDL_GPUTransferBuffer* transferBuffer =
@@ -300,29 +303,53 @@ void Shader::setTextureSampler(
     };
 }
 
-void Shader::setStorageBufferData(const uint32_t index, const void* data, const uint32_t len)
+void Shader::_setStorageBufferDataRaw(const uint32_t binding, const void* data, const uint32_t len)
 {
     if (!data)
         throw std::runtime_error("Storage buffer data pointer is null");
-    if (index >= m_storageBufferCount)
-        throw std::runtime_error("Storage buffer index out of range");
-    if (len > m_storageBufferSizes[index])
-        throw std::runtime_error("Data size exceeds capacity");
+    if (binding >= m_storageBufferCount)
+        throw std::runtime_error("Provided storage buffer binding out of range.");
+    if (len > m_storageBufferSizes[binding])
+        throw std::runtime_error("Data size exceeds binding capacity.");
 
-    uint8_t* ptr = static_cast<uint8_t*>(
-        SDL_MapGPUTransferBuffer(renderer::_getGPUDevice(), m_storageTransferBuffers[index], true)
-    );
+    SDL_GPUTransferBuffer* transBuf = m_storageTransferBuffers[binding];
+
+    SDL_GPUDevice* device = renderer::_getGPUDevice();
+    uint8_t* ptr = static_cast<uint8_t*>(SDL_MapGPUTransferBuffer(device, transBuf, true));
+    if (!ptr)
+        throw std::runtime_error(
+            "Failed to map GPU storage transfer buffer: " + std::string(SDL_GetError())
+        );
+
     memcpy(ptr, data, len);
-    SDL_UnmapGPUTransferBuffer(renderer::_getGPUDevice(), m_storageTransferBuffers[index]);
+    SDL_UnmapGPUTransferBuffer(device, transBuf);
 
-    SDL_GPUCommandBuffer* command_buffer = SDL_AcquireGPUCommandBuffer(renderer::_getGPUDevice());
-    SDL_GPUCopyPass* copy = SDL_BeginGPUCopyPass(command_buffer);
-    SDL_GPUTransferBufferLocation
-        location{.transfer_buffer = m_storageTransferBuffers[index], .offset = 0};
-    SDL_GPUBufferRegion region{.buffer = m_storageBuffers[index], .offset = 0, .size = len};
+    SDL_GPUCommandBuffer* cmdBuf = SDL_AcquireGPUCommandBuffer(device);
+    if (!cmdBuf)
+        throw std::runtime_error(
+            "Failed to acquire GPU command buffer: " + std::string(SDL_GetError())
+        );
+
+    SDL_GPUCopyPass* copy = SDL_BeginGPUCopyPass(cmdBuf);
+    if (!copy)
+        throw std::runtime_error("Failed to begin GPU copy pass: " + std::string(SDL_GetError()));
+
+    SDL_GPUTransferBufferLocation location{
+        .transfer_buffer = transBuf,
+        .offset = 0,
+    };
+    SDL_GPUBufferRegion region{
+        .buffer = m_storageBuffers[binding],
+        .offset = 0,
+        .size = len,
+    };
     SDL_UploadToGPUBuffer(copy, &location, &region, true);
+
     SDL_EndGPUCopyPass(copy);
-    SDL_SubmitGPUCommandBuffer(command_buffer);
+    if (!SDL_SubmitGPUCommandBuffer(cmdBuf))
+        throw std::runtime_error(
+            "Failed to submit GPU command buffer: " + std::string(SDL_GetError())
+        );
 }
 
 Sampler::Sampler(
@@ -460,7 +487,9 @@ Unbinds the current shader state, reverting to the default render state.
                 Py_buffer view;
 
                 if (PyObject_GetBuffer(data.ptr(), &view, PyBUF_CONTIG_RO) != 0)
-                    throw nb::type_error("Expected a buffer-compatible object for uniform data");
+                    throw nb::type_error(
+                        "Expected a buffer-compatible object for storage buffer data"
+                    );
 
                 try
                 {
@@ -495,7 +524,7 @@ Raises:
         )
         .def(
             "set_storage_buffer_data",
-            [](Shader& self, const Uint32 index, nb::object data)
+            [](Shader& self, const Uint32 binding, nb::object data)
             {
                 Py_buffer view;
 
@@ -507,7 +536,11 @@ Raises:
                     if (view.buf == nullptr || view.len < 0)
                         throw nb::type_error("Invalid buffer object");
 
-                    self.setStorageBufferData(index, view.buf, static_cast<uint32_t>(view.len));
+                    if (static_cast<unsigned long long>(view.len) >
+                        std::numeric_limits<uint32_t>::max())
+                        throw std::runtime_error("Storage buffer data is too large.");
+
+                    self._setStorageBufferDataRaw(binding, view.buf, static_cast<uint32_t>(view.len));
                 }
                 catch (...)
                 {
@@ -517,17 +550,18 @@ Raises:
 
                 PyBuffer_Release(&view);
             },
-            "index"_a, "data"_a,
+            "binding"_a, "data"_a,
             nb::sig(
-                "def set_storage_buffer_data(self, index: int, data: collections.abc.Buffer, /) -> "
-                "None"
+                "def set_storage_buffer_data(self, binding: int, data: collections.abc.Buffer, /) "
+                "-> None"
             ),
             R"doc(
-Sets the data for a data storage buffer (an HLSL StructuredBuffer, untested for GLSL) for the fragment shader
-at the specified index.
+Sets the data for a data storage buffer for the fragment shader at the specified binding.
+
+Currently untested with GLSL.
 
 Args:
-    index (int): Shader buffer binding index.
+    binding (int): Shader storage buffer binding.
     data (Buffer): Buffer-compatible object containing the bytes to be given to the shader buffer.
 
 Raises:
