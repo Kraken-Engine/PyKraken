@@ -32,7 +32,7 @@
     },
     {
       "name": "sdl3-shadercross",
-      "platform": "(windows & !arm32 & !uwp & !xbox) | (linux & x64)"
+      "platform": "windows & !arm32 & !uwp & !xbox"
     },
     {
       "name": "sdl3-ttf",
