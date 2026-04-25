@@ -540,7 +540,9 @@ Raises:
                         std::numeric_limits<uint32_t>::max())
                         throw std::runtime_error("Storage buffer data is too large.");
 
-                    self._setStorageBufferDataRaw(binding, view.buf, static_cast<uint32_t>(view.len));
+                    self._setStorageBufferDataRaw(
+                        binding, view.buf, static_cast<uint32_t>(view.len)
+                    );
                 }
                 catch (...)
                 {

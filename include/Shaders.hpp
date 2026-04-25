@@ -75,7 +75,12 @@ class Shader
             std::is_trivially_copyable_v<UniformType>, "Uniform data must be trivially copyable."
         );
 
-        SDL_SetGPURenderStateFragmentUniforms(m_renderState, binding, &data, sizeof(UniformType));
+        if (!SDL_SetGPURenderStateFragmentUniforms(
+                m_renderState, binding, &data, sizeof(UniformType)
+            ))
+        {
+            throw std::runtime_error("Failed to set uniform: " + std::string(SDL_GetError()));
+        }
     }
 
   private:

@@ -59,6 +59,20 @@ static Rect _rotatedBounds(const Rect& dstRect, const double angle, const Vec2& 
     return {dstRect.x + minX, dstRect.y + minY, maxX - minX, maxY - minY};
 }
 
+static Vec2 _anchoredTopLeft(
+    const Vec2& screenAnchor, const Vec2& size, const Vec2& anchor, const Vec2& pivot,
+    const double cameraAngle
+)
+{
+    const Vec2 anchorPoint = size * anchor;
+    const Vec2 pivotPoint = size * pivot;
+    Vec2 pivotToAnchor = anchorPoint - pivotPoint;
+    if (cameraAngle != 0.0)
+        pivotToAnchor.rotate(cameraAngle);
+
+    return screenAnchor - pivotPoint - pivotToAnchor;
+}
+
 static SDL_Renderer* _renderer = nullptr;
 static SDL_GPUDevice* _gpuDevice = nullptr;
 static FilterMode _defaultFilterMode = FilterMode::Linear;
@@ -357,13 +371,12 @@ void draw(const Texture& texture, const Transform& transform, const Vec2& anchor
     if (transform.scale.isZero() || texture.getAlpha() == 0.0f)
         return;
 
-    Rect dstRect{0.0, 0.0, clipArea.getSize() * transform.scale};
-
-    // Position based on anchor
     const Vec2 pos = camera::worldToScreen(transform.pos);
-    dstRect.setTopLeft(pos - (dstRect.getSize() * anchor));
+    const double cameraAngle = camera::getActiveAngle();
+    const double renderAngle = transform.angle + cameraAngle;
 
-    const double renderAngle = transform.angle + camera::getActiveAngle();
+    Rect dstRect{0.0, 0.0, clipArea.getSize() * transform.scale};
+    dstRect.setTopLeft(_anchoredTopLeft(pos, dstRect.getSize(), anchor, pivot, cameraAngle));
 
     // cull using the rotated bounds so rotated quads don't disappear early near the edge
     const Rect cullRect = _rotatedBounds(dstRect, renderAngle, pivot);
@@ -505,11 +518,11 @@ void drawBatch(
         const auto srcSDLRect = static_cast<SDL_FRect>(clipArea);
         const Vec2 clipSize = clipArea.getSize();
 
-        Rect dstRect{0.0, 0.0, clipSize * transform.scale};
         const Vec2 pos = camera::worldToScreen(transform.pos);
-        dstRect.setTopLeft(pos - (dstRect.getSize() * anchor));
-
         const double renderAngle = transform.angle + cameraAngle;
+
+        Rect dstRect{0.0, 0.0, clipSize * transform.scale};
+        dstRect.setTopLeft(_anchoredTopLeft(pos, dstRect.getSize(), anchor, pivot, cameraAngle));
 
         const Rect cullRect = _rotatedBounds(dstRect, renderAngle, pivot);
         if (cullRect.getRight() < 0.0 || cullRect.x >= rendRes.x || cullRect.getBottom() < 0.0 ||
@@ -681,7 +694,7 @@ void drawBatchNDArray(
         const Vec2 clipSize = clipArea.getSize();
 
         Rect dstRect{0.0, 0.0, clipSize * scale};
-        dstRect.setTopLeft(pos - (dstRect.getSize() * anchor));
+        dstRect.setTopLeft(_anchoredTopLeft(pos, dstRect.getSize(), anchor, pivot, cameraAngle));
 
         const Rect cullRect = _rotatedBounds(dstRect, angle, pivot);
         if (cullRect.getRight() < 0.0 || cullRect.x >= rendRes.x || cullRect.getBottom() < 0.0 ||
