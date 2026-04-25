@@ -2,10 +2,13 @@
 #include <nanobind/ndarray.h>
 #include <nanobind/stl/filesystem.h>
 #include <nanobind/stl/string.h>
+#include <nanobind/stl/vector.h>
 #endif  // KRAKEN_ENABLE_PYTHON
 
 #include <algorithm>
+#include <limits>
 #include <string>
+#include <utility>
 
 #include "Renderer.hpp"
 #include "Shaders.hpp"
@@ -45,9 +48,22 @@ namespace kn::shaders
 // Static registry to track all shader states for proper cleanup
 static std::vector<Shader*> _shaderStates;
 
+static void _registerShaderState(Shader* shader)
+{
+    if (std::find(_shaderStates.begin(), _shaderStates.end(), shader) == _shaderStates.end())
+        _shaderStates.push_back(shader);
+}
+
+static void _unregisterShaderState(Shader* shader)
+{
+    auto it = std::find(_shaderStates.begin(), _shaderStates.end(), shader);
+    if (it != _shaderStates.end())
+        _shaderStates.erase(it);
+}
+
 Shader::Shader(
     const std::filesystem::path& fragmentBasePath, const uint32_t uniformBufferCount,
-    const uint32_t samplerCount
+    const uint32_t samplerCount, const std::vector<uint32_t>& storageBufferSizes
 )
 {
     SDL_GPUShaderFormat formats = SDL_GetGPUShaderFormats(renderer::_getGPUDevice());
@@ -59,6 +75,7 @@ Shader::Shader(
     SDL_GPUShaderFormat shaderFormat = SDL_GPU_SHADERFORMAT_INVALID;
     const char* entrypoint;
     std::string extension;
+    m_storageBufferCount = static_cast<uint32_t>(storageBufferSizes.size());
 
     if (formats & SDL_GPU_SHADERFORMAT_SPIRV)
     {
@@ -98,7 +115,7 @@ Shader::Shader(
         .stage = SDL_GPU_SHADERSTAGE_FRAGMENT,
         .num_samplers = samplerCount,
         .num_storage_textures = 0,  // Not usable yet
-        .num_storage_buffers = 0,   // Not usable yet
+        .num_storage_buffers = m_storageBufferCount,
         .num_uniform_buffers = uniformBufferCount,
         .props = 0,
     };
@@ -114,62 +131,78 @@ Shader::Shader(
     }
     SDL_free(code);
 
+    m_storageBufferSizes = storageBufferSizes;
+
+    for (uint32_t i = 0; i < m_storageBufferCount; i++)
+    {
+        SDL_GPUBufferCreateInfo bufferInfo{
+            .usage = SDL_GPU_BUFFERUSAGE_GRAPHICS_STORAGE_READ,
+            .size = storageBufferSizes[i],
+            .props = 0,
+        };
+
+        SDL_GPUBuffer* buffer = SDL_CreateGPUBuffer(renderer::_getGPUDevice(), &bufferInfo);
+        if (!buffer)
+        {
+            _releaseGPUResources();
+            throw std::runtime_error(
+                "Failed to create a GPU buffer: " + std::string(SDL_GetError())
+            );
+        }
+        m_storageBuffers.push_back(buffer);
+
+        SDL_GPUTransferBufferCreateInfo transferBufferInfo{
+            .usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
+            .size = storageBufferSizes[i],
+            .props = 0,
+        };
+
+        SDL_GPUTransferBuffer* transferBuffer =
+            SDL_CreateGPUTransferBuffer(renderer::_getGPUDevice(), &transferBufferInfo);
+        if (!transferBuffer)
+        {
+            _releaseGPUResources();
+            throw std::runtime_error(
+                "Failed to create a GPU storage transfer buffer: " + std::string(SDL_GetError())
+            );
+        }
+        m_storageTransferBuffers.push_back(transferBuffer);
+    }
+
     SDL_GPURenderStateCreateInfo renderStateInfo{
         .fragment_shader = m_fragShader,
         .num_sampler_bindings = 0,
         .sampler_bindings = nullptr,
         .num_storage_textures = 0,    // Not usable yet
         .storage_textures = nullptr,  // Not usable yet
-        .num_storage_buffers = 0,     // Not usable yet
-        .storage_buffers = nullptr,   // Not usable yet
+        .num_storage_buffers = static_cast<int32_t>(m_storageBufferCount),
+        .storage_buffers = m_storageBuffers.data(),
         .props = 0,
     };
     m_renderState = SDL_CreateGPURenderState(renderer::_get(), &renderStateInfo);
     if (!m_renderState)
     {
-        SDL_ReleaseGPUShader(renderer::_getGPUDevice(), m_fragShader);
+        _releaseGPUResources();
         throw std::runtime_error("Failed to create render state: " + std::string(SDL_GetError()));
     }
 
-    _shaderStates.push_back(this);
+    _registerShaderState(this);
 }
 
 Shader::Shader(Shader&& other) noexcept
-    : m_fragShader(other.m_fragShader),
-      m_renderState(other.m_renderState)
 {
-    // Steal pointers and nullify original
-    other.m_fragShader = nullptr;
-    other.m_renderState = nullptr;
-
-    // Update address in global registry
-    auto it = std::find(_shaderStates.begin(), _shaderStates.end(), &other);
-    if (it != _shaderStates.end())
-        *it = this;  // Swap old pointer for new address
+    _unregisterShaderState(&other);
+    _moveFrom(other);
 }
 
 Shader& Shader::operator=(Shader&& other) noexcept
 {
     if (this != &other)
     {
-        // Clean up existing GPU resources first
-        if (m_renderState)
-            SDL_DestroyGPURenderState(m_renderState);
-        if (m_fragShader)
-            SDL_ReleaseGPUShader(renderer::_getGPUDevice(), m_fragShader);
-
-        // Remove "other" from the registry to prevent dangling pointers.
-        auto it = std::find(_shaderStates.begin(), _shaderStates.end(), &other);
-        if (it != _shaderStates.end())
-            _shaderStates.erase(it);
-
-        // Steal pointers
-        m_fragShader = other.m_fragShader;
-        m_renderState = other.m_renderState;
-
-        // Nullify original
-        other.m_fragShader = nullptr;
-        other.m_renderState = nullptr;
+        _unregisterShaderState(this);
+        _releaseGPUResources();
+        _unregisterShaderState(&other);
+        _moveFrom(other);
     }
 
     return *this;
@@ -177,25 +210,61 @@ Shader& Shader::operator=(Shader&& other) noexcept
 
 Shader::~Shader()
 {
-    // Remove from registry if still present
-    auto& shaders = _shaderStates;
-    auto it = std::find(shaders.begin(), shaders.end(), this);
-    if (it != shaders.end())
-        shaders.erase(it);
+    _unregisterShaderState(this);
+    _releaseGPUResources();
+}
 
-    // Only clean up GPU resources if the device still exists
-    // If _quit() was called, resources were already freed
+void Shader::_releaseGPUResources() noexcept
+{
+    SDL_GPUDevice* device = renderer::_getGPUDevice();
+
     if (m_renderState)
     {
         SDL_DestroyGPURenderState(m_renderState);
         m_renderState = nullptr;
     }
 
+    for (SDL_GPUTransferBuffer* transferBuffer : m_storageTransferBuffers)
+        SDL_ReleaseGPUTransferBuffer(device, transferBuffer);
+    for (SDL_GPUBuffer* buffer : m_storageBuffers)
+        SDL_ReleaseGPUBuffer(device, buffer);
+
+    m_storageTransferBuffers.clear();
+    m_storageBuffers.clear();
+    m_storageBufferSizes.clear();
+    m_storageBufferCount = 0;
+    m_samplerBindings.clear();
+    m_samplerCount = 0;
+
     if (m_fragShader)
     {
-        SDL_ReleaseGPUShader(renderer::_getGPUDevice(), m_fragShader);
+        SDL_ReleaseGPUShader(device, m_fragShader);
         m_fragShader = nullptr;
     }
+}
+
+void Shader::_moveFrom(Shader& other) noexcept
+{
+    m_fragShader = other.m_fragShader;
+    m_renderState = other.m_renderState;
+    m_samplerCount = other.m_samplerCount;
+    m_samplerBindings = std::move(other.m_samplerBindings);
+    m_storageBufferCount = other.m_storageBufferCount;
+    m_storageBuffers = std::move(other.m_storageBuffers);
+    m_storageBufferSizes = std::move(other.m_storageBufferSizes);
+    m_storageTransferBuffers = std::move(other.m_storageTransferBuffers);
+
+    other.m_fragShader = nullptr;
+    other.m_renderState = nullptr;
+    other.m_samplerCount = 0;
+    other.m_samplerBindings.clear();
+    other.m_storageBufferCount = 0;
+    other.m_storageBuffers.clear();
+    other.m_storageBufferSizes.clear();
+    other.m_storageTransferBuffers.clear();
+
+    if (m_renderState || m_fragShader)
+        _registerShaderState(this);
 }
 
 void Shader::bind() const
@@ -232,6 +301,55 @@ void Shader::setTextureSampler(
         .texture = texture.getGPU(),
         .sampler = sampler.getSDL(),
     };
+}
+
+void Shader::_setStorageBufferDataRaw(const uint32_t binding, const void* data, const uint32_t len)
+{
+    if (!data)
+        throw std::runtime_error("Storage buffer data pointer is null");
+    if (binding >= m_storageBufferCount)
+        throw std::runtime_error("Provided storage buffer binding out of range.");
+    if (len > m_storageBufferSizes[binding])
+        throw std::runtime_error("Data size exceeds binding capacity.");
+
+    SDL_GPUTransferBuffer* transBuf = m_storageTransferBuffers[binding];
+
+    SDL_GPUDevice* device = renderer::_getGPUDevice();
+    uint8_t* ptr = static_cast<uint8_t*>(SDL_MapGPUTransferBuffer(device, transBuf, true));
+    if (!ptr)
+        throw std::runtime_error(
+            "Failed to map GPU storage transfer buffer: " + std::string(SDL_GetError())
+        );
+
+    memcpy(ptr, data, len);
+    SDL_UnmapGPUTransferBuffer(device, transBuf);
+
+    SDL_GPUCommandBuffer* cmdBuf = SDL_AcquireGPUCommandBuffer(device);
+    if (!cmdBuf)
+        throw std::runtime_error(
+            "Failed to acquire GPU command buffer: " + std::string(SDL_GetError())
+        );
+
+    SDL_GPUCopyPass* copy = SDL_BeginGPUCopyPass(cmdBuf);
+    if (!copy)
+        throw std::runtime_error("Failed to begin GPU copy pass: " + std::string(SDL_GetError()));
+
+    SDL_GPUTransferBufferLocation location{
+        .transfer_buffer = transBuf,
+        .offset = 0,
+    };
+    SDL_GPUBufferRegion region{
+        .buffer = m_storageBuffers[binding],
+        .offset = 0,
+        .size = len,
+    };
+    SDL_UploadToGPUBuffer(copy, &location, &region, true);
+
+    SDL_EndGPUCopyPass(copy);
+    if (!SDL_SubmitGPUCommandBuffer(cmdBuf))
+        throw std::runtime_error(
+            "Failed to submit GPU command buffer: " + std::string(SDL_GetError())
+        );
 }
 
 Sampler::Sampler(
@@ -303,19 +421,7 @@ void _quit()
 {
     // Clean up all shader states before GPU device is destroyed
     for (Shader* shader : _shaderStates)
-    {
-        if (shader->m_renderState)
-        {
-            SDL_DestroyGPURenderState(shader->m_renderState);
-            shader->m_renderState = nullptr;
-        }
-
-        if (shader->m_fragShader)
-        {
-            SDL_ReleaseGPUShader(renderer::_getGPUDevice(), shader->m_fragShader);
-            shader->m_fragShader = nullptr;
-        }
-    }
+        shader->_releaseGPUResources();
 
     _shaderStates.clear();
 }
@@ -348,14 +454,17 @@ Args:
 Encapsulates a GPU shader and its associated render state.
         )doc")
         .def(
-            nb::init<const std::filesystem::path&, uint32_t, uint32_t>(), "fragment_base_path"_a,
-            "uniform_buffer_count"_a = 0, "sampler_count"_a = 1, R"doc(
+            nb::init<
+                const std::filesystem::path&, uint32_t, uint32_t, const std::vector<uint32_t>&>(),
+            "fragment_base_path"_a, "uniform_buffer_count"_a = 0, "sampler_count"_a = 1,
+            "storage_buffer_sizes"_a = nb::list{}, R"doc(
 Create a Shader instance from a fragment shader file.
 
 Args:
     fragment_base_path (str): Base file name of the fragment shader. The appropriate backend extension will be appended automatically.
     uniform_buffer_count (int, optional): Number of uniform buffers used by the shader. Default is 0.
     sampler_count (int, optional): Number of samplers used by the shader. Default is 1.
+    storage_buffer_sizes (Sequence[int], optional): The storage buffer sizes in bytes used by the shader. Default is an empty sequence.
 
 Raises:
     RuntimeError: If the shader cannot be loaded or created.
@@ -378,7 +487,9 @@ Unbinds the current shader state, reverting to the default render state.
                 Py_buffer view;
 
                 if (PyObject_GetBuffer(data.ptr(), &view, PyBUF_CONTIG_RO) != 0)
-                    throw nb::type_error("Expected a buffer-compatible object for uniform data");
+                    throw nb::type_error(
+                        "Expected a buffer-compatible object for storage buffer data"
+                    );
 
                 try
                 {
@@ -409,6 +520,53 @@ Args:
 Raises:
     TypeError: If the object does not provide compatible uniform data.
     RuntimeError: If the uniform data cannot be set.
+            )doc"
+        )
+        .def(
+            "set_storage_buffer_data",
+            [](Shader& self, const Uint32 binding, nb::object data)
+            {
+                Py_buffer view;
+
+                if (PyObject_GetBuffer(data.ptr(), &view, PyBUF_CONTIG_RO) != 0)
+                    throw nb::type_error("Expected a buffer-compatible object for uniform data");
+
+                try
+                {
+                    if (view.buf == nullptr || view.len < 0)
+                        throw nb::type_error("Invalid buffer object");
+
+                    if (static_cast<unsigned long long>(view.len) >
+                        std::numeric_limits<uint32_t>::max())
+                        throw std::runtime_error("Storage buffer data is too large.");
+
+                    self._setStorageBufferDataRaw(binding, view.buf, static_cast<uint32_t>(view.len));
+                }
+                catch (...)
+                {
+                    PyBuffer_Release(&view);
+                    throw;
+                }
+
+                PyBuffer_Release(&view);
+            },
+            "binding"_a, "data"_a,
+            nb::sig(
+                "def set_storage_buffer_data(self, binding: int, data: collections.abc.Buffer, /) "
+                "-> None"
+            ),
+            R"doc(
+Sets the data for a data storage buffer for the fragment shader at the specified binding.
+
+Currently untested with GLSL.
+
+Args:
+    binding (int): Shader storage buffer binding.
+    data (Buffer): Buffer-compatible object containing the bytes to be given to the shader buffer.
+
+Raises:
+    TypeError: If the object does not provide compatible storage buffer data.
+    RuntimeError: If the storage buffer data cannot be set.
             )doc"
         )
         .def(

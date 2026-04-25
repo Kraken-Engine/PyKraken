@@ -42,7 +42,7 @@ class Shader
     Shader() = delete;
     Shader(
         const std::filesystem::path& fragmentBasePath, uint32_t uniformBufferCount = 0,
-        uint32_t samplerCount = 1
+        uint32_t samplerCount = 1, const std::vector<uint32_t>& storageBufferSizes = {}
     );
     ~Shader();
 
@@ -57,12 +57,24 @@ class Shader
 
     void setTextureSampler(const uint32_t binding, const Texture& texture, const Sampler& sampler);
 
+    template <typename StorageBufferType>
+    void setStorageBufferData(const uint32_t binding, const StorageBufferType& data)
+    {
+        static_assert(
+            std::is_trivially_copyable_v<StorageBufferType>,
+            "Storage buffer data must be trivially copyable."
+        );
+
+        _setStorageBufferDataRaw(binding, &data, static_cast<uint32_t>(sizeof(StorageBufferType)));
+    }
+
     template <typename UniformType>
     void setUniform(const uint32_t binding, const UniformType& data) const
     {
         static_assert(
-            std::is_trivially_copyable_v<UniformType>, "Uniform data must be trivially copyable"
+            std::is_trivially_copyable_v<UniformType>, "Uniform data must be trivially copyable."
         );
+
         SDL_SetGPURenderStateFragmentUniforms(m_renderState, binding, &data, sizeof(UniformType));
     }
 
@@ -72,6 +84,15 @@ class Shader
 
     uint32_t m_samplerCount = 0;
     std::vector<SDL_GPUTextureSamplerBinding> m_samplerBindings;
+
+    uint32_t m_storageBufferCount = 0;
+    std::vector<SDL_GPUBuffer*> m_storageBuffers;
+    std::vector<uint32_t> m_storageBufferSizes;
+    std::vector<SDL_GPUTransferBuffer*> m_storageTransferBuffers;
+
+    void _releaseGPUResources() noexcept;
+    void _moveFrom(Shader& other) noexcept;
+    void _setStorageBufferDataRaw(uint32_t binding, const void* data, uint32_t len);
 
     friend void _quit();
 
