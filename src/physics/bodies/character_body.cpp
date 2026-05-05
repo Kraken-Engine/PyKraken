@@ -23,7 +23,7 @@ static float GroundCastCallback(
     b2ShapeId shapeId, b2Vec2 point, b2Vec2 normal, float fraction, void* context
 )
 {
-    CastContext* ctx = (CastContext*)context;
+    auto ctx = static_cast<CastContext*>(context);
     b2BodyId hitBody = b2Shape_GetBody(shapeId);
 
     if (B2_ID_EQUALS(hitBody, ctx->ignoreBodyId))
@@ -111,14 +111,13 @@ void CharacterBody::moveAndSlide(double delta)
     }
 
     // Apply friction and movement response
-    float speed = std::sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+    const float speed = std::sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
 
-    bool shouldApplyFriction = (motionMode == MotionMode::Grounded && m_isOnFloor) ||
-                               (motionMode == MotionMode::Floating);
-
+    // On ground or floating: apply friction
+    const bool shouldApplyFriction = (motionMode == MotionMode::Grounded && m_isOnFloor) ||
+                                     (motionMode == MotionMode::Floating);
     if (shouldApplyFriction)
     {
-        // On ground or floating: apply friction
         if (speed < stopSpeed)
         {
             velocity.x = 0.0f;
@@ -126,20 +125,19 @@ void CharacterBody::moveAndSlide(double delta)
         }
         else
         {
-            float frictionDecel = friction * timeStep;
-            float newSpeed = std::max(0.0f, speed - frictionDecel);
+            const float frictionDecel = friction * timeStep;
+            const float newSpeed = std::max(0.0f, speed - frictionDecel);
             if (speed > 0.01f)
             {
-                float scale = newSpeed / speed;
-                velocity.x *= scale;
-                velocity.y *= scale;
+                const float scale = newSpeed / speed;
+                velocity *= scale;
             }
         }
     }
 
     // Calculate movement for this frame
     b2Vec2 targetVelocity = {static_cast<float>(velocity.x), static_cast<float>(velocity.y)};
-    b2Vec2 targetPos = currentPos + targetVelocity * timeStep;
+    const b2Vec2 targetPos = currentPos + targetVelocity * timeStep;
 
     b2QueryFilter filter = b2DefaultQueryFilter();
     float tolerance = 0.01f;
