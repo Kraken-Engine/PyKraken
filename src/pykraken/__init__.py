@@ -14,7 +14,10 @@ def _init(debug: bool = False) -> None:
     """
     if debug:
         import faulthandler
-        faulthandler.enable()
+        import sys
+
+        if sys.stderr is not None:
+            faulthandler.enable()
 
     _original_init(debug=debug)
 

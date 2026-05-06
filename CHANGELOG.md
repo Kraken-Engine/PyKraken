@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - UI drawing offset to the center of the screen instead of anchored by the top left of the screen.
+- Fixed true renderer not clearing with the given color, resulting in black or pink dependin on the system.
+- UI row, column, stack, and panel now properly render border properties.
+- Fix error message when attempting to run bundled app with debugging enabled.
 
 ## [1.7.3] - 2026-04-25
 

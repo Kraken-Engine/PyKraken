@@ -58,6 +58,7 @@ static void _pushContainer(const Style& style, Direction dir);
 static void _popContainer();
 static size_t _generateId(const std::string& text);
 static void _calculateSizes(Node* node);
+static void _renderStyleBox(const Rect& bounds, const Style& style);
 static void _begin(const Rect& rootBounds);
 static void _end();
 
@@ -86,10 +87,7 @@ class Box : public Node
   public:
     void render() override
     {
-        if (style.texture)
-            renderer::draw9Slice(*style.texture, bounds, style.slice);
-        else if (style.backgroundColor)
-            draw::rect(bounds, *style.backgroundColor);
+        _renderStyleBox(bounds, style);
 
         for (auto& child : children)
             child->render();
@@ -126,21 +124,8 @@ class Label : public Node
 
     void render() override
     {
-        // 1. Draw Background
-        if (style.texture)
-            renderer::draw9Slice(*style.texture, bounds, style.slice);
-        else if (style.backgroundColor)
-            draw::rect(bounds, *style.backgroundColor, 0, style.borderRadius);
+        _renderStyleBox(bounds, style);
 
-        if (style.borderColor && style.borderWidth > 0)
-        {
-            draw::rect(
-                bounds, *style.borderColor, style.borderWidth,
-                style.texture ? 0.0 : style.borderRadius
-            );
-        }
-
-        // 2. Draw Text
         if (style.font)
         {
             Text txt(*style.font, text);
@@ -182,28 +167,14 @@ class Button : public Node
 
     void render() override
     {
-        // 1. Draw Background
-        if (style.texture)
-            renderer::draw9Slice(*style.texture, bounds, style.slice);
-        else if (style.backgroundColor)
-            draw::rect(bounds, *style.backgroundColor, 0, style.borderRadius);
+        _renderStyleBox(bounds, style);
 
-        if (style.borderColor && style.borderWidth > 0)
-        {
-            draw::rect(
-                bounds, *style.borderColor, style.borderWidth,
-                style.texture ? 0.0 : style.borderRadius
-            );
-        }
-
-        // 2. Draw Hover Effect
         if (_stateMap[id].isHovered)
         {
             static Color hoverColor{255, 255, 255, 40};
             draw::rect(bounds, hoverColor, 0, style.borderRadius);
         }
 
-        // 3. Draw Text
         if (style.font)
         {
             Text txt(*style.font, text);
@@ -478,6 +449,22 @@ size_t _generateId(const std::string& text)
     }
 
     return hash;
+}
+
+void _renderStyleBox(const Rect& bounds, const Style& style)
+{
+    if (style.texture)
+        renderer::draw9Slice(*style.texture, bounds, style.slice);
+    else if (style.backgroundColor)
+        draw::rect(bounds, *style.backgroundColor, 0, style.borderRadius);
+
+    if (style.borderColor && style.borderWidth > 0)
+    {
+        draw::rect(
+            bounds, *style.borderColor, style.borderWidth,
+            style.texture ? 0.0 : style.borderRadius
+        );
+    }
 }
 
 void _calculateSizes(Node* node)

@@ -204,12 +204,28 @@ void setRenderBackend(const RenderBackend backend)
 
 void clear(const Color& color)
 {
-    if (!SDL_SetRenderDrawColor(_renderer, color.r, color.g, color.b, color.a))
-        throw std::runtime_error("Failed to set render draw color: " + std::string(SDL_GetError()));
+    SDL_Texture* currentTarget = SDL_GetRenderTarget(_renderer);
 
-    if (!SDL_RenderClear(_renderer))
-        throw std::runtime_error("Failed to clear renderer: " + std::string(SDL_GetError()));
-}
+    auto clearCurrentTarget = [&]() {
+        if (!SDL_SetRenderDrawColor(_renderer, color.r, color.g, color.b, color.a))
+            throw std::runtime_error("Failed to set render draw color: " + std::string(SDL_GetError()));
+
+        if (!SDL_RenderClear(_renderer))
+            throw std::runtime_error("Failed to clear renderer: " + std::string(SDL_GetError()));
+    };
+
+    if (_primaryTarget && currentTarget == _primaryTarget->getSDL())
+    {
+        if (!SDL_SetRenderTarget(_renderer, nullptr))
+            throw std::runtime_error("Failed to unset render target: " + std::string(SDL_GetError()));
+
+        clearCurrentTarget();
+
+        if (!SDL_SetRenderTarget(_renderer, currentTarget))
+            throw std::runtime_error("Failed to restore render target: " + std::string(SDL_GetError()));
+    }
+
+    clearCurrentTarget();}
 
 void setTarget(const Texture* target)
 {
