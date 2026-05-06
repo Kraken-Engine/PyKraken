@@ -5,7 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) when possible.
 
-## [1.7.3] - TBA
+## [1.7.4] - TBA
+
+### Fixed
+- UI drawing offset to the center of the screen instead of anchored by the top left of the screen.
+
+## [1.7.3] - 2026-04-25
 
 ### Added
 - `tilemap.Map` constructor now accepts an optional path to load on creation.

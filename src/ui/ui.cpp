@@ -35,22 +35,19 @@ static size_t _containerIdCounter = 0;
 
 static std::vector<Node*> _stack;
 static std::unique_ptr<Node> _root;
-static Camera _uiCamera{};
 static Camera* _prevCamera = nullptr;
 
 static void _activateUICamera()
 {
     _prevCamera = camera::_getActiveCamera();
-    _uiCamera.set();
+    if (_prevCamera)
+        _prevCamera->unset();
 }
 
 static void _deactivateUICamera()
 {
-    _uiCamera.unset();
-
     if (_prevCamera)
         _prevCamera->set();
-
     _prevCamera = nullptr;
 }
 
