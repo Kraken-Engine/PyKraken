@@ -8,6 +8,8 @@ NB_MODULE(_pykraken, m)
 {
     using namespace nb::literals;
 
+    m.attr("__pool_capacity__") = KRAKEN_PYTHON_POOL_CAPACITY;
+
     m.def("init", &kn::init, "debug"_a = false, R"doc(
 Initialize the Kraken engine subsystems.
 

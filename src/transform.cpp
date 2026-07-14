@@ -38,7 +38,7 @@ void _bind(nb::module_& module)
 {
     using namespace nb::literals;
 
-    nb::class_<Transform>(module, "Transform", R"doc(
+    nb::class_<Transform>(module, "Transform", nb::pooled(KRAKEN_PYTHON_POOL_CAPACITY), R"doc(
 Transform represents a 2D transformation with position, rotation, and scale.
 
 Attributes:

@@ -1341,7 +1341,10 @@ void _bind(nb::module_& module)
 {
     using namespace nb::literals;
 
-    nb::class_<Vertex>(module, "Vertex", "A vertex with position, color, and texture coordinates.")
+    nb::class_<Vertex>(
+        module, "Vertex", nb::pooled(KRAKEN_PYTHON_POOL_CAPACITY),
+        "A vertex with position, color, and texture coordinates."
+    )
         .def(
             "__init__",
             [](Vertex* self, const Vec2& position, std::optional<Color> color,

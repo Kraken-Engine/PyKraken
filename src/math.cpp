@@ -421,7 +421,8 @@ void _bind(nb::module_& module)
 {
     using namespace nanobind::literals;
 
-    auto vec2Class = nb::class_<Vec2>(module, "Vec2", R"doc(
+    auto vec2Class =
+        nb::class_<Vec2>(module, "Vec2", nb::pooled(KRAKEN_PYTHON_POOL_CAPACITY), R"doc(
 A 2D vector representing Cartesian coordinates.
 
 Attributes:
@@ -443,7 +444,8 @@ Methods:
         )doc");
 
     // -------------- PolarCoordinate ----------------
-    nb::class_<PolarCoordinate>(module, "PolarCoordinate", R"doc(
+    nb::class_<PolarCoordinate>(
+        module, "PolarCoordinate", nb::pooled(KRAKEN_PYTHON_POOL_CAPACITY), R"doc(
 PolarCoordinate models a polar coordinate pair.
 
 Attributes:

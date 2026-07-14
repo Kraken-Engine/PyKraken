@@ -7,7 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.7.4] - TBA
 
+### Changed
+
+- Nanobind backend updated to version 2.13.0.
+- Frequently constructed value types now use nanobind's instance pooling. In a CPython 3.14.4 benchmark on Apple silicon, pooling improved construction throughput by a 14% geometric mean across nine types (1,000,000 constructions per type, seven repeats).
+- Stub files are now generated at install time from the package-qualified extension, improving editor discovery of exported types and submodules without post-processing the generated files.
+
 ### Fixed
+
 - UI drawing offset to the center of the screen instead of anchored by the top left of the screen.
 - Fixed true renderer not clearing with the given color, resulting in black or pink dependin on the system.
 - UI row, column, stack, and panel now properly render border properties.
@@ -16,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.7.3] - 2026-04-25
 
 ### Added
+
 - `tilemap.Map` constructor now accepts an optional path to load on creation.
 - Camera rotation is now supported by modifying its `transform.angle` property.
 - Added two camera move helpers: `move_world` and `move_screen`.
@@ -23,10 +31,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New `Shader.set_storage_buffer_data` method for uploading data to a storage buffer binding.
 
 ### Changed
+
 - Instead of the highly confusing camera `world_pos` and `local_pos` properties,
   position has been moved to a `transform` property.
 
 ### Fixed
+
 - Improved UI context management.
 - Improved Texture move semantics.
 - Fixed segfault relating to shaders by correcting backend move semantics.
@@ -35,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.7.2] - 2026-04-20
 
 ### Added
+
 - New `shaders.Sampler` class.
 - New `WrapMode` enum for shader sampler addressing modes.
 - New `TextureUsage` flag enum for specifying how a texture is intended to be used.
@@ -50,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Polygon.set_centroid` method for setting an exact position of a polygon.
 
 ### Changed
+
 - All `Texture` constructors now use `FilterMode` and have an additional `usage` parameter.
 - `PixelArray` constructor accepting a `Vec2` size parameter changed to accept separate `width` and `height` integer parameters for type safety.
 - Camera API was refactored to explicit world/local semantics (`world_pos`, `local_pos`) with new local/world movement helpers.
@@ -58,14 +70,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shader creation now uses the `Shader` constructor directly rather than a factory function.
 - Renamed `TextureScaleMode` to `FilterMode` for ambiguity with the shader API.
 - UI drawing is now unaffected by any active world camera.
-- *"kraken-clean"* font renamed to *"kraken-modern"*
+- _"kraken-clean"_ font renamed to _"kraken-modern"_
 - `Polygon` rotation and scaling methods use its centroid now instead of a specified pivot point.
 
 ### Removed
+
 - Removed `pykraken.shader_uniform` helper module and its `ShaderUniform` class in favor of native buffer-like data.
 - Removed `Camera` constructor asking for a default position as they'd be ambiguous.
 
 ### Fixed
+
 - Fixed tilemap tileset GID range handling by avoiding TMXLite `getLastGID()` for tileset bounds resolution.
 - Fixed shader baker error handling for failed SPIR-V/MSL compilation.
 - A lot of UI stuff now has docstrings.
@@ -73,6 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.7.1] - 2026-04-15
 
 ### Added
+
 - New `renderer.draw_9slice` function for drawing 9-slice textures.
 - New `ui` submodule for designing and rendering user interfaces:
   - `Direction` enum for specifying layout direction.
@@ -96,6 +111,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Loading a shader moved from `Shader` constructor to a new `shaders.load` function that returns a `Shader` object.
 
 ### Changed
+
 - Renamed `Align` enum to `TextAlign` for specificity.
 - Physics `World` constructor's gravity parameter is now optional and defaults to zero gravity.
 - `fx.Effect` objects are now stateful, single-use objects to be consumed by an `Orchestrator` timeline, rather than reusable templates.
@@ -104,13 +120,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `fx.scale_to` function's `scale` property enforces the `Vec2` type for type safety.
 
 ### Removed
+
 - Physics `Body` types no longer have a `debug_draw` method.
 - `Tween` class no longer has a `step` method as timing is handled by the engine.
 
 ### Fixed
+
 - `Orchestrator` objects were copied upon calling `parallel` and `then` methods, causing effects to not be added to the original orchestrator timeline. Now returns reference to the original orchestrator.
 - Some images wouldn't render when drawn while a shader was binded. This was due to unpredictable pixel formats when
-loading images that shaders didn't like. Solved by forcing an RGBA32 format on all loaded images.
+  loading images that shaders didn't like. Solved by forcing an RGBA32 format on all loaded images.
 - PyInstaller builds were broken since moving to Nanobind due to different naming conventions. They've been fixed and tested to work again.
 - Fixed bug with tilemaps regarding tile id's not being mapped correctly to their tileset, causing wrong tiles to be drawn.
 - Isometric, hexagonal, and staggered maps render correctly now.
@@ -120,6 +138,7 @@ loading images that shaders didn't like. Solved by forcing an RGBA32 format on a
 ## [1.7.0] - 2026-04-07
 
 ### Added
+
 - New `diameter` and edge position properties for the `Circle` class; `left`, `right`, `top`, and `bottom`.
 - More `Line` methods:
   - `moved` for non-mutating version of `move`.
@@ -144,16 +163,19 @@ loading images that shaders didn't like. Solved by forcing an RGBA32 format on a
   - `get_output_resolution()` for getting the actual output resolution of the renderer.
 
 ### Changed
+
 - `Polygon`'s `transform` method renamed to `move` and `scale` methods renamed to `scale_by` for consistency with other shapes.
 - `renderer` submodule's `set_present_resolution` function renamed to `set_virtual_resolution` for clarity.
 - `on_floor`, `on_ceiling`, and `on_wall` properties of `CharacterBody` changed from read-only properties to regular methods: `is_on_floor()`, `is_on_ceiling()`, and `is_on_wall()`.
 
 ### Removed
+
 - `line` and `rect` submodules removed in favor of non-mutating methods in the `Line` and `Rect` classes.
 
 ## [1.6.5] - 2026-03-31
 
 ### Added
+
 - New `renderer.Batcher` class for batch draw memory preallocation and management.
 - When `debug` mode is enabled, the engine now attempts to provide more detailed error messages and stack traces for segfaults using the `faulthandler` module.
 - Log warning about excessive texture swapping in a single frame when using Direct3D 12.
@@ -164,16 +186,19 @@ loading images that shaders didn't like. Solved by forcing an RGBA32 format on a
   - Manually batch draw all transformed textures instead of relying on SDL's backend, improving performance.
 
 ### Changed
+
 - Vulkan is now the default rendering backend on all platforms, falling back to the system's default graphics API if Vulkan is not supported.
 - Functions with parameters for file or directory paths now accept `PathLike` objects in addition to strings for improved flexibility and type safety.
 
 ### Fixed
+
 - When drawing multiple different textures excessively within a single frame (swapping) on Windows, the engine would segfault likely due to descriptor heap exhaustion on Direct3D 12. The engine now uses Vulkan on Windows by default, if available, which in turn also improves performance.
 - MP3 files were not loading due to a missing decoder in the backend. Fix should also encompass FLAC and OGG files.
 
 ## [1.6.4] - 2026-03-23
 
 ### Added
+
 - `CharacterBody` additions:
   - `MotionMode` enum (`GROUNDED`, `FLOATING`) and corresponding `motion_mode` property.
   - Movement properties: `max_speed`, `acceleration`, `friction`, `stop_speed`, and `air_steer`.
@@ -184,14 +209,17 @@ loading images that shaders didn't like. Solved by forcing an RGBA32 format on a
   - `Vec2`: Added in-place rounding methods (`floor`, `ceil`, `round`) and surface sliding methods (`slide`, `slid`).
 
 ### Changed
+
 - `Map` and `PixelArray` `set_at` / `get_at` methods now require two integers (x, y) instead of a `Vec2` for improved type safety.
 
 ### Fixed
+
 - Passing an empty rect to `renderer.read_pixels` now correctly reads the entire render target instead of crashing.
 - `CharacterBody.move_and_slide` now uses Box2D's Mover API, utilizing a geometric solver to eliminate snagging on floor seams and provide smoother sliding along complex surfaces.
 - `Event.type` now returns an `EventType` enum type instead of an integer (for built-in event types; user events still return integers).
 
 ### Removed
+
 - `CharacterBody` removals:
   - `floor_max_angle` and `floor_snap_distance` properties.
   - `is_on_floor()`, `is_on_ceiling()`, and `is_on_wall()` methods (replaced by the new properties mentioned in "Added").
@@ -199,15 +227,17 @@ loading images that shaders didn't like. Solved by forcing an RGBA32 format on a
 ## [1.6.3] - 2026-03-17
 
 ### Fixed
+
 - Tilemap objects with polygon shapes were not being transformed to their correct world positions, causing them to render and collide in the wrong place.
 
 ## [1.6.2] - 2026-03-17
 
 ### Added
+
 - New `Vec2` non-mutating methods: `.floored()`, `.ceiled()`, and `.rounded()` for coordinate manipulation.
 - `Rect` constructor for accepting only a `Vec2` size parameter.
 - New `draw_batch` function for efficiently drawing a texture with many varying transforms.
-    - Comes with an override for passing an ndarray of transforms for even faster drawing - good for particle sims.
+  - Comes with an override for passing an ndarray of transforms for even faster drawing - good for particle sims.
 - `Texture.get_rect()` method for getting the dimensions of a texture as a `Rect` object.
 - Debug info messages now show GPU driver information.
 - Some more pytest scripts for important functions and objects.
@@ -216,17 +246,20 @@ loading images that shaders didn't like. Solved by forcing an RGBA32 format on a
 - Added optional `handle_close` parameter to `window.create` for whether the window should handle the window quit event and close itself, or leave it to the user to handle.
 
 ### Changed
+
 - Migrated the Python binding layer from `pybind11` to `nanobind` for improved performance and smaller binary sizes.
-    - In my testing, migrating the same engine API from pybind11 to nanobind increased transform-heavy sprite throughput by about 8–9× under the same Python script and workload.
+  - In my testing, migrating the same engine API from pybind11 to nanobind increased transform-heavy sprite throughput by about 8–9× under the same Python script and workload.
 - Wheels now build against the Python 3.12 stable ABI, allowing a single binary to work across future Python versions.
 - Renamed `EasingAnimation` class to `Tween` to follow common terminology.
 - `renderer.get_target_resolution` function renamed to `renderer.get_current_resolution` for clarity.
 
 ### Removed
+
 - `math.to_deg()` and `math.to_rad()` functions have been removed in favor of `math.DEG2RAD` and `math.RAD2DEG` constants for conversion.
 - Removed lesser used `renderer.clear` function that accepted 4 separate color components.
 
 ### Fixed
+
 - `input.get_direction()` no longer stacks redundant bindings on the same axis, which caused biased directions after normalization. It also now preserves partial analog stick deflection instead of always normalizing to a unit vector.
 - `input.get_axis()` no longer double-negates analog values for negative-direction bindings.
 - `input.is_pressed()`, `input.is_just_pressed()`, and `input.is_just_released()` now respect the gamepad slot specified in each `InputAction`.
@@ -237,6 +270,7 @@ loading images that shaders didn't like. Solved by forcing an RGBA32 format on a
 ## [1.6.1] - 2026-02-15
 
 ### Added
+
 - New `mixer` submodule for advanced audio management.
 - `AudioPriority` enum for managing hardware track acquisition (MUSIC, UI, SFX).
 - Support for polyphonic sound effects via the `Sample` class and `max_polyphony` attribute.
@@ -246,19 +280,19 @@ loading images that shaders didn't like. Solved by forcing an RGBA32 format on a
 - Added `is_convex` and `is_concave` methods to the `Polygon` class for checking polygon convexity.
 - Added `Circle` default constructor and another accepting just a radius.
 - New `physics` submodule with a `World` class, bodies, and joints for basic 2D physics simulation.
-    - `Body` abstract class for physics bodies:
-        - `RigidBody` for simulating solid objects with mass, velocity, and forces.
-        - `CharacterBody` for simulating character-like movement with floor detection and snapping.
-        - `StaticBody` for immovable objects that can still collide with other bodies.
-    - `Joint` abstract class for the following joint types:
-        - `DistanceJoint` for maintaining a fixed distance between two bodies.
-        - `FilterJoint` for filtering collisions between two bodies.
-        - `MotorJoint` for applying a motor force to maintain a relative position between two bodies.
-        - `PrismaticJoint` for allowing relative movement along a specified axis between two bodies.
-        - `RevoluteJoint` for allowing relative rotation between two bodies.
-        - `MouseJoint` for dragging a body with the mouse cursor.
-        - `WeldJoint` for rigidly connecting two bodies together.
-        - `WheelJoint` for allowing relative rotation and translation along a specified axis between two bodies.
+  - `Body` abstract class for physics bodies:
+    - `RigidBody` for simulating solid objects with mass, velocity, and forces.
+    - `CharacterBody` for simulating character-like movement with floor detection and snapping.
+    - `StaticBody` for immovable objects that can still collide with other bodies.
+  - `Joint` abstract class for the following joint types:
+    - `DistanceJoint` for maintaining a fixed distance between two bodies.
+    - `FilterJoint` for filtering collisions between two bodies.
+    - `MotorJoint` for applying a motor force to maintain a relative position between two bodies.
+    - `PrismaticJoint` for allowing relative movement along a specified axis between two bodies.
+    - `RevoluteJoint` for allowing relative rotation between two bodies.
+    - `MouseJoint` for dragging a body with the mouse cursor.
+    - `WeldJoint` for rigidly connecting two bodies together.
+    - `WheelJoint` for allowing relative rotation and translation along a specified axis between two bodies.
 - `Collision` class for representing collision information between two bodies. Provided via `World.get_collisions()` method.
 - `CastHit` class for representing the result of a ray or shape cast in the physics world.
 - Added `Capsule` shape class for physics bodies, defined by a line segment and a radius.
@@ -275,9 +309,10 @@ loading images that shaders didn't like. Solved by forcing an RGBA32 format on a
 - `camera.get_active_pos` function for getting the position of the currently active camera.
 
 ### Changed
+
 - Refactored the audio backend to use SDL3_mixer.
-    - Renamed `Audio` class to `Sample` (for short sound effects).
-    - Renamed `AudioStream` class to `Stream` (for long music files).
+  - Renamed `Audio` class to `Sample` (for short sound effects).
+  - Renamed `AudioStream` class to `Stream` (for long music files).
 - Audio loading functions moved to `mixer.load_sample` and `mixer.load_stream`.
 - `Stream.looping` is now an RW property instead of just a setter method.
 - `Stream` playback position renamed from `current_time` to `playback_pos`.
@@ -289,9 +324,11 @@ loading images that shaders didn't like. Solved by forcing an RGBA32 format on a
 - `draw.rect` and `draw.rects` functions now have parameters for corner radii.
 
 ### Fixed
+
 - Fixed a bug where textures wouldn't render at all (hopefully). Likely related to the internal SDL2->SDL3 transition.
 
 ### Removed
+
 - Removed `rewind` method from audio stream class (use `seek(0)` or restart playback).
 - Removed `miniaudio` dependency.
 - Removed `SGL_gfx` dependency.
@@ -300,6 +337,7 @@ loading images that shaders didn't like. Solved by forcing an RGBA32 format on a
 ## [1.6.0] - 2026-01-29
 
 ### Added
+
 - Added `Vec2.ZERO`, `Vec2.UP`, `Vec2.DOWN`, `Vec2.LEFT`, and `Vec2.RIGHT` constants for common vector directions.
 - Added the ability to multiply two `Vec2` objects element-wise using the `*` operator.
 - New `transform` submodule with `compose` and `compose_chain` functions for parenting transforms.
@@ -310,6 +348,7 @@ loading images that shaders didn't like. Solved by forcing an RGBA32 format on a
 - New `Vertex` class representing a single vertex with position, color, and texture coordinate attributes.
 
 ### Changed
+
 - `Vec2` boolean conversion now checks for both components being exactly zero, rather than using a tolerance.
 - `fx.move_to` function now requires a `Vec2` for the `pos` parameter instead of accepting an optional argument of any object type.
 - Greatly improved quality and performance of `draw.circle` and `draw.polygon` by switching to a GPU-based rendering approach.
@@ -320,6 +359,7 @@ loading images that shaders didn't like. Solved by forcing an RGBA32 format on a
 - Renamed tilemap layer `render` methods to `draw` for consistency with other drawing functions.
 
 ### Removed
+
 - Implicit conversians from sequences to `Vec2`, `Rect`, `Line`, `Color`, and `PolarCoordinate` have been removed for better type safety. Use explicit constructors instead.
 - Removed `src` parameter from `renderer.draw` function.
 - Removed `clip` attribute from `Sprite` class.
@@ -329,34 +369,39 @@ loading images that shaders didn't like. Solved by forcing an RGBA32 format on a
 ## [1.5.0] - 2025-12-31
 
 ### Added
+
 - Added `build.py` script for automating build and compilation tasks.
 - Added `tilemap` submodule for working with tile maps.
 - Added `Vec2` methods `move_toward` and non-mutating `moved_toward` for moving a vector towards a target vector by a specified maximum distance.
 
 ### Fixed
+
 - Most evident with animations and tilemaps, fixed a visual artifact where textures would render slightly offset when using the camera. The fix? Flooring the camera's position before rendering.
 
 ### Changed
+
 - Completely reworked tile maps in Kraken, supporting:
-    - Tile, Object (of all kinds), and Image layers
-    - Terrains in tilesets
-    - More than one tileset per map
-    - Text properties
+  - Tile, Object (of all kinds), and Image layers
+  - Terrains in tilesets
+  - More than one tileset per map
+  - Text properties
 - Binded functions that return or accept references to list types no longer make copies of the list, but use opaque references to the original list.
 - Improved error handling in rendering and draw functions.
 - Rendering and draw operations now properly cull objects outside the current viewport; zero-opacity objects are also culled.
 - Moved `math` functions to `Vec2` class methods:
-    - `math.scale_to_length` -> `Vec2.scaled_to_length`
-    - `math.normalize` -> `Vec2.normalized`
-    - `math.rotate` -> `Vec2.rotated`
+  - `math.scale_to_length` -> `Vec2.scaled_to_length`
+  - `math.normalize` -> `Vec2.normalized`
+  - `math.rotate` -> `Vec2.rotated`
 
 ### Removed
+
 - Removed `<`, `>`, `<=`, `>=` operators from `Vec2` class due to ambiguity with element-wise comparisons.
 - Removed `from_polar` function from the `math` submodule (see "Changed" for other math functions).
 
 ## [1.4.2] - 2025-12-21
 
 ### Added
+
 - `renderer.set_target(target: Texture)` function for setting/unsetting render target textures.
 - `TextureAccess` enum for specifying texture access modes (STATIC/TARGET).
 - `TextureScaleMode` enum for specifying texture scaling modes (LINEAR/NEAREST/PIXEL_ART).
@@ -364,11 +409,13 @@ loading images that shaders didn't like. Solved by forcing an RGBA32 format on a
 - `renderer.set_default_scale_mode(scale_mode: TextureScaleMode)` and `renderer.get_default_scale_mode()` functions for managing default texture scale modes.
 
 ### Changed
+
 - `renderer.get_res()` renamed to `renderer.get_target_resolution()`.
 - `window.create(title, resolution, scaled)` parameters changed to `window.create(title, size)`.
 - All `Texture` constructors updated to have `TextureAccess` and `TextureScaleMode` parameters.
 
 ### Removed
+
 - Removed `AnimationController.texture` property.
 - Removed unused `Animation` struct binding.
 - Removed `file_path` parameter from `AnimationController.load_sprite_sheet` method.

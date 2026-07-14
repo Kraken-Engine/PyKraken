@@ -60,7 +60,7 @@ void _bind(const nb::module_& module)
 {
     using namespace nb::literals;
 
-    nb::class_<Capsule>(module, "Capsule", R"doc(
+    nb::class_<Capsule>(module, "Capsule", nb::pooled(KRAKEN_PYTHON_POOL_CAPACITY), R"doc(
 Represents a capsule shape with two points and a radius.
     )doc")
         .def(nb::init<>(), R"doc(

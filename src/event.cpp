@@ -335,7 +335,7 @@ void _bind(nb::module_& module)
 {
     using namespace nb::literals;
 
-    nb::class_<Event>(module, "Event", R"doc(
+    nb::class_<Event>(module, "Event", nb::pooled(KRAKEN_PYTHON_POOL_CAPACITY), R"doc(
 Represents a single input event such as keyboard, mouse, or gamepad activity.
 
 Attributes:

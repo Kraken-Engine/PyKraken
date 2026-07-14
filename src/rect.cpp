@@ -368,7 +368,7 @@ void _bind(nb::module_& module)
 {
     using namespace nb::literals;
 
-    nb::class_<Rect>(module, "Rect", R"doc(
+    nb::class_<Rect>(module, "Rect", nb::pooled(KRAKEN_PYTHON_POOL_CAPACITY), R"doc(
 Represents a rectangle with position and size.
 
 A Rect is defined by its top-left corner position (x, y) and dimensions (w, h).

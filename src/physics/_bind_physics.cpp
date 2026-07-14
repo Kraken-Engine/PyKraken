@@ -740,7 +740,8 @@ Args:
     upper (float): The upper translation limit.
             )doc");
 
-    nb::class_<Collision>(subPhysics, "Collision", R"doc(
+    nb::class_<Collision>(
+        subPhysics, "Collision", nb::pooled(KRAKEN_PYTHON_POOL_CAPACITY), R"doc(
 Information about a collision between two bodies.
 
 Collision events are generated during the physics step for colliders that have
@@ -755,7 +756,8 @@ Collision events are generated during the physics step for colliders that have
             "The speed at which the bodies approached each other."
         );
 
-    nb::class_<CastHit>(subPhysics, "CastHit", R"doc(
+    nb::class_<CastHit>(
+        subPhysics, "CastHit", nb::pooled(KRAKEN_PYTHON_POOL_CAPACITY), R"doc(
 Result of a ray cast or shape cast query.
 
 Contains the body that was hit, the point and normal of the intersection,

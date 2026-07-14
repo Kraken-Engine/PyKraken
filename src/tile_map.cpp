@@ -14,6 +14,7 @@
 
 #ifdef KRAKEN_ENABLE_PYTHON
 #include <nanobind/stl/filesystem.h>
+#include <nanobind/stl/optional.h>
 #include <nanobind/stl/shared_ptr.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
@@ -1692,7 +1693,8 @@ Attributes:
         );
     nb::bind_vector<std::vector<TileLayer::Tile>>(tileLayerClass, "TileLayerTileList");
 
-    nb::class_<TileLayer::TileResult>(tileLayerClass, "TileResult", R"doc(
+    nb::class_<TileLayer::TileResult>(
+        tileLayerClass, "TileResult", nb::pooled(KRAKEN_PYTHON_POOL_CAPACITY), R"doc(
 TileResult bundles a `Tile` with its world-space `Rect`.
 
 Attributes:
@@ -1726,13 +1728,7 @@ Returns:
     list[TileLayer.TileResult]: List of TileResult entries for tiles intersecting the area.
         )doc")
         .def(
-            "get_from_point",
-            [](const TileLayer& self, const Vec2& position) -> nb::object
-            {
-                const auto result = self.getFromPoint(position);
-                return result.has_value() ? nb::cast(result.value()) : nb::none();
-            },
-            "position"_a, R"doc(
+            "get_from_point", &TileLayer::getFromPoint, "position"_a, R"doc(
 Return the tile at a given world position.
 
 Args:

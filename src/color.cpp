@@ -295,7 +295,7 @@ void _bind(nb::module_& module)
 {
     using namespace nb::literals;
 
-    nb::class_<Color>(module, "Color", R"doc(
+    nb::class_<Color>(module, "Color", nb::pooled(KRAKEN_PYTHON_POOL_CAPACITY), R"doc(
 Represents an RGBA color.
 
 Each channel (r, g, b, a) is an 8-bit unsigned integer.

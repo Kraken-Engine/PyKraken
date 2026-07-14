@@ -72,6 +72,11 @@ endif()
 
 if(KRAKEN_BUILD_PYTHON)
   message(STATUS "KrakenEngine: Building Python bindings (_pykraken)")
+  set(KRAKEN_PYTHON_POOL_CAPACITY 128 CACHE STRING
+      "Maximum cached Python wrappers per pooled type (0 disables pooling)")
+  if(NOT KRAKEN_PYTHON_POOL_CAPACITY MATCHES "^[0-9]+$")
+    message(FATAL_ERROR "KRAKEN_PYTHON_POOL_CAPACITY must be a non-negative integer")
+  endif()
 else()
   message(STATUS "KrakenEngine: Building as C++ library (Kraken::Kraken)")
 endif()
@@ -390,7 +395,10 @@ if(KRAKEN_BUILD_PYTHON)
   endif()
 
   # For ifndef guards
-  target_compile_definitions(_pykraken PUBLIC KRAKEN_ENABLE_PYTHON)
+  target_compile_definitions(_pykraken PUBLIC
+    KRAKEN_ENABLE_PYTHON
+    KRAKEN_PYTHON_POOL_CAPACITY=${KRAKEN_PYTHON_POOL_CAPACITY}
+  )
 
   set(KRAKEN_TARGET _pykraken)
 else()
@@ -480,6 +488,7 @@ if(KRAKEN_BUILD_PYTHON)
 
   # Ensure the module is placed in the correct package directory for scikit-build-core
   install(TARGETS _pykraken LIBRARY DESTINATION pykraken)
+  install(FILES src/pykraken/__init__.py DESTINATION pykraken)
   if(WIN32)
     if(_VCPKG_DLLS)
       install(FILES ${_VCPKG_DLLS} DESTINATION pykraken)
@@ -502,30 +511,14 @@ if(KRAKEN_BUILD_PYTHON)
 
   nanobind_add_stub(
     _pykraken_stub
-    MODULE _pykraken
-
-    PYTHON_PATH $<TARGET_FILE_DIR:_pykraken>
-    DEPENDS _pykraken
+    INSTALL_TIME
+    MODULE pykraken._pykraken
+    PYTHON_PATH .
 
     RECURSIVE
 
-    OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}
-    MARKER_FILE py.typed
-  )
-
-  add_custom_command(
-    TARGET _pykraken_stub POST_BUILD
-    COMMAND ${Python_EXECUTABLE} "${CMAKE_SOURCE_DIR}/scripts/clean_stubs.py" "${CMAKE_CURRENT_BINARY_DIR}/_pykraken"
-    COMMENT "Running custom stub cleanup script..."
-  )
-
-  install(
-    DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/_pykraken/
-    DESTINATION pykraken
-  )
-  install(
-    FILES ${CMAKE_CURRENT_BINARY_DIR}/py.typed
-    DESTINATION pykraken
+    OUTPUT_PATH pykraken
+    MARKER_FILE pykraken/py.typed
   )
 else()
   # =====================================================================

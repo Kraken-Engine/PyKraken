@@ -539,7 +539,11 @@ Args:
                 return self.parallel(std::move(effectVec));
             },
             nb::rv_policy::reference,
-            nb::sig("def parallel(self, *effects: fx.Effect) -> Orchestrator"), R"doc(
+            nb::sig(
+                "def parallel(self, *effects: pykraken._pykraken.fx.Effect) -> "
+                "pykraken._pykraken.Orchestrator"
+            ),
+            R"doc(
 Add multiple effects to run in parallel.
 
 Args:

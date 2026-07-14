@@ -121,7 +121,7 @@ void _bind(const nb::module_& module)
 {
     using namespace nb::literals;
 
-    nb::class_<Circle>(module, "Circle", R"doc(
+    nb::class_<Circle>(module, "Circle", nb::pooled(KRAKEN_PYTHON_POOL_CAPACITY), R"doc(
 Represents a circle shape with position and radius.
 
 Supports collision detection with points, rectangles, other circles, and lines.
