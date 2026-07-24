@@ -2,9 +2,9 @@ name: Build and Test Wheels
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ windows-latest, macos-latest, ubuntu-latest ]
+        os: [windows-latest, macos-latest, ubuntu-latest]
 
     steps:
       - uses: actions/checkout@v6
@@ -72,7 +72,7 @@ jobs:
           # --- macOS ---
           CIBW_ENVIRONMENT_MACOS: >
             CC=clang CXX=clang++
-            MACOSX_DEPLOYMENT_TARGET=15.0
+            MACOSX_DEPLOYMENT_TARGET=11.0
             CMAKE_GENERATOR=Ninja
             CMAKE_ARGS=-DSDL3_SHADERCROSS_VENDORED=ON
             VCPKG_ROOT=/Users/runner/work/vcpkg
@@ -117,8 +117,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
-        python-version: [ 3.12, 3.13, 3.14 ]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: [3.12, 3.13, 3.14]
 
     steps:
       - name: Checkout

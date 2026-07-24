@@ -2,10 +2,10 @@
 #include <cmath>
 #include <stdexcept>
 
-#include "Capsule.hpp"
-#include "Time.hpp"
-#include "physics/World.hpp"
-#include "physics/bodies/CharacterBody.hpp"
+#include "kraken/core/Time.hpp"
+#include "kraken/geometry/Capsule.hpp"
+#include "kraken/physics/World.hpp"
+#include "kraken/physics/bodies/CharacterBody.hpp"
 
 namespace kn::physics
 {

@@ -1,0 +1,56 @@
+#pragma once
+
+#include <SDL3_ttf/SDL_ttf.h>
+
+#include <string>
+
+#include "kraken/core/_globals.hpp"
+#include "kraken/graphics/Color.hpp"
+#include "kraken/math/Math.hpp"
+
+namespace kn
+{
+class Rect;
+class Font;
+
+namespace text
+{
+
+void _init();
+void _quit();
+void _cleanupTexts();  // Clean up all text objects before text engine is destroyed
+}  // namespace text
+
+class Text
+{
+  public:
+    Color shadowColor{};
+    Vec2 shadowOffset{};
+
+    Text(const Font& font, const std::string& text = "");
+    ~Text();
+
+    void draw(Vec2 pos = {}, const Vec2& anchor = Anchor::TOP_LEFT) const;
+
+    void setFont(const Font& font) const;
+
+    void setWrapWidth(int wrapWidth) const;
+    int getWrapWidth() const;
+
+    void setText(const std::string& text) const;
+    std::string getText() const;
+
+    void setColor(const Color& color) const;
+    Color getColor() const;
+
+    Rect getRect() const;
+    Vec2 getSize() const;
+    int getWidth() const;
+    int getHeight() const;
+
+  private:
+    TTF_Text* m_text = nullptr;
+
+    friend void text::_cleanupTexts();  // Allow text::_cleanupTexts to access private members
+};
+}  // namespace kn

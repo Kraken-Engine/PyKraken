@@ -1,5 +1,5 @@
-#include "physics/World.hpp"
-#include "physics/bodies/StaticBody.hpp"
+#include "kraken/physics/World.hpp"
+#include "kraken/physics/bodies/StaticBody.hpp"
 
 namespace kn::physics
 {

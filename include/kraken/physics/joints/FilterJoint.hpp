@@ -1,0 +1,14 @@
+#pragma once
+
+#include "kraken/physics/joints/Joint.hpp"
+
+namespace kn::physics
+{
+class FilterJoint : public Joint
+{
+  protected:
+    FilterJoint(b2JointId jointId);
+
+    friend class World;
+};
+}  // namespace kn::physics

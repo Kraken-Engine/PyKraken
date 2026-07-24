@@ -1,0 +1,604 @@
+#include "kraken/math/Math.hpp"
+
+#include <SDL3/SDL.h>
+#include <nanobind/make_iterator.h>
+#include <nanobind/nanobind.h>
+#include <nanobind/operators.h>
+#include <nanobind/stl/string.h>
+
+#include <algorithm>
+#include <cmath>
+#include <string>
+
+#include "bindings/python/bindings.hpp"
+
+namespace kn::math
+{
+void _bind(nb::module_& module)
+{
+    using namespace nanobind::literals;
+
+    auto vec2Class =
+        nb::class_<Vec2>(module, "Vec2", nb::pooled(KRAKEN_PYTHON_POOL_CAPACITY), R"doc(
+A 2D vector representing Cartesian coordinates.
+
+Attributes:
+    x (float): Horizontal component.
+    y (float): Vertical component.
+
+Methods:
+    copy: Return a duplicated Vec2.
+    is_zero: Test whether components are near zero.
+    rotate: Rotate the vector in place.
+    to_polar: Convert the vector to a PolarCoordinate.
+    scale_to_length: Scale the vector to a specific length.
+    project: Project onto another Vec2.
+    reject: Remove the projection onto another Vec2.
+    reflect: Reflect across another Vec2.
+    normalize: Normalize the vector in place.
+    distance_to: Measure distance to another Vec2.
+    distance_squared_to: Measure squared distance to another Vec2.
+        )doc");
+
+    // -------------- PolarCoordinate ----------------
+    nb::class_<
+        PolarCoordinate>(module, "PolarCoordinate", nb::pooled(KRAKEN_PYTHON_POOL_CAPACITY), R"doc(
+PolarCoordinate models a polar coordinate pair.
+
+Attributes:
+    angle (float): Angle in radians.
+    radius (float): Distance from origin.
+
+Methods:
+    to_cartesian: Convert the coordinate to a Vec2.
+        )doc")
+        .def(nb::init(), R"doc(
+Initialize a PolarCoordinate with zero angle and radius.
+        )doc")
+        .def(nb::init<double, double>(), "angle"_a, "radius"_a, R"doc(
+Initialize a PolarCoordinate from explicit values.
+
+Args:
+    angle (float): Angle in radians.
+    radius (float): Distance from the origin.
+        )doc")
+
+        // Properties
+        .def_rw("angle", &PolarCoordinate::angle, R"doc(
+The angle component in radians.
+        )doc")
+        .def_rw("radius", &PolarCoordinate::radius, R"doc(
+The radius component (distance from origin).
+        )doc")
+
+        // Methods
+        .def("to_cartesian", &PolarCoordinate::toCartesian, R"doc(
+Convert this PolarCoordinate to a Vec2.
+
+Returns:
+    Vec2: Cartesian representation of this coordinate.
+        )doc")
+
+        // Dunder methods
+        .def(nb::self == nb::self)
+        .def(nb::self != nb::self)
+        .def(
+            "__str__", [](const PolarCoordinate& p) -> std::string
+            { return "(" + std::to_string(p.angle) + ", " + std::to_string(p.radius) + ")"; }
+        )
+        .def(
+            "__repr__",
+            [](const PolarCoordinate& p) -> std::string
+            {
+                return "PolarCoordinate(" + std::to_string(p.angle) + ", " +
+                       std::to_string(p.radius) + ")";
+            }
+        )
+        .def(
+            "__iter__",
+            [](const PolarCoordinate& p) -> nb::iterator
+            {
+                return nb::
+                    make_iterator(nb::type<PolarCoordinate>(), "iterator", &p.angle, &p.angle + 2);
+            },
+            nb::keep_alive<0, 1>()
+        )
+        .def(
+            "__getitem__",
+            [](const PolarCoordinate& p, const size_t i) -> double
+            {
+                if (i == 0)
+                    return p.angle;
+                if (i == 1)
+                    return p.radius;
+                throw nb::index_error("Index out of range");
+            },
+            "index"_a
+        )
+        .def(
+            "__setitem__",
+            [](PolarCoordinate& p, const size_t i, const double value) -> void
+            {
+                if (i == 0)
+                    p.angle = value;
+                else if (i == 1)
+                    p.radius = value;
+                else
+                    throw nb::index_error("Index out of range");
+            },
+            "index"_a, "value"_a
+        )
+        .def("__len__", [](const PolarCoordinate&) -> int { return 2; })
+        .def(
+            "__hash__",
+            [](const PolarCoordinate& p) -> size_t
+            {
+                const size_t ha = std::hash<double>{}(p.angle);
+                const size_t hr = std::hash<double>{}(p.radius);
+                return ha ^ hr << 1;
+            }
+        );
+
+    // -------------- Vec2 ----------------
+
+    vec2Class
+        .def(nb::init(), R"doc(
+Initialize a Vec2 with zeroed components.
+        )doc")
+        .def(nb::init<double>(), "value"_a, R"doc(
+Initialize a Vec2 with identical x and y values.
+
+Args:
+    value (float): Value assigned to both components.
+        )doc")
+        .def(nb::init<double, double>(), "x"_a, "y"_a, R"doc(
+Initialize a Vec2 with explicit component values.
+
+Args:
+    x (float): Horizontal component.
+    y (float): Vertical component.
+        )doc")
+
+        // Properties
+        .def_rw("x", &Vec2::x, R"doc(The x component of the vector.)doc")
+        .def_rw("y", &Vec2::y, R"doc(The y component of the vector.)doc")
+
+        .def_prop_ro("length", &Vec2::getLength, "Return the magnitude of this Vec2.")
+        .def_prop_ro(
+            "length_squared", &Vec2::getLengthSquared, "Return the squared magnitude of this Vec2."
+        )
+        .def_prop_ro("angle", &Vec2::getAngle, "Return the vector angle in radians.")
+        .def_prop_ro(
+            "xx", [](const Vec2& self) -> Vec2 { return {self.x, self.x}; },
+            "Return a Vec2 with both components set to x."
+        )
+
+        .def_prop_rw(
+            "xy", [](const Vec2& self) -> Vec2 { return {self.x, self.y}; },
+            [](Vec2& self, const double lhs, const double rhs)
+            {
+                self.x = lhs;
+                self.y = rhs;
+            },
+            "Access or assign the (x, y) components as a Vec2."
+        )
+        .def_prop_rw(
+            "yx", [](const Vec2& self) -> Vec2 { return {self.y, self.x}; },
+            [](Vec2& self, const double lhs, const double rhs)
+            {
+                self.x = lhs;
+                self.y = rhs;
+            },
+            "Access or assign the (y, x) components as a Vec2."
+        )
+        .def_prop_ro(
+            "yy", [](const Vec2& self) -> Vec2 { return {self.y, self.y}; },
+            "Return a Vec2 with both components set to y."
+        )
+
+        .def_prop_ro_static(
+            "ZERO", [](const nb::object&) -> Vec2 { return Vec2::ZERO; }, "(0.0, 0.0)"
+        )
+        .def_prop_ro_static(
+            "LEFT", [](const nb::object&) -> Vec2 { return Vec2::LEFT; }, "(-1.0, 0.0)"
+        )
+        .def_prop_ro_static(
+            "RIGHT", [](const nb::object&) -> Vec2 { return Vec2::RIGHT; }, "(1.0, 0.0)"
+        )
+        .def_prop_ro_static(
+            "UP", [](const nb::object&) -> Vec2 { return Vec2::UP; }, "(0.0, -1.0)"
+        )
+        .def_prop_ro_static(
+            "DOWN", [](const nb::object&) -> Vec2 { return Vec2::DOWN; }, "(0.0, 1.0)"
+        )
+
+        // Methods
+        .def("copy", &Vec2::copy, R"doc(
+Return a copy of this Vec2.
+
+Returns:
+    Vec2: A duplicated vector with the same components.
+        )doc")
+        .def("is_zero", &Vec2::isZero, "tolerance"_a = 1e-8, R"doc(
+Determine whether this Vec2 is effectively zero.
+
+Args:
+    tolerance (float): Largest allowed absolute component magnitude.
+
+Returns:
+    bool: True if both components are within the tolerance.
+        )doc")
+        .def("project", &Vec2::project, "other"_a, R"doc(
+Project this Vec2 onto another Vec2.
+
+Args:
+    other (Vec2): The vector to project onto.
+
+Returns:
+    Vec2: Projection of this vector onto the other vector.
+        )doc")
+        .def("reject", &Vec2::reject, "other"_a, R"doc(
+Compute the rejection of this Vec2 from another Vec2.
+
+Args:
+    other (Vec2): The vector defining the projection axis.
+
+Returns:
+    Vec2: Component of this vector orthogonal to the other vector.
+        )doc")
+        .def("reflect", &Vec2::reflect, "other"_a, R"doc(
+Reflect this Vec2 across another Vec2.
+
+Args:
+    other (Vec2): The vector used as the reflection normal.
+
+Returns:
+    Vec2: Reflected vector.
+        )doc")
+        .def("rotate", &Vec2::rotate, "radians"_a, R"doc(
+Rotate this Vec2 in place.
+
+Args:
+    radians (float): Rotation angle in radians.
+        )doc")
+        .def("rotated", &Vec2::rotated, "radians"_a, R"doc(
+Return a new Vec2 rotated by a specified angle.
+
+Args:
+    radians (float): Rotation angle in radians.
+
+Returns:
+    Vec2: A new vector rotated by the given angle.
+        )doc")
+        .def("normalize", &Vec2::normalize, R"doc(
+Normalize this Vec2 in place.
+        )doc")
+        .def("normalized", &Vec2::normalized, R"doc(
+Return a new normalized Vec2.
+
+Returns:
+    Vec2: A new vector with unit length.
+        )doc")
+        .def("scale_to_length", &Vec2::scaleToLength, "length"_a, R"doc(
+Scale this Vec2 to a specific magnitude.
+
+Args:
+    length (float): Target vector length.
+        )doc")
+        .def("scaled_to_length", &Vec2::scaledToLength, "length"_a, R"doc(
+Return a new Vec2 scaled to a specific magnitude.
+
+Args:
+    length (float): Target vector length.
+
+Returns:
+    Vec2: A new vector scaled to the specified length.
+        )doc")
+        .def("distance_to", &Vec2::distanceTo, "other"_a, R"doc(
+Compute the Euclidean distance to another Vec2.
+
+Args:
+    other (Vec2): Comparison vector.
+
+Returns:
+    float: Distance between the vectors.
+        )doc")
+        .def("distance_squared_to", &Vec2::distanceSquaredTo, "other"_a, R"doc(
+Compute the squared distance to another Vec2.
+
+Args:
+    other (Vec2): Comparison vector.
+
+Returns:
+    float: Squared distance between the vectors.
+        )doc")
+        .def("to_polar", &Vec2::toPolar, R"doc(
+Convert this Vec2 to polar coordinates.
+
+Returns:
+    PolarCoordinate: Polar representation with angle and length.
+        )doc")
+        .def("move_toward", &Vec2::moveToward, "target"_a, "delta"_a, R"doc(
+Move this Vec2 toward a target Vec2 by a specified delta.
+
+Args:
+    target (Vec2): The target vector to move towards.
+    delta (float): The maximum distance to move.
+        )doc")
+        .def("moved_toward", &Vec2::movedToward, "target"_a, "delta"_a, R"doc(
+Return a new Vec2 moved toward a target Vec2 by a specified delta.
+
+Args:
+    target (Vec2): The target vector to move towards.
+    delta (float): The maximum distance to move.
+
+Returns:
+    Vec2: A new vector moved toward the target.
+        )doc")
+        .def("floor", &Vec2::floor, R"doc(
+Floor both components of this Vec2 in-place.
+        )doc")
+        .def("floored", &Vec2::floored, R"doc(
+Return a new Vec2 with both components floored to the nearest integer.
+
+Returns:
+    Vec2: A new vector with floored components.
+        )doc")
+        .def("ceil", &Vec2::ceil, R"doc(
+Ceil both components of this Vec2 in-place.
+        )doc")
+        .def("ceiled", &Vec2::ceiled, R"doc(
+Return a new Vec2 with both components ceiled to the nearest integer.
+
+Returns:
+    Vec2: A new vector with ceiled components.
+        )doc")
+        .def("round", &Vec2::round, R"doc(
+Round both components of this Vec2 in-place.
+        )doc")
+        .def("rounded", &Vec2::rounded, R"doc(
+Return a new Vec2 with both components rounded to the nearest integer.
+
+Returns:
+    Vec2: A new vector with rounded components.
+        )doc")
+        .def("slide", &Vec2::slide, "normal"_a, R"doc(
+Slide this Vec2 along a surface defined by a normal vector.
+
+Args:
+    normal (Vec2): The normal vector defining the surface.
+
+Returns:
+    Vec2: A new vector slid along the surface.
+        )doc")
+        .def("slid", &Vec2::slid, "normal"_a, R"doc(
+Return a new Vec2 slid along a surface defined by a normal vector.
+
+Args:
+    normal (Vec2): The normal vector defining the surface.
+
+Returns:
+    Vec2: A new vector slid along the surface.
+        )doc")
+        .def(
+            "as_ints", [](const Vec2& v) -> nb::typed<nb::tuple, int, int>
+            { return nb::make_tuple(static_cast<int>(v.x), static_cast<int>(v.y)); }, R"doc(
+Return the vector components truncated to integers as a tuple.
+
+Returns:
+    tuple[int, int]: The (x, y) components as integers.
+        )doc"
+        )
+
+        // Dunder methods
+        .def(
+            "__str__", [](const Vec2& v) -> std::string
+            { return "<" + std::to_string(v.x) + ", " + std::to_string(v.y) + ">"; }
+        )
+        .def(
+            "__repr__", [](const Vec2& v) -> std::string
+            { return "Vec2(" + std::to_string(v.x) + ", " + std::to_string(v.y) + ")"; }
+        )
+        .def(
+            "__iter__", [](const Vec2& v) -> nb::iterator
+            { return nb::make_iterator(nb::type<Vec2>(), "iterator", &v.x, &v.x + 2); },
+            nb::keep_alive<0, 1>()
+        )
+        .def(
+            "__getitem__",
+            [](const Vec2& v, const size_t i) -> double
+            {
+                if (i == 0)
+                    return v.x;
+                if (i == 1)
+                    return v.y;
+
+                throw nb::index_error("Index out of range");
+            },
+            "index"_a
+        )
+        .def(
+            "__setitem__",
+            [](Vec2& v, const size_t i, const double value) -> void
+            {
+                if (i == 0)
+                    v.x = value;
+                else if (i == 1)
+                    v.y = value;
+                else
+                    throw nb::index_error("Index out of range");
+            },
+            "index"_a, "value"_a
+        )
+        .def("__len__", [](const Vec2&) -> int { return 2; })
+
+        // Arithmetic dunder methods
+        .def(nb::self + nb::self)
+        .def(nb::self += nb::self, nb::rv_policy::none)
+        .def(-nb::self)
+        .def(nb::self - nb::self)
+        .def(nb::self -= nb::self, nb::rv_policy::none)
+        .def("__bool__", [](const Vec2& v) -> bool { return static_cast<bool>(v); })
+        .def(nb::self / double())
+        .def(nb::self / nb::self)
+        .def(nb::self /= double(), nb::rv_policy::none)
+        .def(nb::self /= nb::self, nb::rv_policy::none)
+        .def(nb::self * nb::self)
+        .def(nb::self * double())
+        .def(double() * nb::self)
+        .def(nb::self *= nb::self, nb::rv_policy::none)
+        .def(nb::self *= double(), nb::rv_policy::none)
+
+        // Hash and comparison dunder methods
+        .def(
+            "__hash__",
+            [](const Vec2& v) -> size_t
+            {
+                const std::size_t hx = std::hash<double>{}(v.x);
+                const std::size_t hy = std::hash<double>{}(v.y);
+                return hx ^ hy << 1;
+            }
+        )
+        .def(nb::self == nb::self)
+        .def(nb::self != nb::self);
+
+    auto subMath = module.def_submodule("math", "Math related functions");
+
+    subMath.def("from_polar", &fromPolar, "angle"_a, "radius"_a, R"doc(
+Convert polar coordinates to a Cartesian vector.
+
+Args:
+    angle (float): The angle in radians.
+    radius (float): The radius/distance from origin.
+
+Returns:
+    Vec2: The equivalent Cartesian vector.
+        )doc");
+
+    subMath.def(
+        "clamp", &clampVec, "vec"_a, "min_vec"_a, "max_vec"_a,
+        R"doc(
+Clamp a vector between two boundary vectors.
+
+Args:
+    vec (Vec2): The vector to clamp.
+    min_vec (Vec2): The minimum boundary vector.
+    max_vec (Vec2): The maximum boundary vector.
+
+Returns:
+    Vec2: A new vector with components clamped between min and max.
+        )doc"
+    );
+
+    subMath.def(
+        "clamp", [](const double value, const double min_val, const double max_val) -> double
+        { return std::clamp(value, min_val, max_val); }, "value"_a, "min_val"_a, "max_val"_a,
+        R"doc(
+Clamp a value between two boundaries.
+
+Args:
+    value (float): The value to clamp.
+    min_val (float): The minimum boundary.
+    max_val (float): The maximum boundary.
+
+Returns:
+    float: The clamped value.
+        )doc"
+    );
+
+    subMath.def(
+        "lerp", nb::overload_cast<const Vec2&, const Vec2&, double>(&lerp), "a"_a, "b"_a, "t"_a,
+        R"doc(
+Linearly interpolate between two Vec2s.
+
+Args:
+    a (Vec2): The start vector.
+    b (Vec2): The end vector.
+    t (float): The interpolation factor [0.0, 1.0].
+
+Returns:
+    Vec2: The interpolated vector.
+        )doc"
+    );
+
+    subMath.def(
+        "lerp", nb::overload_cast<double, double, double>(&lerp), "a"_a, "b"_a, "t"_a,
+        R"doc(
+Linearly interpolate between two values.
+
+Args:
+    a (float): The start value.
+    b (float): The end value.
+    t (float): The interpolation factor [0.0, 1.0].
+
+Returns:
+    float: The interpolated value.
+        )doc"
+    );
+
+    subMath.def("remap", &remap, "in_min"_a, "in_max"_a, "out_min"_a, "out_max"_a, "value"_a, R"doc(
+Remap a value from one range to another.
+
+Args:
+    in_min (float): Input range minimum.
+    in_max (float): Input range maximum.
+    out_min (float): Output range minimum.
+    out_max (float): Output range maximum.
+    value (float): The value to remap.
+
+Returns:
+    float: The remapped value in the output range.
+
+Raises:
+    ValueError: If in_min equals in_max.
+        )doc");
+
+    subMath.attr("DEG2RAD") = M_PI / 180.0;
+    subMath.attr("RAD2DEG") = 180.0 / M_PI;
+
+    subMath.def("dot", &dot, "a"_a, "b"_a, R"doc(
+Calculate the dot product of two vectors.
+
+Args:
+    a (Vec2): The first vector.
+    b (Vec2): The second vector.
+
+Returns:
+    float: The dot product (a.x * b.x + a.y * b.y).
+        )doc");
+
+    subMath.def("cross", &cross, "a"_a, "b"_a, R"doc(
+Calculate the 2D cross product of two vectors. (a.x * b.y - a.y * b.x)
+
+Args:
+    a (Vec2): The first vector.
+    b (Vec2): The second vector.
+
+Returns:
+    float: The 2D cross product.
+        )doc");
+
+    subMath.def("angle_between", &angleBetween, "a"_a, "b"_a, R"doc(
+Calculate the angle between two vectors.
+
+Args:
+    a (Vec2): The first vector.
+    b (Vec2): The second vector.
+
+Returns:
+    float: The angle between the vectors in radians [0, π].
+        )doc");
+
+    subMath.def("move_toward", &moveToward, "current"_a, "target"_a, "delta"_a, R"doc(
+Move a value toward a target by a maximum delta.
+
+Args:
+    current (float): The current value.
+    target (float): The target value.
+    delta (float): The maximum amount to move toward the target.
+
+Returns:
+    float: The new value after moving toward the target.
+        )doc");
+}
+}  // namespace kn::math

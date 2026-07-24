@@ -1,11 +1,11 @@
-#include "physics/bodies/Body.hpp"
+#include "kraken/physics/bodies/Body.hpp"
 
-#include "../../mapbox/earcut.hpp"
-#include "Capsule.hpp"
-#include "Circle.hpp"
-#include "Polygon.hpp"
-#include "Rect.hpp"
-#include "Transform.hpp"
+#include "geometry/earcut.hpp"
+#include "kraken/geometry/Capsule.hpp"
+#include "kraken/geometry/Circle.hpp"
+#include "kraken/geometry/Polygon.hpp"
+#include "kraken/geometry/Rect.hpp"
+#include "kraken/math/Transform.hpp"
 
 namespace kn::physics
 {

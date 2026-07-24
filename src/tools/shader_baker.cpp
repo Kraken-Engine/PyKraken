@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include "Log.hpp"
+#include "kraken/core/Log.hpp"
 
 namespace kn::shaders
 {
