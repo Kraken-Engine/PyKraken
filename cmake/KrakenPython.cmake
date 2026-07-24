@@ -29,7 +29,6 @@ if(WIN32)
 endif()
 
 install(TARGETS _pykraken LIBRARY DESTINATION pykraken)
-install(FILES src/pykraken/__init__.py DESTINATION pykraken)
 
 if(WIN32)
   if(_VCPKG_DLLS)

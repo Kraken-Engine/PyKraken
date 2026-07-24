@@ -14,7 +14,7 @@ if "pykraken._pykraken" not in hiddenimports:
 
 binaries = collect_dynamic_libs("pykraken")  # SDL3/ttf/image libs
 
-# Editable installs can place the extension outside `src/pykraken`.
+# Editable installs can place the extension outside the pure-Python source tree.
 _spec = importlib.util.find_spec("pykraken._pykraken")
 if _spec and _spec.origin:
     binaries.append((_spec.origin, "pykraken"))

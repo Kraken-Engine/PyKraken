@@ -38,7 +38,7 @@ build-backend = "scikit_build_core.build"
 minimum-version = "0.4"
 build-dir = "build/{wheel_tag}"
 wheel.py-api = "cp312"
-wheel.packages = ["src/pykraken"]
+wheel.packages = ["python/pykraken"]
 
 [tool.cibuildwheel]
 build-verbosity = 1

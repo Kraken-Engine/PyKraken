@@ -13,6 +13,7 @@ if(KRAKEN_BUILD_PYTHON)
   endif()
 else()
   message(STATUS "KrakenEngine: Building as C++ library (Kraken::Kraken)")
+  option(KRAKEN_INSTALL "Generate native C++ install and package-export rules" ON)
 endif()
 
 include(FetchContent)

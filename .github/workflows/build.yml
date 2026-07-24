@@ -110,6 +110,39 @@ jobs:
           path: ./wheelhouse/*.whl
           archive: false
 
+  native_cpp:
+    name: Build native C++ library
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build
+
+      - name: Set up vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: ${{ github.workspace }}/vcpkg
+          vcpkgJsonGlob: "${{ github.workspace }}/vcpkg.json"
+
+      - name: Configure native library
+        env:
+          VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+          VCPKG_DEFAULT_TRIPLET: x64-linux-release
+        run: >
+          cmake -S . -B build/native -G Ninja
+          -DKRAKEN_BUILD_PYTHON=OFF
+          -DKRAKEN_INSTALL=OFF
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+
+      - name: Build native library
+        run: cmake --build build/native --parallel 2
+
   test:
     needs: build_wheels
     name: Test ${{ matrix.os }} / Python ${{ matrix.python-version }}
@@ -153,10 +186,10 @@ jobs:
       - name: Run tests
         shell: bash
         run: |
-          mv src _src_backup
+          mv python _python_backup
           if [ "$RUNNER_OS" = "Linux" ]; then
             xvfb-run -s "-screen 0 1920x1080x24" python -m pytest tests -q
           else
             python -m pytest tests -q
           fi
-          mv _src_backup src
+          mv _python_backup python

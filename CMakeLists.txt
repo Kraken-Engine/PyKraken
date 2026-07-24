@@ -19,6 +19,6 @@ include(cmake/KrakenTargets.cmake)
 
 if(KRAKEN_BUILD_PYTHON)
   include(cmake/KrakenPython.cmake)
-else()
+elseif(KRAKEN_INSTALL)
   include(cmake/KrakenInstall.cmake)
 endif()
