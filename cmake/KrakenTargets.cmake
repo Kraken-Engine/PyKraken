@@ -32,6 +32,7 @@ if(KRAKEN_BUILD_PYTHON)
 else()
   add_library(KrakenEngine STATIC ${KRAKEN_CORE_SOURCES})
   add_library(Kraken::Kraken ALIAS KrakenEngine)
+  set_target_properties(KrakenEngine PROPERTIES EXPORT_NAME Kraken)
   set(KRAKEN_TARGET KrakenEngine)
 endif()
 
@@ -57,19 +58,29 @@ if(MSVC)
 endif()
 
 target_link_libraries(${KRAKEN_TARGET} PRIVATE
-  SDL3_image::SDL3_image
-  $<IF:$<TARGET_EXISTS:pugixml>,pugixml,>
-  $<IF:$<TARGET_EXISTS:zstd::libzstd_static>,zstd::libzstd_static,
-    $<IF:$<TARGET_EXISTS:zstd::zstd>,zstd::zstd,zstd::libzstd_shared>>
+  $<BUILD_INTERFACE:SDL3_image::SDL3_image>
+  $<INSTALL_INTERFACE:SDL3_image::SDL3_image>
+  $<BUILD_INTERFACE:$<IF:$<TARGET_EXISTS:pugixml::pugixml>,pugixml::pugixml,
+    $<IF:$<TARGET_EXISTS:pugixml>,pugixml,>>>
+  $<INSTALL_INTERFACE:pugixml::pugixml>
+  $<BUILD_INTERFACE:$<IF:$<TARGET_EXISTS:zstd::libzstd_static>,zstd::libzstd_static,
+    $<IF:$<TARGET_EXISTS:zstd::zstd>,zstd::zstd,zstd::libzstd_shared>>>
+  $<INSTALL_INTERFACE:zstd::libzstd_static>
 )
 
 target_link_libraries(${KRAKEN_TARGET} PUBLIC
-  SDL3::SDL3
-  SDL3_ttf::SDL3_ttf
-  SDL3_mixer::SDL3_mixer
-  box2d::box2d
-  spdlog::spdlog
-  tmxlite::tmxlite
+  $<BUILD_INTERFACE:SDL3::SDL3>
+  $<INSTALL_INTERFACE:SDL3::SDL3>
+  $<BUILD_INTERFACE:SDL3_ttf::SDL3_ttf>
+  $<INSTALL_INTERFACE:SDL3_ttf::SDL3_ttf>
+  $<BUILD_INTERFACE:SDL3_mixer::SDL3_mixer>
+  $<INSTALL_INTERFACE:SDL3_mixer::SDL3_mixer>
+  $<BUILD_INTERFACE:box2d::box2d>
+  $<INSTALL_INTERFACE:box2d::box2d>
+  $<BUILD_INTERFACE:spdlog::spdlog>
+  $<INSTALL_INTERFACE:spdlog::spdlog>
+  $<BUILD_INTERFACE:tmxlite::tmxlite>
+  $<INSTALL_INTERFACE:tmxlite::tmxlite>
 )
 
 if(KRAKEN_BUILD_PYTHON)

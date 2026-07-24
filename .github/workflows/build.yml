@@ -66,7 +66,9 @@ jobs:
             CC=cl CXX=cl
             VCPKG_ROOT=C:/vcpkg
             VCPKG_DEFAULT_TRIPLET=x64-windows-release
+            VCPKG_MANIFEST_FEATURES=python
             CMAKE_GENERATOR=Ninja
+            CMAKE_ARGS=-DVCPKG_MANIFEST_FEATURES=python
             VCPKG_KEEP_PDB=0
 
           # --- macOS ---
@@ -74,9 +76,10 @@ jobs:
             CC=clang CXX=clang++
             MACOSX_DEPLOYMENT_TARGET=11.0
             CMAKE_GENERATOR=Ninja
-            CMAKE_ARGS=-DSDL3_SHADERCROSS_VENDORED=ON
+            CMAKE_ARGS="-DSDL3_SHADERCROSS_VENDORED=ON -DVCPKG_MANIFEST_FEATURES=python"
             VCPKG_ROOT=/Users/runner/work/vcpkg
             VCPKG_DEFAULT_TRIPLET=arm64-osx-release
+            VCPKG_MANIFEST_FEATURES=python
 
           # --- Linux ---
           CIBW_MANYLINUX_X86_64_IMAGE: "manylinux_2_28"
@@ -99,10 +102,11 @@ jobs:
           CIBW_ENVIRONMENT_LINUX: >
             CC=gcc CXX=g++
             CMAKE_GENERATOR=Ninja
-            CMAKE_ARGS=-DSDL3_SHADERCROSS_VENDORED=ON
+            CMAKE_ARGS="-DSDL3_SHADERCROSS_VENDORED=ON -DVCPKG_MANIFEST_FEATURES=python"
             VCPKG_ROOT=/opt/vcpkg
             VCPKG_DEFAULT_TRIPLET=x64-linux-release
             VCPKG_DEFAULT_BINARY_CACHE=/project/.vcpkg_cache
+            VCPKG_MANIFEST_FEATURES=python
 
       - name: Upload wheels
         uses: actions/upload-artifact@v7

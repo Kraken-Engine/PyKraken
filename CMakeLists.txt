@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.15...3.27)
 # The vcpkg toolchain must be selected before project().
 include(cmake/KrakenVcpkg.cmake)
 
-project(KrakenEngine LANGUAGES CXX)
+project(KrakenEngine VERSION 1.7.4 LANGUAGES CXX)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")

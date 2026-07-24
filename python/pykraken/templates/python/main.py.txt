@@ -1,0 +1,11 @@
+import pykraken as kn
+
+kn.init()
+kn.window.create("{{PROJECT_NAME}}", 800, 600)
+
+while kn.window.is_open():
+    kn.event.poll()
+    kn.renderer.clear()
+    kn.renderer.present()
+
+kn.quit()

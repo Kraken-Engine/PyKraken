@@ -1,7 +1,7 @@
 [project]
 name = "kraken-engine"
 version = "1.7.4"
-description = "Python bindings for Kraken Engine"
+description = "A 2D game engine for Python and C++"
 readme = "README.md"
 requires-python = ">=3.12"
 authors = [{ name = "Derrick Martinez" }]
@@ -11,6 +11,7 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: C++",
   "Topic :: Games/Entertainment",
   "Topic :: Multimedia :: Graphics",
   "Operating System :: Microsoft :: Windows",
@@ -28,7 +29,7 @@ license-files = ["LICENSE"]
 "Source" = "https://github.com/Kraken-Engine/PyKraken"
 
 [project.scripts]
-pykraken = "pykraken.cli:main"
+kraken = "pykraken.cli:main"
 
 [build-system]
 requires = ["scikit-build-core >=0.11.6", "nanobind ==2.13.0"]

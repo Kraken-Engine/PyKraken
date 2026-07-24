@@ -3,6 +3,12 @@ if(SDL3_VENDORED)
   set(SDL_SHARED OFF CACHE BOOL "" FORCE)
   set(SDL_STATIC ON CACHE BOOL "" FORCE)
   set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
+  if(KRAKEN_INSTALL)
+    set(SDL_INSTALL ON CACHE BOOL "" FORCE)
+    set(SDL_INSTALL_DOCS OFF CACHE BOOL "" FORCE)
+  else()
+    set(SDL_INSTALL OFF CACHE BOOL "" FORCE)
+  endif()
 
   # Temporarily use the Kraken fork while waiting for upstream releases.
   FetchContent_Declare(SDL3
@@ -30,8 +36,14 @@ if(SDL3_IMAGE_VENDORED)
   set(SDLIMAGE_XCF OFF CACHE BOOL "" FORCE)
   set(SDLIMAGE_XPM OFF CACHE BOOL "" FORCE)
   set(SDLIMAGE_XV OFF CACHE BOOL "" FORCE)
-  set(SDLIMAGE_VENDORED ON CACHE BOOL "" FORCE)
+  if(KRAKEN_INSTALL)
+    set(SDLIMAGE_VENDORED OFF CACHE BOOL "" FORCE)
+  else()
+    set(SDLIMAGE_VENDORED ON CACHE BOOL "" FORCE)
+  endif()
   set(SDLIMAGE_PNG_SHARED OFF CACHE BOOL "" FORCE)
+  set(SDLIMAGE_INSTALL ${KRAKEN_INSTALL} CACHE BOOL "" FORCE)
+  set(SDLIMAGE_INSTALL_MAN OFF CACHE BOOL "" FORCE)
 
   FetchContent_Declare(SDL_image
     GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
@@ -47,6 +59,8 @@ endif()
 # SDL3_ttf must follow SDL3_image to avoid duplicate vendored PNG aliases.
 if(SDL3_TTF_VENDORED)
   set(SDLTTF_VENDORED ON CACHE BOOL "" FORCE)
+  set(SDLTTF_INSTALL ${KRAKEN_INSTALL} CACHE BOOL "" FORCE)
+  set(SDLTTF_INSTALL_MAN OFF CACHE BOOL "" FORCE)
   FetchContent_Declare(SDL_ttf
     GIT_REPOSITORY https://github.com/libsdl-org/SDL_ttf.git
     GIT_TAG release-3.2.2
@@ -67,6 +81,8 @@ if(SDL3_MIXER_VENDORED)
   set(SDLMIXER_VOC OFF CACHE BOOL "" FORCE)
   set(SDLMIXER_AU OFF CACHE BOOL "" FORCE)
   set(SDLMIXER_VENDORED ON CACHE BOOL "" FORCE)
+  set(SDLMIXER_INSTALL ${KRAKEN_INSTALL} CACHE BOOL "" FORCE)
+  set(SDLMIXER_INSTALL_MAN OFF CACHE BOOL "" FORCE)
   FetchContent_Declare(SDL_mixer
     GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer.git
     GIT_TAG release-3.2.0
@@ -150,6 +166,9 @@ if(ZSTD_VENDORED)
     SOURCE_SUBDIR build/cmake
   )
   FetchContent_MakeAvailable(zstd)
+  if(TARGET libzstd_static AND NOT TARGET zstd::libzstd_static)
+    add_library(zstd::libzstd_static ALIAS libzstd_static)
+  endif()
 else()
   find_package(zstd CONFIG QUIET)
   if(NOT zstd_FOUND)
@@ -163,6 +182,13 @@ endif()
 
 # tmxlite
 if(TMXLITE_VENDORED)
+  if(ZSTD_VENDORED)
+    set(ZSTD_LIBRARY libzstd_static CACHE STRING "" FORCE)
+    set(ZSTD_LIBRARY_DEBUG libzstd_static CACHE STRING "" FORCE)
+    set(ZSTD_LIBRARY_RELEASE libzstd_static CACHE STRING "" FORCE)
+    set(ZSTD_INCLUDE_DIR "${zstd_SOURCE_DIR}/lib" CACHE PATH "" FORCE)
+  endif()
+
   FetchContent_Declare(tmxlite
     GIT_REPOSITORY https://github.com/fallahn/tmxlite.git
     GIT_TAG v1.4.5

@@ -1,4 +1,7 @@
 set(KRAKEN_CORE_SOURCES
+  # Runtime
+  src/runtime.cpp
+
   # Animation
   src/animation/animation_controller.cpp
   src/animation/ease.cpp

@@ -7,9 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.7.4] - TBA
 
+### Added
+
+- `kraken init` now creates complete Python or C++ projects from packaged templates.
+- `kraken init my-game --cpp` creates a CMake project that builds Kraken and all native dependencies from source without requiring vcpkg.
+- `kraken init my-game --cpp --sdk` downloads and configures the matching prebuilt native SDK.
+- Native SDK release workflows for macOS ARM64, Windows x64, and experimental Windows ARM64.
+- A relocatable, versioned `find_package(KrakenEngine)` package exposing `Kraken::Kraken`.
+- A draft-first release workflow that builds and tests wheels and SDKs before they can be published.
+
 ### Changed
 
 - Nanobind backend updated to version 2.13.0.
+- The developer command is now `kraken`, replacing `pykraken`, to reflect the engine's Python and C++ project support.
 - Frequently constructed value types now use nanobind's instance pooling. In a CPython 3.14.4 benchmark on Apple silicon, pooling improved construction throughput by a 14% geometric mean across nine types (1,000,000 constructions per type, seven repeats).
 - Stub files are now generated at install time from the package-qualified extension, improving editor discovery of exported types and submodules without post-processing the generated files.
 

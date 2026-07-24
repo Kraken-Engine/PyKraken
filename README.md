@@ -6,8 +6,15 @@
 
 <br>
 
-**Kraken Engine** is a modern and highly capable 2D game development Python library, designed to give developers the power and flexibility of low-level systems with the ease of a clean, expressive API.
+**Kraken Engine** is a modern and highly capable multilingual 2D game framework for Python and C++, designed to give developers the power and flexibility of low-level systems with the ease of a clean, expressive API.
 It is ideal for solo developers and indie teams looking to build games or interactive experiences rapidly.
+
+Create a starter project with the Kraken CLI:
+
+```bash
+kraken init my-game
+kraken init my-game --cpp
+```
 
 ## Documentation
 

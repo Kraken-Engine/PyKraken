@@ -1,30 +1,41 @@
 import argparse
-import subprocess
-import os
-import pykraken
-
-import sys
-import time
-import threading
 import itertools
+import os
+from pathlib import Path
+import platform
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import threading
+import time
+from importlib import resources
+from importlib.metadata import PackageNotFoundError, version
+from urllib.error import HTTPError, URLError
+from urllib.request import urlretrieve
+
+
+try:
+    VERSION = version("kraken-engine")
+except PackageNotFoundError:
+    VERSION = "1.7.4"
+REPOSITORY = "https://github.com/Kraken-Engine/PyKraken"
+
 
 class DotAnimator:
     def __init__(self, message):
         self.message = message
-        # Cycle through 0 to 3 dots
-        self.dots = itertools.cycle(['', '.', '..', '...'])
+        self.dots = itertools.cycle(("", ".", "..", "..."))
         self.running = False
         self.thread = None
 
     def _animate(self):
         while self.running:
-            # \r moves the cursor back to the start of the line
-            # The extra spaces at the end ensure shrinking strings (from '...' to '') overwrite old dots
             sys.stdout.write(f"\r{self.message}{next(self.dots)}   ")
             sys.stdout.flush()
             time.sleep(0.4)
 
-        # Clear the line when finished so the success/error message prints cleanly
         sys.stdout.write(f"\r{self.message}...   \n")
         sys.stdout.flush()
 
@@ -39,219 +50,241 @@ class DotAnimator:
         if self.thread:
             self.thread.join()
 
-def main():
-    parser = argparse.ArgumentParser(prog="pykraken", description="Kraken Engine Developer Tools")
+
+def _project_identifier(name):
+    identifier = re.sub(r"[^A-Za-z0-9_]", "_", name)
+    if not identifier or identifier[0].isdigit():
+        identifier = f"Kraken_{identifier}"
+    return identifier
+
+
+def _template_files(language, demo=False, sdk=False):
+    common = {
+        "gitignore.txt": ".gitignore",
+        "README.md.txt": "README.md",
+    }
+    if language == "python":
+        common["main.demo.py.txt" if demo else "main.py.txt"] = "main.py"
+    else:
+        common.update(
+            {
+                "CMakeLists.sdk.txt" if sdk else "CMakeLists.txt": "CMakeLists.txt",
+                "CMakePresets.json.txt": "CMakePresets.json",
+                "main.demo.cpp.txt" if demo else "main.cpp.txt": "src/main.cpp",
+            }
+        )
+    return common
+
+
+def _render_template(text, project_name, sdk=False):
+    replacements = {
+        "{{PROJECT_NAME}}": project_name,
+        "{{PROJECT_IDENTIFIER}}": _project_identifier(project_name),
+        "{{KRAKEN_VERSION}}": VERSION,
+        "{{KRAKEN_TAG}}": f"v{VERSION}",
+        "{{BUILD_TYPE}}": "Release" if sdk else "Debug",
+    }
+    for placeholder, value in replacements.items():
+        text = text.replace(placeholder, value)
+    return text
+
+
+def _write_project(target_dir, language, demo=False, sdk=False, force=False):
+    template_dir = resources.files("pykraken").joinpath("templates", language)
+    files = _template_files(language, demo=demo, sdk=sdk)
+    collisions = [target_dir / destination for destination in files.values() if (target_dir / destination).exists()]
+
+    if collisions and not force:
+        paths = ", ".join(str(path) for path in collisions)
+        raise FileExistsError(f"Refusing to overwrite existing files: {paths}. Use --force to replace them.")
+
+    target_dir.mkdir(parents=True, exist_ok=True)
+    for source_name, destination_name in files.items():
+        destination = target_dir / destination_name
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        source = template_dir.joinpath(source_name)
+        rendered = _render_template(source.read_text(encoding="utf-8"), target_dir.name, sdk=sdk)
+        destination.write_text(rendered, encoding="utf-8")
+
+
+def _sdk_asset():
+    system = platform.system()
+    machine = platform.machine().lower()
+
+    if system == "Darwin" and machine in {"arm64", "aarch64"}:
+        return f"kraken-sdk-v{VERSION}-macos-arm64.tar.gz"
+    if system == "Windows" and machine in {"amd64", "x86_64"}:
+        return f"kraken-sdk-v{VERSION}-windows-x64.zip"
+    if system == "Windows" and machine in {"arm64", "aarch64"}:
+        return f"kraken-sdk-v{VERSION}-windows-arm64.zip"
+
+    raise RuntimeError(
+        f"No prebuilt Kraken SDK is published for {system} {platform.machine()}. "
+        "Create the project without --sdk to use the portable bundled source build."
+    )
+
+
+def _download_sdk(target_dir):
+    asset = _sdk_asset()
+    url = f"{REPOSITORY}/releases/download/v{VERSION}/{asset}"
+
+    with tempfile.TemporaryDirectory(prefix="kraken-sdk-") as temporary_dir:
+        archive = Path(temporary_dir) / asset
+        extracted = Path(temporary_dir) / "extracted"
+        extracted.mkdir()
+
+        try:
+            with DotAnimator(f"Downloading {asset}"):
+                urlretrieve(url, archive)
+        except (HTTPError, URLError) as error:
+            raise RuntimeError(f"Unable to download {url}: {error}") from error
+
+        shutil.unpack_archive(archive, extracted)
+        sdk_dir = target_dir / ".kraken" / "sdk"
+        if sdk_dir.exists():
+            shutil.rmtree(sdk_dir)
+        sdk_dir.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(extracted, sdk_dir)
+
+
+def _run_bake(args):
+    import pykraken as kn
+
+    if args.verbose:
+        kn.log.enable()
+
+    try:
+        with DotAnimator(f"Baking: {args.input}"):
+            kn.shaders.bake(args.input, args.out)
+
+        outputs = {
+            "spv": args.out + ".spv",
+            "dxil": args.out + ".dxil",
+            "msl": args.out + ".msl",
+        }
+        missing = [name for name, path in outputs.items() if not os.path.exists(path)]
+        if missing:
+            print(f"Some shader outputs failed: {', '.join(missing)}")
+        else:
+            print("Shaders generated successfully.")
+    except Exception as error:
+        print(f"Error baking shader: {error}")
+    finally:
+        kn.log.disable()
+
+
+def _run_build(args):
+    import pykraken
+
+    name = args.name if args.name else os.path.splitext(args.entry)[0]
+    kraken_package_dir = os.path.dirname(pykraken.__file__)
+    hook_dir = os.path.join(kraken_package_dir, "__pyinstaller")
+    command = [
+        "pyinstaller",
+        "--onefile",
+        "--noconsole",
+        f"--name={name}",
+        f"--additional-hooks-dir={hook_dir}",
+        args.entry,
+    ]
+    if args.icon:
+        command.append(f"--icon={args.icon}")
+
+    try:
+        if args.verbose:
+            print(f"Building bundle: {name}...")
+            subprocess.run(command, check=True)
+        else:
+            with DotAnimator(f"Building bundle: {name}"):
+                subprocess.run(command, check=True, capture_output=True, text=True)
+        print(f"Executable created successfully in ./dist/{name}")
+    except FileNotFoundError:
+        print("PyInstaller was not found. Install it with: pip install pyinstaller")
+    except subprocess.CalledProcessError as error:
+        print(f"Build failed with error code {error.returncode}")
+        if not args.verbose and error.stderr:
+            print(f"\n--- Error Details ---\n{error.stderr}")
+
+
+def _run_init(args, parser):
+    selected_flags = int(args.cpp) + int(args.python)
+    if args.language and selected_flags:
+        parser.error("--language cannot be combined with --cpp or --python")
+    if selected_flags > 1:
+        parser.error("--cpp and --python are mutually exclusive")
+
+    language = args.language or ("cpp" if args.cpp else "python")
+    if args.sdk and language != "cpp":
+        parser.error("--sdk can only be used for a C++ project")
+
+    target_dir = Path(args.path).expanduser().resolve()
+    try:
+        _write_project(target_dir, language, demo=args.demo, sdk=args.sdk, force=args.force)
+        if args.sdk:
+            _download_sdk(target_dir)
+    except (FileExistsError, RuntimeError) as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
+
+    print(f"Created {language.upper()} Kraken project at {target_dir}")
+    relative = os.path.relpath(target_dir)
+    if language == "cpp":
+        print(f"Next: cd {relative} && cmake --preset dev && cmake --build --preset dev")
+    else:
+        print(f"Next: cd {relative} && python main.py")
+    return 0
+
+
+def _create_parser():
+    parser = argparse.ArgumentParser(prog="kraken", description="Kraken Engine developer tools")
     subparsers = parser.add_subparsers(dest="command", help="Available commands", required=True)
 
-    # --- BAKE COMMAND ---
     bake_parser = subparsers.add_parser("bake", help="Compile HLSL/GLSL to SPV, DXIL, and MSL")
     bake_parser.add_argument("input", help="Path to the input shader file")
     bake_parser.add_argument("-o", "--out", default=".", help="Output directory (default: current)")
     bake_parser.add_argument("-v", "--verbose", action="store_true", help="Show debug logging")
 
-    # --- BUILD COMMAND ---
-    build_parser = subparsers.add_parser("build", help="Bundle game into an executable")
-    build_parser.add_argument("entry", help="Path to the main Python script (e.g., main.py)")
+    build_parser = subparsers.add_parser("build", help="Bundle a Python game into an executable")
+    build_parser.add_argument("entry", help="Path to the main Python script")
     build_parser.add_argument("-n", "--name", default="Platformer", help="Name of the executable")
-    build_parser.add_argument("-i", "--icon", help="Path to the icon file (.ico)", default=None)
-    build_parser.add_argument("-v", "--verbose", action="store_true", help="Show detailed PyInstaller output")
+    build_parser.add_argument("-i", "--icon", help="Path to the icon file (.ico)")
+    build_parser.add_argument("-v", "--verbose", action="store_true", help="Show detailed output")
 
-    # --- INIT COMMAND ---
-    init_parser = subparsers.add_parser("init", help="Create a starter main.py file")
-    init_parser.add_argument(
-        "path",
-        nargs="?",
-        default=".",
-        help="Folder to create the project in (default: current directory)"
-    )
-    init_parser.add_argument(
-        "-f", "--force",
-        action="store_true",
-        help="Overwrite existing main.py if it exists"
-    )
-    init_parser.add_argument(
-        "--demo",
-        action="store_true",
-        help="Generate a starter file with text and shape rendering"
-    )
+    init_parser = subparsers.add_parser("init", help="Create a Python or C++ Kraken project")
+    init_parser.add_argument("path", nargs="?", default=".", help="Project directory")
+    language_group = init_parser.add_mutually_exclusive_group()
+    language_group.add_argument("--cpp", action="store_true", help="Create a C++20 CMake project")
+    language_group.add_argument("--python", action="store_true", help="Create a Python project (default)")
+    init_parser.add_argument("--language", choices=("python", "cpp"), help="Project language")
+    init_parser.add_argument("--sdk", action="store_true", help="Use the matching prebuilt C++ SDK")
+    init_parser.add_argument("-f", "--force", action="store_true", help="Overwrite generated files")
+    init_parser.add_argument("--demo", action="store_true", help="Create a rendering demo")
 
-    # --- DOCS COMMAND ---
-    subparsers.add_parser("docs", help="Open PyKraken documentation in browser")
+    subparsers.add_parser("docs", help="Open Kraken documentation in a browser")
+    return parser
 
-    args = parser.parse_args()
+
+def main(argv=None):
+    parser = _create_parser()
+    args = parser.parse_args(argv)
 
     if args.command == "bake":
-        if args.verbose:
-            pykraken.log.enable()
-
-        try:
-            out_base = args.out
-
-            # 1. Start the animation and do the work
-            with DotAnimator(f"⏲️  Baking: {args.input}"):
-                pykraken.shaders.bake(args.input, out_base)
-
-            # Check which outputs were produced (the baker now logs instead of throwing).
-            outputs = {
-                "spv": out_base + ".spv",
-                "dxil": out_base + ".dxil",
-                "msl": out_base + ".msl",
-            }
-
-            missing = [name for name, path in outputs.items() if not os.path.exists(path)]
-
-            if missing:
-                print(f"⚠️ Some shader outputs failed: {', '.join(missing)}")
-            else:
-                print("✅ Shaders generated successfully.")
-
-        except Exception as e:
-            # If the baker raises (e.g., can't open input file), show the error.
-            print(f"❌ Error baking shader: {e}")
-
-        pykraken.log.disable()
-
+        _run_bake(args)
     elif args.command == "build":
-        name = args.name if args.name else os.path.splitext(args.entry)[0]
-
-        # Locate the __pyinstaller directory dynamically so students don't need to configure paths
-        kraken_pkg_dir = os.path.dirname(pykraken.__file__)
-        hook_dir = os.path.join(kraken_pkg_dir, "__pyinstaller")
-
-        # Construct the standard PyInstaller command
-        cmd = [
-            "pyinstaller",
-            "--onefile",
-            "--noconsole",
-            f"--name={name}",
-            f"--additional-hooks-dir={hook_dir}",
-            args.entry
-        ]
-
-        if args.icon:
-            cmd.append(f"--icon={args.icon}")
-
-        try:
-            if args.verbose:
-                print(f"📦 Building Bundle: {name}...")
-                subprocess.run(cmd, check=True)
-            else:
-                with DotAnimator(f"📦 Building Bundle: {name}"):
-                    subprocess.run(cmd, check=True, capture_output=True, text=True)
-
-            print(f"✅ Executable created successfully in ./dist/{name}")
-
-        except FileNotFoundError:
-            print("❌ Error: PyInstaller not found. Please run 'pip install pyinstaller'.")
-        except subprocess.CalledProcessError as e:
-            print(f"❌ Build failed with error code: {e.returncode}")
-
-            if not args.verbose and e.stderr:
-                print("\n--- Error Details ---")
-                print(e.stderr)
-
+        _run_build(args)
     elif args.command == "init":
-        target_dir = os.path.abspath(args.path)
-        target = os.path.join(target_dir, "main.py")
-
-        minimal_template = """import pykraken as kn
-
-kn.init()
-kn.window.create("Kraken Window", 800, 600)
-
-while kn.window.is_open():
-    kn.event.poll()
-    kn.renderer.clear()
-    kn.renderer.present()
-
-kn.quit()
-"""
-
-        demo_template = """import pykraken as kn
-from random import randint, choice
-
-WIN_SIZE = kn.Vec2(800, 600)
-WIN_WIDTH, WIN_HEIGHT = WIN_SIZE.as_ints()
-
-kn.init()
-kn.window.create("Hello, world!", WIN_WIDTH, WIN_HEIGHT)
-kn.time.set_target(60)
-
-font = kn.Font("kraken-modern", 32)
-label = kn.Text(font, "Hello, world!")
-
-SHAPE_COUNT = 40
-
-shapes = [
-    kn.Polygon(
-        n=randint(3, 5),
-        radius=randint(6, 12),
-        centroid=kn.Vec2(
-            randint(10, WIN_WIDTH - 10),
-            randint(10, WIN_HEIGHT - 10)
-        )
-    )
-    for _ in range(SHAPE_COUNT)
-]
-
-spin_speeds = [
-    randint(30, 60) * kn.math.DEG2RAD * choice((-1, 1))
-    for _ in range(SHAPE_COUNT)
-]
-
-shape_colors = [
-    kn.color.from_hsv(randint(0, 359), 0.4, 0.6)
-    for _ in range(SHAPE_COUNT)
-]
-
-while kn.window.is_open():
-    kn.event.poll()
-
-    dt = kn.time.get_delta()
-
-    kn.renderer.clear(kn.Color.DARK_GRAY)
-    for shape, spin_speed, color in zip(shapes, spin_speeds, shape_colors):
-        shape.rotate(spin_speed * dt)
-        kn.draw.polygon(shape, color, filled=False)
-    label.draw(WIN_SIZE / 2, kn.Anchor.CENTER)
-
-    kn.renderer.present()
-
-kn.quit()
-"""
-        template = demo_template if args.demo else minimal_template
-
-        try:
-            os.makedirs(target_dir, exist_ok=True)
-
-            if os.path.exists(target) and not args.force:
-                print(f"❌ {target} already exists. Use --force to overwrite.")
-                return
-
-            with open(target, "w", encoding="utf-8") as f:
-                f.write(template)
-
-            rel_target = os.path.relpath(target)
-            print(f"✅ Created {rel_target} successfully.")
-
-            if os.path.abspath(args.path) == os.getcwd():
-                print(f"👉 Next: python main.py")
-            else:
-                print(f"👉 Next: cd {args.path} && python main.py")
-
-        except Exception as e:
-            print(f"❌ Failed to create main.py: {e}")
-
+        return _run_init(args, parser)
     elif args.command == "docs":
         import webbrowser
 
-        URL = "https://krakenengine.org/"
         try:
-            webbrowser.open(URL)
-            print("🌐 Opening documentation...")
-        except Exception as e:
-            print(f"❌ Failed to open browser: {e}")
+            webbrowser.open("https://krakenengine.org/")
+            print("Opening documentation...")
+        except Exception as error:
+            print(f"Failed to open browser: {error}")
+            return 1
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -1,0 +1,22 @@
+#include <kraken/KrakenEngine.hpp>
+
+int main()
+{
+    kn::init();
+    kn::window::create("{{PROJECT_NAME}}", 800, 600);
+    kn::time::setTarget(60);
+
+    kn::Circle circle({400.0f, 300.0f}, 64.0f);
+
+    while (kn::window::isOpen())
+    {
+        kn::event::poll();
+
+        kn::renderer::clear(kn::Color::DARK_GRAY);
+        kn::draw::circle(circle, kn::Color::CYAN);
+        kn::renderer::present();
+    }
+
+    kn::quit();
+    return 0;
+}

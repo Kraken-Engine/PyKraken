@@ -31,10 +31,6 @@
       ]
     },
     {
-      "name": "sdl3-shadercross",
-      "platform": "windows & !arm32 & !uwp & !xbox"
-    },
-    {
       "name": "sdl3-ttf",
       "features": [
         "harfbuzz"
@@ -86,5 +82,16 @@
       "name": "zstd",
       "version": "1.5.7"
     }
-  ]
+  ],
+  "features": {
+    "python": {
+      "description": "Dependencies used by the Python shader-baking bindings.",
+      "dependencies": [
+        {
+          "name": "sdl3-shadercross",
+          "platform": "windows & !arm32 & !uwp & !xbox"
+        }
+      ]
+    }
+  }
 }
