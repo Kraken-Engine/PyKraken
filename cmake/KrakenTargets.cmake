@@ -50,24 +50,27 @@ set_target_properties(${KRAKEN_TARGET} PROPERTIES
   CXX_EXTENSIONS OFF
 )
 
+target_compile_features(${KRAKEN_TARGET} PUBLIC cxx_std_20)
+
 if(MSVC)
   target_compile_options(${KRAKEN_TARGET} PRIVATE /utf-8)
 endif()
 
 target_link_libraries(${KRAKEN_TARGET} PRIVATE
-  SDL3::SDL3
   SDL3_image::SDL3_image
-  SDL3_ttf::SDL3_ttf
-  SDL3_mixer::SDL3_mixer
-  tmxlite::tmxlite
   $<IF:$<TARGET_EXISTS:pugixml>,pugixml,>
   $<IF:$<TARGET_EXISTS:zstd::libzstd_static>,zstd::libzstd_static,
     $<IF:$<TARGET_EXISTS:zstd::zstd>,zstd::zstd,zstd::libzstd_shared>>
-  box2d::box2d
-  spdlog::spdlog
 )
 
-target_link_libraries(${KRAKEN_TARGET} PUBLIC spdlog::spdlog)
+target_link_libraries(${KRAKEN_TARGET} PUBLIC
+  SDL3::SDL3
+  SDL3_ttf::SDL3_ttf
+  SDL3_mixer::SDL3_mixer
+  box2d::box2d
+  spdlog::spdlog
+  tmxlite::tmxlite
+)
 
 if(KRAKEN_BUILD_PYTHON)
   target_link_libraries(_pykraken PRIVATE SDL3_shadercross::SDL3_shadercross)
