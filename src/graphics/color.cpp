@@ -1,6 +1,7 @@
 #include "kraken/graphics/Color.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <iomanip>
 #include <sstream>
 

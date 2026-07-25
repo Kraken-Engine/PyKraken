@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 #include <string>
 
 #include "bindings/python/bindings.hpp"
@@ -553,8 +554,8 @@ Raises:
     ValueError: If in_min equals in_max.
         )doc");
 
-    subMath.attr("DEG2RAD") = M_PI / 180.0;
-    subMath.attr("RAD2DEG") = 180.0 / M_PI;
+    subMath.attr("DEG2RAD") = std::numbers::pi_v<double> / 180.0;
+    subMath.attr("RAD2DEG") = 180.0 / std::numbers::pi_v<double>;
 
     subMath.def("dot", &dot, "a"_a, "b"_a, R"doc(
 Calculate the dot product of two vectors.
