@@ -206,7 +206,14 @@ jobs:
       - name: Install build tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build
+          sudo apt-get install -y \
+            ninja-build pkg-config \
+            libasound2-dev libpulse-dev libpipewire-0.3-dev \
+            libx11-dev libxext-dev libxft-dev \
+            libxrandr-dev libxcursor-dev libxi-dev libxinerama-dev libxfixes-dev libxss-dev libxtst-dev \
+            libxkbcommon-dev libwayland-dev wayland-protocols \
+            libegl1-mesa-dev libgbm-dev libvulkan-dev \
+            libibus-1.0-dev
 
       - name: Configure bundled-source build
         run: >
@@ -264,7 +271,6 @@ jobs:
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgDirectory: ${{ github.workspace }}/vcpkg
-          vcpkgJsonGlob: "${{ github.workspace }}/vcpkg.json"
 
       - name: Configure SDK
         shell: bash
