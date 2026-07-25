@@ -130,7 +130,8 @@ jobs:
             autoconf \
             autoconf-archive \
             automake \
-            libtool
+            libtool \
+            libltdl-dev
 
       - name: Set up vcpkg
         uses: lukka/run-vcpkg@v11
