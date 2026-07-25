@@ -1,8 +1,6 @@
 name: Build and Test Wheels
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -12,8 +10,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  approval:
+    name: Approve CI run
+    runs-on: ubuntu-latest
+    environment:
+      name: ci-approval
+      deployment: false
+    steps:
+      - name: Confirm approval
+        run: echo "CI run approved."
+
   build_wheels:
     name: Build wheel (${{ matrix.os }})
+    needs: approval
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -49,7 +58,9 @@ jobs:
 
       - name: Setup MSVC Developer Command Prompt (Windows)
         if: runner.os == 'Windows'
-        uses: ilammy/msvc-dev-cmd@v1
+        uses: TheMrMilchmann/setup-msvc-dev@v4
+        with:
+          arch: x64
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.4.0
@@ -116,6 +127,7 @@ jobs:
 
   native_cpp:
     name: Build native C++ library
+    needs: approval
     runs-on: ubuntu-latest
 
     steps:

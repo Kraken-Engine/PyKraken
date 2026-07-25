@@ -63,9 +63,6 @@ target_link_libraries(${KRAKEN_TARGET} PRIVATE
   $<BUILD_INTERFACE:$<IF:$<TARGET_EXISTS:pugixml::pugixml>,pugixml::pugixml,
     $<IF:$<TARGET_EXISTS:pugixml>,pugixml,>>>
   $<INSTALL_INTERFACE:pugixml::pugixml>
-  $<BUILD_INTERFACE:$<IF:$<TARGET_EXISTS:zstd::libzstd_static>,zstd::libzstd_static,
-    $<IF:$<TARGET_EXISTS:zstd::zstd>,zstd::zstd,zstd::libzstd_shared>>>
-  $<INSTALL_INTERFACE:zstd::libzstd_static>
 )
 
 target_link_libraries(${KRAKEN_TARGET} PUBLIC
@@ -81,6 +78,12 @@ target_link_libraries(${KRAKEN_TARGET} PUBLIC
   $<INSTALL_INTERFACE:spdlog::spdlog>
   $<BUILD_INTERFACE:tmxlite::tmxlite>
   $<INSTALL_INTERFACE:tmxlite::tmxlite>
+)
+
+target_link_libraries(${KRAKEN_TARGET} PRIVATE
+  $<BUILD_INTERFACE:$<IF:$<TARGET_EXISTS:zstd::libzstd_static>,zstd::libzstd_static,
+    $<IF:$<TARGET_EXISTS:zstd::zstd>,zstd::zstd,zstd::libzstd_shared>>>
+  $<INSTALL_INTERFACE:zstd::libzstd_static>
 )
 
 if(KRAKEN_BUILD_PYTHON)

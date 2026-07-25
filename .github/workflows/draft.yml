@@ -2,6 +2,12 @@ name: Build Draft Release
 
 on:
   workflow_dispatch:
+    inputs:
+      create_draft:
+        description: Create or update the GitHub draft release (main only)
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -15,6 +21,13 @@ jobs:
       version: ${{ steps.version.outputs.version }}
 
     steps:
+      - name: Verify draft release branch
+        if: ${{ inputs.create_draft && github.ref != 'refs/heads/main' }}
+        shell: bash
+        run: |
+          echo "::error::Draft releases can only be created from main."
+          exit 1
+
       - uses: actions/checkout@v6
 
       - id: version
@@ -69,7 +82,9 @@ jobs:
 
       - name: Set up MSVC
         if: runner.os == 'Windows'
-        uses: ilammy/msvc-dev-cmd@v1
+        uses: TheMrMilchmann/setup-msvc-dev@v4
+        with:
+          arch: x64
 
       - name: Build wheel
         uses: pypa/cibuildwheel@v3.4.0
@@ -241,7 +256,7 @@ jobs:
 
       - name: Set up MSVC
         if: runner.os == 'Windows'
-        uses: ilammy/msvc-dev-cmd@v1
+        uses: TheMrMilchmann/setup-msvc-dev@v4
         with:
           arch: ${{ matrix.triplet == 'arm64-windows-static-md' && 'arm64' || 'x64' }}
 
@@ -318,6 +333,7 @@ jobs:
   create_draft:
     name: Create draft release
     needs: [prepare, test_wheels, build_bundled_cpp, build_sdk]
+    if: ${{ inputs.create_draft && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
