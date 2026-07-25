@@ -125,7 +125,12 @@ jobs:
       - name: Install build tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build
+          sudo apt-get install -y \
+            ninja-build \
+            autoconf \
+            autoconf-archive \
+            automake \
+            libtool
 
       - name: Set up vcpkg
         uses: lukka/run-vcpkg@v11
