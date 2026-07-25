@@ -1,8 +1,8 @@
 #include <box2d/box2d.h>
 
-#include "Math.hpp"
-#include "physics/World.hpp"
-#include "physics/bodies/RigidBody.hpp"
+#include "kraken/math/Math.hpp"
+#include "kraken/physics/World.hpp"
+#include "kraken/physics/bodies/RigidBody.hpp"
 
 namespace kn::physics
 {

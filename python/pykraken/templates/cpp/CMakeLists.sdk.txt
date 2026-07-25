@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.24)
+
+project({{PROJECT_IDENTIFIER}} LANGUAGES CXX)
+
+find_package(KrakenEngine {{KRAKEN_VERSION}} CONFIG REQUIRED)
+
+add_executable({{PROJECT_IDENTIFIER}} src/main.cpp)
+target_link_libraries({{PROJECT_IDENTIFIER}} PRIVATE Kraken::Kraken)

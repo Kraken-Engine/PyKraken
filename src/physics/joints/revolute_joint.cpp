@@ -1,4 +1,4 @@
-#include "physics/joints/RevoluteJoint.hpp"
+#include "kraken/physics/joints/RevoluteJoint.hpp"
 
 namespace kn::physics
 {

@@ -1,9 +1,9 @@
-#include "physics/joints/Joint.hpp"
+#include "kraken/physics/joints/Joint.hpp"
 
 #include <stdexcept>
 
-#include "Math.hpp"
-#include "physics/bodies/Body.hpp"
+#include "kraken/math/Math.hpp"
+#include "kraken/physics/bodies/Body.hpp"
 
 namespace kn::physics
 {

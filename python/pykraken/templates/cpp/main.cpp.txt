@@ -1,0 +1,17 @@
+#include <kraken/KrakenEngine.hpp>
+
+int main()
+{
+    kn::init();
+    kn::window::create("{{PROJECT_NAME}}", 800, 600);
+
+    while (kn::window::isOpen())
+    {
+        kn::event::poll();
+        kn::renderer::clear();
+        kn::renderer::present();
+    }
+
+    kn::quit();
+    return 0;
+}

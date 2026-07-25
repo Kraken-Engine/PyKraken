@@ -1,0 +1,38 @@
+name: Publish Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish_pypi:
+    name: Publish existing wheels to PyPI
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Verify promoted release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        shell: bash
+        run: |
+          assets="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name')"
+          test "$(printf '%s\n' "$assets" | grep -c '\.whl$')" -eq 3
+          printf '%s\n' "$assets" | grep -qx "kraken-sdk-${TAG}-macos-arm64.tar.gz"
+          printf '%s\n' "$assets" | grep -qx "kraken-sdk-${TAG}-windows-x64.zip"
+
+      - name: Download release wheels
+        uses: robinraju/release-downloader@v1.12
+        with:
+          releaseId: ${{ github.event.release.id }}
+          fileName: "*.whl"
+          tarBall: false
+          zipBall: false
+          out-file-path: "dist"
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

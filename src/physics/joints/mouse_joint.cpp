@@ -1,5 +1,5 @@
-#include "Math.hpp"
-#include "physics/joints/MouseJoint.hpp"
+#include "kraken/math/Math.hpp"
+#include "kraken/physics/joints/MouseJoint.hpp"
 
 namespace kn::physics
 {

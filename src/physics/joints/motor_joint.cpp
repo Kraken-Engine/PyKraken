@@ -1,5 +1,5 @@
-#include "Math.hpp"
-#include "physics/joints/MotorJoint.hpp"
+#include "kraken/math/Math.hpp"
+#include "kraken/physics/joints/MotorJoint.hpp"
 
 namespace kn::physics
 {
