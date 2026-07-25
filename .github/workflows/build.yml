@@ -126,12 +126,14 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            ninja-build \
-            autoconf \
-            autoconf-archive \
-            automake \
-            libtool \
-            libltdl-dev
+            ninja-build autoconf autoconf-archive automake libtool libltdl-dev pkg-config perl \
+            libasound2-dev libpulse-dev libpipewire-0.3-dev \
+            libx11-dev libxext-dev libxft-dev \
+            libxrandr-dev libxcursor-dev libxi-dev libxinerama-dev libxfixes-dev libxss-dev libxtst-dev \
+            libxkbcommon-dev libwayland-dev wayland-protocols \
+            libegl1-mesa-dev libgbm-dev libvulkan-dev \
+            libibus-1.0-dev \
+            libpng-dev libjpeg-dev libfreetype-dev libflac-dev libzstd-dev
 
       - name: Set up vcpkg
         uses: lukka/run-vcpkg@v11
