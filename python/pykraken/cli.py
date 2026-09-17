@@ -19,7 +19,7 @@ from urllib.request import urlretrieve
 try:
     VERSION = version("kraken-engine")
 except PackageNotFoundError:
-    VERSION = "1.7.4"
+    VERSION = "1.7.5"
 REPOSITORY = "https://github.com/Kraken-Engine/PyKraken"
 
 

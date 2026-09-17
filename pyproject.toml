@@ -1,16 +1,18 @@
 [project]
 name = "kraken-engine"
-version = "1.7.4"
+version = "1.7.5"
 description = "A 2D game engine for Python and C++"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 authors = [{ name = "Derrick Martinez" }]
 classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Programming Language :: C++",
   "Topic :: Games/Entertainment",
   "Topic :: Multimedia :: Graphics",
@@ -20,6 +22,7 @@ classifiers = [
 ]
 license = "MIT"
 license-files = ["LICENSE"]
+dependencies = ["nanobind-backend>=1.0"]
 
 [project.urls]
 "Homepage" = "https://krakenengine.org/"
@@ -32,14 +35,23 @@ license-files = ["LICENSE"]
 kraken = "pykraken.cli:main"
 
 [build-system]
-requires = ["scikit-build-core >=0.11.6", "nanobind ==2.13.0"]
+requires = ["scikit-build-core >=1.0.0", "nanobind ==3.0.1"]
 build-backend = "scikit_build_core.build"
 
 [tool.scikit-build]
-minimum-version = "0.4"
+minimum-version = "build-system.requires"
 build-dir = "build/{wheel_tag}"
-wheel.py-api = "cp312"
+wheel.py-api = "cp311"
 wheel.packages = ["python/pykraken"]
 
 [tool.cibuildwheel]
 build-verbosity = 1
+
+[tool.pytest]
+minversion = "9.0"
+testpaths = ["tests"]
+addopts = ["-ra"]
+strict_config = true
+strict_markers = true
+strict_parametrization_ids = true
+strict_xfail = true

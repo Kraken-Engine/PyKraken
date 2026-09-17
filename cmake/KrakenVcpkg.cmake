@@ -1,4 +1,15 @@
 # Configure vcpkg before project() enables a compiler.
+# Python builds need the optional shadercross dependency. Select it before
+# project() runs vcpkg's manifest install, including fresh scikit-build caches.
+# SYSTEM overrides the per-dependency vendoring option in KrakenOptions.cmake.
+string(TOUPPER "${KRAKEN_DEPENDENCIES}" _KRAKEN_DEPENDENCY_PROVIDER)
+if((SKBUILD OR KRAKEN_BUILD_PYTHON) AND
+   (NOT SDL3_SHADERCROSS_VENDORED OR _KRAKEN_DEPENDENCY_PROVIDER STREQUAL "SYSTEM"))
+  list(APPEND VCPKG_MANIFEST_FEATURES python)
+  list(REMOVE_DUPLICATES VCPKG_MANIFEST_FEATURES)
+endif()
+unset(_KRAKEN_DEPENDENCY_PROVIDER)
+
 set(_KRAKEN_VCPKG_TRIPLET "")
 
 if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)

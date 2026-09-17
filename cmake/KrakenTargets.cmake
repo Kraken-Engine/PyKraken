@@ -4,10 +4,11 @@ if(KRAKEN_BUILD_PYTHON)
     OPTIONAL_COMPONENTS Development.SABIModule)
   find_package(nanobind CONFIG REQUIRED)
 
-  nanobind_add_module(_pykraken STABLE_ABI
+  nanobind_add_module(_pykraken
     ${KRAKEN_CORE_SOURCES}
     ${KRAKEN_PYTHON_SOURCES}
     ${KRAKEN_BAKER_SOURCES}
+    BACKEND_MODULE nanobind_backend
   )
 
   if(SDL3_SHADERCROSS_VENDORED)
