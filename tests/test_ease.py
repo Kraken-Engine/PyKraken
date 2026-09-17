@@ -38,17 +38,22 @@ ALL_EASING_FUNCS = [
 ]
 
 
-@pytest.mark.parametrize("func", ALL_EASING_FUNCS, ids=lambda f: f.__name__)
 class TestEasingBoundaries:
-    def test_start_is_zero(self, func):
-        assert func(0.0) == pytest.approx(0.0, abs=1e-4)
+    def test_start_is_zero(self, subtests):
+        for func in ALL_EASING_FUNCS:
+            with subtests.test(func=func.__name__):
+                assert func(0.0) == pytest.approx(0.0, abs=1e-4)
 
-    def test_end_is_one(self, func):
-        assert func(1.0) == pytest.approx(1.0, abs=1e-2)
+    def test_end_is_one(self, subtests):
+        for func in ALL_EASING_FUNCS:
+            with subtests.test(func=func.__name__):
+                assert func(1.0) == pytest.approx(1.0, abs=1e-2)
 
-    def test_midpoint_is_finite(self, func):
-        result = func(0.5)
-        assert result == result  # not NaN
+    def test_midpoint_is_finite(self, subtests):
+        for func in ALL_EASING_FUNCS:
+            with subtests.test(func=func.__name__):
+                result = func(0.5)
+                assert result == result  # not NaN
 
 
 class TestLinear:

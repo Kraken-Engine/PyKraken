@@ -5,7 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) when possible.
 
-## [1.7.4] - TBA
+## [1.7.5] - TBA
+
+### Changed
+
+- Nanobind backend updated to version 3.0.1.
+- Package now supports Python versions >=3.10 with version-dependant performance instead of using the 3.12 ABI across all.
+
+## [1.7.4] - 2026-07-25
 
 ### Added
 
