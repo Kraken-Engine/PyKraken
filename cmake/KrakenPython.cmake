@@ -29,6 +29,10 @@ if(WIN32)
 endif()
 
 install(TARGETS _pykraken LIBRARY DESTINATION pykraken)
+# Editable installs keep Python sources outside site-packages. Install the public
+# stub beside the generated extension stubs so static analyzers see one package.
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/python/pykraken/__init__.pyi"
+        DESTINATION pykraken)
 
 if(WIN32)
   if(_VCPKG_DLLS)
