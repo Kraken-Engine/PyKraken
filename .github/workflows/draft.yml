@@ -360,6 +360,7 @@ jobs:
           path: dist
           pattern: "kraken-sdk-*"
           merge-multiple: true
+          skip-decompress: true
 
       - name: Verify required assets
         shell: bash

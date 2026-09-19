@@ -19,6 +19,7 @@ AnimationController::AnimationController()
 {
     _controllers.push_back(this);
 }
+
 AnimationController::~AnimationController()
 {
     std::erase(_controllers, this);
