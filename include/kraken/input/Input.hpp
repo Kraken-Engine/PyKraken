@@ -12,18 +12,24 @@ namespace kn
 {
 class Vec2;
 
-struct InputAction
+class InputAction
 {
+  public:
     using InputData =
         std::variant<Scancode, Keycode, MouseButton, GamepadButton, std::pair<GamepadAxis, bool>>;
-    InputData data;
-    int padSlot = 0;
 
     explicit InputAction(Scancode scan);
     explicit InputAction(Keycode key);
     explicit InputAction(MouseButton mButton);
     explicit InputAction(GamepadButton cButton, int slot = 0);
     InputAction(GamepadAxis axis, bool isPositive, int slot = 0);
+
+    int getPadSlot() const;
+    InputData getData() const;
+
+  private:
+    InputData data;
+    int padSlot = 0;
 };
 
 namespace input

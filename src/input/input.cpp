@@ -72,9 +72,6 @@ static double getStrength(const std::string& name)
     if (it == _inputBindings.end())
         return 0.0;
 
-    const Vec2 leftStick = gamepad::getLeftStick();
-    const Vec2 rightStick = gamepad::getRightStick();
-
     double strength = 0.0;
 
     for (const auto& action : it->second)
@@ -98,7 +95,7 @@ static double getStrength(const std::string& name)
                 },
                 [&](const GamepadButton cButton)
                 {
-                    if (gamepad::isPressed(cButton, action.padSlot))
+                    if (gamepad::isPressed(cButton, action.getPadSlot()))
                         strength = std::max(strength, 1.0);
                 },
                 [&](const std::pair<GamepadAxis, bool>& axisPair)
@@ -111,13 +108,16 @@ static double getStrength(const std::string& name)
                             strength = std::max(strength, std::abs(value));
                     };
 
+                    const Vec2 leftStick = gamepad::getLeftStick(action.getPadSlot());
+                    const Vec2 rightStick = gamepad::getRightStick(action.getPadSlot());
+
                     process(GamepadAxis::LeftX, leftStick.x);
                     process(GamepadAxis::LeftY, leftStick.y);
                     process(GamepadAxis::RightX, rightStick.x);
                     process(GamepadAxis::RightY, rightStick.y);
                 },
             },
-            action.data
+            action.getData()
         );
     }
 
@@ -161,10 +161,10 @@ bool isPressed(const std::string& name)
                     [](const Keycode key) -> bool { return key::isPressed(key); },
                     [](const MouseButton mButton) -> bool { return mouse::isPressed(mButton); },
                     [&](const GamepadButton cButton) -> bool
-                    { return gamepad::isPressed(cButton, action.padSlot); },
+                    { return gamepad::isPressed(cButton, action.getPadSlot()); },
                     [](const std::pair<GamepadAxis, bool>&) -> bool { return false; },
                 },
-                action.data
+                action.getData()
             );
         }
     );
@@ -186,10 +186,10 @@ bool isJustPressed(const std::string& name)
                     [](const Keycode key) -> bool { return key::isJustPressed(key); },
                     [](const MouseButton mButton) -> bool { return mouse::isJustPressed(mButton); },
                     [&](const GamepadButton cButton) -> bool
-                    { return gamepad::isJustPressed(cButton, action.padSlot); },
+                    { return gamepad::isJustPressed(cButton, action.getPadSlot()); },
                     [](const std::pair<GamepadAxis, bool>&) -> bool { return false; },
                 },
-                action.data
+                action.getData()
             );
         }
     );
@@ -212,10 +212,10 @@ bool isJustReleased(const std::string& name)
                     [](const MouseButton mButton) -> bool
                     { return mouse::isJustReleased(mButton); },
                     [&](const GamepadButton cButton) -> bool
-                    { return gamepad::isJustReleased(cButton, action.padSlot); },
+                    { return gamepad::isJustReleased(cButton, action.getPadSlot()); },
                     [](const std::pair<GamepadAxis, bool>&) -> bool { return false; },
                 },
-                action.data
+                action.getData()
             );
         }
     );
