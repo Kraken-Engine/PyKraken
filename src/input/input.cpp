@@ -48,14 +48,21 @@ InputAction::InputAction(const GamepadAxis axis, const bool isPositive, const in
 
 namespace input
 {
-static std::unordered_map<std::string, std::vector<InputAction>> _inputBindings;
+
+struct InputBinding
+{
+    std::vector<InputAction> actions;
+    bool wasHeld = false;
+};
+
+static std::unordered_map<std::string, InputBinding> _inputBindings;
 
 void bind(const std::string& name, const std::vector<InputAction>& actions)
 {
     if (name.empty())
         throw std::invalid_argument("Input name cannot be empty.");
 
-    _inputBindings[name] = actions;
+    _inputBindings[name] = {actions};
 }
 
 void unbind(const std::string& name)
@@ -74,7 +81,7 @@ static double getStrength(const std::string& name)
 
     double strength = 0.0;
 
-    for (const auto& action : it->second)
+    for (const auto& action : it->second.actions)
     {
         std::visit(
             overloaded{
@@ -151,8 +158,8 @@ bool isPressed(const std::string& name)
     if (it == _inputBindings.end())
         return false;
 
-    return std::ranges::any_of(
-        it->second,
+    const bool pressed = std::ranges::any_of(
+        it->second.actions,
         [](const InputAction& action)
         {
             return std::visit(
@@ -168,6 +175,13 @@ bool isPressed(const std::string& name)
             );
         }
     );
+
+    if (pressed)
+        it->second.wasHeld = true;
+    else if (it->second.wasHeld)
+        it->second.wasHeld = false;
+
+    return pressed;
 }
 
 bool isJustPressed(const std::string& name)
@@ -176,8 +190,10 @@ bool isJustPressed(const std::string& name)
     if (it == _inputBindings.end())
         return false;
 
-    return std::ranges::any_of(
-        it->second,
+    const InputBinding& binding = it->second;
+
+    const bool justPressed = std::ranges::any_of(
+        binding.actions,
         [](const InputAction& action)
         {
             return std::visit(
@@ -193,6 +209,12 @@ bool isJustPressed(const std::string& name)
             );
         }
     );
+
+    // If any input action is still held, it can't be just pressed.
+    if (justPressed && binding.wasHeld)
+        return false;
+
+    return justPressed;
 }
 
 bool isJustReleased(const std::string& name)
@@ -201,8 +223,8 @@ bool isJustReleased(const std::string& name)
     if (it == _inputBindings.end())
         return false;
 
-    return std::ranges::any_of(
-        it->second,
+    const bool justReleased = std::ranges::any_of(
+        it->second.actions,
         [](const InputAction& action)
         {
             return std::visit(
@@ -219,6 +241,12 @@ bool isJustReleased(const std::string& name)
             );
         }
     );
+
+    // If any input action is still held, it can't be just released.
+    if (justReleased && it->second.wasHeld)
+        return false;
+
+    return justReleased;
 }
 
 }  // namespace input
