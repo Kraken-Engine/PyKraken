@@ -328,6 +328,7 @@ void Map::load(const std::filesystem::path& tmxPath)
             break;
         }
         case tmx::Layer::Type::Group:
+            // TODO: Implement group layer parsing
             break;
         }
 

@@ -425,14 +425,12 @@ The source region is determined by the texture's clip area.
 Args:
     texture (Texture): The texture to render.
     dst (Rect): Destination rectangle on screen.
-    angle (float, optional): The rotation angle in degrees. Defaults to 0.0.
+    angle (float, optional): The rotation angle in radians. Defaults to 0.0.
     pivot (Vec2, optional): The rotation pivot (0.0-1.0). Defaults to center (0.5, 0.5).
         )doc"
     );
 
-    subRenderer.def(
-        "draw_9slice", &draw9Slice, "texture"_a, "dst"_a, "slice"_a, "anchor"_a = Anchor::TOP_LEFT,
-        "pivot"_a = Anchor::CENTER, R"doc(
+    subRenderer.def("draw_9slice", &draw9Slice, "texture"_a, "dst"_a, "slice"_a, R"doc(
 Render a texture using 9-slice scaling (9-grid). The camera's transform is not applied to this draw.
 
 This divides the texture into 9 regions: 4 corners (unscaled), 4 edges (scaled in one axis),
@@ -442,10 +440,7 @@ Args:
     texture (Texture): The source texture.
     dst (Rect): The destination rectangle on screen.
     slice (Rect): A rectangle defining the slice widths/heights (left_width, top_height, right_width, bottom_height).
-    anchor (Vec2, optional): The anchor point. Defaults to top left.
-    pivot (Vec2, optional): The rotation pivot. Defaults to center.
-        )doc"
-    );
+        )doc");
 
     subRenderer.def(
         "draw_batch", &drawBatch, "texture"_a, "transforms"_a, "anchor"_a = Anchor::TOP_LEFT,

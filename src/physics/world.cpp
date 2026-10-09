@@ -191,13 +191,11 @@ void _tick()
     {
         for (auto* world : _worlds)
         {
-            auto it = world->m_fixedUpdateCallbacks.begin();
-            while (it != world->m_fixedUpdateCallbacks.end())
+            for (const auto& callback : world->m_fixedUpdateCallbacks)
             {
-                bool shouldRemove = false;
                 try
                 {
-                    it->operator()(_fixedDelta);
+                    callback(_fixedDelta);
                 }
                 catch (const std::exception& e)
                 {
@@ -205,8 +203,6 @@ void _tick()
                         "An error occurred in a fixed update callback: " + std::string(e.what())
                     );
                 }
-
-                ++it;
             }
 
             b2World_Step(world->m_worldId, _fixedDelta, _maxSubsteps);
@@ -673,6 +669,7 @@ StaticBody World::fromMapLayer(const tilemap::Layer& layer)
     auto& objGroup = dynamic_cast<const tilemap::ObjectGroup&>(layer);
     StaticBody body(*this);
 
+    // TODO: Implement Point, Polyline (Lines), Ellipse, Text
     for (const auto& obj : objGroup.getObjects())
     {
         if (!obj.visible)
@@ -689,7 +686,6 @@ StaticBody World::fromMapLayer(const tilemap::Layer& layer)
             poly.move(obj.transform.pos);
             body.addCollider(poly);
         }
-        // Skipping Point, Polyline (Lines), Ellipse, Text
     }
 
     return body;

@@ -4,6 +4,7 @@
 
 namespace kn
 {
+// TODO: Split into "GameTimer" and "RealTimer"
 class Timer
 {
   public:

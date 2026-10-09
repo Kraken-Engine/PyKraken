@@ -60,10 +60,7 @@ void draw(
 
 void draw(const Texture& texture, Rect dst, double angle = 0.0, const Vec2& pivot = Anchor::CENTER);
 
-void draw9Slice(
-    const Texture& texture, const Rect& dst, const Rect& slice,
-    const Vec2& anchor = Anchor::TOP_LEFT, const Vec2& pivot = Anchor::CENTER
-);
+void draw9Slice(const Texture& texture, const Rect& dst, const Rect& slice);
 
 void drawBatch(
     const Texture& texture, const std::vector<Transform>& transforms,

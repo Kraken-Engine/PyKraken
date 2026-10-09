@@ -465,10 +465,7 @@ void draw(const Texture& texture, Rect dst, const double angle, const Vec2& pivo
     }
 }
 
-void draw9Slice(
-    const Texture& texture, const Rect& dst, const Rect& slice, const Vec2& anchor,
-    const Vec2& pivot
-)
+void draw9Slice(const Texture& texture, const Rect& dst, const Rect& slice)
 {
     if (!texture.hasUsage(TextureUsage::Drawable))
         throw std::runtime_error("Texture is not drawable");
