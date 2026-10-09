@@ -154,3 +154,6 @@ src/pykraken/py.typed
 
 external/
 .codex
+
+# Ignore test file
+main.py

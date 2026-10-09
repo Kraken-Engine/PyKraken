@@ -13,6 +13,11 @@ Camera::Camera(const bool setActive)
         set();
 }
 
+Camera::~Camera()
+{
+    unset();
+}
+
 void Camera::moveWorld(const Vec2& worldDelta)
 {
     transform.pos += worldDelta;
