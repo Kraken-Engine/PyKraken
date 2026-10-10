@@ -63,3 +63,12 @@ nanobind_add_stub(
   OUTPUT_PATH pykraken
   MARKER_FILE pykraken/py.typed
 )
+
+# nanobind's install-time generator does not propagate subprocess failures.
+install(CODE [[
+  foreach(_stub_file IN ITEMS pykraken/_pykraken/__init__.pyi pykraken/py.typed)
+    if(NOT EXISTS "${CMAKE_INSTALL_PREFIX}/${_stub_file}")
+      message(FATAL_ERROR "Stub generation did not produce ${_stub_file}")
+    endif()
+  endforeach()
+]])

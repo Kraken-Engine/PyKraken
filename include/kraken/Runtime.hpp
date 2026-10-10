@@ -1,8 +1,8 @@
 #pragma once
 
 #define KN_VERSION_MAJOR 1
-#define KN_VERSION_MINOR 7
-#define KN_VERSION_PATCH 4
+#define KN_VERSION_MINOR 8
+#define KN_VERSION_PATCH 0
 
 namespace kn
 {
