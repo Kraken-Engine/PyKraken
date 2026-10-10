@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) when possible.
 
+## Planned API
+
+These are proposed follow-up items, not implemented features or a commitment to ship all of them in the latest update.
+
+- A `Space` enum for explicitly choosing screen or world coordinates across texture, primitive, and text drawing, with corresponding mouse coordinate queries.
+- Text transforms for rotation and scaling. This is feasible by caching rendered text in a render-target texture and drawing that texture with a transform; layout/content changes would invalidate the cache.
+- Scoped destination clipping: restrict drawing to a rectangular region of the current render target, restore the previous clip afterward, and intersect nested clips. This would support scrollable panels, cropped views, and minimaps without altering texture source rectangles or object coordinates.
+- Finish input action state handling: update aggregate held/just-pressed/just-released states once per input frame, make queries read-only and independent of call order, and correctly handle multiple bindings and press/release transitions within a frame.
+- Optional threshold-based axis bindings with separate activation/release thresholds, plus trigger-axis support, while keeping ordinary movement bindings analog.
+- Physics contact begin/end and sensor enter/exit events, with collider identity and clear event lifetimes across fixed steps.
+- Separate `GameTimer` and `RealTimer` clocks so gameplay timers can follow pause/time scale while real-time timers remain independent; revisit scheduled gameplay events alongside this split.
+- Expanded Tiled support: recursive group-layer loading, custom properties, runtime tile editing, and faithful collider import with object rotation, layer offsets, and diagnostics for unsupported shapes.
+- Dedicated UI work after common gameplay features: stable widget IDs, keyboard/controller navigation, disabled states, reliable press/release capture and hitboxes, and scrolling/clipping containers.
+- Native camera zoom remains deferred; scaling a custom render-target texture is the current workaround.
+
 ## [1.8.0] - TBA
 
 ### Added
@@ -40,24 +55,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Input direction and axis queries now honor each binding's controller slot instead of always reading controller slot 0.
 - Non-looping animation completion is now reported when playback reaches its endpoint instead of relying on frame-index wraparound.
 - Rectangle texture-draw documentation now correctly specifies radians for rotation.
-
-### Planned
-
-These are proposed follow-up items, not implemented features or a commitment to ship all of them in 1.8.0.
-
-- A `Space` enum for explicitly choosing screen or world coordinates across texture, primitive, and text drawing, with corresponding mouse coordinate queries.
-- Text transforms for rotation and scaling. This is feasible by caching rendered text in a render-target texture and drawing that texture with a transform; layout/content changes would invalidate the cache.
-- Scoped destination clipping: restrict drawing to a rectangular region of the current render target, restore the previous clip afterward, and intersect nested clips. This would support scrollable panels, cropped views, and minimaps without altering texture source rectangles or object coordinates.
-- Finish input action state handling: update aggregate held/just-pressed/just-released states once per input frame, make queries read-only and independent of call order, and correctly handle multiple bindings and press/release transitions within a frame.
-- Optional threshold-based axis bindings with separate activation/release thresholds, plus trigger-axis support, while keeping ordinary movement bindings analog.
-
-#### Postponed
-
-- Physics contact begin/end and sensor enter/exit events, with collider identity and clear event lifetimes across fixed steps.
-- Separate `GameTimer` and `RealTimer` clocks so gameplay timers can follow pause/time scale while real-time timers remain independent; revisit scheduled gameplay events alongside this split.
-- Expanded Tiled support: recursive group-layer loading, custom properties, runtime tile editing, and faithful collider import with object rotation, layer offsets, and diagnostics for unsupported shapes.
-- Dedicated UI work after common gameplay features: stable widget IDs, keyboard/controller navigation, disabled states, reliable press/release capture and hitboxes, and scrolling/clipping containers.
-- Native camera zoom remains deferred; scaling a custom render-target texture is the current workaround.
 
 ## [1.7.4] - 2026-07-25
 
