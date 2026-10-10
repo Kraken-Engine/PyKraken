@@ -35,7 +35,8 @@ dependencies = ["nanobind-backend>=1.0"]
 kraken = "pykraken.cli:main"
 
 [build-system]
-requires = ["scikit-build-core >=1.0.0", "nanobind ==3.0.1"]
+# Install-time stub generation imports the extension and its external backend.
+requires = ["scikit-build-core >=1.0.0", "nanobind ==3.0.1", "nanobind-backend>=1.0"]
 build-backend = "scikit_build_core.build"
 
 [tool.scikit-build]
