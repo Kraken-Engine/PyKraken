@@ -2,7 +2,6 @@
 
 #include <box2d/box2d.h>
 
-#include <functional>
 #include <vector>
 
 #include "kraken/graphics/Color.hpp"
@@ -25,7 +24,12 @@ class Layer;
 namespace physics
 {
 
-void _tick();
+void _beginFrame();
+void _reset();
+
+// Consume accumulated frame time, yielding at most eight fixed deltas.
+// Call once per frame and step all desired worlds inside the same loop.
+std::vector<float> fixedSteps();
 
 void setFixedDelta(float fixedDelta);
 float getFixedDelta();
@@ -133,15 +137,13 @@ class World
 
     bool isValid() const;
 
-    void addFixedUpdate(std::function<void(float)> callback);
-    void clearFixedUpdates();
+    // Advance only this world; gameplay updates should run before this call.
+    void step(float delta);
 
     void debugDraw(const Color& color = Color::RED, const DebugDrawOptions& options = {}) const;
 
   private:
     b2WorldId m_worldId = b2_nullWorldId;
-    std::vector<std::function<void(float)>> m_fixedUpdateCallbacks;
-
     struct QueryContext
     {
         std::vector<Body> bodies;
@@ -159,7 +161,6 @@ class World
 
     b2WorldId _getWorldId() const;
 
-    friend void _tick();
     friend class CharacterBody;
     friend class RigidBody;
     friend class StaticBody;

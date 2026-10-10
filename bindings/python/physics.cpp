@@ -1,5 +1,4 @@
 #include <nanobind/operators.h>
-#include <nanobind/stl/function.h>
 #include <nanobind/stl/vector.h>
 
 #include "bindings/python/bindings.hpp"
@@ -32,29 +31,34 @@ void _bind(nb::module_& m)
 
     auto subPhysics = m.def_submodule("physics", "Physics engine related classes and functions");
 
-    subPhysics.def("set_fixed_delta", &setFixedDelta, "fixed_delta"_a, R"doc(
-Set the fixed delta time for automatic physics stepping. Default is 1/60 seconds (60 FPS).
-
-Setting this to a value greater than 0.0 enables automatic physics stepping
-in the engine backend. The physics will be updated with this fixed time step,
-using an accumulator to handle variable frame rates.
-
-Args:
-    fixed_delta (float): The fixed time step in seconds (e.g., 1.0/60.0).
-                         Set to 0.0 to disable automatic stepping.
+    subPhysics.def("fixed_steps", &fixedSteps, R"doc(
+Consume accumulated frame time and return a sequence of fixed deltas in seconds.
+Call once per frame and update gameplay and step each world inside the same loop.
+This function never advances a world itself.
+At most eight steps are returned; excess catch-up time is discarded.
+Repeated calls without advancing frame timing return no additional steps.
     )doc");
+
+    subPhysics.def("set_fixed_delta", &setFixedDelta, "fixed_delta"_a, R"doc(
+Set the positive, finite timestep yielded by fixed_steps(). Default: 1/60 seconds.
+Changing the timestep clears accumulated time. This does not enable automatic stepping.
+    )doc");
+
     subPhysics.def("get_fixed_delta", &getFixedDelta, R"doc(
 Get the current fixed delta time for physics stepping.
 
 Returns:
     float: The fixed time step in seconds.
     )doc");
+
     subPhysics.def("set_max_substeps", &setMaxSubsteps, "max_substeps"_a, R"doc(
-Set the maximum number of substeps for physics stepping. Default is 4.
+Set the physics solver substeps used by each World.step() call. Default is 4.
+This does not change the eight-step fixed_steps() catch-up limit.
 
 Args:
     max_substeps (int): The number of substeps per time step.
     )doc");
+
     subPhysics.def("get_max_substeps", &getMaxSubsteps, R"doc(
 Get the current maximum number of substeps for physics stepping.
 
@@ -850,66 +854,12 @@ Raises:
     TypeError: If the layer is not an ObjectGroup.
             )doc")
 
-        .def(
-            "add_fixed_update",
-            [](World& self, nb::typed<nb::callable, void(float)> callback) -> void
-            {
-                if (nb::hasattr(callback, "__self__") &&
-                    !nb::getattr(callback, "__self__").is_none())
-                {
-                    nb::object selfObj = callback.attr("__self__");
-                    nb::object weakOwner = nb::weakref(selfObj);
-                    nb::object unboundMethod = callback.attr("__func__");
-                    self.addFixedUpdate(
-                        [weakOwner, unboundMethod](float delta)
-                        {
-                            nb::object owner = weakOwner();
-                            if (!owner.is_none())
-                                unboundMethod(owner, delta);
-                        }
-                    );
-                }
-                else
-                {
-                    // For lambdas and regular functions, keep a strong reference
-                    self.addFixedUpdate([callback](float delta) { callback(delta); });
-                }
-            },
-            "callback"_a,
-            R"doc(Add a callback function to be executed during each physics step.)doc"
-        )
-        .def(
-            "fixed_callback",
-            [](World& self,
-               nb::typed<nb::callable, void(float)> func) -> nb::typed<nb::callable, void(float)>
-            {
-                if (nb::hasattr(func, "__self__") && !nb::getattr(func, "__self__").is_none())
-                {
-                    nb::object selfObj = func.attr("__self__");
-                    nb::object weakOwner = nb::weakref(selfObj);
-                    nb::object unboundMethod = func.attr("__func__");
-                    self.addFixedUpdate(
-                        [weakOwner, unboundMethod](float delta)
-                        {
-                            nb::object owner = weakOwner();
-                            if (!owner.is_none())
-                                unboundMethod(owner, delta);
-                        }
-                    );
-                }
-                else
-                {
-                    self.addFixedUpdate([func](float delta) { func(delta); });
-                }
-                return func;
-            },
-            "callback"_a,
-            R"doc(A decorator to register a function as a physics update callback.)doc"
-        )
-        .def(
-            "clear_fixed_updates", &World::clearFixedUpdates,
-            R"doc(Remove all registered fixed update callbacks.)doc"
-        )
+        .def("step", &World::step, "delta"_a, R"doc(
+Advance this world by a positive, finite delta in seconds.
+Run gameplay updates before this call and read collision events afterward.
+Use the deltas yielded by physics.fixed_steps() for fixed-rate simulation.
+No world is automatically stepped by window.is_open().
+        )doc")
 
         .def(
             "create_distance_joint", &World::createDistanceJoint, "body_a"_a, "body_b"_a,

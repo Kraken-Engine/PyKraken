@@ -46,6 +46,16 @@ InputAction::InputAction(const GamepadAxis axis, const bool isPositive, const in
 {
 }
 
+int InputAction::getPadSlot() const
+{
+    return padSlot;
+}
+
+InputAction::InputData InputAction::getData() const
+{
+    return data;
+}
+
 namespace input
 {
 

@@ -47,7 +47,7 @@ void AnimationController::addStrip(
     for (int i = 0; i < strip.frameCount; ++i)
     {
         const int x = i * frameWidth;
-        newAnim.frames.emplace_back(x, y, frameWidth, frameHeight);
+        newAnim.frames.emplace_back(x, y, static_cast<int>(frameWidth), static_cast<int>(frameHeight));
     }
 
     m_animMap[name] = std::move(newAnim);
