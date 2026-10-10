@@ -1,19 +1,54 @@
 #include <kraken/KrakenEngine.hpp>
 
+#include <random>
+#include <vector>
+
 int main()
 {
+    constexpr int WINDOW_WIDTH = 800;
+    constexpr int WINDOW_HEIGHT = 600;
+
     kn::init();
-    kn::window::create("{{PROJECT_NAME}}", 800, 600);
+    kn::window::create("{{PROJECT_NAME}}", WINDOW_WIDTH, WINDOW_HEIGHT);
     kn::time::setTarget(60);
 
-    kn::Circle circle({400.0f, 300.0f}, 64.0f);
+    std::mt19937 random(std::random_device{}());
+    const auto randint = [&random](int min, int max)
+    {
+        return std::uniform_int_distribution<int>(min, max)(random);
+    };
+
+    struct SpinningShape
+    {
+        kn::Polygon polygon;
+        double spinSpeed;
+        kn::Color color;
+    };
+
+    std::vector<SpinningShape> shapes;
+    shapes.reserve(40);
+    for (int i = 0; i < 40; ++i)
+    {
+        shapes.push_back({
+            kn::Polygon(randint(3, 5), randint(6, 12),
+                        kn::Vec2(randint(10, WINDOW_WIDTH - 10),
+                                 randint(10, WINDOW_HEIGHT - 10))),
+            kn::math::toRadians(randint(30, 60)) * (randint(0, 1) == 0 ? -1 : 1),
+            kn::color::fromHSV({static_cast<double>(randint(0, 359)), 0.4, 0.6}),
+        });
+    }
 
     while (kn::window::isOpen())
     {
         kn::event::poll();
+        const double delta = kn::time::getDelta();
 
         kn::renderer::clear(kn::Color::DARK_GRAY);
-        kn::draw::circle(circle, kn::Color::CYAN);
+        for (auto& shape : shapes)
+        {
+            shape.polygon.rotate(shape.spinSpeed * delta);
+            kn::draw::polygon(shape.polygon, shape.color, false);
+        }
         kn::renderer::present();
     }
 

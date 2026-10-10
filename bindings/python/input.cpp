@@ -111,7 +111,7 @@ Returns:
         )doc");
 
     subInput.def("is_pressed", &isPressed, "name"_a, R"doc(
-Check if the given action is currently being held.
+Check if the given action is currently being held. Controller axes are not considered for this check.
 
 Args:
     name (str): The name of the bound input.
@@ -121,7 +121,7 @@ Returns:
         )doc");
 
     subInput.def("is_just_pressed", &isJustPressed, "name"_a, R"doc(
-Check if the given action was just pressed this frame.
+Check if the given action was just pressed this frame. Controller axes are not considered for this check.
 
 Args:
     name (str): The name of the bound input.
@@ -131,7 +131,7 @@ Returns:
         )doc");
 
     subInput.def("is_just_released", &isJustReleased, "name"_a, R"doc(
-Check if the given action was just released this frame.
+Check if the given action was just released this frame. Controller axes are not considered for this check.
 
 Args:
     name (str): The name of the bound input.

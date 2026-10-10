@@ -1,6 +1,14 @@
+from dataclasses import dataclass
 from random import choice, randint
 
 import pykraken as kn
+
+
+@dataclass
+class SpinningShape:
+    polygon: kn.Polygon
+    spin_speed: float
+    color: kn.Color
 
 
 WINDOW_SIZE = kn.Vec2(800, 600)
@@ -11,27 +19,29 @@ kn.window.create("{{PROJECT_NAME}}", WINDOW_WIDTH, WINDOW_HEIGHT)
 kn.time.set_target(60)
 
 shapes = [
-    kn.Polygon(
-        n=randint(3, 5),
-        radius=randint(6, 12),
-        centroid=kn.Vec2(
-            randint(10, WINDOW_WIDTH - 10),
-            randint(10, WINDOW_HEIGHT - 10),
+    SpinningShape(
+        polygon=kn.Polygon(
+            n=randint(3, 5),
+            radius=randint(6, 12),
+            centroid=kn.Vec2(
+                randint(10, WINDOW_WIDTH - 10),
+                randint(10, WINDOW_HEIGHT - 10),
+            ),
         ),
+        spin_speed=randint(30, 60) * kn.math.DEG2RAD * choice((-1, 1)),
+        color=kn.color.from_hsv(randint(0, 359), 0.4, 0.6),
     )
     for _ in range(40)
 ]
-spin_speeds = [randint(30, 60) * kn.math.DEG2RAD * choice((-1, 1)) for _ in shapes]
-shape_colors = [kn.color.from_hsv(randint(0, 359), 0.4, 0.6) for _ in shapes]
 
 while kn.window.is_open():
     kn.event.poll()
     delta = kn.time.get_delta()
 
     kn.renderer.clear(kn.Color.DARK_GRAY)
-    for shape, spin_speed, color in zip(shapes, spin_speeds, shape_colors):
-        shape.rotate(spin_speed * delta)
-        kn.draw.polygon(shape, color, filled=False)
+    for shape in shapes:
+        shape.polygon.rotate(shape.spin_speed * delta)
+        kn.draw.polygon(shape.polygon, shape.color, filled=False)
     kn.renderer.present()
 
 kn.quit()

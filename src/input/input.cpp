@@ -107,6 +107,7 @@ static double getStrength(const std::string& name)
                 },
                 [&](const std::pair<GamepadAxis, bool>& axisPair)
                 {
+                    // TODO: Consider trigger axes
                     auto [axis, isPositive] = axisPair;
 
                     auto process = [&](const GamepadAxis a, const double value)
@@ -176,6 +177,8 @@ bool isPressed(const std::string& name)
         }
     );
 
+    // TODO: Move to update() to avoid toggling wasHeld multiple times per frame and needing this
+    // function to be called.
     if (pressed)
         it->second.wasHeld = true;
     else if (it->second.wasHeld)
