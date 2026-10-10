@@ -613,6 +613,7 @@ void drawBatch(
         throw std::invalid_argument("clip_rects must have one entry per transform");
 
     _validateDrawOptions(texture, options);
+
     Batcher localBuffers;
     Batcher& buffers = batcher ? *batcher : localBuffers;
     buffers.preallocate(n);
@@ -621,6 +622,7 @@ void drawBatch(
     buffers.m_runs.clear();
     auto& vertices = buffers.m_vertices;
     auto& indices = buffers.m_indices;
+
     const double cameraAngle = camera::getActiveAngle();
     const Vec2 rendRes = getCurrentResolution();
     const double texW = texture.getWidth();
