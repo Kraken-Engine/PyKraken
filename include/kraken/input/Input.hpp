@@ -35,6 +35,11 @@ class InputAction
 namespace input
 {
 
+// Internal event-poll lifecycle; queries never consume state.
+void _beginFrame();
+void _handleEvent(const SDL_Event& event);
+void _reset();
+
 void bind(const std::string& name, const std::vector<InputAction>& actions);
 
 void unbind(const std::string& name);
@@ -46,6 +51,8 @@ Vec2 getDirection(
 
 double getAxis(const std::string& negative = "", const std::string& positive = "");
 
+// Digital state from the latest event::poll(). Queries do not consume edges.
+// Both edges can be true in one poll; analog axis bindings are excluded.
 bool isPressed(const std::string& name);
 
 bool isJustPressed(const std::string& name);

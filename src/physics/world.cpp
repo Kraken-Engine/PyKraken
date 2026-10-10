@@ -244,6 +244,36 @@ void World::step(float delta)
     if (!std::isfinite(delta) || delta <= 0.0f)
         throw std::invalid_argument("Step delta must be finite and greater than 0.");
     b2World_Step(m_worldId, delta, _maxSubsteps);
+
+    // Own the event records before user code can mutate bodies. Retain capacity
+    // between steps; never dereference end-event IDs, which may be destroyed.
+    const auto contacts = b2World_GetContactEvents(m_worldId);
+    m_contactEvents.clear();
+    m_contactEvents.reserve(contacts.beginCount + contacts.endCount);
+    for (int i = 0; i < contacts.beginCount; ++i)
+    {
+        const auto& e = contacts.beginEvents[i];
+        m_contactEvents.push_back({Collider(e.shapeIdA), Collider(e.shapeIdB), true});
+    }
+    for (int i = 0; i < contacts.endCount; ++i)
+    {
+        const auto& e = contacts.endEvents[i];
+        m_contactEvents.push_back({Collider(e.shapeIdA), Collider(e.shapeIdB), false});
+    }
+
+    const auto sensors = b2World_GetSensorEvents(m_worldId);
+    m_sensorEvents.clear();
+    m_sensorEvents.reserve(sensors.beginCount + sensors.endCount);
+    for (int i = 0; i < sensors.beginCount; ++i)
+    {
+        const auto& e = sensors.beginEvents[i];
+        m_sensorEvents.push_back({Collider(e.sensorShapeId), Collider(e.visitorShapeId), true});
+    }
+    for (int i = 0; i < sensors.endCount; ++i)
+    {
+        const auto& e = sensors.endEvents[i];
+        m_sensorEvents.push_back({Collider(e.sensorShapeId), Collider(e.visitorShapeId), false});
+    }
 }
 
 void World::debugDraw(const Color& color, const DebugDrawOptions& options) const
@@ -419,6 +449,18 @@ WheelJoint World::createWheelJoint(
     jointDef.localAxisA = b2Body_GetLocalVector(bodyA.m_bodyId, b2axis);
 
     return WheelJoint(b2CreateWheelJoint(m_worldId, &jointDef));
+}
+
+const std::vector<ContactEvent>& World::getContactEvents() const
+{
+    _checkValid();
+    return m_contactEvents;
+}
+
+const std::vector<SensorEvent>& World::getSensorEvents() const
+{
+    _checkValid();
+    return m_sensorEvents;
 }
 
 std::vector<Collision> World::getCollisions()

@@ -62,12 +62,17 @@ void CharacterBody::setCapsuleShape(const Capsule& capsule)
     m_capsule.center2 = static_cast<b2Vec2>(capsule.p2);
     m_capsule.radius = static_cast<float>(capsule.radius);
 
-    // Destroy the old shape if it exists
+    // Preserve event opt-in when replacing the internal collider.
+    b2ShapeDef shapeDef = b2DefaultShapeDef();
     if (b2Shape_IsValid(m_capsuleShapeId))
+    {
+        shapeDef.enableContactEvents = b2Shape_AreContactEventsEnabled(m_capsuleShapeId);
+        shapeDef.enableSensorEvents = b2Shape_AreSensorEventsEnabled(m_capsuleShapeId);
+        shapeDef.enableHitEvents = b2Shape_AreHitEventsEnabled(m_capsuleShapeId);
         b2DestroyShape(m_capsuleShapeId, false);
+    }
 
     // Create the new capsule shape
-    b2ShapeDef shapeDef = b2DefaultShapeDef();
     m_capsuleShapeId = b2CreateCapsuleShape(m_bodyId, &shapeDef, &m_capsule);
 }
 

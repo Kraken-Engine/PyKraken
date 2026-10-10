@@ -62,7 +62,10 @@ namespace input
 struct InputBinding
 {
     std::vector<InputAction> actions;
-    bool wasHeld = false;
+    std::vector<uint8_t> held;
+    size_t heldCount = 0;
+    bool justPressed = false;
+    bool justReleased = false;
 };
 
 static std::unordered_map<std::string, InputBinding> _inputBindings;
@@ -72,7 +75,21 @@ void bind(const std::string& name, const std::vector<InputAction>& actions)
     if (name.empty())
         throw std::invalid_argument("Input name cannot be empty.");
 
-    _inputBindings[name] = {actions};
+    InputBinding binding{actions, std::vector<uint8_t>(actions.size())};
+    for (size_t i = 0; i < actions.size(); ++i)
+    {
+        binding.held[i] = std::visit(
+            overloaded{
+                [](Scancode v) { return key::isPressed(v); }, [](Keycode v)
+                { return key::isPressed(v); }, [](MouseButton v) { return mouse::isPressed(v); },
+                [&](GamepadButton v) { return gamepad::isPressed(v, actions[i].getPadSlot()); },
+                [](const std::pair<GamepadAxis, bool>&) { return false; }
+            },
+            actions[i].getData()
+        );
+        binding.heldCount += binding.held[i];
+    }
+    _inputBindings.insert_or_assign(name, std::move(binding));
 }
 
 void unbind(const std::string& name)
@@ -163,103 +180,103 @@ double getAxis(const std::string& negative, const std::string& positive)
     return std::clamp(getStrength(positive) - getStrength(negative), -1.0, 1.0);
 }
 
-bool isPressed(const std::string& name)
+// A poll is one input frame. Edges latch until the next poll, including taps
+// and release/repress sequences entirely within a single frame.
+void _beginFrame()
 {
-    const auto it = _inputBindings.find(name);
-    if (it == _inputBindings.end())
-        return false;
+    for (auto& [name, binding] : _inputBindings)
+        binding.justPressed = binding.justReleased = false;
+}
 
-    const bool pressed = std::ranges::any_of(
-        it->second.actions,
-        [](const InputAction& action)
+void _reset()
+{
+    for (auto& [name, binding] : _inputBindings)
+    {
+        std::fill(binding.held.begin(), binding.held.end(), 0);
+        binding.heldCount = 0;
+        binding.justPressed = binding.justReleased = false;
+    }
+}
+
+void _handleEvent(const SDL_Event& event)
+{
+    const bool keyboard = event.type == SDL_EVENT_KEY_DOWN || event.type == SDL_EVENT_KEY_UP;
+    const bool mouse = event.type == SDL_EVENT_MOUSE_BUTTON_DOWN ||
+                       event.type == SDL_EVENT_MOUSE_BUTTON_UP;
+    const bool pad = event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN ||
+                     event.type == SDL_EVENT_GAMEPAD_BUTTON_UP;
+    const bool removed = event.type == SDL_EVENT_GAMEPAD_REMOVED;
+    const bool focusLost = event.type == SDL_EVENT_WINDOW_FOCUS_LOST;
+    if ((!keyboard && !mouse && !pad && !removed && !focusLost) || (keyboard && event.key.repeat))
+        return;
+    const int slot = (pad || removed)
+                         ? gamepad::_getSlot(removed ? event.gdevice.which : event.gbutton.which)
+                         : -1;
+    const bool down = event.type == SDL_EVENT_KEY_DOWN ||
+                      event.type == SDL_EVENT_MOUSE_BUTTON_DOWN ||
+                      event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN;
+    for (auto& [name, binding] : _inputBindings)
+    {
+        const bool wasHeld = binding.heldCount != 0;
+        for (size_t i = 0; i < binding.actions.size(); ++i)
         {
-            return std::visit(
+            const auto& action = binding.actions[i];
+            const bool matches = std::visit(
                 overloaded{
-                    [](const Scancode scan) -> bool { return key::isPressed(scan); },
-                    [](const Keycode key) -> bool { return key::isPressed(key); },
-                    [](const MouseButton mButton) -> bool { return mouse::isPressed(mButton); },
-                    [&](const GamepadButton cButton) -> bool
-                    { return gamepad::isPressed(cButton, action.getPadSlot()); },
-                    [](const std::pair<GamepadAxis, bool>&) -> bool { return false; },
+                    [&](Scancode v)
+                    {
+                        return focusLost ||
+                               (keyboard && static_cast<SDL_Scancode>(v) == event.key.scancode);
+                    },
+                    [&](Keycode v)
+                    {
+                        return focusLost ||
+                               (keyboard && static_cast<SDL_Keycode>(v) == event.key.key);
+                    },
+                    [&](MouseButton v)
+                    {
+                        return focusLost || (mouse && static_cast<Uint8>(v) == event.button.button);
+                    },
+                    [&](GamepadButton v)
+                    {
+                        return slot >= 0 && action.getPadSlot() == slot &&
+                               (removed || (pad && static_cast<Uint8>(v) == event.gbutton.button));
+                    },
+                    [](const std::pair<GamepadAxis, bool>&) { return false; }
                 },
                 action.getData()
             );
+            if (matches && binding.held[i] != down)
+            {
+                if (down)
+                    ++binding.heldCount;
+                else
+                    --binding.heldCount;
+                binding.held[i] = down;
+            }
         }
-    );
+        const bool held = binding.heldCount != 0;
+        binding.justPressed |= !wasHeld && held;
+        binding.justReleased |= wasHeld && !held;
+    }
+}
 
-    // TODO: Move to update() to avoid toggling wasHeld multiple times per frame and needing this
-    // function to be called.
-    if (pressed)
-        it->second.wasHeld = true;
-    else if (it->second.wasHeld)
-        it->second.wasHeld = false;
-
-    return pressed;
+bool isPressed(const std::string& name)
+{
+    const auto it = _inputBindings.find(name);
+    return it != _inputBindings.end() && it->second.heldCount != 0;
 }
 
 bool isJustPressed(const std::string& name)
 {
     const auto it = _inputBindings.find(name);
-    if (it == _inputBindings.end())
-        return false;
-
-    const InputBinding& binding = it->second;
-
-    const bool justPressed = std::ranges::any_of(
-        binding.actions,
-        [](const InputAction& action)
-        {
-            return std::visit(
-                overloaded{
-                    [](const Scancode scan) -> bool { return key::isJustPressed(scan); },
-                    [](const Keycode key) -> bool { return key::isJustPressed(key); },
-                    [](const MouseButton mButton) -> bool { return mouse::isJustPressed(mButton); },
-                    [&](const GamepadButton cButton) -> bool
-                    { return gamepad::isJustPressed(cButton, action.getPadSlot()); },
-                    [](const std::pair<GamepadAxis, bool>&) -> bool { return false; },
-                },
-                action.getData()
-            );
-        }
-    );
-
-    // If any input action is still held, it can't be just pressed.
-    if (justPressed && binding.wasHeld)
-        return false;
-
-    return justPressed;
+    return it != _inputBindings.end() && it->second.justPressed;
 }
 
 bool isJustReleased(const std::string& name)
 {
     const auto it = _inputBindings.find(name);
-    if (it == _inputBindings.end())
-        return false;
-
-    const bool justReleased = std::ranges::any_of(
-        it->second.actions,
-        [](const InputAction& action)
-        {
-            return std::visit(
-                overloaded{
-                    [](const Scancode scan) -> bool { return key::isJustReleased(scan); },
-                    [](const Keycode key) -> bool { return key::isJustReleased(key); },
-                    [](const MouseButton mButton) -> bool
-                    { return mouse::isJustReleased(mButton); },
-                    [&](const GamepadButton cButton) -> bool
-                    { return gamepad::isJustReleased(cButton, action.getPadSlot()); },
-                    [](const std::pair<GamepadAxis, bool>&) -> bool { return false; },
-                },
-                action.getData()
-            );
-        }
-    );
-
-    // If any input action is still held, it can't be just released.
-    if (justReleased && it->second.wasHeld)
-        return false;
-
-    return justReleased;
+    return it != _inputBindings.end() && it->second.justReleased;
 }
 
 }  // namespace input

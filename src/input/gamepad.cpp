@@ -154,6 +154,14 @@ GamepadType getType(const int slot)
     return static_cast<GamepadType>(SDL_GetGamepadType(state.pad));
 }
 
+int _getSlot(SDL_JoystickID id)
+{
+    for (int i = 0; i < MAX_GAMEPADS; ++i)
+        if (_gamepadSlots[i] == id)
+            return i;
+    return -1;
+}
+
 void _clearStates()
 {
     for (auto& state : _connectedPads | std::views::values)

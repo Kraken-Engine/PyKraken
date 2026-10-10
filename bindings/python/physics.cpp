@@ -94,7 +94,7 @@ Args:
     density (float, optional): The density of the collider. Defaults to 1.0.
     friction (float, optional): The friction coefficient of the collider. Defaults to 0.2.
     restitution (float, optional): The restitution (bounciness) of the collider. Defaults to 0.0.
-    enable_events (bool, optional): Whether to enable hit events for this collider. Defaults to False.
+    enable_events (bool, optional): Whether to enable hit, contact, and sensor events for this collider. Defaults to False.
     is_sensor (bool, optional): Whether the collider is a sensor. Defaults to False.
             )doc"
         )
@@ -110,7 +110,7 @@ Args:
     density (float, optional): The density of the collider. Defaults to 1.0.
     friction (float, optional): The friction coefficient of the collider. Defaults to 0.2.
     restitution (float, optional): The restitution (bounciness) of the collider. Defaults to 0.0.
-    enable_events (bool, optional): Whether to enable hit events for this collider. Defaults to False.
+    enable_events (bool, optional): Whether to enable hit, contact, and sensor events for this collider. Defaults to False.
     is_sensor (bool, optional): Whether the collider is a sensor. Defaults to False.
             )doc"
         )
@@ -126,7 +126,7 @@ Args:
     density (float, optional): The density of the collider. Defaults to 1.0.
     friction (float, optional): The friction coefficient of the collider. Defaults to 0.2.
     restitution (float, optional): The restitution (bounciness) of the collider. Defaults to 0.0.
-    enable_events (bool, optional): Whether to enable hit events for this collider. Defaults to False.
+    enable_events (bool, optional): Whether to enable hit, contact, and sensor events for this collider. Defaults to False.
     is_sensor (bool, optional): Whether the collider is a sensor. Defaults to False.
             )doc"
         )
@@ -142,7 +142,7 @@ Args:
     density (float, optional): The density of the collider. Defaults to 1.0.
     friction (float, optional): The friction coefficient of the collider. Defaults to 0.2.
     restitution (float, optional): The restitution (bounciness) of the collider. Defaults to 0.0.
-    enable_events (bool, optional): Whether to enable hit events for this collider. Defaults to False.
+    enable_events (bool, optional): Whether to enable hit, contact, and sensor events for this collider. Defaults to False.
     is_sensor (bool, optional): Whether the collider is a sensor. Defaults to False.
             )doc"
         )
@@ -173,6 +173,10 @@ Args:
             Returns:
                 Transform: The current transform of the body.
             )doc")
+        .def(
+            "get_colliders", &Body::getColliders,
+            "Return non-owning handles for this body's collider shapes."
+        )
         .def("destroy", &Body::destroy, R"doc(Destroy the body manually.)doc")
         .def(nb::self == nb::self)
         .def(nb::self != nb::self);
@@ -745,6 +749,34 @@ Args:
     upper (float): The upper translation limit.
             )doc");
 
+    nb::class_<Collider>(subPhysics, "Collider", R"doc(
+Non-owning collider handle. id supports matching and dictionary keys within a
+world's lifetime, including after collider destruction. Check is_valid before
+reading body. A concave polygon creates multiple collider handles.
+    )doc")
+        .def_prop_ro("id", &Collider::getId)
+        .def_prop_ro("body", &Collider::getBody)
+        .def("set_events_enabled", &Collider::setEventsEnabled, "enabled"_a, R"doc(
+Enable or disable hit, contact, and sensor events for this collider.
+Use this to opt in existing colliders, including CharacterBody's internal capsule.
+Changing CharacterBody.capsule_shape preserves its event flags but replaces its ID.
+Kinematic characters use mover queries against static terrain; these queries do
+not produce contact events. Use is_on_floor/is_on_wall for mover contact state.
+        )doc")
+        .def_prop_ro("is_valid", &Collider::isValid)
+        .def(nb::self == nb::self)
+        .def("__hash__", [](const Collider& c) { return std::hash<uint64_t>{}(c.getId()); });
+
+    nb::class_<ContactEvent>(subPhysics, "ContactEvent")
+        .def_ro("collider_a", &ContactEvent::colliderA)
+        .def_ro("collider_b", &ContactEvent::colliderB)
+        .def_ro("began", &ContactEvent::began, "True for contact begin, False for contact end.");
+
+    nb::class_<SensorEvent>(subPhysics, "SensorEvent")
+        .def_ro("sensor", &SensorEvent::sensor)
+        .def_ro("visitor", &SensorEvent::visitor)
+        .def_ro("began", &SensorEvent::began, "True for sensor enter, False for sensor exit.");
+
     nb::class_<Collision>(subPhysics, "Collision", nb::pooled(KRAKEN_PYTHON_POOL_CAPACITY), R"doc(
 Information about a collision between two bodies.
 
@@ -975,11 +1007,27 @@ Returns:
         )doc"
         )
 
+        .def("get_contact_events", &World::getContactEvents, nb::rv_policy::copy, R"doc(
+Return contact begin/end snapshots from the latest World.step(). Reads do not
+consume events. Read after EACH fixed step, before stepping this world again.
+The returned list owns its records and may be retained across subsequent steps.
+Colliders must opt in with enable_events=True. End-event colliders may already
+be destroyed: their IDs remain readable, but body access requires is_valid.
+Begin records precede end records; no chronological ordering is promised.
+        )doc")
+        .def("get_sensor_events", &World::getSensorEvents, nb::rv_policy::copy, R"doc(
+Return sensor enter/exit snapshots from the latest World.step(). Reads do not
+consume events. Read after EACH fixed step. Returned records may be retained.
+Enable events on BOTH the sensor and visitor colliders. Destroyed colliders
+remain identifiable by ID; check is_valid before accessing their bodies.
+Begin records precede end records; no chronological ordering is promised.
+        )doc")
         .def("get_collisions", &World::getCollisions, R"doc(
 Get all collision events that occurred during the last physics step.
 
 Note:
-    This only includes hit events. The list is cleared after each call.
+    This only includes hit events. Reads do not consume events; read after each
+    step and before destroying participating colliders.
 
 Returns:
     list[Collision]: A list of collision events.

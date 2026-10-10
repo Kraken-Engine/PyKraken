@@ -7,6 +7,7 @@
 #include "kraken/core/Log.hpp"
 #include "kraken/graphics/Window.hpp"
 #include "kraken/input/Gamepad.hpp"
+#include "kraken/input/Input.hpp"
 #include "kraken/input/Key.hpp"
 #include "kraken/input/Mouse.hpp"
 
@@ -45,6 +46,7 @@ void stop_text_input()
 
 const std::vector<Event> poll()
 {
+    input::_beginFrame();
     gamepad::_clearStates();
     key::_clearStates();
     mouse::_clearStates();
@@ -56,6 +58,7 @@ const std::vector<Event> poll()
     {
         Event e(event.type);
 
+        input::_handleEvent(event);
         gamepad::_handleEvents(event, e);
         key::_handleEvents(event, e);
         mouse::_handleEvents(event, e);

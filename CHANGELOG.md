@@ -12,9 +12,7 @@ These are proposed follow-up items, not implemented features or a commitment to 
 - A `Space` enum for explicitly choosing screen or world coordinates across texture, primitive, and text drawing, with corresponding mouse coordinate queries.
 - Text transforms for rotation and scaling. This is feasible by caching rendered text in a render-target texture and drawing that texture with a transform; layout/content changes would invalidate the cache.
 - Scoped destination clipping: restrict drawing to a rectangular region of the current render target, restore the previous clip afterward, and intersect nested clips. This would support scrollable panels, cropped views, and minimaps without altering texture source rectangles or object coordinates.
-- Finish input action state handling: update aggregate held/just-pressed/just-released states once per input frame, make queries read-only and independent of call order, and correctly handle multiple bindings and press/release transitions within a frame.
 - Optional threshold-based axis bindings with separate activation/release thresholds, plus trigger-axis support, while keeping ordinary movement bindings analog.
-- Physics contact begin/end and sensor enter/exit events, with collider identity and clear event lifetimes across fixed steps.
 - Separate `GameTimer` and `RealTimer` clocks so gameplay timers can follow pause/time scale while real-time timers remain independent; revisit scheduled gameplay events alongside this split.
 - Expanded Tiled support: recursive group-layer loading, custom properties, runtime tile editing, and faithful collider import with object rotation, layer offsets, and diagnostics for unsupported shapes.
 - Dedicated UI work after common gameplay features: stable widget IDs, keyboard/controller navigation, disabled states, reliable press/release capture and hitboxes, and scrolling/clipping containers.
@@ -24,6 +22,8 @@ These are proposed follow-up items, not implemented features or a commitment to 
 
 ### Added
 
+- Physics contact begin/end and sensor enter/exit snapshots through `World.get_contact_events()` / `getContactEvents()` and `get_sensor_events()` / `getSensorEvents()`. Read after each world step; records are replaced on the next step. Python returns independent snapshots. Event `began` distinguishes begin/enter from end/exit.
+- Non-owning `Collider` handles with identity, validity checks, and body access, available through `Body.get_colliders()` / `getColliders()` and physics events. Destroyed colliders retain readable IDs within the world's lifetime. Concave polygons may produce multiple collider handles.
 - `DrawOptions` and `BlendMode` for local source rectangles, tint, alpha, horizontal/vertical flips, and normal/additive/multiply blending. Python draw calls accept property keywords or a reusable options object; C++ accepts `DrawOptions`.
 - Native geometry batching through C++ `renderer::drawBatch`, using contiguous packed rows through `std::span`. Python's NumPy `renderer.draw_batch` overload shares this implementation without copying compatible array data.
 - `renderer.Batcher` / `renderer::Batcher` reusable CPU geometry buffers for Python and C++. Per-instance colors, source rectangles, opacity, and flips remain on the geometry path; blend-mode changes split submissions while preserving draw order.
@@ -41,7 +41,8 @@ These are proposed follow-up items, not implemented features or a commitment to 
 - `AnimationController.add_sheet` / `addSheet` renamed to `add_strips` / `addStrips`. C++ `getCurrentClip` renamed to `getFrameArea`; Python retains its `frame_area` property. Looping is exposed as a public property.
 - `AnimationController.play` rewinds and resumes only when selecting a different animation. Use `replay` to restart the selected animation.
 - Both Python and C++ starter demos now use collections of spinning polygons with individual rotation speeds and colors.
-- Input action edge queries now include held-state checks to reduce false transitions across multiple bindings. A complete, query-order-independent fix remains planned; controller axes are documented as excluded from pressed-state queries.
+- Input action states now aggregate ordered digital events during `event.poll()`. Queries are read-only and independent of call order; multiple bindings, same-poll taps, focus loss, and controller disconnects preserve aggregate transitions. Both edges may be true in one poll. Axis bindings remain analog-only.
+- Collider `enable_events` now enables contact and sensor events as well as impact events. Existing colliders, including character capsules, can opt in through `Collider.set_events_enabled()` / `setEventsEnabled()`. Enable it on both sensor and visitor colliders for sensor notifications.
 
 ### Removed
 
