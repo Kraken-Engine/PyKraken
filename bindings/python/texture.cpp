@@ -37,27 +37,10 @@ shader-sampled.
     nb::class_<Texture> texture(module, "Texture", R"doc(
 Represents a hardware-accelerated image that can be efficiently rendered.
 
-Textures are optimized for fast rendering operations and support various effects
-like rotation, flipping, tinting, alpha blending, and different blend modes.
-They can be created from image files or pixel arrays.
+Textures store shared image data loaded from image files or pixel arrays.
+Source regions, tint, alpha, flips, and blend modes belong to renderer draw calls,
+so the same texture can be reused by sprites with independent appearances.
     )doc");
-
-    nb::class_<Texture::Flip>(texture, "Flip", R"doc(
-Controls horizontal and vertical flipping of a texture during rendering.
-
-Used to mirror textures along the horizontal and/or vertical axes without
-creating additional texture data.
-    )doc")
-        .def_rw("h", &Texture::Flip::h, R"doc(
-Enable or disable horizontal flipping.
-
-When True, the texture is mirrored horizontally (left-right flip).
-        )doc")
-        .def_rw("v", &Texture::Flip::v, R"doc(
-Enable or disable vertical flipping.
-
-When True, the texture is mirrored vertically (top-bottom flip).
-        )doc");
 
     texture
         .def(
@@ -130,21 +113,6 @@ Returns:
     bool: True if the usage flag is present.
         )doc")
 
-        .def_rw("flip", &Texture::flip, R"doc(
-The flip settings for horizontal and vertical mirroring.
-
-Controls whether the texture is flipped horizontally and/or vertically during rendering.
-        )doc")
-
-        .def_prop_rw("alpha", &Texture::getAlpha, &Texture::setAlpha, R"doc(
-Get or set the alpha modulation of the texture as a float between `0.0` and `1.0`.
-        )doc")
-        .def_prop_rw("clip_area", &Texture::getClipArea, &Texture::setClipArea, R"doc(
-Get or set the clip area (atlas region) of the texture.
-        )doc")
-        .def_prop_rw("tint", &Texture::getTint, &Texture::setTint, R"doc(
-Get or set the color tint applied to the texture.
-        )doc")
         .def_prop_ro("width", &Texture::getWidth, R"doc(
 The width of the texture in pixels.
         )doc")
@@ -160,24 +128,6 @@ Return a Rect with position (0, 0) and the texture's dimensions.
 
 Returns:
     Rect: A rectangle representing the texture's bounds.
-        )doc")
-
-        .def("make_additive", &Texture::makeAdditive, R"doc(
-Set the texture to use additive blending mode.
-
-In additive mode, the texture's colors are added to the destination,
-creating bright, glowing effects.
-        )doc")
-        .def("make_multiply", &Texture::makeMultiply, R"doc(
-Set the texture to use multiply blending mode.
-
-In multiply mode, the texture's colors are multiplied with the destination,
-creating darkening and shadow effects.
-        )doc")
-        .def("make_normal", &Texture::makeNormal, R"doc(
-Set the texture to use normal (alpha) blending mode.
-
-This is the default blending mode for standard transparency effects.
         )doc");
 }
 }  // namespace texture

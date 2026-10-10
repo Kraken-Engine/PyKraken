@@ -5,9 +5,6 @@
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/vector.h>
 
-#include <cmath>
-#include <limits>
-
 #include "bindings/python/bindings.hpp"
 #include "kraken/core/Log.hpp"
 #include "kraken/graphics/Camera.hpp"
@@ -16,271 +13,74 @@
 
 namespace kn::renderer
 {
-static Rect _rotatedBounds(const Rect& dstRect, const double angle, const Vec2& pivot)
-{
-    if (angle == 0.0)
-        return dstRect;
-
-    const double c = std::cos(angle);
-    const double s = std::sin(angle);
-    const Vec2 corners[4] = {
-        {0.0, 0.0},
-        {dstRect.w, 0.0},
-        {dstRect.w, dstRect.h},
-        {0.0, dstRect.h},
-    };
-
-    double minX = std::numeric_limits<double>::infinity();
-    double minY = std::numeric_limits<double>::infinity();
-    double maxX = -std::numeric_limits<double>::infinity();
-    double maxY = -std::numeric_limits<double>::infinity();
-
-    const Vec2 pivotPoint = dstRect.getSize() * pivot;
-    for (const auto& corner : corners)
-    {
-        const auto [localX, localY] = corner - pivotPoint;
-        const double rotatedX = localX * c - localY * s + pivotPoint.x;
-        const double rotatedY = localX * s + localY * c + pivotPoint.y;
-        minX = std::min(minX, rotatedX);
-        minY = std::min(minY, rotatedY);
-        maxX = std::max(maxX, rotatedX);
-        maxY = std::max(maxY, rotatedY);
-    }
-
-    return {dstRect.x + minX, dstRect.y + minY, maxX - minX, maxY - minY};
-}
-
-static Vec2 _anchoredTopLeft(
-    const Vec2& screenAnchor, const Vec2& size, const Vec2& anchor, const Vec2& pivot,
-    const double cameraAngle
+static void drawBatchList(
+    const Texture& texture, const std::vector<Transform>& transforms, const Vec2& anchor,
+    const Vec2& pivot, const std::optional<std::vector<Rect>>& clipRects,
+    const DrawOptions& options, const std::optional<std::vector<DrawOptions>>& instanceOptions
 )
 {
-    const Vec2 anchorPoint = size * anchor;
-    const Vec2 pivotPoint = size * pivot;
-    Vec2 pivotToAnchor = anchorPoint - pivotPoint;
-    if (cameraAngle != 0.0)
-        pivotToAnchor.rotate(cameraAngle);
-    return screenAnchor - pivotPoint - pivotToAnchor;
-}
+    if (clipRects && clipRects->size() != transforms.size())
+        throw std::invalid_argument("clip_rects must have one entry per transform");
+    if (instanceOptions && instanceOptions->size() != transforms.size())
+        throw std::invalid_argument("instance_options must have one entry per transform");
 
-class Batcher;
+    _validateDrawOptions(texture, options);
+    for (size_t i = 0; i < transforms.size(); ++i)
+    {
+        DrawOptions item = instanceOptions ? (*instanceOptions)[i] : options;
+
+        if (clipRects)
+            item.source = (*clipRects)[i];
+
+        draw(texture, transforms[i], anchor, pivot, item);
+    }
+}
 
 static void drawBatchNDArray(
     const Texture& texture,
     nb::ndarray<const double, nb::ndim<2>, nb::c_contig, nb::device::cpu> arr, const Vec2& anchor,
-    const Vec2& pivot, Batcher* batcher
-);
-
-class Batcher
-{
-  public:
-    Batcher() = default;
-    ~Batcher() = default;
-
-    void preallocate(const size_t nSprites)
-    {
-        vertices.reserve(nSprites * 4);
-        indices.reserve(nSprites * 6);
-    }
-
-    void free()
-    {
-        vertices.clear();
-        vertices.shrink_to_fit();
-        indices.clear();
-        indices.shrink_to_fit();
-    }
-
-  private:
-    friend void drawBatchNDArray(
-        const Texture& texture,
-        nb::ndarray<const double, nb::ndim<2>, nb::c_contig, nb::device::cpu> arr,
-        const Vec2& anchor, const Vec2& pivot, Batcher* batcher
-    );
-
-    std::vector<SDL_Vertex> vertices;
-    std::vector<int> indices;
-};
-
-void drawBatchNDArray(
-    const Texture& texture,
-    nb::ndarray<const double, nb::ndim<2>, nb::c_contig, nb::device::cpu> arr, const Vec2& anchor,
-    const Vec2& pivot, Batcher* batcher
+    const Vec2& pivot, Batcher* batcher, const DrawOptions& options,
+    const std::optional<std::vector<DrawOptions>>& instanceOptions,
+    const std::optional<std::vector<Rect>>& clipRects
 )
 {
-    if (!texture.hasUsage(TextureUsage::Drawable))
-        throw std::runtime_error("Texture is not drawable");
+    if (instanceOptions && instanceOptions->size() != arr.shape(0))
+        throw std::invalid_argument("instance_options must have one entry per transform");
+    if (clipRects && clipRects->size() != arr.shape(0))
+        throw std::invalid_argument("clip_rects must have one entry per transform");
 
-    const size_t n = arr.shape(0);
-    const size_t cols = arr.shape(1);
+    drawBatch(
+        texture, std::span<const double>{arr.data(), arr.size()},
+        static_cast<uint8_t>(arr.shape(1)), batcher, options, anchor, pivot,
+        instanceOptions ? std::span<const DrawOptions>{*instanceOptions}
+                        : std::span<const DrawOptions>{},
+        clipRects ? std::span<const Rect>{*clipRects} : std::span<const Rect>{}
+    );
+}
 
-    if (n == 0)
-        return;
+static DrawOptions resolveOptions(
+    const std::optional<DrawOptions>& options, const std::optional<Rect>& source,
+    const std::optional<Color>& tint, const std::optional<float>& alpha,
+    const std::optional<bool>& flipH, const std::optional<bool>& flipV,
+    const std::optional<BlendMode>& blend
+)
+{
+    DrawOptions result = options.value_or(DrawOptions{});
 
-    if (cols < 2 || cols > 5 && cols != 9)
-        throw std::invalid_argument(
-            "Expected array with 2-5 or 9 columns: [x, y, (angle), (scale or scale_x, scale_y), "
-            "(clip_left, clip_top, clip_width, clip_height)]"
-        );
+    if (source)
+        result.source = source;
+    if (tint)
+        result.tint = *tint;
+    if (alpha)
+        result.alpha = *alpha;
+    if (flipH)
+        result.flipH = *flipH;
+    if (flipV)
+        result.flipV = *flipV;
+    if (blend)
+        result.blend = *blend;
 
-    const Rect textureClipArea = texture.getClipArea();
-    if (textureClipArea.w <= 0.0 || textureClipArea.h <= 0.0)
-        return;
-
-    const float alpha = texture.getAlpha();
-    if (alpha == 0.0f)
-        return;
-
-    const double cameraAngle = camera::getActiveAngle();
-
-    const Vec2 rendRes = getCurrentResolution();
-    SDL_Texture* sdlTexture = texture.getSDL();
-
-    const Color tint = texture.getTint();
-    const auto vertexColor = static_cast<SDL_FColor>(tint);
-
-    const double texW = texture.getWidth();
-    const double texH = texture.getHeight();
-
-    const auto t_u1 = static_cast<float>(textureClipArea.x / texW);
-    const auto t_v1 = static_cast<float>(textureClipArea.y / texH);
-    const auto t_u2 = static_cast<float>(textureClipArea.getRight() / texW);
-    const auto t_v2 = static_cast<float>(textureClipArea.getBottom() / texH);
-
-    std::vector<SDL_Vertex>* pVertices;
-    std::vector<int>* pIndices;
-    std::vector<SDL_Vertex> localVertices;
-    std::vector<int> localIndices;
-
-    if (batcher)
-    {
-        batcher->vertices.clear();
-        batcher->indices.clear();
-        pVertices = &batcher->vertices;
-        pIndices = &batcher->indices;
-    }
-    else
-    {
-        localVertices.reserve(n * 4);
-        localIndices.reserve(n * 6);
-        pVertices = &localVertices;
-        pIndices = &localIndices;
-    }
-
-    const double* data = arr.data();
-
-    std::vector<SDL_Vertex>& vertices = *pVertices;
-    std::vector<int>& indices = *pIndices;
-
-    for (size_t i = 0; i < n; ++i)
-    {
-        const double* row = data + i * cols;
-        const Vec2 pos = camera::worldToScreen(Vec2{row[0], row[1]});
-        const double angle = ((cols >= 3) ? row[2] : 0.0) + cameraAngle;
-
-        Vec2 scale{1.0};
-        if (cols >= 4)
-        {
-            scale.x = row[3];
-            scale.y = (cols == 4) ? scale.x : row[4];
-        }
-
-        if (scale.isZero())
-            continue;
-
-        Rect clipArea = (cols == 9) ? Rect{row[5], row[6], row[7], row[8]} : textureClipArea;
-
-        if (clipArea.w <= 0.0 || clipArea.h <= 0.0)
-            continue;
-
-        const Vec2 clipSize = clipArea.getSize();
-
-        Rect dstRect{0.0, 0.0, clipSize * scale};
-        dstRect.setTopLeft(_anchoredTopLeft(pos, dstRect.getSize(), anchor, pivot, cameraAngle));
-
-        const Rect cullRect = _rotatedBounds(dstRect, angle, pivot);
-        if (cullRect.getRight() < 0.0 || cullRect.x >= rendRes.x || cullRect.getBottom() < 0.0 ||
-            cullRect.y >= rendRes.y)
-            continue;
-
-        float u1, v1, u2, v2;
-        if (cols == 9)
-        {
-            u1 = static_cast<float>(clipArea.x / texW);
-            v1 = static_cast<float>(clipArea.y / texH);
-            u2 = static_cast<float>(clipArea.getRight() / texW);
-            v2 = static_cast<float>(clipArea.getBottom() / texH);
-        }
-        else
-        {
-            u1 = t_u1;
-            v1 = t_v1;
-            u2 = t_u2;
-            v2 = t_v2;
-        }
-
-        if (texture.flip.h)
-            std::swap(u1, u2);
-        if (texture.flip.v)
-            std::swap(v1, v2);
-
-        const double pivotX = dstRect.w * pivot.x;
-        const double pivotY = dstRect.h * pivot.y;
-
-        const auto dx = static_cast<float>(dstRect.x + pivotX);
-        const auto dy = static_cast<float>(dstRect.y + pivotY);
-
-        const auto x1 = static_cast<float>(-pivotX);
-        const auto y1 = static_cast<float>(-pivotY);
-        const auto x2 = static_cast<float>(dstRect.w - pivotX);
-        const auto y2 = static_cast<float>(dstRect.h - pivotY);
-
-        const int base = static_cast<int>(vertices.size());
-
-        if (angle == 0.0)
-        {
-            vertices.push_back({{dx + x1, dy + y1}, vertexColor, {u1, v1}});
-            vertices.push_back({{dx + x2, dy + y1}, vertexColor, {u2, v1}});
-            vertices.push_back({{dx + x2, dy + y2}, vertexColor, {u2, v2}});
-            vertices.push_back({{dx + x1, dy + y2}, vertexColor, {u1, v2}});
-        }
-        else
-        {
-            const auto c = static_cast<float>(std::cos(angle));
-            const auto s = static_cast<float>(std::sin(angle));
-
-            vertices.push_back(
-                {{dx + x1 * c - y1 * s, dy + x1 * s + y1 * c}, vertexColor, {u1, v1}}
-            );
-            vertices.push_back(
-                {{dx + x2 * c - y1 * s, dy + x2 * s + y1 * c}, vertexColor, {u2, v1}}
-            );
-            vertices.push_back(
-                {{dx + x2 * c - y2 * s, dy + x2 * s + y2 * c}, vertexColor, {u2, v2}}
-            );
-            vertices.push_back(
-                {{dx + x1 * c - y2 * s, dy + x1 * s + y2 * c}, vertexColor, {u1, v2}}
-            );
-        }
-
-        indices.push_back(base);
-        indices.push_back(base + 1);
-        indices.push_back(base + 2);
-        indices.push_back(base);
-        indices.push_back(base + 2);
-        indices.push_back(base + 3);
-    }
-
-    if (vertices.empty())
-        return;
-
-    if (!SDL_RenderGeometry(
-            _get(), sdlTexture, vertices.data(), static_cast<int>(vertices.size()), indices.data(),
-            static_cast<int>(indices.size())
-        ))
-    {
-        throw std::runtime_error("Failed to render geometry: " + std::string(SDL_GetError()));
-    }
+    return result;
 }
 
 void _bind(nb::module_& module)
@@ -295,6 +95,27 @@ void _bind(nb::module_& module)
         .value("DIRECT3D12", RenderBackend::Direct3d12, "Use the Direct3D 12 backend.");
 
     auto subRenderer = module.def_submodule("renderer", "Functions for rendering graphics");
+
+    nb::enum_<BlendMode>(module, "BlendMode")
+        .value("NORMAL", BlendMode::Normal)
+        .value("ADDITIVE", BlendMode::Additive)
+        .value("MULTIPLY", BlendMode::Multiply);
+
+    nb::class_<DrawOptions>(module, "DrawOptions", "Reusable local texture draw properties.")
+        .def(
+            "__init__",
+            [](DrawOptions* self, std::optional<Rect> source, Color tint, float alpha, bool flipH,
+               bool flipV, BlendMode blend)
+            { new (self) DrawOptions{source, tint, alpha, flipH, flipV, blend}; },
+            nb::kw_only(), "source"_a = nb::none(), "tint"_a = Color::WHITE, "alpha"_a = 1.0f,
+            "flip_h"_a = false, "flip_v"_a = false, "blend"_a = BlendMode::Normal
+        )
+        .def_rw("source", &DrawOptions::source)
+        .def_rw("tint", &DrawOptions::tint)
+        .def_rw("alpha", &DrawOptions::alpha)
+        .def_rw("flip_h", &DrawOptions::flipH)
+        .def_rw("flip_v", &DrawOptions::flipV)
+        .def_rw("blend", &DrawOptions::blend);
 
     nb::class_<Batcher>(subRenderer, "Batcher", R"doc(
 A reusable memory buffer for batched rendering, designed for maximum throughput.
@@ -400,92 +221,188 @@ Raises:
 
     subRenderer.def(
         "draw",
-        nb::overload_cast<const Texture&, const Transform&, const Vec2&, const Vec2&>(&draw),
+        [](const Texture& texture, const Transform& transform, const Vec2& anchor,
+           const Vec2& pivot, const std::optional<DrawOptions>& options,
+           const std::optional<Rect>& source, const std::optional<Color>& tint,
+           const std::optional<float>& alpha, const std::optional<bool>& flipH,
+           const std::optional<bool>& flipV, const std::optional<BlendMode>& blend)
+        {
+            draw(
+                texture, transform, anchor, pivot,
+                resolveOptions(options, source, tint, alpha, flipH, flipV, blend)
+            );
+        },
         "texture"_a, "transform"_a = Transform{}, "anchor"_a = Anchor::TOP_LEFT,
-        "pivot"_a = Anchor::CENTER, R"doc(
-Render a texture.
+        "pivot"_a = Anchor::CENTER, nb::kw_only(), "options"_a = nb::none(),
+        "source"_a = nb::none(), "tint"_a = nb::none(), "alpha"_a = nb::none(),
+        "flip_h"_a = nb::none(), "flip_v"_a = nb::none(), "blend"_a = nb::none(), R"doc(
+Draw a texture in world coordinates. Properties are local to this call.
 
 Args:
-    texture (Texture): The texture to render.
-    transform (Transform, optional): The transform (position, rotation, scale).
-    anchor (Vec2, optional): The anchor point (0.0-1.0). Defaults to top left (0, 0).
-    pivot (Vec2, optional): The rotation pivot (0.0-1.0). Defaults to center (0.5, 0.5).
+    texture (Texture): The texture to draw.
+    transform (Transform, optional): The position, rotation, and scale of the texture. Defaults to no transform.
+    anchor (Vec2, optional): The anchor point of the texture. Defaults to Anchor.TOP_LEFT.
+    pivot (Vec2, optional): The pivot point for rotation and scaling. Defaults to Anchor.CENTER.
+    options (DrawOptions, optional): Additional draw options. Defaults to None.
+    source (Rect, optional): The source rectangle from the texture. Defaults to None (full texture).
+    tint (Color, optional): The color tint to apply. Defaults to None (no tint).
+    alpha (float, optional): The alpha multiplier (0..1). Defaults to None (no change).
+    flip_h (bool, optional): Whether to flip the texture horizontally. Defaults to None (no flip).
+    flip_v (bool, optional): Whether to flip the texture vertically. Defaults to None (no flip).
+    blend (BlendMode, optional): The blend mode to use. Defaults to None (normal blending).
         )doc"
     );
 
     subRenderer.def(
-        "draw", nb::overload_cast<const Texture&, Rect, double, const Vec2&>(&draw), "texture"_a,
-        "dst"_a, "angle"_a = 0.0, "pivot"_a = Anchor::CENTER, R"doc(
-Render a texture stretched into a destination rectangle without a camera's transform applied.
-
-This is a simpler alternative to the transform-based draw when you only
-need to place a texture at a specific screen rectangle.
-The source region is determined by the texture's clip area.
-
-Args:
-    texture (Texture): The texture to render.
-    dst (Rect): Destination rectangle on screen.
-    angle (float, optional): The rotation angle in radians. Defaults to 0.0.
-    pivot (Vec2, optional): The rotation pivot (0.0-1.0). Defaults to center (0.5, 0.5).
-        )doc"
-    );
-
-    subRenderer.def("draw_9slice", &draw9Slice, "texture"_a, "dst"_a, "slice"_a, R"doc(
-Render a texture using 9-slice scaling (9-grid). The camera's transform is not applied to this draw.
-
-This divides the texture into 9 regions: 4 corners (unscaled), 4 edges (scaled in one axis),
-and 1 center (scaled in both axes).
+        "draw",
+        [](const Texture& texture, Rect dst, double angle, const Vec2& pivot,
+           const std::optional<DrawOptions>& options, const std::optional<Rect>& source,
+           const std::optional<Color>& tint, const std::optional<float>& alpha,
+           const std::optional<bool>& flipH, const std::optional<bool>& flipV,
+           const std::optional<BlendMode>& blend)
+        {
+            draw(
+                texture, dst, angle, pivot,
+                resolveOptions(options, source, tint, alpha, flipH, flipV, blend)
+            );
+        },
+        "texture"_a, "dst"_a, "angle"_a = 0.0, "pivot"_a = Anchor::CENTER, nb::kw_only(),
+        "options"_a = nb::none(), "source"_a = nb::none(), "tint"_a = nb::none(),
+        "alpha"_a = nb::none(), "flip_h"_a = nb::none(), "flip_v"_a = nb::none(),
+        "blend"_a = nb::none(), R"doc(
+Draw a texture into a screen-space rectangle, bypassing the camera.
 
 Args:
-    texture (Texture): The source texture.
-    dst (Rect): The destination rectangle on screen.
-    slice (Rect): A rectangle defining the slice widths/heights (left_width, top_height, right_width, bottom_height).
-        )doc");
-
-    subRenderer.def(
-        "draw_batch", &drawBatch, "texture"_a, "transforms"_a, "anchor"_a = Anchor::TOP_LEFT,
-        "pivot"_a = Anchor::CENTER, "clip_rects"_a = nb::none(),
-        nb::call_guard<nb::gil_scoped_release>(), R"doc(
-Render a texture multiple times with different transforms in a single batch call.
-
-This is much faster than calling draw() in a loop because it avoids
-per-call Python/C++ dispatch overhead.
-
-Args:
-    texture (Texture): The texture to render.
-    transforms (Sequence[Transform]): A list of transforms (position, rotation, scale).
-    clip_rects (Sequence[Rect], optional): Per-instance clip rectangles. If provided, these override
-        the texture's clip area for each instance. If None, all instances use the texture's clip area.
-    anchor (Vec2, optional): The anchor point (0.0-1.0). Defaults to top left (0, 0).
-    pivot (Vec2, optional): The rotation pivot (0.0-1.0). Defaults to center (0.5, 0.5).
+    texture (Texture): The texture to draw.
+    dst (Rect): The destination rectangle in screen coordinates.
+    angle (float, optional): The rotation angle in degrees. Defaults to 0.
+    pivot (Vec2, optional): The pivot point for rotation and scaling. Defaults to Anchor.CENTER.
+    options (DrawOptions, optional): Additional draw options. Defaults to None.
+    source (Rect, optional): The source rectangle from the texture. Defaults to None (full texture).
+    tint (Color, optional): The color tint to apply. Defaults to None (no tint).
+    alpha (float, optional): The alpha multiplier (0..1). Defaults to None (no change).
+    flip_h (bool, optional): Whether to flip the texture horizontally. Defaults to None (no flip).
+    flip_v (bool, optional): Whether to flip the texture vertically. Defaults to None (no flip).
+    blend (BlendMode, optional): The blend mode to use. Defaults to None (normal blending).
         )doc"
     );
 
     subRenderer.def(
-        "draw_batch", &drawBatchNDArray, "texture"_a, "transforms"_a, "anchor"_a = Anchor::TOP_LEFT,
-        "pivot"_a = Anchor::CENTER, "batcher"_a = nb::none(),
-        nb::call_guard<nb::gil_scoped_release>(), R"doc(
-Render a texture multiple times using a NumPy array for maximum throughput. This is *the* fastest way to render large batches of sprites,
-being significantly faster than the list-based draw_batch() due to no-copy viewing of contiguous array data.
-
-Each row of the array describes one instance. The number of columns determines
-the layout:
-
-- **2 columns** ``[x, y]`` — position only (angle=0, scale=1).
-- **3 columns** ``[x, y, angle]`` — position + rotation (scale=1).
-- **4 columns** ``[x, y, angle, scale]`` — position + rotation + uniform scale.
-- **5 columns** ``[x, y, angle, scale_x, scale_y]`` — full transform.
-- **9 columns** ``[x, y, angle, scale_x, scale_y, clip_left, clip_top, clip_width, clip_height]`` — full transform + per-instance clip rect.
+        "draw_9slice",
+        [](const Texture& texture, const Rect& dst, const Rect& slice,
+           const std::optional<DrawOptions>& options, const std::optional<Rect>& source,
+           const std::optional<Color>& tint, const std::optional<float>& alpha,
+           const std::optional<bool>& flipH, const std::optional<bool>& flipV,
+           const std::optional<BlendMode>& blend)
+        {
+            draw9Slice(
+                texture, dst, slice,
+                resolveOptions(options, source, tint, alpha, flipH, flipV, blend)
+            );
+        },
+        "texture"_a, "dst"_a, "slice"_a, nb::kw_only(), "options"_a = nb::none(),
+        "source"_a = nb::none(), "tint"_a = nb::none(), "alpha"_a = nb::none(),
+        "flip_h"_a = nb::none(), "flip_v"_a = nb::none(), "blend"_a = nb::none(), R"doc(
+Draw a nine-slice in screen coordinates.
 
 Args:
-    texture (Texture): The texture to render.
-    transforms (numpy.ndarray): float64 array with shape ``(N, 2|3|4|5|9)``.
-    anchor (Vec2, optional): The anchor point (0.0-1.0). Defaults to top left (0, 0).
-    pivot (Vec2, optional): The rotation pivot (0.0-1.0). Defaults to center (0.5, 0.5).
-    batcher (Batcher, optional): Pre-allocated rendering buffer for higher performance.
+    texture (Texture): The texture to draw.
+    dst (Rect): The destination rectangle in screen coordinates.
+    slice (Rect): The nine-slice rectangle in texture coordinates.
+    options (DrawOptions, optional): Additional draw options. Defaults to None.
+    source (Rect, optional): The source rectangle from the texture. Defaults to None (full texture).
+    tint (Color, optional): The color tint to apply. Defaults to None (no tint).
+    alpha (float, optional): The alpha multiplier (0..1). Defaults to None (no change).
+    flip_h (bool, optional): Whether to flip the texture horizontally. Defaults to None (no flip).
+    flip_v (bool, optional): Whether to flip the texture vertically. Defaults to None (no flip).
+    blend (BlendMode, optional): The blend mode to use. Defaults to None (normal blending).
+        )doc"
+    );
 
-Raises:
-    ValueError: If the array does not have 2, 3, 4, 5, or 9 columns.
+    subRenderer.def(
+        "draw_batch",
+        [](const Texture& texture,
+           nb::ndarray<const double, nb::ndim<2>, nb::c_contig, nb::device::cpu> transforms,
+           const Vec2& anchor, const Vec2& pivot, Batcher* batcher,
+           const std::optional<DrawOptions>& options, const std::optional<Rect>& source,
+           const std::optional<Color>& tint, const std::optional<float>& alpha,
+           const std::optional<bool>& flipH, const std::optional<bool>& flipV,
+           const std::optional<BlendMode>& blend,
+           const std::optional<std::vector<DrawOptions>>& instanceOptions,
+           const std::optional<std::vector<Rect>>& clipRects)
+        {
+            const auto common = resolveOptions(options, source, tint, alpha, flipH, flipV, blend);
+            nb::gil_scoped_release release;
+            drawBatchNDArray(
+                texture, transforms, anchor, pivot, batcher, common, instanceOptions, clipRects
+            );
+        },
+        "texture"_a, "transforms"_a, "anchor"_a = Anchor::TOP_LEFT, "pivot"_a = Anchor::CENTER,
+        "batcher"_a = nb::none(), nb::kw_only(), "options"_a = nb::none(), "source"_a = nb::none(),
+        "tint"_a = nb::none(), "alpha"_a = nb::none(), "flip_h"_a = nb::none(),
+        "flip_v"_a = nb::none(), "blend"_a = nb::none(), "instance_options"_a = nb::none(),
+        "clip_rects"_a = nb::none(), R"doc(
+Draw a contiguous float64 NumPy array with 2, 3, 4, 5, or 9 columns:
+[x, y, (angle), (scale or scale_x, scale_y), (source_x, source_y, source_w, source_h)].
+The shared-style path uses geometry and optionally reusable Batcher buffers.
+Per-instance colors, flips, and sources remain on the geometry path.
+Blend-mode changes split geometry submissions while preserving order.
+Array source columns override option sources; clip_rects overrides both.
+
+Args:
+    texture (Texture): The texture to draw.
+    transforms (ndarray): A 2D NumPy array of shape (N, M) where N is the number of instances and M is 2, 3, 4, 5, or 9.
+    anchor (Vec2, optional): The anchor point of the texture. Defaults to Anchor.TOP_LEFT.
+    pivot (Vec2, optional): The pivot point for rotation and scaling. Defaults to Anchor.CENTER.
+    batcher (Batcher, optional): A reusable Batcher for internal memory. Defaults to None (internal allocation).
+    options (DrawOptions, optional): Additional draw options. Defaults to None.
+    source (Rect, optional): The source rectangle from the texture. Defaults to None (full texture).
+    tint (Color, optional): The color tint to apply. Defaults to None (no tint).
+    alpha (float, optional): The alpha multiplier (0..1). Defaults to None (no change).
+    flip_h (bool, optional): Whether to flip the texture horizontally. Defaults to None (no flip).
+    flip_v (bool, optional): Whether to flip the texture vertically. Defaults to None (no flip).
+    blend (BlendMode, optional): The blend mode to use. Defaults to None (normal blending).
+    instance_options (list of DrawOptions, optional): A list of DrawOptions for each instance. Must have the same length as transforms if provided.
+    clip_rects (list of Rect, optional): A list of source rectangles for each instance. Must have the same length as transforms if provided.
+        )doc"
+    );
+
+    subRenderer.def(
+        "draw_batch",
+        [](const Texture& texture, const std::vector<Transform>& transforms, const Vec2& anchor,
+           const Vec2& pivot, const std::optional<std::vector<Rect>>& clipRects,
+           const std::optional<DrawOptions>& options, const std::optional<Rect>& source,
+           const std::optional<Color>& tint, const std::optional<float>& alpha,
+           const std::optional<bool>& flipH, const std::optional<bool>& flipV,
+           const std::optional<BlendMode>& blend,
+           const std::optional<std::vector<DrawOptions>>& instanceOptions)
+        {
+            const auto common = resolveOptions(options, source, tint, alpha, flipH, flipV, blend);
+            nb::gil_scoped_release release;
+            drawBatchList(texture, transforms, anchor, pivot, clipRects, common, instanceOptions);
+        },
+        "texture"_a, "transforms"_a, "anchor"_a = Anchor::TOP_LEFT, "pivot"_a = Anchor::CENTER,
+        "clip_rects"_a = nb::none(), nb::kw_only(), "options"_a = nb::none(),
+        "source"_a = nb::none(), "tint"_a = nb::none(), "alpha"_a = nb::none(),
+        "flip_h"_a = nb::none(), "flip_v"_a = nb::none(), "blend"_a = nb::none(),
+        "instance_options"_a = nb::none(), R"doc(
+Draw a sequence of transforms using local properties.
+instance_options, if supplied, replaces common options per instance and must have
+one entry per transform. clip_rects overrides source and must match the batch length.
+
+Args:
+    texture (Texture): The texture to draw.
+    transforms (list of Transform): A list of Transform objects for each instance.
+    anchor (Vec2, optional): The anchor point of the texture. Defaults to Anchor.TOP_LEFT.
+    pivot (Vec2, optional): The pivot point for rotation and scaling. Defaults to Anchor.CENTER.
+    clip_rects (list of Rect, optional): A list of source rectangles for each instance. Must have the same length as transforms if provided.
+    options (DrawOptions, optional): Additional draw options. Defaults to None.
+    source (Rect, optional): The source rectangle from the texture. Defaults to None (full texture).
+    tint (Color, optional): The color tint to apply. Defaults to None (no tint).
+    alpha (float, optional): The alpha multiplier (0..1). Defaults to None (no change).
+    flip_h (bool, optional): Whether to flip the texture horizontally. Defaults to None (no flip).
+    flip_v (bool, optional): Whether to flip the texture vertically. Defaults to None (no flip).
+    blend (BlendMode, optional): The blend mode to use. Defaults to None (normal blending).
         )doc"
     );
 

@@ -51,7 +51,6 @@ Texture::Texture(
 
     m_width = width;
     m_height = height;
-    m_clipArea = {0, 0, m_width, m_height};
     m_usage = usage;
 
     if (!SDL_SetTextureBlendMode(m_texPtr, SDL_BLENDMODE_BLEND))
@@ -131,13 +130,11 @@ Texture::~Texture()
 }
 
 Texture::Texture(Texture&& other) noexcept
-    : flip(other.flip),
-      m_texPtr(other.m_texPtr),
+    : m_texPtr(other.m_texPtr),
       m_gpuTexPtr(other.m_gpuTexPtr),
       m_usage(other.m_usage),
       m_width(other.m_width),
-      m_height(other.m_height),
-      m_clipArea(other.m_clipArea)
+      m_height(other.m_height)
 {
     other.m_texPtr = nullptr;
     other.m_gpuTexPtr = nullptr;
@@ -153,10 +150,8 @@ Texture& Texture::operator=(Texture&& other) noexcept
         if (m_gpuTexPtr)
             SDL_ReleaseGPUTexture(renderer::_getGPUDevice(), m_gpuTexPtr);
 
-        flip = other.flip;
         m_width = other.m_width;
         m_height = other.m_height;
-        m_clipArea = other.m_clipArea;
         m_texPtr = other.m_texPtr;
         m_gpuTexPtr = other.m_gpuTexPtr;
         m_usage = other.m_usage;
@@ -209,7 +204,6 @@ void Texture::_createTexture(
 
     m_width = surface->w;
     m_height = surface->h;
-    m_clipArea = {0, 0, m_width, m_height};
 
     if (!SDL_SetTextureBlendMode(m_texPtr, SDL_BLENDMODE_BLEND))
     {
@@ -346,91 +340,6 @@ Vec2 Texture::getSize() const
 Rect Texture::getRect() const
 {
     return {0, 0, m_width, m_height};
-}
-
-Rect Texture::getClipArea() const
-{
-    return m_clipArea;
-}
-
-void Texture::setClipArea(const Rect& area)
-{
-    m_clipArea = area;
-}
-
-void Texture::setTint(const Color& tint) const
-{
-    if (!m_texPtr)
-        throw std::runtime_error("Texture is not drawable, cannot set tint");
-
-    if (!SDL_SetTextureColorMod(m_texPtr, tint.r, tint.g, tint.b))
-        throw std::runtime_error("Failed to set texture color mod: " + std::string(SDL_GetError()));
-}
-
-Color Texture::getTint() const
-{
-    if (!m_texPtr)
-        throw std::runtime_error("Texture is not drawable, cannot get tint");
-
-    Color colorMod;
-    if (!SDL_GetTextureColorMod(m_texPtr, &colorMod.r, &colorMod.g, &colorMod.b))
-        throw std::runtime_error("Failed to get texture color mod: " + std::string(SDL_GetError()));
-
-    return colorMod;
-}
-
-void Texture::setAlpha(const float alpha) const
-{
-    if (!m_texPtr)
-        throw std::runtime_error("Texture is not drawable, cannot set alpha");
-
-    if (!SDL_SetTextureAlphaModFloat(m_texPtr, alpha))
-        throw std::runtime_error("Failed to set texture alpha mod: " + std::string(SDL_GetError()));
-}
-
-float Texture::getAlpha() const
-{
-    if (!m_texPtr)
-        throw std::runtime_error("Texture is not drawable, cannot get alpha");
-
-    float alphaMod;
-    if (!SDL_GetTextureAlphaModFloat(m_texPtr, &alphaMod))
-        throw std::runtime_error("Failed to get texture alpha mod: " + std::string(SDL_GetError()));
-
-    return alphaMod;
-}
-
-void Texture::makeAdditive() const
-{
-    if (!m_texPtr)
-        throw std::runtime_error("Texture is not drawable, cannot make additive");
-
-    if (!SDL_SetTextureBlendMode(m_texPtr, SDL_BLENDMODE_ADD))
-        throw std::runtime_error(
-            "Failed to set texture blend mode: " + std::string(SDL_GetError())
-        );
-}
-
-void Texture::makeMultiply() const
-{
-    if (!m_texPtr)
-        throw std::runtime_error("Texture is not drawable, cannot make multiply");
-
-    if (!SDL_SetTextureBlendMode(m_texPtr, SDL_BLENDMODE_MUL))
-        throw std::runtime_error(
-            "Failed to set texture blend mode: " + std::string(SDL_GetError())
-        );
-}
-
-void Texture::makeNormal() const
-{
-    if (!m_texPtr)
-        throw std::runtime_error("Texture is not drawable, cannot make normal");
-
-    if (!SDL_SetTextureBlendMode(m_texPtr, SDL_BLENDMODE_BLEND))
-        throw std::runtime_error(
-            "Failed to set texture blend mode: " + std::string(SDL_GetError())
-        );
 }
 
 TextureUsage Texture::getUsage() const
