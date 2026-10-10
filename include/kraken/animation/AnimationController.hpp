@@ -32,24 +32,29 @@ struct SheetStrip
 class AnimationController
 {
   public:
+    bool looping = true;
+
     AnimationController();
     ~AnimationController();
 
-    void addSheet(int frameWidth, int frameHeight, const std::vector<SheetStrip>& strips);
+    void addStrip(
+        uint16_t frameWidth, uint16_t frameHeight, const SheetStrip& strip, uint8_t stripIndex = 0
+    );
+    void addStrips(
+        uint16_t frameWidth, uint16_t frameHeight, const std::vector<SheetStrip>& strips
+    );
 
     void set(const std::string& name);
     void play(const std::string& name);
+    void replay(const std::string& name);
     void playFrom(int frameIndex);
 
-    [[nodiscard]] const Rect& getCurrentClip() const;
+    [[nodiscard]] const Rect& getFrameArea() const;
     [[nodiscard]] int getFrameIndex() const;
     [[nodiscard]] double getProgress() const;
 
     void setPlaybackSpeed(double speed);
     [[nodiscard]] double getPlaybackSpeed() const;
-
-    void setLooping(bool loop);
-    [[nodiscard]] bool isLooping() const;
 
     [[nodiscard]] bool isFinished() const;
 
@@ -64,7 +69,8 @@ class AnimationController
     double m_index = 0.0;
     double m_prevIndex = 0.0;
     bool m_paused = false;
-    bool m_looping = true;
+    bool m_finished = false;
+
     std::string m_currAnim;
     std::unordered_map<std::string, Animation> m_animMap;
 
