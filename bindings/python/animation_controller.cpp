@@ -27,14 +27,16 @@ the number of frames to extract from the strip, and the playback speed in frames
 per second (FPS).
     )doc")
 
-        .def(nb::init<const std::string&, int, double>(), "name"_a, "frame_count"_a, "fps"_a, R"doc(
+        .def(
+            nb::init<const std::string&, int, double>(), "name"_a, "frame_count"_a, "fps"_a, R"doc(
 Create a sprite sheet strip definition.
 
 Args:
     name (str): Unique identifier for this animation.
     frame_count (int): Number of frames to extract from this strip/row.
     fps (float): Frames per second for playback timing.
-             )doc")
+             )doc"
+        )
 
         .def_rw("name", &SheetStrip::name, R"doc(
 The unique name identifier for this animation strip.
@@ -68,14 +70,16 @@ managing playback state, and providing frame-by-frame animation control.
     )doc")
         .def(nb::init<>())
 
-        .def_prop_ro("current_animation_name", &AnimationController::getCurrentAnimationName, R"doc(
+        .def_prop_ro(
+            "current_animation_name", &AnimationController::getCurrentAnimationName, R"doc(
 The name of the currently active animation.
 
 Returns:
     str: The name of the current animation, or empty string if none is set.
-    )doc")
+    )doc"
+        )
         .def_prop_ro(
-            "frame_area", &AnimationController::getCurrentClip, nb::rv_policy::reference_internal,
+            "frame_area", &AnimationController::getFrameArea, nb::rv_policy::reference_internal,
             R"doc(
 The clip area (atlas region) for the current animation frame.
 
@@ -116,19 +120,30 @@ Returns:
     float: The current playback speed multiplier.
     )doc"
         )
-        .def_prop_rw(
-            "looping", &AnimationController::isLooping, &AnimationController::setLooping,
-            R"doc(
-Whether the animation should loop when it reaches the end.
-
-Returns:
-    bool: True if the animation is set to loop, False otherwise.
-    )doc"
+        .def_rw(
+            "looping", &AnimationController::looping,
+            R"doc(Whether the animation should loop when it reaches the end.)doc"
         )
         .def(
-            "add_sheet", &AnimationController::addSheet, "frame_width"_a, "frame_height"_a,
+            "add_strip", &AnimationController::addStrip, "frame_width"_a, "frame_height"_a,
+            "strip"_a, "strip_index"_a = 0, R"doc(
+Add a single animation strip to the controller.
+
+Args:
+    frame_width (int): The width of each frame in pixels.
+    frame_height (int): The height of each frame in pixels.
+    strip (SheetStrip): The strip definition.
+    strip_index (int, optional): The index of the strip. Defaults to 0.
+
+Raises:
+    ValueError: If frame size is not positive or the animation name is a duplicate.
+    RuntimeError: If the animation has no frames.
+        )doc"
+        )
+        .def(
+            "add_strips", &AnimationController::addStrips, "frame_width"_a, "frame_height"_a,
             "strips"_a, R"doc(
-Add animations from a sprite sheet definition.
+Add animations from a sprite sheet.
 
 Divides an atlas into horizontal strips, where each strip represents a different animation.
 Each strip is divided into equal-sized frames based on the specified frame size.
@@ -157,9 +172,7 @@ Raises:
     ValueError: If the specified animation name is not found.
              )doc")
         .def("play", &AnimationController::play, "name"_a, R"doc(
-Play an animation from the beginning.
-
-Switches to the specified animation, rewinds it to frame 0, and starts playback.
+Play an animation from the beginning only if it is not already playing.
 
 Args:
     name (str): The name of the animation to play.
@@ -167,6 +180,14 @@ Args:
 Raises:
     ValueError: If the specified animation name is not found.
              )doc")
+        .def("replay", &AnimationController::replay, "name"_a, R"doc(
+Replay an animation from the beginning, regardless of current state.
+
+Args:
+    name (str): The name of the animation to replay.
+Raises:
+    ValueError: If the specified animation name is not found.
+            )doc")
         .def("play_from", &AnimationController::playFrom, "frame_index"_a, R"doc(
 Start playing the current animation from a specific frame.
 

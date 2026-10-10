@@ -71,6 +71,8 @@ Args:
 
     subInput.def("bind", &bind, "name"_a, "actions"_a, R"doc(
     Bind a name to a list of InputActions.
+    Rebinding replaces the previous state, samples currently held buttons, and
+    clears edges without synthesizing a press. Analog axes remain analog-only.
 
     Args:
         name (str): The identifier for this binding (e.g. "jump").
@@ -111,7 +113,7 @@ Returns:
         )doc");
 
     subInput.def("is_pressed", &isPressed, "name"_a, R"doc(
-Check if the given action is currently being held.
+Check if the given action is currently being held. Controller axes are not considered for this check.
 
 Args:
     name (str): The name of the bound input.
@@ -121,7 +123,10 @@ Returns:
         )doc");
 
     subInput.def("is_just_pressed", &isJustPressed, "name"_a, R"doc(
-Check if the given action was just pressed this frame.
+Check whether the aggregate action changed from released to held during the last
+event.poll(). Queries are read-only; repeated reads return the same result.
+Both edge queries can be True if a press and release occur within one poll.
+Controller axes are not considered for this check.
 
 Args:
     name (str): The name of the bound input.
@@ -131,7 +136,9 @@ Returns:
         )doc");
 
     subInput.def("is_just_released", &isJustReleased, "name"_a, R"doc(
-Check if the given action was just released this frame.
+Check whether the last held binding was released during the last event.poll().
+Queries are read-only. Both edge queries can be True within one poll.
+Controller axes are not considered for this check.
 
 Args:
     name (str): The name of the bound input.

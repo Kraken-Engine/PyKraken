@@ -31,11 +31,15 @@ jobs:
       - uses: actions/checkout@v6
 
       - id: version
-        name: Read version from pyproject.toml
+        name: Read and validate release version
         shell: bash
         run: |
           version="$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
-          test "$(python -c 'import json; print(json.load(open("vcpkg.json"))["version-semver"])')" = "$version"
+          vcpkg_version="$(python -c 'import json; print(json.load(open("vcpkg.json"))["version-semver"])')"
+          if [ "$vcpkg_version" != "$version" ]; then
+            echo "::error file=vcpkg.json::Version ${vcpkg_version} does not match pyproject.toml version ${version}."
+            exit 1
+          fi
           grep -q "project(KrakenEngine VERSION ${version} LANGUAGES CXX)" CMakeLists.txt
           IFS=. read -r major minor patch <<< "$version"
           grep -q "#define KN_VERSION_MAJOR ${major}" include/kraken/Runtime.hpp
@@ -360,6 +364,7 @@ jobs:
           path: dist
           pattern: "kraken-sdk-*"
           merge-multiple: true
+          skip-decompress: true
 
       - name: Verify required assets
         shell: bash

@@ -44,6 +44,8 @@ const std::vector<int> getConnectedSlots();
 
 GamepadType getType(int slot = 0);
 
+int _getSlot(SDL_JoystickID id);
+
 void _clearStates();
 
 void _handleEvents(const SDL_Event& sdlEvent, Event& e);

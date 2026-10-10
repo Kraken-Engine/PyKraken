@@ -19,45 +19,52 @@ AnimationController::AnimationController()
 {
     _controllers.push_back(this);
 }
+
 AnimationController::~AnimationController()
 {
     std::erase(_controllers, this);
 }
 
-void AnimationController::addSheet(
-    const int frameWidth, const int frameHeight, const std::vector<SheetStrip>& strips
+void AnimationController::addStrip(
+    const uint16_t frameWidth, const uint16_t frameHeight, const SheetStrip& strip,
+    const uint8_t stripIndex
 )
 {
-    if (frameWidth <= 0 || frameHeight <= 0)
-        throw std::invalid_argument("Frame size must be positive non-zero values");
+    if (frameWidth == 0 || frameHeight == 0)
+        throw std::invalid_argument("Frame size must be non-zero values");
+
+    const std::string& name = strip.name;
+    if (m_animMap.contains(name))
+        throw std::runtime_error("Animation duplicate: " + name);
+    if (strip.frameCount <= 0)
+        throw std::invalid_argument("Frame count must be positive for strip: " + name);
+
+    const int y = static_cast<int>(stripIndex) * frameHeight;
+
+    // Extract only the specified number of frames from this strip/row
+    Animation newAnim;
+    newAnim.fps = strip.fps;
+    for (int i = 0; i < strip.frameCount; ++i)
+    {
+        const int x = i * frameWidth;
+        newAnim.frames.emplace_back(x, y, static_cast<int>(frameWidth), static_cast<int>(frameHeight));
+    }
+
+    m_animMap[name] = std::move(newAnim);
+    m_currAnim = name;
+}
+
+void AnimationController::addStrips(
+    const uint16_t frameWidth, const uint16_t frameHeight, const std::vector<SheetStrip>& strips
+)
+{
     if (strips.empty())
         throw std::invalid_argument("No strips provided for animation controller");
+    if (strips.size() > 255)
+        throw std::invalid_argument("Too many strips provided for animation controller (max 255)");
 
-    for (size_t stripIndex = 0; stripIndex < strips.size(); ++stripIndex)
-    {
-        const auto& strip = strips[stripIndex];
-
-        const std::string& name = strip.name;
-        if (m_animMap.contains(name))
-            throw std::runtime_error("Animation duplicate: " + name);
-
-        if (strip.frameCount <= 0)
-            throw std::invalid_argument("Frame count must be positive for strip: " + name);
-
-        const int y = static_cast<int>(stripIndex) * frameHeight;
-
-        // Extract only the specified number of frames from this strip/row
-        Animation newAnim;
-        newAnim.fps = strip.fps;
-        for (int i = 0; i < strip.frameCount; ++i)
-        {
-            const int x = i * frameWidth;
-            newAnim.frames.emplace_back(x, y, frameWidth, frameHeight);
-        }
-
-        m_animMap[name] = std::move(newAnim);
-        m_currAnim = name;
-    }
+    for (uint8_t stripIndex = 0; stripIndex < strips.size(); ++stripIndex)
+        addStrip(frameWidth, frameHeight, strips[stripIndex], static_cast<uint8_t>(stripIndex));
 }
 
 void AnimationController::set(const std::string& name)
@@ -69,6 +76,19 @@ void AnimationController::set(const std::string& name)
 }
 
 void AnimationController::play(const std::string& name)
+{
+    std::string prevAnim = m_currAnim;
+    set(name);
+
+    // Only rewind and resume if the animation has changed
+    if (prevAnim != m_currAnim)
+    {
+        rewind();
+        resume();
+    }
+}
+
+void AnimationController::replay(const std::string& name)
 {
     set(name);
     rewind();
@@ -87,7 +107,7 @@ void AnimationController::playFrom(const int frameIndex)
     resume();
 }
 
-const Rect& AnimationController::getCurrentClip() const
+const Rect& AnimationController::getFrameArea() const
 {
     const auto& [frames, _] = m_animMap.at(m_currAnim);
 
@@ -110,19 +130,9 @@ double AnimationController::getPlaybackSpeed() const
     return m_playbackSpeed;
 }
 
-bool AnimationController::isLooping() const
-{
-    return m_looping;
-}
-
-void AnimationController::setLooping(const bool loop)
-{
-    m_looping = loop;
-}
-
 bool AnimationController::isFinished() const
 {
-    return m_prevIndex > m_index;
+    return m_finished;
 }
 
 std::string AnimationController::getCurrentAnimationName() const
@@ -170,6 +180,8 @@ void AnimationController::update(const double delta)
     if (m_currAnim.empty())
         return;
 
+    m_finished = false;
+
     const auto& [frames, fps] = m_animMap.at(m_currAnim);
 
     // Store previous index for loop detection
@@ -178,10 +190,18 @@ void AnimationController::update(const double delta)
     m_index += delta * fps * m_playbackSpeed;
     const auto frameCount = static_cast<double>(frames.size());
 
-    if (m_looping)
+    if (looping)
     {
         // Loop back to the beginning
         m_index = fmod(m_index + frameCount, frameCount);
+
+        // Forward looping
+        if (m_index < m_prevIndex && m_prevIndex > 0.0)
+            m_finished = true;
+        // Backward looping
+        else if (m_index > m_prevIndex && m_prevIndex < frameCount - 1)
+            m_finished = true;
+
         return;
     }
 
@@ -190,11 +210,13 @@ void AnimationController::update(const double delta)
     {
         m_index = frameCount;
         pause();
+        m_finished = true;
     }
     else if (m_index < 0.0)
     {
         m_index = 0.0;
         pause();
+        m_finished = true;
     }
 }
 

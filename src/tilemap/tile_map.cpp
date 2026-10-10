@@ -328,6 +328,7 @@ void Map::load(const std::filesystem::path& tmxPath)
             break;
         }
         case tmx::Layer::Type::Group:
+            // TODO: Implement group layer parsing
             break;
         }
 
@@ -921,7 +922,8 @@ void TileLayer::draw(const double angle, const Vec2& pivot)
             if (!setTile || !setTexture)
                 continue;
 
-            setTexture->setAlpha(layerAlpha);
+            DrawOptions drawOptions;
+            drawOptions.alpha = layerAlpha;
             if (orient == tmx::Orientation::Isometric)
             {
                 renderTransform.pos =
@@ -963,8 +965,8 @@ void TileLayer::draw(const double angle, const Vec2& pivot)
             {
                 const HexTransformInfo hexInfo = decodeHexTransform(rawFlipFlags);
                 renderTransform.angle = hexInfo.rotation;
-                setTexture->flip.h = hexInfo.h;
-                setTexture->flip.v = hexInfo.v;
+                drawOptions.flipH = hexInfo.h;
+                drawOptions.flipV = hexInfo.v;
             }
             else
             {
@@ -976,8 +978,8 @@ void TileLayer::draw(const double angle, const Vec2& pivot)
 
                 const FlipInfo flipInfo = kFlipLUT[lutFlipFlags];
                 renderTransform.angle = flipInfo.rotation;
-                setTexture->flip.h = flipInfo.h;
-                setTexture->flip.v = flipInfo.v;
+                drawOptions.flipH = flipInfo.h;
+                drawOptions.flipV = flipInfo.v;
             }
 
             if (rotateLayer)
@@ -986,8 +988,9 @@ void TileLayer::draw(const double angle, const Vec2& pivot)
                 renderTransform.angle += angle;
             }
 
-            setTexture->setClipArea(setTile->getClipArea());
-            renderer::draw(*setTexture, renderTransform);
+            drawOptions.source = setTile->getClipArea();
+            renderer::
+                draw(*setTexture, renderTransform, Anchor::TOP_LEFT, Anchor::CENTER, drawOptions);
         }
     }
 }
@@ -1178,13 +1181,16 @@ void ObjectGroup::draw(const double angle, const Vec2& pivot)
                 if (!tile || !setTexture)
                     continue;
 
-                setTexture->setAlpha(static_cast<float>(m_opacity));
+                DrawOptions drawOptions;
+                drawOptions.alpha = static_cast<float>(m_opacity);
                 if (tile && setTexture)
                 {
                     Transform renderTransform = obj.transform;
                     renderTransform.pos += offset;
-                    setTexture->setClipArea(tile->getClipArea());
-                    renderer::draw(*setTexture, renderTransform);
+                    drawOptions.source = tile->getClipArea();
+                    renderer::draw(
+                        *setTexture, renderTransform, Anchor::TOP_LEFT, Anchor::CENTER, drawOptions
+                    );
                 }
 
                 continue;
@@ -1273,15 +1279,18 @@ void ObjectGroup::draw(const double angle, const Vec2& pivot)
             if (!tile || !setTexture)
                 continue;
 
-            setTexture->setAlpha(static_cast<float>(m_opacity));
+            DrawOptions drawOptions;
+            drawOptions.alpha = static_cast<float>(m_opacity);
             if (tile && setTexture)
             {
                 Transform renderTransform = obj.transform;
                 renderTransform.pos += offset;
                 renderTransform.pos = rotatePoint(renderTransform.pos, pivotWorld, angle);
                 renderTransform.angle += angle;
-                setTexture->setClipArea(tile->getClipArea());
-                renderer::draw(*setTexture, renderTransform);
+                drawOptions.source = tile->getClipArea();
+                renderer::draw(
+                    *setTexture, renderTransform, Anchor::TOP_LEFT, Anchor::CENTER, drawOptions
+                );
             }
 
             continue;
@@ -1369,13 +1378,14 @@ void ImageLayer::draw(const double angle, const Vec2& pivot)
         renderTransform.angle += angle;
     }
 
-    renderer::draw(*m_texture, renderTransform);
+    DrawOptions drawOptions;
+    drawOptions.alpha = static_cast<float>(m_opacity);
+    renderer::draw(*m_texture, renderTransform, Anchor::TOP_LEFT, Anchor::CENTER, drawOptions);
 }
 
 void ImageLayer::setOpacity(const double value)
 {
     m_opacity = value;
-    m_texture->setAlpha(static_cast<float>(value));
 }
 
 double ImageLayer::getOpacity() const

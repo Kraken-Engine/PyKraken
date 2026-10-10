@@ -88,7 +88,7 @@ bool isOpen()
     animation_controller::_tick();
     ease::_tick();
     orchestrator::_tick();
-    physics::_tick();
+    physics::_beginFrame();
 
     return _isOpen;
 }

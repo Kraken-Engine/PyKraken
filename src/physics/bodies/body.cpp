@@ -38,6 +38,8 @@ void Body::addCollider(
     shapeDef.material.friction = friction;
     shapeDef.material.restitution = restitution;
     shapeDef.enableHitEvents = enableEvents;
+    shapeDef.enableContactEvents = enableEvents;
+    shapeDef.enableSensorEvents = enableEvents;
     shapeDef.isSensor = isSensor;
     shapeDef.filter = m_filter;
 
@@ -69,6 +71,8 @@ void Body::addCollider(
         shapeDef.material.friction = friction;
         shapeDef.material.restitution = restitution;
         shapeDef.enableHitEvents = enableEvents;
+        shapeDef.enableContactEvents = enableEvents;
+        shapeDef.enableSensorEvents = enableEvents;
         shapeDef.isSensor = isSensor;
         shapeDef.filter = m_filter;
 
@@ -95,6 +99,8 @@ void Body::addCollider(
             shapeDef.material.friction = friction;
             shapeDef.material.restitution = restitution;
             shapeDef.enableHitEvents = enableEvents;
+            shapeDef.enableContactEvents = enableEvents;
+            shapeDef.enableSensorEvents = enableEvents;
             shapeDef.isSensor = isSensor;
             shapeDef.filter = m_filter;
 
@@ -125,6 +131,8 @@ void Body::addCollider(
     shapeDef.material.friction = friction;
     shapeDef.material.restitution = restitution;
     shapeDef.enableHitEvents = enableEvents;
+    shapeDef.enableContactEvents = enableEvents;
+    shapeDef.enableSensorEvents = enableEvents;
     shapeDef.isSensor = isSensor;
     shapeDef.filter = m_filter;
 
@@ -147,6 +155,8 @@ void Body::addCollider(
     shapeDef.material.friction = friction;
     shapeDef.material.restitution = restitution;
     shapeDef.enableHitEvents = enableEvents;
+    shapeDef.enableContactEvents = enableEvents;
+    shapeDef.enableSensorEvents = enableEvents;
     shapeDef.isSensor = isSensor;
     shapeDef.filter = m_filter;
 
@@ -207,6 +217,30 @@ void Body::_checkValid() const
 {
     if (!b2Body_IsValid(m_bodyId))
         throw std::runtime_error("Attempted to use an invalid or destroyed Body");
+}
+
+void Collider::setEventsEnabled(bool enabled)
+{
+    if (!isValid())
+        throw std::runtime_error("Collider is no longer valid.");
+    b2Shape_EnableContactEvents(m_id, enabled);
+    b2Shape_EnableSensorEvents(m_id, enabled);
+    b2Shape_EnableHitEvents(m_id, enabled);
+}
+
+Body Collider::getBody() const
+{
+    if (!isValid())
+        throw std::runtime_error("Collider is no longer valid.");
+    return Body(b2Shape_GetBody(m_id));
+}
+
+std::vector<Collider> Body::getColliders() const
+{
+    std::vector<Collider> result;
+    for (const auto id : _getShapeIds())
+        result.emplace_back(id);
+    return result;
 }
 
 std::vector<b2ShapeId> Body::_getShapeIds() const

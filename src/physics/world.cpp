@@ -1,6 +1,7 @@
 #include "kraken/physics/World.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <memory>
 
 #include "kraken/core/Time.hpp"
@@ -27,10 +28,9 @@
 
 namespace kn::physics
 {
-static std::vector<World*> _worlds;
 static float _fixedDelta = 1.0f / 60.0f;
 static int _maxSubsteps = 4;
-static float _accumulator = 0.0f;
+static double _accumulator = 0.0;
 
 static Color _toColor(b2HexColor color)
 {
@@ -178,48 +178,34 @@ static void _drawString(b2Vec2 p, const char* str, b2HexColor color, void* conte
     debugContext->debugText->draw({p.x, p.y});
 }
 
-void _tick()
+void _beginFrame()
 {
-    _accumulator += static_cast<float>(time::getDelta());
+    _accumulator =
+        std::min(_accumulator + time::getDelta(), static_cast<double>(_fixedDelta) * 8.0);
+}
 
-    // Limit accumulator to avoid "spiral of death"
-    const float maxAccumulator = _fixedDelta * 8.0f;
-    if (_accumulator > maxAccumulator)
-        _accumulator = maxAccumulator;
+void _reset()
+{
+    _accumulator = 0.0;
+}
 
+std::vector<float> fixedSteps()
+{
+    std::vector<float> steps;
     while (_accumulator >= _fixedDelta)
     {
-        for (auto* world : _worlds)
-        {
-            auto it = world->m_fixedUpdateCallbacks.begin();
-            while (it != world->m_fixedUpdateCallbacks.end())
-            {
-                bool shouldRemove = false;
-                try
-                {
-                    it->operator()(_fixedDelta);
-                }
-                catch (const std::exception& e)
-                {
-                    throw std::runtime_error(
-                        "An error occurred in a fixed update callback: " + std::string(e.what())
-                    );
-                }
-
-                ++it;
-            }
-
-            b2World_Step(world->m_worldId, _fixedDelta, _maxSubsteps);
-        }
+        steps.push_back(_fixedDelta);
         _accumulator -= _fixedDelta;
     }
+    return steps;
 }
 
 void setFixedDelta(const float fixedDelta)
 {
-    if (fixedDelta <= 0.0f)
-        throw std::invalid_argument("Fixed delta must be greater than 0.");
+    if (!std::isfinite(fixedDelta) || fixedDelta <= 0.0f)
+        throw std::invalid_argument("Fixed delta must be finite and greater than 0.");
     _fixedDelta = fixedDelta;
+    _reset();
 }
 
 float getFixedDelta()
@@ -244,29 +230,50 @@ World::World(const Vec2& gravity)
     b2WorldDef worldDef = b2DefaultWorldDef();
     worldDef.gravity = static_cast<b2Vec2>(gravity);
     m_worldId = b2CreateWorld(&worldDef);
-
-    _worlds.push_back(this);
 }
 
 World::~World()
 {
-    _worlds.erase(std::remove(_worlds.begin(), _worlds.end(), this), _worlds.end());
-
     if (b2World_IsValid(m_worldId))
         b2DestroyWorld(m_worldId);
 }
 
-void World::addFixedUpdate(std::function<void(float)> callback)
+void World::step(float delta)
 {
-    if (!callback)
-        throw std::invalid_argument("Callback cannot be null.");
+    _checkValid();
+    if (!std::isfinite(delta) || delta <= 0.0f)
+        throw std::invalid_argument("Step delta must be finite and greater than 0.");
+    b2World_Step(m_worldId, delta, _maxSubsteps);
 
-    m_fixedUpdateCallbacks.push_back(std::move(callback));
-}
+    // Own the event records before user code can mutate bodies. Retain capacity
+    // between steps; never dereference end-event IDs, which may be destroyed.
+    const auto contacts = b2World_GetContactEvents(m_worldId);
+    m_contactEvents.clear();
+    m_contactEvents.reserve(contacts.beginCount + contacts.endCount);
+    for (int i = 0; i < contacts.beginCount; ++i)
+    {
+        const auto& e = contacts.beginEvents[i];
+        m_contactEvents.push_back({Collider(e.shapeIdA), Collider(e.shapeIdB), true});
+    }
+    for (int i = 0; i < contacts.endCount; ++i)
+    {
+        const auto& e = contacts.endEvents[i];
+        m_contactEvents.push_back({Collider(e.shapeIdA), Collider(e.shapeIdB), false});
+    }
 
-void World::clearFixedUpdates()
-{
-    m_fixedUpdateCallbacks.clear();
+    const auto sensors = b2World_GetSensorEvents(m_worldId);
+    m_sensorEvents.clear();
+    m_sensorEvents.reserve(sensors.beginCount + sensors.endCount);
+    for (int i = 0; i < sensors.beginCount; ++i)
+    {
+        const auto& e = sensors.beginEvents[i];
+        m_sensorEvents.push_back({Collider(e.sensorShapeId), Collider(e.visitorShapeId), true});
+    }
+    for (int i = 0; i < sensors.endCount; ++i)
+    {
+        const auto& e = sensors.endEvents[i];
+        m_sensorEvents.push_back({Collider(e.sensorShapeId), Collider(e.visitorShapeId), false});
+    }
 }
 
 void World::debugDraw(const Color& color, const DebugDrawOptions& options) const
@@ -442,6 +449,18 @@ WheelJoint World::createWheelJoint(
     jointDef.localAxisA = b2Body_GetLocalVector(bodyA.m_bodyId, b2axis);
 
     return WheelJoint(b2CreateWheelJoint(m_worldId, &jointDef));
+}
+
+const std::vector<ContactEvent>& World::getContactEvents() const
+{
+    _checkValid();
+    return m_contactEvents;
+}
+
+const std::vector<SensorEvent>& World::getSensorEvents() const
+{
+    _checkValid();
+    return m_sensorEvents;
 }
 
 std::vector<Collision> World::getCollisions()
@@ -673,6 +692,7 @@ StaticBody World::fromMapLayer(const tilemap::Layer& layer)
     auto& objGroup = dynamic_cast<const tilemap::ObjectGroup&>(layer);
     StaticBody body(*this);
 
+    // TODO: Implement Point, Polyline (Lines), Ellipse, Text
     for (const auto& obj : objGroup.getObjects())
     {
         if (!obj.visible)
@@ -689,7 +709,6 @@ StaticBody World::fromMapLayer(const tilemap::Layer& layer)
             poly.move(obj.transform.pos);
             body.addCollider(poly);
         }
-        // Skipping Point, Polyline (Lines), Ellipse, Text
     }
 
     return body;

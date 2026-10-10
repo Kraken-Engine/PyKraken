@@ -2,7 +2,6 @@
 
 #include <box2d/box2d.h>
 
-#include <functional>
 #include <vector>
 
 #include "kraken/graphics/Color.hpp"
@@ -25,7 +24,12 @@ class Layer;
 namespace physics
 {
 
-void _tick();
+void _beginFrame();
+void _reset();
+
+// Consume accumulated frame time, yielding at most eight fixed deltas.
+// Call once per frame and step all desired worlds inside the same loop.
+std::vector<float> fixedSteps();
 
 void setFixedDelta(float fixedDelta);
 float getFixedDelta();
@@ -52,6 +56,20 @@ struct Collision
     Vec2 point;
     Vec2 normal;
     float approachSpeed;
+};
+
+struct ContactEvent
+{
+    Collider colliderA;
+    Collider colliderB;
+    bool began;
+};
+
+struct SensorEvent
+{
+    Collider sensor;
+    Collider visitor;
+    bool began;
 };
 
 struct CastHit
@@ -108,6 +126,10 @@ class World
 
     // Queries
     std::vector<Collision> getCollisions();
+    // Snapshots from the latest step, replaced by the next step (not consumed
+    // by reads). Copy events to retain them; collider handles are non-owning.
+    const std::vector<ContactEvent>& getContactEvents() const;
+    const std::vector<SensorEvent>& getSensorEvents() const;
     std::vector<Body> queryPoint(const Vec2& point);
     std::vector<Body> queryAABB(const Rect& rect);
 
@@ -133,15 +155,15 @@ class World
 
     bool isValid() const;
 
-    void addFixedUpdate(std::function<void(float)> callback);
-    void clearFixedUpdates();
+    // Advance only this world; gameplay updates should run before this call.
+    void step(float delta);
 
     void debugDraw(const Color& color = Color::RED, const DebugDrawOptions& options = {}) const;
 
   private:
     b2WorldId m_worldId = b2_nullWorldId;
-    std::vector<std::function<void(float)>> m_fixedUpdateCallbacks;
-
+    std::vector<ContactEvent> m_contactEvents;
+    std::vector<SensorEvent> m_sensorEvents;
     struct QueryContext
     {
         std::vector<Body> bodies;
@@ -159,7 +181,6 @@ class World
 
     b2WorldId _getWorldId() const;
 
-    friend void _tick();
     friend class CharacterBody;
     friend class RigidBody;
     friend class StaticBody;

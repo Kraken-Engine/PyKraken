@@ -11,7 +11,7 @@ class Camera
     Transform transform{};
 
     Camera(bool setActive = false);
-    ~Camera() = default;
+    ~Camera();
 
     void moveWorld(const Vec2& worldDelta);
     void moveScreen(const Vec2& screenDelta);

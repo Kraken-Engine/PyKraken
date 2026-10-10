@@ -13,6 +13,8 @@
 #include "kraken/graphics/Shaders.hpp"
 #include "kraken/graphics/Text.hpp"
 #include "kraken/graphics/Window.hpp"
+#include "kraken/input/Input.hpp"
+#include "kraken/physics/World.hpp"
 
 namespace kn
 {
@@ -28,11 +30,15 @@ void init(const bool debug)
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
         throw std::runtime_error(std::string("Failed to initialize SDL: ") + SDL_GetError());
 
+    kn::physics::_reset();
+    kn::input::_reset();
     kn::mixer::_init();
 }
 
 void quit()
 {
+    kn::physics::_reset();
+    kn::input::_reset();
     kn::log::disable();
 
     // Text objects must be destroyed first (they reference fonts and text engine).

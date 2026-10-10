@@ -1,5 +1,4 @@
 #include <nanobind/operators.h>
-#include <nanobind/stl/function.h>
 #include <nanobind/stl/vector.h>
 
 #include "bindings/python/bindings.hpp"
@@ -32,29 +31,34 @@ void _bind(nb::module_& m)
 
     auto subPhysics = m.def_submodule("physics", "Physics engine related classes and functions");
 
-    subPhysics.def("set_fixed_delta", &setFixedDelta, "fixed_delta"_a, R"doc(
-Set the fixed delta time for automatic physics stepping. Default is 1/60 seconds (60 FPS).
-
-Setting this to a value greater than 0.0 enables automatic physics stepping
-in the engine backend. The physics will be updated with this fixed time step,
-using an accumulator to handle variable frame rates.
-
-Args:
-    fixed_delta (float): The fixed time step in seconds (e.g., 1.0/60.0).
-                         Set to 0.0 to disable automatic stepping.
+    subPhysics.def("fixed_steps", &fixedSteps, R"doc(
+Consume accumulated frame time and return a sequence of fixed deltas in seconds.
+Call once per frame and update gameplay and step each world inside the same loop.
+This function never advances a world itself.
+At most eight steps are returned; excess catch-up time is discarded.
+Repeated calls without advancing frame timing return no additional steps.
     )doc");
+
+    subPhysics.def("set_fixed_delta", &setFixedDelta, "fixed_delta"_a, R"doc(
+Set the positive, finite timestep yielded by fixed_steps(). Default: 1/60 seconds.
+Changing the timestep clears accumulated time. This does not enable automatic stepping.
+    )doc");
+
     subPhysics.def("get_fixed_delta", &getFixedDelta, R"doc(
 Get the current fixed delta time for physics stepping.
 
 Returns:
     float: The fixed time step in seconds.
     )doc");
+
     subPhysics.def("set_max_substeps", &setMaxSubsteps, "max_substeps"_a, R"doc(
-Set the maximum number of substeps for physics stepping. Default is 4.
+Set the physics solver substeps used by each World.step() call. Default is 4.
+This does not change the eight-step fixed_steps() catch-up limit.
 
 Args:
     max_substeps (int): The number of substeps per time step.
     )doc");
+
     subPhysics.def("get_max_substeps", &getMaxSubsteps, R"doc(
 Get the current maximum number of substeps for physics stepping.
 
@@ -90,7 +94,7 @@ Args:
     density (float, optional): The density of the collider. Defaults to 1.0.
     friction (float, optional): The friction coefficient of the collider. Defaults to 0.2.
     restitution (float, optional): The restitution (bounciness) of the collider. Defaults to 0.0.
-    enable_events (bool, optional): Whether to enable hit events for this collider. Defaults to False.
+    enable_events (bool, optional): Whether to enable hit, contact, and sensor events for this collider. Defaults to False.
     is_sensor (bool, optional): Whether the collider is a sensor. Defaults to False.
             )doc"
         )
@@ -106,7 +110,7 @@ Args:
     density (float, optional): The density of the collider. Defaults to 1.0.
     friction (float, optional): The friction coefficient of the collider. Defaults to 0.2.
     restitution (float, optional): The restitution (bounciness) of the collider. Defaults to 0.0.
-    enable_events (bool, optional): Whether to enable hit events for this collider. Defaults to False.
+    enable_events (bool, optional): Whether to enable hit, contact, and sensor events for this collider. Defaults to False.
     is_sensor (bool, optional): Whether the collider is a sensor. Defaults to False.
             )doc"
         )
@@ -122,7 +126,7 @@ Args:
     density (float, optional): The density of the collider. Defaults to 1.0.
     friction (float, optional): The friction coefficient of the collider. Defaults to 0.2.
     restitution (float, optional): The restitution (bounciness) of the collider. Defaults to 0.0.
-    enable_events (bool, optional): Whether to enable hit events for this collider. Defaults to False.
+    enable_events (bool, optional): Whether to enable hit, contact, and sensor events for this collider. Defaults to False.
     is_sensor (bool, optional): Whether the collider is a sensor. Defaults to False.
             )doc"
         )
@@ -138,7 +142,7 @@ Args:
     density (float, optional): The density of the collider. Defaults to 1.0.
     friction (float, optional): The friction coefficient of the collider. Defaults to 0.2.
     restitution (float, optional): The restitution (bounciness) of the collider. Defaults to 0.0.
-    enable_events (bool, optional): Whether to enable hit events for this collider. Defaults to False.
+    enable_events (bool, optional): Whether to enable hit, contact, and sensor events for this collider. Defaults to False.
     is_sensor (bool, optional): Whether the collider is a sensor. Defaults to False.
             )doc"
         )
@@ -169,6 +173,10 @@ Args:
             Returns:
                 Transform: The current transform of the body.
             )doc")
+        .def(
+            "get_colliders", &Body::getColliders,
+            "Return non-owning handles for this body's collider shapes."
+        )
         .def("destroy", &Body::destroy, R"doc(Destroy the body manually.)doc")
         .def(nb::self == nb::self)
         .def(nb::self != nb::self);
@@ -741,6 +749,34 @@ Args:
     upper (float): The upper translation limit.
             )doc");
 
+    nb::class_<Collider>(subPhysics, "Collider", R"doc(
+Non-owning collider handle. id supports matching and dictionary keys within a
+world's lifetime, including after collider destruction. Check is_valid before
+reading body. A concave polygon creates multiple collider handles.
+    )doc")
+        .def_prop_ro("id", &Collider::getId)
+        .def_prop_ro("body", &Collider::getBody)
+        .def("set_events_enabled", &Collider::setEventsEnabled, "enabled"_a, R"doc(
+Enable or disable hit, contact, and sensor events for this collider.
+Use this to opt in existing colliders, including CharacterBody's internal capsule.
+Changing CharacterBody.capsule_shape preserves its event flags but replaces its ID.
+Kinematic characters use mover queries against static terrain; these queries do
+not produce contact events. Use is_on_floor/is_on_wall for mover contact state.
+        )doc")
+        .def_prop_ro("is_valid", &Collider::isValid)
+        .def(nb::self == nb::self)
+        .def("__hash__", [](const Collider& c) { return std::hash<uint64_t>{}(c.getId()); });
+
+    nb::class_<ContactEvent>(subPhysics, "ContactEvent")
+        .def_ro("collider_a", &ContactEvent::colliderA)
+        .def_ro("collider_b", &ContactEvent::colliderB)
+        .def_ro("began", &ContactEvent::began, "True for contact begin, False for contact end.");
+
+    nb::class_<SensorEvent>(subPhysics, "SensorEvent")
+        .def_ro("sensor", &SensorEvent::sensor)
+        .def_ro("visitor", &SensorEvent::visitor)
+        .def_ro("began", &SensorEvent::began, "True for sensor enter, False for sensor exit.");
+
     nb::class_<Collision>(subPhysics, "Collision", nb::pooled(KRAKEN_PYTHON_POOL_CAPACITY), R"doc(
 Information about a collision between two bodies.
 
@@ -850,66 +886,12 @@ Raises:
     TypeError: If the layer is not an ObjectGroup.
             )doc")
 
-        .def(
-            "add_fixed_update",
-            [](World& self, nb::typed<nb::callable, void(float)> callback) -> void
-            {
-                if (nb::hasattr(callback, "__self__") &&
-                    !nb::getattr(callback, "__self__").is_none())
-                {
-                    nb::object selfObj = callback.attr("__self__");
-                    nb::object weakOwner = nb::weakref(selfObj);
-                    nb::object unboundMethod = callback.attr("__func__");
-                    self.addFixedUpdate(
-                        [weakOwner, unboundMethod](float delta)
-                        {
-                            nb::object owner = weakOwner();
-                            if (!owner.is_none())
-                                unboundMethod(owner, delta);
-                        }
-                    );
-                }
-                else
-                {
-                    // For lambdas and regular functions, keep a strong reference
-                    self.addFixedUpdate([callback](float delta) { callback(delta); });
-                }
-            },
-            "callback"_a,
-            R"doc(Add a callback function to be executed during each physics step.)doc"
-        )
-        .def(
-            "fixed_callback",
-            [](World& self,
-               nb::typed<nb::callable, void(float)> func) -> nb::typed<nb::callable, void(float)>
-            {
-                if (nb::hasattr(func, "__self__") && !nb::getattr(func, "__self__").is_none())
-                {
-                    nb::object selfObj = func.attr("__self__");
-                    nb::object weakOwner = nb::weakref(selfObj);
-                    nb::object unboundMethod = func.attr("__func__");
-                    self.addFixedUpdate(
-                        [weakOwner, unboundMethod](float delta)
-                        {
-                            nb::object owner = weakOwner();
-                            if (!owner.is_none())
-                                unboundMethod(owner, delta);
-                        }
-                    );
-                }
-                else
-                {
-                    self.addFixedUpdate([func](float delta) { func(delta); });
-                }
-                return func;
-            },
-            "callback"_a,
-            R"doc(A decorator to register a function as a physics update callback.)doc"
-        )
-        .def(
-            "clear_fixed_updates", &World::clearFixedUpdates,
-            R"doc(Remove all registered fixed update callbacks.)doc"
-        )
+        .def("step", &World::step, "delta"_a, R"doc(
+Advance this world by a positive, finite delta in seconds.
+Run gameplay updates before this call and read collision events afterward.
+Use the deltas yielded by physics.fixed_steps() for fixed-rate simulation.
+No world is automatically stepped by window.is_open().
+        )doc")
 
         .def(
             "create_distance_joint", &World::createDistanceJoint, "body_a"_a, "body_b"_a,
@@ -1025,11 +1007,27 @@ Returns:
         )doc"
         )
 
+        .def("get_contact_events", &World::getContactEvents, nb::rv_policy::copy, R"doc(
+Return contact begin/end snapshots from the latest World.step(). Reads do not
+consume events. Read after EACH fixed step, before stepping this world again.
+The returned list owns its records and may be retained across subsequent steps.
+Colliders must opt in with enable_events=True. End-event colliders may already
+be destroyed: their IDs remain readable, but body access requires is_valid.
+Begin records precede end records; no chronological ordering is promised.
+        )doc")
+        .def("get_sensor_events", &World::getSensorEvents, nb::rv_policy::copy, R"doc(
+Return sensor enter/exit snapshots from the latest World.step(). Reads do not
+consume events. Read after EACH fixed step. Returned records may be retained.
+Enable events on BOTH the sensor and visitor colliders. Destroyed colliders
+remain identifiable by ID; check is_valid before accessing their bodies.
+Begin records precede end records; no chronological ordering is promised.
+        )doc")
         .def("get_collisions", &World::getCollisions, R"doc(
 Get all collision events that occurred during the last physics step.
 
 Note:
-    This only includes hit events. The list is cleared after each call.
+    This only includes hit events. Reads do not consume events; read after each
+    step and before destroying participating colliders.
 
 Returns:
     list[Collision]: A list of collision events.

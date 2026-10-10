@@ -16,6 +16,7 @@ struct Transform;
 namespace physics
 {
 class World;
+class Collider;
 
 class Body
 {
@@ -39,6 +40,8 @@ class Body
         const Capsule& capsule, float density = 1.0f, float friction = 0.2f,
         float restitution = 0.0f, bool enableEvents = false, bool isSensor = false
     );
+
+    std::vector<Collider> getColliders() const;
 
     void setPos(const Vec2& pos);
     Vec2 getPos() const;
@@ -72,8 +75,37 @@ class Body
     void _checkValid() const;
     std::vector<b2ShapeId> _getShapeIds() const;
 
+    friend class Collider;
     friend class World;
     friend class Joint;
 };
+// Non-owning shape handle. The ID remains readable after destruction; check
+// isValid() before accessing the body. A concave polygon has multiple colliders.
+class Collider
+{
+  public:
+    explicit Collider(b2ShapeId id)
+        : m_id(id)
+    {
+    }
+    uint64_t getId() const
+    {
+        return b2StoreShapeId(m_id);
+    }
+    bool isValid() const
+    {
+        return b2Shape_IsValid(m_id);
+    }
+    Body getBody() const;
+    void setEventsEnabled(bool enabled);
+    bool operator==(const Collider& other) const
+    {
+        return getId() == other.getId();
+    }
+
+  private:
+    b2ShapeId m_id;
+};
+
 }  // namespace physics
 }  // namespace kn

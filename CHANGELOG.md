@@ -5,7 +5,59 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) when possible.
 
-## [1.7.4] - TBA
+## Planned API
+
+These are proposed follow-up items, not implemented features or a commitment to ship all of them in the latest update.
+
+- A `Space` enum for explicitly choosing screen or world coordinates across texture, primitive, and text drawing, with corresponding mouse coordinate queries.
+- Text transforms for rotation and scaling. This is feasible by caching rendered text in a render-target texture and drawing that texture with a transform; layout/content changes would invalidate the cache.
+- Scoped destination clipping: restrict drawing to a rectangular region of the current render target, restore the previous clip afterward, and intersect nested clips. This would support scrollable panels, cropped views, and minimaps without altering texture source rectangles or object coordinates.
+- Optional threshold-based axis bindings with separate activation/release thresholds, plus trigger-axis support, while keeping ordinary movement bindings analog.
+- Separate `GameTimer` and `RealTimer` clocks so gameplay timers can follow pause/time scale while real-time timers remain independent; revisit scheduled gameplay events alongside this split.
+- Expanded Tiled support: recursive group-layer loading, custom properties, runtime tile editing, and faithful collider import with object rotation, layer offsets, and diagnostics for unsupported shapes.
+- Dedicated UI work after common gameplay features: stable widget IDs, keyboard/controller navigation, disabled states, reliable press/release capture and hitboxes, and scrolling/clipping containers.
+- Native camera zoom remains deferred; scaling a custom render-target texture is the current workaround.
+
+## [1.8.0] - TBA
+
+### Added
+
+- Physics contact begin/end and sensor enter/exit snapshots through `World.get_contact_events()` / `getContactEvents()` and `get_sensor_events()` / `getSensorEvents()`. Read after each world step; records are replaced on the next step. Python returns independent snapshots. Event `began` distinguishes begin/enter from end/exit.
+- Non-owning `Collider` handles with identity, validity checks, and body access, available through `Body.get_colliders()` / `getColliders()` and physics events. Destroyed colliders retain readable IDs within the world's lifetime. Concave polygons may produce multiple collider handles.
+- `DrawOptions` and `BlendMode` for local source rectangles, tint, alpha, horizontal/vertical flips, and normal/additive/multiply blending. Python draw calls accept property keywords or a reusable options object; C++ accepts `DrawOptions`.
+- Native geometry batching through C++ `renderer::drawBatch`, using contiguous packed rows through `std::span`. Python's NumPy `renderer.draw_batch` overload shares this implementation without copying compatible array data.
+- `renderer.Batcher` / `renderer::Batcher` reusable CPU geometry buffers for Python and C++. Per-instance colors, source rectangles, opacity, and flips remain on the geometry path; blend-mode changes split submissions while preserving draw order.
+- `physics.fixed_steps()` / `physics::fixedSteps()` and explicit `World.step(delta)` for fixed-rate gameplay updates. Partial frame time is carried forward, scaled time controls accumulation, and catch-up is limited to eight steps.
+- `AnimationController.add_strip` / `addStrip` for adding a single animation row with an explicit strip index.
+- `AnimationController.replay` for restarting an animation regardless of its current selection.
+
+### Changed
+
+- Nanobind backend updated to version 3.0.1.
+- Package now supports Python versions >=3.10 with version-dependant performance instead of using the 3.12 ABI across all.
+- Texture rendering properties now belong to draw calls, including destination-rectangle draws, nine-slice rendering, and batches. Tile and image layers pass their source regions, opacity, and flips locally instead of modifying shared textures.
+- C++ `renderer::drawBatch` now submits geometry rather than looping over individual sprite draws. The sequence-of-`Transform` convenience overload is retained only in Python to reduce Python-to-C++ dispatch overhead.
+- Physics worlds must now be stepped explicitly inside the fixed-step loop; `window.is_open()` / `window::isOpen()` updates frame timing without advancing any world. Box2D solver substeps remain separate from the catch-up limit.
+- `AnimationController.add_sheet` / `addSheet` renamed to `add_strips` / `addStrips`. C++ `getCurrentClip` renamed to `getFrameArea`; Python retains its `frame_area` property. Looping is exposed as a public property.
+- `AnimationController.play` rewinds and resumes only when selecting a different animation. Use `replay` to restart the selected animation.
+- Both Python and C++ starter demos now use collections of spinning polygons with individual rotation speeds and colors.
+- Input action states now aggregate ordered digital events during `event.poll()`. Queries are read-only and independent of call order; multiple bindings, same-poll taps, focus loss, and controller disconnects preserve aggregate transitions. Both edges may be true in one poll. Axis bindings remain analog-only.
+- Collider `enable_events` now enables contact and sensor events as well as impact events. Existing colliders, including character capsules, can opt in through `Collider.set_events_enabled()` / `setEventsEnabled()`. Enable it on both sensor and visitor colliders for sensor notifications.
+
+### Removed
+
+- Texture-level clip area, tint, alpha, flip settings, and `make_additive` / `make_multiply` / `make_normal` methods, along with their C++ equivalents. Use draw properties or `DrawOptions` instead.
+- Physics callback registration, removal, and decorators in favor of ordinary gameplay function calls followed by explicit world stepping.
+- Unused `anchor` and `pivot` parameters from nine-slice drawing.
+
+### Fixed
+
+- Destroying an active camera now clears the active-camera pointer, preventing dangling references.
+- Input direction and axis queries now honor each binding's controller slot instead of always reading controller slot 0.
+- Non-looping animation completion is now reported when playback reaches its endpoint instead of relying on frame-index wraparound.
+- Rectangle texture-draw documentation now correctly specifies radians for rotation.
+
+## [1.7.4] - 2026-07-25
 
 ### Added
 

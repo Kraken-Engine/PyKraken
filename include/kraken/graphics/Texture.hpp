@@ -30,12 +30,6 @@ ENABLE_ENUM_FLAGS(TextureUsage)
 class Texture
 {
   public:
-    struct Flip
-    {
-        bool h = false;
-        bool v = false;
-    } flip;
-
     Texture(
         int width, int height, FilterMode filter = FilterMode::Default,
         TextureUsage usage = TextureUsage::Drawable
@@ -61,19 +55,6 @@ class Texture
 
     [[nodiscard]] Rect getRect() const;
 
-    [[nodiscard]] Rect getClipArea() const;
-    void setClipArea(const Rect& area);
-
-    void setTint(const Color& tint) const;
-    [[nodiscard]] Color getTint() const;
-
-    void setAlpha(float alpha) const;
-    [[nodiscard]] float getAlpha() const;
-
-    void makeAdditive() const;
-    void makeMultiply() const;
-    void makeNormal() const;
-
     [[nodiscard]] TextureUsage getUsage() const;
     bool hasUsage(TextureUsage usage) const;
 
@@ -88,7 +69,6 @@ class Texture
 
     int m_width = 0;
     int m_height = 0;
-    Rect m_clipArea{};
 
     void _createGPUTexture(SDL_Surface* surface);
     void _createTexture(SDL_Surface* surface, TextureAccess access, FilterMode filter);
